@@ -34,6 +34,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Mixin;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
@@ -265,6 +266,11 @@ final class CodeGenerator {
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             Elements elementUtils, Types typeUtils) {
+        generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils);
+    }
+
+    private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
+            String mixinFieldName, Elements elementUtils, Types typeUtils) {
         Option o = field.getAnnotation(Option.class);
         OptionList ol = field.getAnnotation(OptionList.class);
         OptionGroup og = field.getAnnotation(OptionGroup.class);
@@ -272,20 +278,50 @@ final class CodeGenerator {
         Argument arg = field.getAnnotation(Argument.class);
 
         if (o != null) {
-            generateOption(sb, simpleName, field, o, elementUtils, typeUtils);
+            generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils);
         } else if (ol != null) {
-            generateOptionList(sb, simpleName, field, ol, elementUtils, typeUtils);
+            generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils);
         } else if (og != null) {
-            generateOptionGroup(sb, simpleName, field, og, elementUtils, typeUtils);
+            generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils);
         } else if (args != null) {
-            generateArguments(sb, simpleName, field, args, elementUtils, typeUtils);
+            generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils);
         } else if (arg != null) {
-            generateArgument(sb, simpleName, field, arg, elementUtils, typeUtils);
+            generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils);
+        } else if (field.getAnnotation(Mixin.class) != null) {
+            generateMixin(sb, simpleName, field, elementUtils, typeUtils);
+        }
+    }
+
+    private static void generateMixin(StringBuilder sb, String simpleName, VariableElement mixinField,
+            Elements elementUtils, Types typeUtils) {
+        String mixinFieldName = mixinField.getSimpleName().toString();
+        TypeMirror mixinType = mixinField.asType();
+        if (!(mixinType instanceof DeclaredType))
+            return;
+        TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
+        generateMixinFields(sb, simpleName, mixinFieldName, mixinElement, elementUtils, typeUtils);
+    }
+
+    private static void generateMixinFields(StringBuilder sb, String simpleName, String mixinFieldName,
+            TypeElement typeElement, Elements elementUtils, Types typeUtils) {
+        for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
+            if (enclosed instanceof VariableElement) {
+                generateFieldProcessing(sb, simpleName, (VariableElement) enclosed, mixinFieldName,
+                        elementUtils, typeUtils);
+            }
+        }
+        // Recurse into superclass
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() != TypeKind.NONE && !superclass.toString().equals("java.lang.Object")) {
+            if (superclass instanceof DeclaredType) {
+                TypeElement superElement = (TypeElement) ((DeclaredType) superclass).asElement();
+                generateMixinFields(sb, simpleName, mixinFieldName, superElement, elementUtils, typeUtils);
+            }
         }
     }
 
     private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
-            Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         String fieldType = getBoxedTypeName(field.asType(), typeUtils);
         boolean isBooleanType = isBooleanType(field.asType(), typeUtils);
@@ -327,13 +363,12 @@ final class CodeGenerator {
         sb.append("                        .inherited(").append(o.inherited()).append(")\n");
         sb.append("                        .descriptionUrl(").append(stringLiteral(o.descriptionUrl())).append(")\n");
         sb.append("                        .url(").append(o.url()).append(")\n");
-        generateFieldSetter(sb, simpleName, field, typeUtils);
-        generateFieldResetter(sb, simpleName, field, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
-            Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
 
@@ -358,13 +393,12 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
-        generateFieldSetter(sb, simpleName, field, typeUtils);
-        generateFieldResetter(sb, simpleName, field, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
-            Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         // For Map<K,V>, extract V (index 1)
         String valueType = getGenericTypeArgument(field.asType(), 1, typeUtils);
@@ -389,13 +423,12 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
-        generateFieldSetter(sb, simpleName, field, typeUtils);
-        generateFieldResetter(sb, simpleName, field, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
-            Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
 
@@ -419,13 +452,12 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
         sb.append("                        .url(").append(a.url()).append(")\n");
-        generateFieldSetter(sb, simpleName, field, typeUtils);
-        generateFieldResetter(sb, simpleName, field, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
-            Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils) {
         String fieldName = field.getSimpleName().toString();
         String fieldType = getBoxedTypeName(field.asType(), typeUtils);
 
@@ -452,9 +484,18 @@ final class CodeGenerator {
         sb.append("                        .overrideRequired(").append(arg.overrideRequired()).append(")\n");
         sb.append("                        .inherited(").append(arg.inherited()).append(")\n");
         sb.append("                        .url(").append(arg.url()).append(")\n");
-        generateFieldSetter(sb, simpleName, field, typeUtils);
-        generateFieldResetter(sb, simpleName, field, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
+    }
+
+    private static void generateFieldAccessors(StringBuilder sb, String simpleName, VariableElement field,
+            String mixinFieldName, Types typeUtils) {
+        if (mixinFieldName != null) {
+            sb.append("                        .mixinFieldName(").append(stringLiteral(mixinFieldName)).append(")\n");
+        } else {
+            generateFieldSetter(sb, simpleName, field, typeUtils);
+            generateFieldResetter(sb, simpleName, field, typeUtils);
+        }
     }
 
     // --- Helper methods for generating option component instantiation ---

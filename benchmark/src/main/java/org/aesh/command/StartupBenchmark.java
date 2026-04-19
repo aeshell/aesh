@@ -16,6 +16,7 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
+import org.aesh.command.option.Mixin;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
@@ -1046,6 +1047,354 @@ public class StartupBenchmark {
         }
     }
 
+    // ---- Aesh mixin classes ----
+
+    public static class AeshCommonMixin {
+        @Option(shortName = 'v', hasValue = false, negatable = true, description = "Verbose")
+        private boolean verbose;
+        @Option(shortName = 'o', description = "Output path")
+        private String output;
+    }
+
+    @CommandDefinition(name = "mix-file-ops", description = "File operations with mixin")
+    public static class AeshMixCmd1 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 'r', hasValue = false, negatable = true, description = "Recursive")
+        private boolean recursive;
+        @Option(description = "Buffer size", defaultValue = "4096")
+        private int bufferSize;
+        @Argument(description = "Source path")
+        private String source;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-net-fetch", description = "Network fetch with mixin")
+    public static class AeshMixCmd2 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 'u', description = "URL")
+        private String url;
+        @Option(description = "Timeout", defaultValue = "30")
+        private int timeout;
+        @Argument(description = "Destination")
+        private String destination;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-db-query", description = "Database query with mixin")
+    public static class AeshMixCmd3 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 'h', description = "Host")
+        private String host;
+        @Option(shortName = 'p', optionalValue = true, defaultValue = "5432", description = "Port")
+        private String port;
+        @Argument(description = "Query string")
+        private String query;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-build-proj", description = "Build project with mixin")
+    public static class AeshMixCmd4 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 't', description = "Target")
+        private String target;
+        @Option(description = "Parallelism", defaultValue = "4")
+        private int jobs;
+        @Argument(description = "Project dir")
+        private String projectDir;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-deploy-app", description = "Deploy application with mixin")
+    public static class AeshMixCmd5 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 'e', description = "Environment")
+        private String env;
+        @Option(description = "Replicas", defaultValue = "1")
+        private int replicas;
+        @Argument(description = "Artifact")
+        private String artifact;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-log-search", description = "Search logs with mixin")
+    public static class AeshMixCmd6 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 'f', description = "Filter pattern")
+        private String filter;
+        @Option(optionalValue = true, defaultValue = "100", description = "Max results")
+        private String maxResults;
+        @Argument(description = "Log file")
+        private String logFile;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-user-mgmt", description = "User management with mixin")
+    public static class AeshMixCmd7 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 'n', description = "Username")
+        private String username;
+        @Option(description = "Max sessions", defaultValue = "5")
+        private int maxSessions;
+        @Argument(description = "Action")
+        private String action;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-cache-ctl", description = "Cache control with mixin")
+    public static class AeshMixCmd8 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 'k', description = "Key prefix")
+        private String keyPrefix;
+        @Option(description = "TTL seconds", defaultValue = "3600")
+        private int ttl;
+        @Argument(description = "Region")
+        private String region;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-config-edit", description = "Edit configuration with mixin")
+    public static class AeshMixCmd9 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 's', description = "Section")
+        private String section;
+        @Option(description = "Indent level", defaultValue = "2")
+        private int indent;
+        @Argument(description = "Config file")
+        private String configFile;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mix-report-gen", description = "Generate reports with mixin")
+    public static class AeshMixCmd10 implements Command<CommandInvocation> {
+        @Mixin
+        private AeshCommonMixin common;
+        @Option(shortName = 'f', description = "Format")
+        private String format;
+        @Option(description = "Page limit", defaultValue = "50")
+        private int pageLimit;
+        @Argument(description = "Report name")
+        private String reportName;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ---- Picocli mixin classes ----
+
+    public static class PicoCommonMixin {
+        @CommandLine.Option(names = { "-v", "--verbose" }, description = "Verbose")
+        private boolean verbose;
+        @CommandLine.Option(names = { "-o", "--output" }, description = "Output path")
+        private String output;
+    }
+
+    @CommandLine.Command(name = "mix-file-ops", description = "File operations with mixin")
+    public static class PicoMixCmd1 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-r", "--recursive" }, description = "Recursive")
+        private boolean recursive;
+        @CommandLine.Option(names = "--buffer-size", description = "Buffer size", defaultValue = "4096")
+        private int bufferSize;
+        @CommandLine.Parameters(index = "0", description = "Source path", arity = "0..1")
+        private String source;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-net-fetch", description = "Network fetch with mixin")
+    public static class PicoMixCmd2 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-u", "--url" }, description = "URL")
+        private String url;
+        @CommandLine.Option(names = "--timeout", description = "Timeout", defaultValue = "30")
+        private int timeout;
+        @CommandLine.Parameters(index = "0", description = "Destination", arity = "0..1")
+        private String destination;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-db-query", description = "Database query with mixin")
+    public static class PicoMixCmd3 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-h", "--host" }, description = "Host")
+        private String host;
+        @CommandLine.Option(names = { "-p", "--port" }, description = "Port", defaultValue = "5432")
+        private int port;
+        @CommandLine.Parameters(index = "0", description = "Query string", arity = "0..1")
+        private String query;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-build-proj", description = "Build project with mixin")
+    public static class PicoMixCmd4 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-t", "--target" }, description = "Target")
+        private String target;
+        @CommandLine.Option(names = "--jobs", description = "Parallelism", defaultValue = "4")
+        private int jobs;
+        @CommandLine.Parameters(index = "0", description = "Project dir", arity = "0..1")
+        private String projectDir;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-deploy-app", description = "Deploy application with mixin")
+    public static class PicoMixCmd5 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-e", "--env" }, description = "Environment")
+        private String env;
+        @CommandLine.Option(names = "--replicas", description = "Replicas", defaultValue = "1")
+        private int replicas;
+        @CommandLine.Parameters(index = "0", description = "Artifact", arity = "0..1")
+        private String artifact;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-log-search", description = "Search logs with mixin")
+    public static class PicoMixCmd6 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-f", "--filter" }, description = "Filter pattern")
+        private String filter;
+        @CommandLine.Option(names = "--max-results", description = "Max results", defaultValue = "100")
+        private int maxResults;
+        @CommandLine.Parameters(index = "0", description = "Log file", arity = "0..1")
+        private String logFile;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-user-mgmt", description = "User management with mixin")
+    public static class PicoMixCmd7 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-n", "--username" }, description = "Username")
+        private String username;
+        @CommandLine.Option(names = "--max-sessions", description = "Max sessions", defaultValue = "5")
+        private int maxSessions;
+        @CommandLine.Parameters(index = "0", description = "Action", arity = "0..1")
+        private String action;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-cache-ctl", description = "Cache control with mixin")
+    public static class PicoMixCmd8 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-k", "--key-prefix" }, description = "Key prefix")
+        private String keyPrefix;
+        @CommandLine.Option(names = "--ttl", description = "TTL seconds", defaultValue = "3600")
+        private int ttl;
+        @CommandLine.Parameters(index = "0", description = "Region", arity = "0..1")
+        private String region;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-config-edit", description = "Edit configuration with mixin")
+    public static class PicoMixCmd9 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-s", "--section" }, description = "Section")
+        private String section;
+        @CommandLine.Option(names = "--indent", description = "Indent level", defaultValue = "2")
+        private int indent;
+        @CommandLine.Parameters(index = "0", description = "Config file", arity = "0..1")
+        private String configFile;
+
+        @Override
+        public void run() {
+        }
+    }
+
+    @CommandLine.Command(name = "mix-report-gen", description = "Generate reports with mixin")
+    public static class PicoMixCmd10 implements Runnable {
+        @CommandLine.Mixin
+        private PicoCommonMixin common;
+        @CommandLine.Option(names = { "-f", "--format" }, description = "Format")
+        private String format;
+        @CommandLine.Option(names = "--page-limit", description = "Page limit", defaultValue = "50")
+        private int pageLimit;
+        @CommandLine.Parameters(index = "0", description = "Report name", arity = "0..1")
+        private String reportName;
+
+        @Override
+        public void run() {
+        }
+    }
+
     // ---- Command class arrays for easy indexing ----
 
     private static final Class<? extends Command<CommandInvocation>>[] AESH_COMMANDS = new Class[] {
@@ -1066,6 +1415,16 @@ public class StartupBenchmark {
             PicoGrpCmd1.class, PicoGrpCmd2.class, PicoGrpCmd3.class, PicoGrpCmd4.class, PicoGrpCmd5.class
     };
 
+    private static final Class<? extends Command<CommandInvocation>>[] AESH_MIXIN_COMMANDS = new Class[] {
+            AeshMixCmd1.class, AeshMixCmd2.class, AeshMixCmd3.class, AeshMixCmd4.class, AeshMixCmd5.class,
+            AeshMixCmd6.class, AeshMixCmd7.class, AeshMixCmd8.class, AeshMixCmd9.class, AeshMixCmd10.class
+    };
+
+    private static final Class<? extends Runnable>[] PICO_MIXIN_COMMANDS = new Class[] {
+            PicoMixCmd1.class, PicoMixCmd2.class, PicoMixCmd3.class, PicoMixCmd4.class, PicoMixCmd5.class,
+            PicoMixCmd6.class, PicoMixCmd7.class, PicoMixCmd8.class, PicoMixCmd9.class, PicoMixCmd10.class
+    };
+
     private static final Class<? extends Command<CommandInvocation>>[] AESH_VARIETY_COMMANDS = new Class[] {
             AeshListGroupCmd.class, AeshHelpCmd.class, AeshVersionCmd.class
     };
@@ -1079,6 +1438,8 @@ public class StartupBenchmark {
     public static void main(String[] args) throws Exception {
         StartupBenchmark benchmark = new StartupBenchmark();
         benchmark.runFlatBenchmark();
+        System.out.println();
+        benchmark.runMixinBenchmark();
         System.out.println();
         benchmark.runGroupBenchmark();
         System.out.println();
@@ -1145,6 +1506,201 @@ public class StartupBenchmark {
                     COMMAND_COUNTS[c], genResults[c], reflResults[c],
                     picoProgResults[c], picoReflResults[c],
                     reflGenRatio, picoReflGenRatio);
+        }
+    }
+
+    public void runMixinBenchmark() throws Exception {
+        System.out.println("=== Mixin Command Benchmark ===");
+        System.out.println("Each command uses a shared @Mixin with 2 options + 2 own options + argument");
+        System.out.println("Compare with Flat benchmark (same option count, no mixin indirection)");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        double[] genResults = new double[COMMAND_COUNTS.length];
+        double[] reflResults = new double[COMMAND_COUNTS.length];
+        double[] picoProgResults = new double[COMMAND_COUNTS.length];
+        double[] picoReflResults = new double[COMMAND_COUNTS.length];
+
+        for (int c = 0; c < COMMAND_COUNTS.length; c++) {
+            int count = COMMAND_COUNTS[c];
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildAeshRuntimeMixinGenerated(count);
+            }
+            long genNs = timeIterations(() -> buildAeshRuntimeMixinGenerated(count));
+            genResults[c] = (genNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildAeshRuntimeMixinReflection(count);
+            }
+            long reflNs = timeIterations(() -> buildAeshRuntimeMixinReflection(count));
+            reflResults[c] = (reflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildPicocliRuntimeMixinProgrammatic(count);
+            }
+            long picoProgNs = timeIterations(() -> buildPicocliRuntimeMixinProgrammatic(count));
+            picoProgResults[c] = (picoProgNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+            for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+                buildPicocliRuntimeMixinReflection(count);
+            }
+            long picoReflNs = timeIterations(() -> buildPicocliRuntimeMixinReflection(count));
+            picoReflResults[c] = (picoReflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        }
+
+        System.out.printf("Commands | %14s | %14s | %14s | %14s | Refl/Gen | PicoR/Gen%n",
+                "Aesh gen (us)", "Aesh refl (us)", "Pico prog (us)", "Pico refl (us)");
+        System.out.println("---------|-" + "-".repeat(14) + "-|-" + "-".repeat(14) + "-|-"
+                + "-".repeat(14) + "-|-" + "-".repeat(14) + "-|----------|----------");
+        for (int c = 0; c < COMMAND_COUNTS.length; c++) {
+            double reflGenRatio = genResults[c] != 0 ? reflResults[c] / genResults[c] : 0;
+            double picoReflGenRatio = genResults[c] != 0 ? picoReflResults[c] / genResults[c] : 0;
+            System.out.printf("%8d | %14.1f | %14.1f | %14.1f | %14.1f | %7.2fx | %8.2fx%n",
+                    COMMAND_COUNTS[c], genResults[c], reflResults[c],
+                    picoProgResults[c], picoReflResults[c],
+                    reflGenRatio, picoReflGenRatio);
+        }
+    }
+
+    // ---- Aesh: generated / annotation-processor path (mixin) ----
+
+    private void buildAeshRuntimeMixinGenerated(int commandCount) throws Exception {
+        MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        for (int i = 0; i < commandCount; i++) {
+            registry.addCommand(createGeneratedMixinContainer("mixcmd-" + i, i));
+        }
+        AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+    }
+
+    private CommandContainer<CommandInvocation> createGeneratedMixinContainer(String name, int index) throws Exception {
+        Command<CommandInvocation> cmd = AESH_MIXIN_COMMANDS[index % AESH_MIXIN_COMMANDS.length]
+                .getDeclaredConstructor().newInstance();
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = ProcessedCommandBuilder
+                .<Command<CommandInvocation>, CommandInvocation> builder()
+                .name(name)
+                .description("Mixin command " + name)
+                .command(cmd)
+                // Mixin-sourced options (tagged with mixinFieldName)
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('v')
+                        .name("verbose")
+                        .description("Verbose")
+                        .type(boolean.class)
+                        .fieldName("verbose")
+                        .optionType(OptionType.BOOLEAN)
+                        .negatable(true)
+                        .mixinFieldName("common")
+                        .build())
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('o')
+                        .name("output")
+                        .description("Output path")
+                        .type(String.class)
+                        .fieldName("output")
+                        .optionType(OptionType.NORMAL)
+                        .mixinFieldName("common")
+                        .build())
+                // Command's own options
+                .addOption(ProcessedOptionBuilder.builder()
+                        .shortName('r')
+                        .name("recursive")
+                        .description("Recursive")
+                        .type(boolean.class)
+                        .fieldName("recursive")
+                        .optionType(OptionType.BOOLEAN)
+                        .build())
+                .addOption(ProcessedOptionBuilder.builder()
+                        .name("bufferSize")
+                        .description("Buffer size")
+                        .type(int.class)
+                        .fieldName("bufferSize")
+                        .optionType(OptionType.NORMAL)
+                        .addDefaultValue("4096")
+                        .build())
+                .create();
+        pc.setArgument(ProcessedOptionBuilder.builder()
+                .shortName('\u0000')
+                .name("")
+                .description("Source path")
+                .type(String.class)
+                .fieldName("source")
+                .optionType(OptionType.ARGUMENT)
+                .build());
+        return new AeshCommandContainer<>(pc);
+    }
+
+    // ---- Aesh: reflection path (mixin) ----
+
+    private void buildAeshRuntimeMixinReflection(int commandCount) throws Exception {
+        MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+
+        int annotatedCount = Math.min(commandCount, AESH_MIXIN_COMMANDS.length);
+        for (int i = 0; i < annotatedCount; i++) {
+            Command<CommandInvocation> cmd = AESH_MIXIN_COMMANDS[i].getDeclaredConstructor().newInstance();
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
+                    .invoke(containerBuilder, cmd);
+            registry.addCommand(container);
+        }
+
+        for (int i = AESH_MIXIN_COMMANDS.length; i < commandCount; i++) {
+            registry.addCommand(createGeneratedMixinContainer("mixcmd-" + i, i));
+        }
+
+        AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+    }
+
+    // ---- Picocli: programmatic path (mixin) ----
+
+    private void buildPicocliRuntimeMixinProgrammatic(int commandCount) {
+        CommandSpec mainSpec = CommandSpec.create();
+        mainSpec.name("main");
+        CommandLine cmd = new CommandLine(mainSpec);
+        for (int i = 0; i < commandCount; i++) {
+            cmd.addSubcommand("mixcmd-" + i, new CommandLine(createPicocliProgrammaticMixinCommand("mixcmd-" + i)));
+        }
+    }
+
+    private CommandSpec createPicocliProgrammaticMixinCommand(String name) {
+        CommandSpec spec = CommandSpec.create();
+        spec.name(name);
+        // Same options as mixin + own (picocli programmatic has no mixin indirection)
+        spec.addOption(OptionSpec.builder("-v", "--verbose")
+                .type(boolean.class)
+                .description("Verbose")
+                .build());
+        spec.addOption(OptionSpec.builder("-o", "--output")
+                .type(String.class)
+                .description("Output path")
+                .build());
+        spec.addOption(OptionSpec.builder("-r", "--recursive")
+                .type(boolean.class)
+                .description("Recursive")
+                .build());
+        spec.addOption(OptionSpec.builder("--buffer-size")
+                .type(int.class)
+                .description("Buffer size")
+                .defaultValue("4096")
+                .build());
+        spec.addPositional(PositionalParamSpec.builder()
+                .type(String.class)
+                .description("Source path")
+                .build());
+        return spec;
+    }
+
+    // ---- Picocli: reflection path (mixin) ----
+
+    private void buildPicocliRuntimeMixinReflection(int commandCount) {
+        CommandLine cmd = new CommandLine(new PicocliMain());
+        for (int i = 0; i < commandCount; i++) {
+            Class<? extends Runnable> picoClass = PICO_MIXIN_COMMANDS[i % PICO_MIXIN_COMMANDS.length];
+            try {
+                cmd.addSubcommand("mixcmd-" + i, picoClass.getDeclaredConstructor().newInstance());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

@@ -79,6 +79,7 @@ public class ProcessedOptionBuilder {
     private boolean isUrl = false;
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
+    private String mixinFieldName;
 
     private ProcessedOptionBuilder() {
         defaultValues = java.util.Collections.emptyList();
@@ -364,6 +365,10 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.fieldResetter = fieldResetter);
     }
 
+    public ProcessedOptionBuilder mixinFieldName(String mixinFieldName) {
+        return apply(c -> c.mixinFieldName = mixinFieldName);
+    }
+
     public ProcessedOption build() throws OptionParserException {
         if (optionType == null) {
             if (!hasValue)
@@ -422,6 +427,8 @@ public class ProcessedOptionBuilder {
             option.setFieldSetter(fieldSetter);
         if (fieldResetter != null)
             option.setFieldResetter(fieldResetter);
+        if (mixinFieldName != null)
+            option.setMixinFieldName(mixinFieldName);
         return option;
     }
 }

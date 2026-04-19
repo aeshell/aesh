@@ -367,4 +367,105 @@ public class AeshCommandRuntimeTest {
             return CommandResult.SUCCESS;
         }
     }
+
+    // --- Mixin tests ---
+
+    @Test
+    public void testMixinOptionsAreParsed() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(MixinCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("mixcmd",
+                new String[] { "--verbose", "--output", "result.txt" });
+        executor.getExecutions().get(0).populateCommand();
+        MixinCommand cmd = (MixinCommand) executor.getExecutions().get(0).getCommand();
+
+        assertNotNull(cmd.logging);
+        assertTrue(cmd.logging.verbose);
+        assertEquals("result.txt", cmd.output);
+    }
+
+    @Test
+    public void testMixinResetBetweenParses() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(MixinCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // First parse: set verbose
+        runtime.executeCommand("mixcmd --verbose --output first.txt");
+
+        // Second parse: no verbose — mixin field should be reset
+        Executor<?> executor = runtime.buildExecutor("mixcmd",
+                new String[] { "--output", "second.txt" });
+        executor.getExecutions().get(0).populateCommand();
+        MixinCommand cmd = (MixinCommand) executor.getExecutions().get(0).getCommand();
+
+        assertNotNull(cmd.logging);
+        assertFalse(cmd.logging.verbose);
+        assertEquals("second.txt", cmd.output);
+    }
+
+    @Test
+    public void testMixinWithInitializedField() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(MixinWithDefaultsCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // Parse with level override
+        Executor<?> executor1 = runtime.buildExecutor("mixdefaults",
+                new String[] { "--level", "DEBUG" });
+        executor1.getExecutions().get(0).populateCommand();
+        MixinWithDefaultsCommand cmd1 = (MixinWithDefaultsCommand) executor1.getExecutions().get(0).getCommand();
+
+        assertNotNull(cmd1.config);
+        assertEquals("DEBUG", cmd1.config.level);
+
+        // Second parse without level — should reset to initializer value "INFO"
+        runtime.executeCommand("mixdefaults --level DEBUG");
+        Executor<?> executor2 = runtime.buildExecutor("mixdefaults", new String[] {});
+        executor2.getExecutions().get(0).populateCommand();
+        MixinWithDefaultsCommand cmd2 = (MixinWithDefaultsCommand) executor2.getExecutions().get(0).getCommand();
+
+        assertNotNull(cmd2.config);
+        assertEquals("INFO", cmd2.config.level);
+    }
+
+    public static class LoggingMixin {
+        @Option(hasValue = false, description = "Enable verbose output")
+        boolean verbose;
+    }
+
+    @CommandDefinition(name = "mixcmd", description = "")
+    public static class MixinCommand implements Command<CommandInvocation> {
+        @org.aesh.command.option.Mixin
+        LoggingMixin logging;
+
+        @Option(description = "Output file")
+        String output;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class ConfigMixin {
+        @Option(description = "Log level")
+        String level = "INFO";
+    }
+
+    @CommandDefinition(name = "mixdefaults", description = "")
+    public static class MixinWithDefaultsCommand implements Command<CommandInvocation> {
+        @org.aesh.command.option.Mixin
+        ConfigMixin config;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
 }

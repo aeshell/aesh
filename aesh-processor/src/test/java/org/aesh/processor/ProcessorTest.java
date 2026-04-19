@@ -369,6 +369,60 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: @Mixin support ---
+
+    private static final String LOGGING_MIXIN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class LoggingMixin {\n" +
+            "    @Option(hasValue = false, description = \"Enable verbose output\")\n" +
+            "    boolean verbose;\n" +
+            "\n" +
+            "    @Option(description = \"Log level\", defaultValue = \"INFO\")\n" +
+            "    String level;\n" +
+            "}\n";
+
+    private static final String MIXIN_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Mixin;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"mixcmd\", description = \"Command with mixin\")\n" +
+            "public class MixinCommand implements Command<CommandInvocation> {\n" +
+            "    @Mixin\n" +
+            "    LoggingMixin logging;\n" +
+            "\n" +
+            "    @Option(description = \"Output file\")\n" +
+            "    String output;\n" +
+            "\n" +
+            "    @Argument(description = \"Source file\")\n" +
+            "    String source;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testMixinCommand() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.LoggingMixin", LOGGING_MIXIN_SOURCE),
+                new InMemorySource("test.MixinCommand", MIXIN_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.MixinCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.MixinCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Test: Compile-time validation catches abstract class ---
 
     private static final String ABSTRACT_COMMAND_SOURCE = "package test;\n" +
@@ -434,6 +488,7 @@ public class ProcessorTest {
             assertEquals("Option defaultValues for " + rOpt.name(), rOpt.getDefaultValues(), gOpt.getDefaultValues());
             assertEquals("Option negatable for " + rOpt.name(), rOpt.isNegatable(), gOpt.isNegatable());
             assertEquals("Option inherited for " + rOpt.name(), rOpt.isInherited(), gOpt.isInherited());
+            assertEquals("Option mixinFieldName for " + rOpt.name(), rOpt.getMixinFieldName(), gOpt.getMixinFieldName());
         }
 
         // Compare argument

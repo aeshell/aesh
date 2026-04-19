@@ -46,6 +46,7 @@ import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.metadata.MetadataProviderRegistry;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Mixin;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
@@ -194,6 +195,11 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     }
 
     private static void processField(ProcessedCommand processedCommand, Field field) throws CommandLineParserException {
+        processField(processedCommand, field, null);
+    }
+
+    private static void processField(ProcessedCommand processedCommand, Field field, String mixinFieldName)
+            throws CommandLineParserException {
         Option o;
         OptionGroup og;
         OptionList ol;
@@ -233,6 +239,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .inherited(o.inherited())
                             .descriptionUrl(o.descriptionUrl())
                             .url(o.url())
+                            .mixinFieldName(mixinFieldName)
                             .build());
         } else if ((ol = field.getAnnotation(OptionList.class)) != null) {
             if (!Collection.class.isAssignableFrom(field.getType()))
@@ -262,6 +269,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .activator(ol.activator())
                             .renderer(ol.renderer())
                             .parser(ol.parser())
+                            .mixinFieldName(mixinFieldName)
                             .build());
 
         } else if ((og = field.getAnnotation(OptionGroup.class)) != null) {
@@ -290,6 +298,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .activator(og.activator())
                     .renderer(og.renderer())
                     .parser(og.parser())
+                    .mixinFieldName(mixinFieldName)
                     .build());
         }
 
@@ -319,6 +328,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .activator(a.activator())
                     .parser(a.parser())
                     .url(a.url())
+                    .mixinFieldName(mixinFieldName)
                     .build());
         } else if ((arg = field.getAnnotation(Argument.class)) != null) {
             if (processedCommand.getArgument() != null)
@@ -348,7 +358,25 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .overrideRequired(arg.overrideRequired())
                             .inherited(arg.inherited())
                             .url(arg.url())
+                            .mixinFieldName(mixinFieldName)
                             .build());
+        } else if (field.getAnnotation(Mixin.class) != null) {
+            processMixinField(processedCommand, field);
+        }
+    }
+
+    private static void processMixinField(ProcessedCommand processedCommand, Field mixinField)
+            throws CommandLineParserException {
+        processMixinClass(processedCommand, mixinField.getType(), mixinField.getName());
+    }
+
+    private static void processMixinClass(ProcessedCommand processedCommand, Class<?> clazz, String mixinFieldName)
+            throws CommandLineParserException {
+        for (Field field : clazz.getDeclaredFields()) {
+            processField(processedCommand, field, mixinFieldName);
+        }
+        if (clazz.getSuperclass() != null && clazz.getSuperclass() != Object.class) {
+            processMixinClass(processedCommand, clazz.getSuperclass(), mixinFieldName);
         }
     }
 

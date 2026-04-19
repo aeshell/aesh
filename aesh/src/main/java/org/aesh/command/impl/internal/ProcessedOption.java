@@ -99,6 +99,7 @@ public final class ProcessedOption {
     private Consumer<Object> fieldResetter;
     private Object initialValue;
     private boolean initialValueCaptured;
+    private String mixinFieldName;
 
     public ProcessedOption(char shortName, String name, String description,
             String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -196,6 +197,40 @@ public final class ProcessedOption {
         return fieldResetter;
     }
 
+    public void setMixinFieldName(String mixinFieldName) {
+        this.mixinFieldName = mixinFieldName;
+    }
+
+    public String getMixinFieldName() {
+        return mixinFieldName;
+    }
+
+    public boolean isMixinOption() {
+        return mixinFieldName != null;
+    }
+
+    private Object resolveMixinInstance(Object commandInstance) {
+        if (mixinFieldName == null)
+            return commandInstance;
+        try {
+            Field mixinField = getField(commandInstance.getClass(), mixinFieldName);
+            if (mixinField == null)
+                throw new NoSuchFieldException(
+                        "Mixin field '" + mixinFieldName + "' not found on " + commandInstance.getClass().getName());
+            if (!Modifier.isPublic(mixinField.getModifiers()))
+                mixinField.setAccessible(true);
+            Object mixinInstance = mixinField.get(commandInstance);
+            if (mixinInstance == null) {
+                mixinInstance = mixinField.getType().getDeclaredConstructor().newInstance();
+                mixinField.set(commandInstance, mixinInstance);
+            }
+            return mixinInstance;
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(
+                    "Failed to resolve mixin field '" + mixinFieldName + "' on " + commandInstance.getClass().getName(), e);
+        }
+    }
+
     /**
      * Captures the current field value from the command instance so it can be
      * restored on reset. Call once after the command is fully constructed.
@@ -205,14 +240,15 @@ public final class ProcessedOption {
         if (initialValueCaptured || instance == null || fieldName == null)
             return;
         try {
-            Field field = getField(instance.getClass(), fieldName);
+            Object target = resolveMixinInstance(instance);
+            Field field = getField(target.getClass(), fieldName);
             if (field == null)
                 return;
             if (field.getType().isPrimitive())
                 return;
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
-            initialValue = field.get(instance);
+            initialValue = field.get(target);
             initialValueCaptured = true;
         } catch (NoSuchFieldException | IllegalAccessException e) {
             // Capture failed, will fall back to null on reset
@@ -225,36 +261,37 @@ public final class ProcessedOption {
             restoreInitialValue(instance);
             return;
         }
-        if (fieldResetter != null) {
+        if (fieldResetter != null && !isMixinOption()) {
             fieldResetter.accept(instance);
             return;
         }
         // Fallback to reflection
         try {
-            Field field = getField(instance.getClass(), fieldName);
+            Object target = resolveMixinInstance(instance);
+            Field field = getField(target.getClass(), fieldName);
             if (field == null)
                 return;
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if (field.getType().isPrimitive()) {
                 if (boolean.class.isAssignableFrom(field.getType()))
-                    field.set(instance, false);
+                    field.set(target, false);
                 else if (int.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0);
+                    field.set(target, 0);
                 else if (short.class.isAssignableFrom(field.getType()))
-                    field.set(instance, (short) 0);
+                    field.set(target, (short) 0);
                 else if (char.class.isAssignableFrom(field.getType()))
-                    field.set(instance, '\u0000');
+                    field.set(target, '\u0000');
                 else if (byte.class.isAssignableFrom(field.getType()))
-                    field.set(instance, (byte) 0);
+                    field.set(target, (byte) 0);
                 else if (long.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0L);
+                    field.set(target, 0L);
                 else if (float.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0.0f);
+                    field.set(target, 0.0f);
                 else if (double.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0.0d);
+                    field.set(target, 0.0d);
             } else
-                field.set(instance, null);
+                field.set(target, null);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             // Field reset failed, continue
         }
@@ -263,17 +300,18 @@ public final class ProcessedOption {
     @SuppressWarnings("unchecked")
     private void restoreInitialValue(Object instance) {
         try {
-            Field field = getField(instance.getClass(), fieldName);
+            Object target = resolveMixinInstance(instance);
+            Field field = getField(target.getClass(), fieldName);
             if (field == null)
                 return;
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if (initialValue instanceof Collection) {
-                field.set(instance, initialValue.getClass().getDeclaredConstructor().newInstance());
+                field.set(target, initialValue.getClass().getDeclaredConstructor().newInstance());
             } else if (initialValue instanceof Map) {
-                field.set(instance, initialValue.getClass().getDeclaredConstructor().newInstance());
+                field.set(target, initialValue.getClass().getDeclaredConstructor().newInstance());
             } else {
-                field.set(instance, initialValue);
+                field.set(target, initialValue);
             }
         } catch (ReflectiveOperationException e) {
             // Fall back to existing reset behavior
@@ -659,10 +697,10 @@ public final class ProcessedOption {
             boolean doValidation) throws OptionValidatorException {
         if (converter == null || instance == null)
             return;
-        if (fieldSetter != null) {
+        if (fieldSetter != null && !isMixinOption()) {
             injectValueWithSetter(instance, invocationProviders, aeshContext, doValidation);
         } else {
-            injectValueWithReflection(instance, invocationProviders, aeshContext, doValidation);
+            injectValueWithReflection(resolveMixinInstance(instance), invocationProviders, aeshContext, doValidation);
         }
     }
 
