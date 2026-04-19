@@ -223,8 +223,6 @@ public final class ProcessedOption {
                     field.set(instance, 0.0f);
                 else if (double.class.isAssignableFrom(field.getType()))
                     field.set(instance, 0.0d);
-            } else if (!hasValue() && field.getType().equals(Boolean.class)) {
-                field.set(instance, Boolean.FALSE);
             } else
                 field.set(instance, null);
         } catch (NoSuchFieldException | IllegalAccessException e) {

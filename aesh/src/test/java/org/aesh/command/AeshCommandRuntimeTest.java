@@ -3,6 +3,7 @@ package org.aesh.command;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -139,6 +140,37 @@ public class AeshCommandRuntimeTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
             globalVerbose = verbose;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testBooleanWrapperResetsToNull() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(BooleanWrapperCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // First: set --flag
+        Executor<?> executor1 = runtime.buildExecutor("boolwrap", new String[] { "--flag" });
+        executor1.getExecutions().get(0).populateCommand();
+        BooleanWrapperCommand cmd1 = (BooleanWrapperCommand) executor1.getExecutions().get(0).getCommand();
+        assertEquals(Boolean.TRUE, cmd1.flag);
+
+        // Second: no --flag, should reset to null (not FALSE)
+        Executor<?> executor2 = runtime.buildExecutor("boolwrap", new String[] {});
+        executor2.getExecutions().get(0).populateCommand();
+        BooleanWrapperCommand cmd2 = (BooleanWrapperCommand) executor2.getExecutions().get(0).getCommand();
+        assertNull(cmd2.flag);
+    }
+
+    @CommandDefinition(name = "boolwrap", description = "")
+    public static class BooleanWrapperCommand implements Command<CommandInvocation> {
+        @Option(hasValue = false)
+        Boolean flag;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
         }
     }

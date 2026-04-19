@@ -82,7 +82,7 @@ public class CommandLineParserTest {
 
         parser.populateObject("test -Dg=f /tmp/file.txt -e=bar foo bar", invocationProviders, aeshContext,
                 CommandLineParser.Mode.VALIDATE);
-        assertFalse(p1.foo);
+        assertNull(p1.foo);
         assertEquals("f", p1.define.get("g"));
         assertEquals("bar", p1.equal);
         assertEquals("/tmp/file.txt", p1.arguments.get(0));
@@ -166,7 +166,7 @@ public class CommandLineParserTest {
 
         parser.populateObject("test -Dg=f /tmp/file.txt -ebar foo bar", invocationProviders, aeshContext,
                 CommandLineParser.Mode.VALIDATE);
-        assertFalse(p1.foo);
+        assertNull(p1.foo);
         assertEquals("f", p1.define.get("g"));
         assertEquals("bar", p1.equal);
         assertEquals("/tmp/file.txt", p1.arguments.get(0));

@@ -120,7 +120,7 @@ public class CommandLinePopulatorTest {
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext,
                 CommandLineParser.Mode.VALIDATE);
         assertEquals("enable2 ", test1.getEqual());
-        assertFalse(test1.getEnableX());
+        assertNull(test1.getEnableX());
         parser.parse("test -e b -bX");
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext,
                 CommandLineParser.Mode.VALIDATE);
@@ -342,7 +342,7 @@ public class CommandLinePopulatorTest {
         parser.parse("test -e enable2");
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext,
                 CommandLineParser.Mode.VALIDATE);
-        assertFalse(test1.getEnableX());
+        assertNull(test1.getEnableX());
         assertFalse(test1.foo);
         parser.parse("test");
         parser.getCommandPopulator().populateObject(parser.getProcessedCommand(), invocationProviders, aeshContext,
