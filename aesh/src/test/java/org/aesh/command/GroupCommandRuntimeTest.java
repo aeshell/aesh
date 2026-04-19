@@ -1,6 +1,7 @@
 package org.aesh.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -58,6 +59,43 @@ public class GroupCommandRuntimeTest {
         reset();
         runtime.executeCommand("cli --connect=http://127.0.0.1:11222 child --name test");
         assertEquals("child", lastSubcommand);
+    }
+
+    @Test
+    public void testInheritedOptionsViaBuildExecutor() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(InheritGroup.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("igroup --verbose sub");
+        Execution<?> execution = executor.getExecutions().get(0);
+        execution.populateCommand();
+
+        InheritSub sub = (InheritSub) execution.getCommand();
+        assertTrue(sub.verbose);
+    }
+
+    @CommandDefinition(name = "sub", description = "")
+    public static class InheritSub implements Command<CommandInvocation> {
+        @Option(hasValue = false, inherited = true)
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "igroup", description = "", groupCommands = { InheritSub.class })
+    public static class InheritGroup implements Command<CommandInvocation> {
+        @Option(hasValue = false, inherited = true)
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
     }
 
     private void reset() {

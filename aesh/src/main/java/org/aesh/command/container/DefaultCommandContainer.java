@@ -89,14 +89,10 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
         if (getParser().parsedCommand() == null) {
             throw new CommandLineParserException("Command and/or sub-command is not valid!");
         }
-        // Use context-aware populateObject if CommandContext is available
-        if (commandContext != null && commandContext.isInSubCommandMode()) {
-            getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(),
-                    invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE, commandContext);
-        } else {
-            getParser().parsedCommand().getCommandPopulator().populateObject(getParser().parsedCommand().getProcessedCommand(),
-                    invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
-        }
+        // Use doPopulate to populate the whole command tree and propagate
+        // inherited options from parent to child commands
+        getParser().doPopulate(getParser().getProcessedCommand(), invocationProviders,
+                aeshContext, CommandLineParser.Mode.VALIDATE);
         return getParser().parsedCommand().getProcessedCommand();
     }
 
