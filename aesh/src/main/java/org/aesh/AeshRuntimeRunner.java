@@ -21,7 +21,6 @@ package org.aesh;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
@@ -269,9 +268,8 @@ public class AeshRuntimeRunner {
             AeshCompleteOperation completeOperation = new AeshCompleteOperation(buffer, buffer.length());
             rt.complete(completeOperation);
 
-            List<String> candidates = completeOperation.getFormattedCompletionCandidates();
-            for (String candidate : candidates) {
-                System.out.println(candidate);
+            for (org.aesh.terminal.formatting.TerminalString candidate : completeOperation.getCompletionCandidates()) {
+                System.out.println(candidate.getCharacters());
             }
             return CommandResult.SUCCESS;
         } catch (Exception e) {
