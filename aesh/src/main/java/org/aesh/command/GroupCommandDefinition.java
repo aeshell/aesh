@@ -123,6 +123,15 @@ public @interface GroupCommandDefinition {
     Class<? extends DefaultValueProvider> defaultValueProvider() default NullDefaultValueProvider.class;
 
     /**
+     * Optional group heading under which this command appears in the parent's help output.
+     * Commands with the same helpGroup value are displayed together under that heading.
+     * Commands with no helpGroup appear under the default "Commands:" heading.
+     *
+     * @return help group heading
+     */
+    String helpGroup() default "";
+
+    /**
      * When set to true, option parsing stops after the first positional argument is consumed.
      * All remaining tokens are treated as positional arguments, even if they look like options.
      *

@@ -524,6 +524,47 @@ public class ProcessorTest {
         assertEquals("verbose helpGroup", "", verboseOpt.getHelpGroup());
     }
 
+    // --- Test: @CommandDefinition with helpGroup (#399) ---
+
+    private static final String COMMAND_HELP_GROUP_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"sub1\", description = \"Subcommand 1\", helpGroup = \"Dev Tools\")\n" +
+            "public class CmdHelpGroupCommand implements Command<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testCommandHelpGroup() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CmdHelpGroupCommand", COMMAND_HELP_GROUP_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.CmdHelpGroupCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.CmdHelpGroupCommand_AeshMetadata");
+
+        // Verify the generated provider sets helpGroup on the ProcessedCommand
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        assertEquals("Command helpGroup should be set", "Dev Tools", generatedPC.helpGroup());
+
+        // Also verify equivalence with reflection path
+        AeshCommandContainerBuilder reflectionBuilder = new AeshCommandContainerBuilder();
+        ProcessedCommand reflectionPC = reflectionBuilder.create(
+                (Command) commandClass.newInstance()).getParser().getProcessedCommand();
+
+        assertEquals("helpGroup should match reflection path", reflectionPC.helpGroup(), generatedPC.helpGroup());
+    }
+
     // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
 
     private static final String GENERIC_OPTION_SOURCE = "package test;\n" +

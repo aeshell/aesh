@@ -60,6 +60,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean generateHelp;
     private String version;
     private String helpUrl;
+    private String helpGroup = "";
 
     private List<ProcessedOption> options;
     private ProcessedOption arguments;
@@ -249,6 +250,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public String helpUrl() {
         return helpUrl;
+    }
+
+    public String helpGroup() {
+        return helpGroup;
+    }
+
+    public void setHelpGroup(String helpGroup) {
+        this.helpGroup = helpGroup != null ? helpGroup : "";
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
@@ -720,9 +729,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (opts.size() > 0) {
             Map<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
             for (ProcessedOption o : opts) {
-                String group = o.getHelpGroup() != null && !o.getHelpGroup().isEmpty()
-                        ? o.getHelpGroup()
-                        : "";
+                String group = o.getHelpGroup().isEmpty() ? "" : o.getHelpGroup();
                 groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
             }
 

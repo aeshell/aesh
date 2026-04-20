@@ -131,6 +131,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .create();
 
             processCommand(processedCommand, clazz);
+            if (command.helpGroup().length() > 0)
+                processedCommand.setHelpGroup(command.helpGroup());
 
             return new AeshCommandContainer<>(
                     new AeshCommandLineParser<>(processedCommand));
@@ -154,6 +156,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .create();
 
             processCommand(processedGroupCommand, clazz);
+            if (groupCommand.helpGroup().length() > 0)
+                processedGroupCommand.setHelpGroup(groupCommand.helpGroup());
 
             AeshCommandContainer<CI> groupContainer;
 

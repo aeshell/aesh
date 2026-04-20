@@ -216,6 +216,15 @@ final class CodeGenerator {
 
         sb.append("                .create();\n\n");
 
+        // Set command-level helpGroup if present
+        String cmdHelpGroup = isGroup
+                ? commandElement.getAnnotation(GroupCommandDefinition.class).helpGroup()
+                : commandElement.getAnnotation(CommandDefinition.class).helpGroup();
+        if (!cmdHelpGroup.isEmpty()) {
+            sb.append("        processedCommand.setHelpGroup(")
+                    .append(stringLiteral(cmdHelpGroup)).append(");\n\n");
+        }
+
         // Process fields
         for (VariableElement field : fields) {
             generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils);

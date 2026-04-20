@@ -375,6 +375,128 @@ public class CommandLineFormatterTest {
         }
     }
 
+    @Test
+    public void testCommandHelpGrouping() throws CommandLineParserException {
+        // Test that subcommands with helpGroup are grouped in parent's help output
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> parent = ProcessedCommandBuilder.builder()
+                .name("cli").description("CLI tool");
+
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> build = ProcessedCommandBuilder.builder()
+                .name("build").description("Build the project");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> test = ProcessedCommandBuilder.builder()
+                .name("test").description("Run tests");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> deploy = ProcessedCommandBuilder.builder()
+                .name("deploy").description("Deploy artifacts");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> info = ProcessedCommandBuilder.builder()
+                .name("info").description("Show project info");
+
+        CommandLineParser<CommandInvocation> clpParent = new AeshCommandLineParser<>(parent.create());
+        CommandLineParser<CommandInvocation> clpBuild = new AeshCommandLineParser<>(build.create());
+        CommandLineParser<CommandInvocation> clpTest = new AeshCommandLineParser<>(test.create());
+        CommandLineParser<CommandInvocation> clpDeploy = new AeshCommandLineParser<>(deploy.create());
+        CommandLineParser<CommandInvocation> clpInfo = new AeshCommandLineParser<>(info.create());
+
+        // Set helpGroup on subcommands
+        clpBuild.getProcessedCommand().setHelpGroup("Development");
+        clpTest.getProcessedCommand().setHelpGroup("Development");
+        clpDeploy.getProcessedCommand().setHelpGroup("Operations");
+
+        clpParent.addChildParser(clpBuild);
+        clpParent.addChildParser(clpTest);
+        clpParent.addChildParser(clpDeploy);
+        clpParent.addChildParser(clpInfo);
+
+        String help = clpParent.printHelp();
+
+        // Named groups appear first, ungrouped commands under "Other:"
+        int devIdx = help.indexOf("Development:");
+        int opsIdx = help.indexOf("Operations:");
+        int otherIdx = help.indexOf("Other:");
+
+        assertTrue("Development group should appear", devIdx > 0);
+        assertTrue("Operations group should appear", opsIdx > 0);
+        assertTrue("Other group should appear for ungrouped commands", otherIdx > 0);
+        assertTrue("Development should appear before Operations", devIdx < opsIdx);
+        assertTrue("Operations should appear before Other", opsIdx < otherIdx);
+
+        // Verify commands are under their groups
+        assertTrue("build should appear after Development", help.indexOf("build") > devIdx);
+        assertTrue("test should appear after Development", help.indexOf("test") > devIdx);
+        assertTrue("deploy should appear after Operations", help.indexOf("deploy") > opsIdx);
+        assertTrue("info should appear after Other", help.indexOf("info") > otherIdx);
+    }
+
+    @Test
+    public void testCommandHelpGroupingNoGroups() throws CommandLineParserException {
+        // Without helpGroup, subcommands appear under "<name> commands:" as before
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> parent = ProcessedCommandBuilder.builder()
+                .name("app").description("App tool");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> sub1 = ProcessedCommandBuilder.builder()
+                .name("sub1").description("Subcommand 1");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> sub2 = ProcessedCommandBuilder.builder()
+                .name("sub2").description("Subcommand 2");
+
+        CommandLineParser<CommandInvocation> clpParent = new AeshCommandLineParser<>(parent.create());
+        clpParent.addChildParser(new AeshCommandLineParser<>(sub1.create()));
+        clpParent.addChildParser(new AeshCommandLineParser<>(sub2.create()));
+
+        String help = clpParent.printHelp();
+
+        assertTrue("Should use traditional '<name> commands:' heading",
+                help.contains("app commands:"));
+        assertTrue("Should not have 'Other:' heading", !help.contains("Other:"));
+    }
+
+    @Test
+    public void testCommandHelpGroupingFromAnnotation() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(ToolGroupCommand.class).getParser();
+
+        String help = clp.printHelp();
+
+        assertTrue("Source Control group should appear", help.contains("Source Control:"));
+        assertTrue("Build group should appear", help.contains("Build:"));
+        assertTrue("gitcmd should appear after Source Control",
+                help.indexOf("gitcmd") > help.indexOf("Source Control:"));
+        assertTrue("svncmd should appear after Source Control",
+                help.indexOf("svncmd") > help.indexOf("Source Control:"));
+        assertTrue("compile should appear after Build",
+                help.indexOf("compile") > help.indexOf("Build:"));
+    }
+
+    @GroupCommandDefinition(name = "tool", description = "Tool suite", groupCommands = { GitSubCmd.class, SvnSubCmd.class,
+            CompileSubCmd.class })
+    public static class ToolGroupCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "gitcmd", description = "Git operations", helpGroup = "Source Control")
+    public static class GitSubCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "svncmd", description = "SVN operations", helpGroup = "Source Control")
+    public static class SvnSubCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "compile", description = "Compile project", helpGroup = "Build")
+    public static class CompileSubCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     @GroupCommandDefinition(name = "base", description = "", groupCommands = { GitCommand.class })
     public static class BaseCommand implements Command {
 

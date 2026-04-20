@@ -22,7 +22,9 @@ package org.aesh.command.impl.parser;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandLifecycle;
@@ -222,24 +224,49 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         List<CommandLineParser<CI>> parsers = getChildParsers();
         if (parsers != null && parsers.size() > 0) {
             StringBuilder sb = new StringBuilder();
-            sb.append(processedCommand.printHelp(helpNames()))
-                    .append(Config.getLineSeparator())
-                    .append(processedCommand.name())
-                    .append(" commands:")
-                    .append(Config.getLineSeparator());
+            sb.append(processedCommand.printHelp(helpNames()));
 
             int maxLength = 0;
-
             for (CommandLineParser child : parsers) {
                 int length = child.getProcessedCommand().name().length();
-                if (length > maxLength) {
+                if (length > maxLength)
                     maxLength = length;
-                }
             }
 
-            for (CommandLineParser child : parsers) {
-                sb.append(child.getFormattedCommand(4, maxLength + 2))
+            Map<String, List<CommandLineParser<CI>>> groups = new LinkedHashMap<>();
+            for (CommandLineParser<CI> child : parsers) {
+                String group = child.getProcessedCommand().helpGroup();
+                groups.computeIfAbsent(group.isEmpty() ? "" : group, k -> new ArrayList<>()).add(child);
+            }
+
+            boolean hasNamedGroups = groups.size() > 1 || !groups.containsKey("");
+
+            if (hasNamedGroups) {
+                for (Map.Entry<String, List<CommandLineParser<CI>>> entry : groups.entrySet()) {
+                    if (!entry.getKey().isEmpty()) {
+                        sb.append(Config.getLineSeparator())
+                                .append(entry.getKey()).append(":")
+                                .append(Config.getLineSeparator());
+                        for (CommandLineParser child : entry.getValue())
+                            sb.append(child.getFormattedCommand(4, maxLength + 2))
+                                    .append(Config.getLineSeparator());
+                    }
+                }
+                List<CommandLineParser<CI>> defaultGroup = groups.get("");
+                if (defaultGroup != null && !defaultGroup.isEmpty()) {
+                    sb.append(Config.getLineSeparator())
+                            .append("Other:").append(Config.getLineSeparator());
+                    for (CommandLineParser child : defaultGroup)
+                        sb.append(child.getFormattedCommand(4, maxLength + 2))
+                                .append(Config.getLineSeparator());
+                }
+            } else {
+                sb.append(Config.getLineSeparator())
+                        .append(processedCommand.name()).append(" commands:")
                         .append(Config.getLineSeparator());
+                for (CommandLineParser child : parsers)
+                    sb.append(child.getFormattedCommand(4, maxLength + 2))
+                            .append(Config.getLineSeparator());
             }
 
             return sb.toString();
