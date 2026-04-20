@@ -67,7 +67,7 @@
       <version.compiler.plugin>3.14.0</version.compiler.plugin>
       <version.surefire.plugin>3.5.3</version.surefire.plugin>
       <version.jar.plugin>3.4.2</version.jar.plugin>
-      <version.source.plugin>3.3.1</version.source.plugin>
+      <version.source.plugin>3.4.0</version.source.plugin>
       <version.javadoc.plugin>3.11.2</version.javadoc.plugin>
       <version.shade.plugin>3.6.0</version.shade.plugin>
       <version.enforcer.plugin>3.5.0</version.enforcer.plugin>
