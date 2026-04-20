@@ -239,6 +239,47 @@ public class ShellCompletionGeneratorTest {
         assertTrue(out.contains("complete -c cp"));
     }
 
+    // -- Dynamic callback completion tests --
+
+    @Test
+    public void testBashDynamicCompletion() {
+        String out = generateDynamic(ShellType.BASH, SimpleCmd.class, "mycli");
+
+        assertTrue(out.contains("#!/usr/bin/env bash"));
+        assertTrue(out.contains("_complete_mycli()"));
+        assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
+        assertTrue("Should pass COMP_WORDS", out.contains("${COMP_WORDS[@]:1}"));
+        assertTrue(out.contains("complete -o default -F _complete_mycli mycli"));
+    }
+
+    @Test
+    public void testZshDynamicCompletion() {
+        String out = generateDynamic(ShellType.ZSH, SimpleCmd.class, "mycli");
+
+        assertTrue(out.contains("#compdef mycli"));
+        assertTrue(out.contains("_mycli()"));
+        assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
+        assertTrue("Should use words array", out.contains("${words[@]:1}"));
+        assertTrue(out.contains("compadd"));
+    }
+
+    @Test
+    public void testFishDynamicCompletion() {
+        String out = generateDynamic(ShellType.FISH, SimpleCmd.class, "mycli");
+
+        assertTrue(out.contains("complete -c mycli"));
+        assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
+        assertTrue("Should use commandline", out.contains("commandline -cop"));
+    }
+
+    @Test
+    public void testOneShotDynamic() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.BASH, SimpleCmd.class, "mycli");
+
+        assertTrue(out.contains("_complete_mycli"));
+        assertTrue(out.contains("--aesh-complete"));
+    }
+
     // -- One-shot API test --
 
     @Test
@@ -253,6 +294,11 @@ public class ShellCompletionGeneratorTest {
     private String generate(ShellType type, Class<? extends Command> clazz, String programName) {
         CommandLineParser<CommandInvocation> parser = getParser(clazz);
         return ShellCompletionGenerator.forShell(type).generate(parser, programName);
+    }
+
+    private String generateDynamic(ShellType type, Class<? extends Command> clazz, String programName) {
+        CommandLineParser<CommandInvocation> parser = getParser(clazz);
+        return ShellCompletionGenerator.forShell(type).generateDynamic(parser, programName);
     }
 
     @SuppressWarnings("unchecked")

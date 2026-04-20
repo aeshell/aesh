@@ -20,14 +20,19 @@
 package org.aesh;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.List;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
@@ -235,6 +240,152 @@ public class AeshRuntimeRunnerTest {
 
         // The command should NOT have been executed
         assertEquals(null, CaptureCommand.lastCode);
+    }
+
+    // -- Dynamic completion tests --
+
+    @Test
+    public void testGenerateDynamicBashCompletion() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateDynamicCompletion(ShellType.BASH)
+                .execute());
+
+        assertTrue(output.contains("--aesh-complete"));
+        assertTrue(output.contains("_complete_capture"));
+    }
+
+    @Test
+    public void testGenerateDynamicZshCompletion() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateDynamicCompletion(ShellType.ZSH)
+                .execute());
+
+        assertTrue(output.contains("#compdef capture"));
+        assertTrue(output.contains("--aesh-complete"));
+    }
+
+    @Test
+    public void testGenerateDynamicFishCompletion() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateDynamicCompletion(ShellType.FISH)
+                .execute());
+
+        assertTrue(output.contains("complete -c capture"));
+        assertTrue(output.contains("--aesh-complete"));
+    }
+
+    @Test
+    public void testGenerateDynamicCompletionWithCustomProgramName() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateDynamicCompletion(ShellType.BASH)
+                .completionProgramName("myapp")
+                .execute());
+
+        assertTrue(output.contains("_complete_myapp"));
+        assertTrue(output.contains("complete -o default -F _complete_myapp myapp"));
+    }
+
+    @Test
+    public void testDynamicCompleteOptions() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ColorCommand.class)
+                .dynamicComplete(true)
+                .args("--")
+                .execute());
+
+        assertTrue("Should complete option names", output.contains("color"));
+    }
+
+    @Test
+    public void testDynamicCompleteCustomCompleter() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ColorCommand.class)
+                .dynamicComplete(true)
+                .args("--color", "gr")
+                .execute());
+
+        assertTrue("Should have custom completer results", output.contains("een"));
+    }
+
+    @Test
+    public void testDynamicCompleteDoesNotExecuteCommand() {
+        CaptureCommand.reset();
+        AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .dynamicComplete(true)
+                .args("-c", "should-not-run")
+                .execute();
+
+        assertEquals("Command should not have been executed", null, CaptureCommand.lastCode);
+    }
+
+    @Test
+    public void testHandleDynamicCompletion() {
+        String output = captureStdout(() -> {
+            boolean handled = AeshRuntimeRunner.handleDynamicCompletion(
+                    new String[] { "--aesh-complete", "--", "--" },
+                    ColorCommand.class);
+            assertTrue("Should return true for --aesh-complete", handled);
+        });
+
+        assertTrue("Should produce completion output", output.contains("color"));
+    }
+
+    @Test
+    public void testHandleDynamicCompletionReturnsFalseForNormalArgs() {
+        assertFalse("Should return false for normal args",
+                AeshRuntimeRunner.handleDynamicCompletion(
+                        new String[] { "--verbose" }, ColorCommand.class));
+    }
+
+    @Test
+    public void testHandleDynamicCompletionReturnsFalseForEmptyArgs() {
+        assertFalse("Should return false for empty args",
+                AeshRuntimeRunner.handleDynamicCompletion(
+                        new String[0], ColorCommand.class));
+    }
+
+    @Test
+    public void testHandleDynamicCompletionReturnsFalseForNull() {
+        assertFalse("Should return false for null args",
+                AeshRuntimeRunner.handleDynamicCompletion(null, ColorCommand.class));
+    }
+
+    // -- Test command with custom completer --
+
+    public static class ColorCompleter implements OptionCompleter<CompleterInvocation> {
+        private static final List<String> COLORS = Arrays.asList(
+                "red", "green", "blue", "yellow", "orange", "purple");
+
+        @Override
+        public void complete(CompleterInvocation invocation) {
+            String input = invocation.getGivenCompleteValue();
+            if (input == null || input.isEmpty()) {
+                invocation.addAllCompleterValues(COLORS);
+            } else {
+                String lower = input.toLowerCase();
+                for (String color : COLORS) {
+                    if (color.startsWith(lower)) {
+                        invocation.addCompleterValue(color);
+                    }
+                }
+            }
+        }
+    }
+
+    @CommandDefinition(name = "colorpick", description = "Pick a color")
+    public static class ColorCommand implements Command<CommandInvocation> {
+        @Option(completer = ColorCompleter.class, description = "The color")
+        private String color;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
     }
 
     private static String captureStdout(Runnable action) {

@@ -35,13 +35,23 @@ import org.aesh.command.parser.CommandLineParserException;
 public interface ShellCompletionGenerator {
 
     /**
-     * Generate a completion script for the given command parser.
+     * Generate a static completion script for the given command parser.
      *
      * @param parser the command parser
      * @param programName the name of the program (used in the completion registration)
      * @return the completion script content
      */
     String generate(CommandLineParser<? extends CommandInvocation> parser, String programName);
+
+    /**
+     * Generate a dynamic callback completion script that calls back to the
+     * Java process via {@code --aesh-complete} for runtime completions.
+     *
+     * @param parser the command parser (unused by most implementations, available for future use)
+     * @param programName the name of the program
+     * @return the dynamic completion script content
+     */
+    String generateDynamic(CommandLineParser<? extends CommandInvocation> parser, String programName);
 
     /**
      * Supported shell types.
@@ -79,7 +89,7 @@ public interface ShellCompletionGenerator {
     }
 
     /**
-     * One-shot generation from a command class.
+     * One-shot static completion script generation from a command class.
      *
      * @param type shell type
      * @param commandClass the command class annotated with @CommandDefinition or @GroupCommandDefinition
@@ -93,5 +103,22 @@ public interface ShellCompletionGenerator {
         CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
         CommandContainer<CommandInvocation> container = builder.create((Class) commandClass);
         return forShell(type).generate(container.getParser(), programName);
+    }
+
+    /**
+     * One-shot dynamic callback completion script generation from a command class.
+     *
+     * @param type shell type
+     * @param commandClass the command class annotated with @CommandDefinition or @GroupCommandDefinition
+     * @param programName the program name
+     * @return the dynamic completion script content
+     * @throws CommandLineParserException if the command class cannot be parsed
+     */
+    @SuppressWarnings("unchecked")
+    static String generateDynamic(ShellType type, Class<? extends Command> commandClass, String programName)
+            throws CommandLineParserException {
+        CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandContainer<CommandInvocation> container = builder.create((Class) commandClass);
+        return forShell(type).generateDynamic(container.getParser(), programName);
     }
 }
