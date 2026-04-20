@@ -373,6 +373,7 @@ final class CodeGenerator {
         sb.append("                        .descriptionUrl(").append(stringLiteral(o.descriptionUrl())).append(")\n");
         sb.append("                        .url(").append(o.url()).append(")\n");
         generateAliases(sb, o.aliases());
+        generateHelpGroup(sb, o.helpGroup());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -404,6 +405,7 @@ final class CodeGenerator {
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
         generateAliases(sb, ol.aliases());
+        generateHelpGroup(sb, ol.helpGroup());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -516,6 +518,12 @@ final class CodeGenerator {
     private static void generateAliases(StringBuilder sb, String[] aliases) {
         if (aliases != null && aliases.length > 0) {
             sb.append("                        .aliases(").append(stringArrayLiteralAsNew(aliases)).append(")\n");
+        }
+    }
+
+    private static void generateHelpGroup(StringBuilder sb, String helpGroup) {
+        if (helpGroup != null && !helpGroup.isEmpty()) {
+            sb.append("                        .helpGroup(").append(stringLiteral(helpGroup)).append(")\n");
         }
     }
 

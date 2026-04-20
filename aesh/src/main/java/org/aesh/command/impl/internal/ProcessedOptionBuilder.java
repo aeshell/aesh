@@ -82,6 +82,7 @@ public class ProcessedOptionBuilder {
     private java.util.function.Function<Object, Object> fieldGetter;
     private String mixinFieldName;
     private List<String> aliases;
+    private String helpGroup = "";
 
     private ProcessedOptionBuilder() {
         defaultValues = java.util.Collections.emptyList();
@@ -385,6 +386,10 @@ public class ProcessedOptionBuilder {
                 : null);
     }
 
+    public ProcessedOptionBuilder helpGroup(String helpGroup) {
+        return apply(c -> c.helpGroup = helpGroup != null ? helpGroup : "");
+    }
+
     public ProcessedOption build() throws OptionParserException {
         if (optionType == null) {
             if (!hasValue)
@@ -449,6 +454,8 @@ public class ProcessedOptionBuilder {
             option.setMixinFieldName(mixinFieldName);
         if (aliases != null)
             option.setAliases(aliases);
+        if (helpGroup != null && !helpGroup.isEmpty())
+            option.setHelpGroup(helpGroup);
         return option;
     }
 }

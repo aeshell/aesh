@@ -97,6 +97,7 @@ public final class ProcessedOption {
     private String descriptionUrl;
     private boolean isUrl = false;
     private List<String> aliases = Collections.emptyList();
+    private String helpGroup = "";
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
@@ -214,6 +215,14 @@ public final class ProcessedOption {
 
     public List<String> getAliases() {
         return aliases;
+    }
+
+    public void setHelpGroup(String helpGroup) {
+        this.helpGroup = helpGroup != null ? helpGroup : "";
+    }
+
+    public String getHelpGroup() {
+        return helpGroup;
     }
 
     public boolean hasAlias(String name) {

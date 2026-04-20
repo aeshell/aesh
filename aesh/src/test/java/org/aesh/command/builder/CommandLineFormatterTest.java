@@ -21,6 +21,9 @@ package org.aesh.command.builder;
 
 import static org.aesh.terminal.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
 
 import org.aesh.AeshConsoleRunner;
 import org.aesh.command.Command;
@@ -28,6 +31,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
@@ -35,6 +39,7 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.tty.TestConnection;
@@ -225,6 +230,149 @@ public class CommandLineFormatterTest {
                 "         the branch you want to checkout" + getLineSeparator() + getLineSeparator());
 
         runner.stop();
+    }
+
+    @Test
+    public void testHelpGrouping() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("myapp").description("My application");
+
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("json").description("Output as JSON").type(boolean.class)
+                .helpGroup("Output Format").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("xml").description("Output as XML").type(boolean.class)
+                .helpGroup("Output Format").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("user").description("Username").type(String.class)
+                .helpGroup("Authentication").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("password").description("Password").type(String.class)
+                .helpGroup("Authentication").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").description("Verbose output").type(boolean.class)
+                .build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+
+        String help = clp.printHelp();
+
+        // Named groups appear before default "Options:"
+        int outputFormatIdx = help.indexOf("Output Format:");
+        int authIdx = help.indexOf("Authentication:");
+        int optionsIdx = help.indexOf("Options:");
+
+        assertTrue("Output Format group should appear", outputFormatIdx > 0);
+        assertTrue("Authentication group should appear", authIdx > 0);
+        assertTrue("Options group should appear", optionsIdx > 0);
+        assertTrue("Output Format should appear before Authentication", outputFormatIdx < authIdx);
+        assertTrue("Authentication should appear before Options", authIdx < optionsIdx);
+
+        // Verify options are under their groups
+        assertTrue("--json should appear after Output Format", help.indexOf("--json") > outputFormatIdx);
+        assertTrue("--xml should appear after Output Format", help.indexOf("--xml") > outputFormatIdx);
+        assertTrue("--json should appear before Authentication", help.indexOf("--json") < authIdx);
+        assertTrue("--user should appear after Authentication", help.indexOf("--user") > authIdx);
+        assertTrue("--password should appear after Authentication", help.indexOf("--password") > authIdx);
+        assertTrue("--verbose should appear after Options", help.indexOf("--verbose") > optionsIdx);
+    }
+
+    @Test
+    public void testHelpGroupingNoGroups() throws CommandLineParserException {
+        // When no helpGroup is set, all options appear under "Options:" as before
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("simple").description("Simple command");
+
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("foo").description("Foo option").type(String.class).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("bar").description("Bar option").type(String.class).build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+
+        assertEquals("Usage: simple [<options>]" + getLineSeparator() + "Simple command" + getLineSeparator() +
+                getLineSeparator() +
+                "Options:" + getLineSeparator() +
+                "  --foo  Foo option" + getLineSeparator() +
+                "  --bar  Bar option" + getLineSeparator(),
+                clp.printHelp());
+    }
+
+    @Test
+    public void testHelpGroupingAllGrouped() throws CommandLineParserException {
+        // When all options have a helpGroup, no default "Options:" section appears
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("allgrouped").description("All grouped");
+
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("alpha").description("Alpha").type(String.class)
+                .helpGroup("Group A").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("beta").description("Beta").type(String.class)
+                .helpGroup("Group B").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+
+        String help = clp.printHelp();
+        assertTrue("Group A should appear", help.contains("Group A:"));
+        assertTrue("Group B should appear", help.contains("Group B:"));
+        assertTrue("Default Options: should not appear when all options are grouped",
+                !help.contains("Options:"));
+    }
+
+    @Test
+    public void testHelpGroupingFromAnnotation() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(new GroupedOptionsCommand()).getParser();
+
+        String help = clp.printHelp();
+
+        assertTrue("Output section should appear", help.contains("Output:"));
+        assertTrue("Default Options: should appear", help.contains("Options:"));
+        assertTrue("--json should appear after Output:", help.indexOf("--json") > help.indexOf("Output:"));
+        assertTrue("--verbose should appear after Options:", help.indexOf("--verbose") > help.indexOf("Options:"));
+    }
+
+    @Test
+    public void testHelpGroupingOptionListFromAnnotation() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(new GroupedOptionListCommand()).getParser();
+
+        String help = clp.printHelp();
+
+        assertTrue("Filters section should appear", help.contains("Filters:"));
+        assertTrue("--include should appear after Filters:", help.indexOf("--include") > help.indexOf("Filters:"));
+    }
+
+    @CommandDefinition(name = "grouped", description = "Grouped options test")
+    public static class GroupedOptionsCommand implements Command<CommandInvocation> {
+        @Option(description = "Output as JSON", hasValue = false, helpGroup = "Output")
+        boolean json;
+
+        @Option(description = "Output as XML", hasValue = false, helpGroup = "Output")
+        boolean xml;
+
+        @Option(description = "Verbose output", hasValue = false)
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "filterapp", description = "Filter app")
+    public static class GroupedOptionListCommand implements Command<CommandInvocation> {
+        @OptionList(description = "Include patterns", helpGroup = "Filters")
+        List<String> include;
+
+        @Option(description = "Verbose output", hasValue = false)
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
     }
 
     @GroupCommandDefinition(name = "base", description = "", groupCommands = { GitCommand.class })

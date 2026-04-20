@@ -21,7 +21,9 @@ package org.aesh.command.impl.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
@@ -714,11 +716,34 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         //second line
         sb.append(description()).append(Config.getLineSeparator());
 
-        //options and arguments
-        if (opts.size() > 0)
-            sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
-        for (ProcessedOption o : opts)
-            sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks)).append(Config.getLineSeparator());
+        //options and arguments — group by helpGroup
+        if (opts.size() > 0) {
+            Map<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
+            for (ProcessedOption o : opts) {
+                String group = o.getHelpGroup() != null && !o.getHelpGroup().isEmpty()
+                        ? o.getHelpGroup()
+                        : "";
+                groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
+            }
+
+            // Print named groups first
+            for (Map.Entry<String, List<ProcessedOption>> entry : groups.entrySet()) {
+                if (!entry.getKey().isEmpty()) {
+                    sb.append(Config.getLineSeparator()).append(entry.getKey()).append(":").append(Config.getLineSeparator());
+                    for (ProcessedOption o : entry.getValue())
+                        sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+                                .append(Config.getLineSeparator());
+                }
+            }
+            // Then default group
+            List<ProcessedOption> defaultGroup = groups.get("");
+            if (defaultGroup != null && !defaultGroup.isEmpty()) {
+                sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
+                for (ProcessedOption o : defaultGroup)
+                    sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+                            .append(Config.getLineSeparator());
+            }
+        }
         if (arguments != null) {
             sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
             sb.append(arguments.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))

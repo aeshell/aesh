@@ -459,6 +459,71 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: @Option with helpGroup (#399) ---
+
+    private static final String HELP_GROUP_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"grouped\", description = \"Grouped help test\")\n" +
+            "public class HelpGroupCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Output as JSON\", hasValue = false, helpGroup = \"Output\")\n" +
+            "    boolean json;\n" +
+            "\n" +
+            "    @Option(description = \"Output as XML\", hasValue = false, helpGroup = \"Output\")\n" +
+            "    boolean xml;\n" +
+            "\n" +
+            "    @OptionList(description = \"Include patterns\", helpGroup = \"Filters\")\n" +
+            "    List<String> include;\n" +
+            "\n" +
+            "    @Option(description = \"Verbose output\", hasValue = false)\n" +
+            "    boolean verbose;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testHelpGroup() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.HelpGroupCommand", HELP_GROUP_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.HelpGroupCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.HelpGroupCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+
+        // Also verify helpGroup values are set correctly
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        ProcessedOption jsonOpt = findOptionByName(generatedPC.getOptions(), "json");
+        ProcessedOption xmlOpt = findOptionByName(generatedPC.getOptions(), "xml");
+        ProcessedOption includeOpt = findOptionByName(generatedPC.getOptions(), "include");
+        ProcessedOption verboseOpt = findOptionByName(generatedPC.getOptions(), "verbose");
+
+        assertNotNull("json option should exist", jsonOpt);
+        assertNotNull("xml option should exist", xmlOpt);
+        assertNotNull("include option should exist", includeOpt);
+        assertNotNull("verbose option should exist", verboseOpt);
+
+        assertEquals("json helpGroup", "Output", jsonOpt.getHelpGroup());
+        assertEquals("xml helpGroup", "Output", xmlOpt.getHelpGroup());
+        assertEquals("include helpGroup", "Filters", includeOpt.getHelpGroup());
+        assertEquals("verbose helpGroup", "", verboseOpt.getHelpGroup());
+    }
+
     // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
 
     private static final String GENERIC_OPTION_SOURCE = "package test;\n" +
@@ -557,6 +622,7 @@ public class ProcessorTest {
             assertEquals("Option inherited for " + rOpt.name(), rOpt.isInherited(), gOpt.isInherited());
             assertEquals("Option mixinFieldName for " + rOpt.name(), rOpt.getMixinFieldName(), gOpt.getMixinFieldName());
             assertEquals("Option aliases for " + rOpt.name(), rOpt.getAliases(), gOpt.getAliases());
+            assertEquals("Option helpGroup for " + rOpt.name(), rOpt.getHelpGroup(), gOpt.getHelpGroup());
         }
 
         // Compare argument

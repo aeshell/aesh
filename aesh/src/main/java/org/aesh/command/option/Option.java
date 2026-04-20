@@ -206,4 +206,12 @@ public @interface Option {
      */
     String[] aliases() default {};
 
+    /**
+     * Optional heading under which this option appears in help output.
+     * Options with the same helpGroup value are displayed together under
+     * that heading. Options with no helpGroup appear under the default
+     * "Options:" heading.
+     */
+    String helpGroup() default "";
+
 }
