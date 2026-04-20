@@ -20,6 +20,7 @@
 package org.aesh.util.completer;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -35,15 +36,19 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
 
 /**
  * @author Aesh team
  */
-@CommandDefinition(name = "completer", description = "Generates a complete file for a command for posix systems")
+@CommandDefinition(name = "completer", description = "Generates a completion script for a command")
 public class CompleterCommand implements Command<CommandInvocation> {
 
     @Option(hasValue = false)
     private boolean help;
+
+    @Option(name = "shell", shortName = 's', description = "Target shell: BASH, ZSH, or FISH", defaultValue = "BASH")
+    private ShellType shell;
 
     @Argument(required = true, description = "Command class name")
     private String command;
@@ -53,24 +58,29 @@ public class CompleterCommand implements Command<CommandInvocation> {
         if (help) {
             commandInvocation.println(commandInvocation.getHelpInfo("completer"));
             return CommandResult.SUCCESS;
-        } else {
-            Class<Command<CommandInvocation>> clazz = loadCommand(command);
-            if (clazz != null) {
-                CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
-                try {
-                    CommandContainer<CommandInvocation> container = builder.create(clazz);
+        }
 
-                    FileCompleterGenerator completerGenerator = new FileCompleterGenerator();
+        Class<Command<CommandInvocation>> clazz = loadCommand(command);
+        if (clazz == null) {
+            commandInvocation.println("Could not load command: " + command);
+            return CommandResult.FAILURE;
+        }
 
-                    Files.write(Paths.get(container.getParser().getProcessedCommand().name().toLowerCase() + "_complete.bash"),
-                            completerGenerator.generateCompleterFile(container.getParser()).getBytes(),
-                            StandardOpenOption.CREATE);
+        CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        try {
+            CommandContainer<CommandInvocation> container = builder.create(clazz);
+            String programName = container.getParser().getProcessedCommand().name().toLowerCase();
 
-                } catch (CommandLineParserException | IOException e) {
-                    throw new CommandException("Failed to generate completer file: " + e.getMessage(), e);
-                }
-            } else
-                commandInvocation.println("Could not load command: " + command);
+            ShellCompletionGenerator generator = ShellCompletionGenerator.forShell(shell);
+            String script = generator.generate(container.getParser(), programName);
+
+            String filename = programName + shell.fileExtension();
+            Files.write(Paths.get(filename), script.getBytes(StandardCharsets.UTF_8),
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            commandInvocation.println("Completion script written to: " + filename);
+
+        } catch (CommandLineParserException | IOException e) {
+            throw new CommandException("Failed to generate completion script: " + e.getMessage(), e);
         }
 
         return CommandResult.SUCCESS;
@@ -86,5 +96,4 @@ public class CompleterCommand implements Command<CommandInvocation> {
 
         return null;
     }
-
 }

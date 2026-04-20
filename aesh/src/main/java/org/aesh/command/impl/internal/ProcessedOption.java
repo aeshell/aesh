@@ -942,7 +942,7 @@ public final class ProcessedOption {
         return getDefaultValues() != null && getDefaultValues().size() > 0;
     }
 
-    boolean isTypeAssignableByResourcesOrFile() {
+    public boolean isTypeAssignableByResourcesOrFile() {
         return (Resource.class.isAssignableFrom(type) ||
                 File.class.isAssignableFrom(type) ||
                 Path.class.isAssignableFrom(type));
