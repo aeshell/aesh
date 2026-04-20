@@ -20,6 +20,8 @@
 package org.aesh;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
@@ -36,6 +38,7 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.ShellImpl;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.TerminalConnection;
@@ -54,7 +57,9 @@ public class AeshRuntimeRunner {
     private String[] args;
     private boolean interactive = false;
     private ShellType completionShellType;
+    private ShellType dynamicCompletionShellType;
     private String completionProgramName;
+    private boolean dynamicComplete = false;
 
     private AeshRuntimeRunner() {
     }
@@ -120,6 +125,33 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    /**
+     * Generate a dynamic callback completion script and print it to stdout.
+     * The generated script calls back to the program via {@code --aesh-complete}
+     * for runtime completions.
+     *
+     * @param shellType the target shell (BASH, ZSH, or FISH)
+     * @return this builder
+     */
+    public AeshRuntimeRunner generateDynamicCompletion(ShellType shellType) {
+        this.dynamicCompletionShellType = shellType;
+        return this;
+    }
+
+    /**
+     * Enable dynamic completion mode. When set, the runner uses the existing
+     * completion engine to produce completions for the partial command line
+     * provided via {@link #args(String...)}, printing one candidate per line
+     * to stdout.
+     *
+     * @param dynamicComplete true to enable dynamic completion
+     * @return this builder
+     */
+    public AeshRuntimeRunner dynamicComplete(boolean dynamicComplete) {
+        this.dynamicComplete = dynamicComplete;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
         Connection connection = null;
@@ -130,6 +162,12 @@ public class AeshRuntimeRunner {
 
         if (completionShellType != null) {
             return generateCompletionScript(commandRegistry);
+        }
+        if (dynamicCompletionShellType != null) {
+            return generateDynamicCompletionScript(commandRegistry);
+        }
+        if (dynamicComplete) {
+            return performDynamicCompletion(commandRegistry);
         }
         try {
 
@@ -191,6 +229,93 @@ public class AeshRuntimeRunner {
             System.err.println("Command not found: " + e.getMessage());
             return CommandResult.FAILURE;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private CommandResult generateDynamicCompletionScript(CommandRegistry commandRegistry) {
+        try {
+            String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) commandRegistry
+                    .getCommand(commandName, "");
+
+            String programName = completionProgramName != null
+                    ? completionProgramName
+                    : commandName;
+
+            ShellCompletionGenerator generator = ShellCompletionGenerator.forShell(dynamicCompletionShellType);
+            String script = generator.generateDynamic(container.getParser(), programName);
+            System.out.print(script);
+            return CommandResult.SUCCESS;
+        } catch (CommandNotFoundException e) {
+            System.err.println("Command not found: " + e.getMessage());
+            return CommandResult.FAILURE;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private CommandResult performDynamicCompletion(CommandRegistry commandRegistry) {
+        try {
+            CommandRuntime<CommandInvocation> rt = AeshCommandRuntimeBuilder.builder()
+                    .commandRegistry(commandRegistry)
+                    .build();
+
+            // The completion engine expects the command name as the first word.
+            // The shell passes args after the program name, so we prepend the
+            // registered command name.
+            String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();
+            String partialLine = args != null ? String.join(" ", args) : "";
+            String buffer = partialLine.isEmpty() ? commandName + " " : commandName + " " + partialLine;
+
+            AeshCompleteOperation completeOperation = new AeshCompleteOperation(buffer, buffer.length());
+            rt.complete(completeOperation);
+
+            List<String> candidates = completeOperation.getFormattedCompletionCandidates();
+            for (String candidate : candidates) {
+                System.out.println(candidate);
+            }
+            return CommandResult.SUCCESS;
+        } catch (Exception e) {
+            System.err.println("Completion error: " + e.getMessage());
+            return CommandResult.FAILURE;
+        }
+    }
+
+    /**
+     * Check if args contain {@code --aesh-complete} and handle dynamic completion.
+     * This is a convenience method for use in {@code main()} methods.
+     *
+     * @param args the command-line arguments
+     * @param commandClass the command class
+     * @return true if completion was handled, false if normal execution should continue
+     */
+    public static boolean handleDynamicCompletion(String[] args, Class<? extends Command> commandClass) {
+        if (args == null || args.length == 0 || !"--aesh-complete".equals(args[0])) {
+            return false;
+        }
+
+        // Find the -- separator
+        int separatorIndex = -1;
+        for (int i = 1; i < args.length; i++) {
+            if ("--".equals(args[i])) {
+                separatorIndex = i;
+                break;
+            }
+        }
+
+        String[] partialArgs;
+        if (separatorIndex >= 0 && separatorIndex < args.length - 1) {
+            partialArgs = Arrays.copyOfRange(args, separatorIndex + 1, args.length);
+        } else {
+            partialArgs = new String[0];
+        }
+
+        AeshRuntimeRunner.builder()
+                .command(commandClass)
+                .dynamicComplete(true)
+                .args(partialArgs)
+                .execute();
+
+        return true;
     }
 
     private static void showHelpIfNeeded(CommandRuntime runtime, String commandName, Exception e) {
