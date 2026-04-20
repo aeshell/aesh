@@ -57,6 +57,7 @@ final class CodeGenerator {
     private static final String NULL_OPTION_RENDERER = "org.aesh.command.impl.renderer.NullOptionRenderer";
     private static final String AESH_OPTION_PARSER = "org.aesh.command.impl.parser.AeshOptionParser";
     private static final String NULL_DEFAULT_VALUE_PROVIDER = "org.aesh.command.impl.provider.NullDefaultValueProvider";
+    private static final String NULL_HELP_SECTION_PROVIDER = "org.aesh.command.impl.provider.NullHelpSectionProvider";
 
     private CodeGenerator() {
     }
@@ -223,6 +224,15 @@ final class CodeGenerator {
         if (!cmdHelpGroup.isEmpty()) {
             sb.append("        processedCommand.setHelpGroup(")
                     .append(stringLiteral(cmdHelpGroup)).append(");\n\n");
+        }
+
+        // Set helpSectionProvider if not NullHelpSectionProvider
+        String providerClass = getAnnotationClassValue(commandElement,
+                isGroup ? GroupCommandDefinition.class.getCanonicalName() : CommandDefinition.class.getCanonicalName(),
+                "helpSectionProvider", elementUtils);
+        if (providerClass != null && !providerClass.equals(NULL_HELP_SECTION_PROVIDER)) {
+            sb.append("        processedCommand.setHelpSectionProviderClass(")
+                    .append(providerClass).append(".class);\n\n");
         }
 
         // Process fields

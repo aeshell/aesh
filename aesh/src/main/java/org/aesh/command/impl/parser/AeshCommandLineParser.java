@@ -22,14 +22,18 @@ package org.aesh.command.impl.parser;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandLifecycle;
+import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.map.MapCommand;
@@ -222,56 +226,105 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public String printHelp() {
         List<CommandLineParser<CI>> parsers = getChildParsers();
-        if (parsers != null && parsers.size() > 0) {
+        Map<String, List<HelpEntry>> additionalSections = resolveAdditionalSections();
+        boolean hasChildren = parsers != null && parsers.size() > 0;
+        boolean hasAdditional = !additionalSections.isEmpty();
+
+        if (hasChildren || hasAdditional) {
             StringBuilder sb = new StringBuilder();
             sb.append(processedCommand.printHelp(helpNames()));
 
             int maxLength = 0;
-            for (CommandLineParser child : parsers) {
-                int length = child.getProcessedCommand().name().length();
-                if (length > maxLength)
-                    maxLength = length;
+            if (hasChildren) {
+                for (CommandLineParser child : parsers) {
+                    int length = child.getProcessedCommand().name().length();
+                    if (length > maxLength)
+                        maxLength = length;
+                }
+            }
+            for (List<HelpEntry> entries : additionalSections.values()) {
+                for (HelpEntry entry : entries) {
+                    if (entry.name().length() > maxLength)
+                        maxLength = entry.name().length();
+                }
             }
 
-            Map<String, List<CommandLineParser<CI>>> groups = new LinkedHashMap<>();
-            for (CommandLineParser<CI> child : parsers) {
-                String group = child.getProcessedCommand().helpGroup();
-                groups.computeIfAbsent(group.isEmpty() ? "" : group, k -> new ArrayList<>()).add(child);
+            Map<String, List<String>> outputGroups = new LinkedHashMap<>();
+            if (hasChildren) {
+                for (CommandLineParser<CI> child : parsers) {
+                    String group = child.getProcessedCommand().helpGroup();
+                    outputGroups.computeIfAbsent(group.isEmpty() ? "" : group, k -> new ArrayList<>())
+                            .add(child.getFormattedCommand(4, maxLength + 2));
+                }
+            }
+            for (Map.Entry<String, List<HelpEntry>> section : additionalSections.entrySet()) {
+                List<String> lines = outputGroups.computeIfAbsent(section.getKey(), k -> new ArrayList<>());
+                for (HelpEntry he : section.getValue())
+                    lines.add(formatHelpEntry(he, 4, maxLength + 2));
             }
 
-            boolean hasNamedGroups = groups.size() > 1 || !groups.containsKey("");
+            boolean hasNamedGroups = outputGroups.size() > 1 || !outputGroups.containsKey("");
 
             if (hasNamedGroups) {
-                for (Map.Entry<String, List<CommandLineParser<CI>>> entry : groups.entrySet()) {
+                for (Map.Entry<String, List<String>> entry : outputGroups.entrySet()) {
                     if (!entry.getKey().isEmpty()) {
                         sb.append(Config.getLineSeparator())
                                 .append(entry.getKey()).append(":")
                                 .append(Config.getLineSeparator());
-                        for (CommandLineParser child : entry.getValue())
-                            sb.append(child.getFormattedCommand(4, maxLength + 2))
-                                    .append(Config.getLineSeparator());
+                        for (String line : entry.getValue())
+                            sb.append(line).append(Config.getLineSeparator());
                     }
                 }
-                List<CommandLineParser<CI>> defaultGroup = groups.get("");
+                List<String> defaultGroup = outputGroups.get("");
                 if (defaultGroup != null && !defaultGroup.isEmpty()) {
                     sb.append(Config.getLineSeparator())
                             .append("Other:").append(Config.getLineSeparator());
-                    for (CommandLineParser child : defaultGroup)
-                        sb.append(child.getFormattedCommand(4, maxLength + 2))
-                                .append(Config.getLineSeparator());
+                    for (String line : defaultGroup)
+                        sb.append(line).append(Config.getLineSeparator());
                 }
             } else {
                 sb.append(Config.getLineSeparator())
                         .append(processedCommand.name()).append(" commands:")
                         .append(Config.getLineSeparator());
-                for (CommandLineParser child : parsers)
-                    sb.append(child.getFormattedCommand(4, maxLength + 2))
-                            .append(Config.getLineSeparator());
+                for (String line : outputGroups.getOrDefault("", Collections.emptyList()))
+                    sb.append(line).append(Config.getLineSeparator());
             }
 
             return sb.toString();
         } else
             return processedCommand.printHelp(helpNames());
+    }
+
+    private Map<String, List<HelpEntry>> resolveAdditionalSections() {
+        HelpSectionProvider provider = processedCommand.getHelpSectionProvider();
+        if (provider != null)
+            return provider.getAdditionalSections();
+
+        Class<? extends HelpSectionProvider> providerClass = processedCommand.getHelpSectionProviderClass();
+        if (providerClass != null && providerClass != NullHelpSectionProvider.class) {
+            try {
+                provider = providerClass.getDeclaredConstructor().newInstance();
+                return provider.getAdditionalSections();
+            } catch (Exception e) {
+                // fall through
+            }
+        }
+        return Collections.emptyMap();
+    }
+
+    private String formatHelpEntry(HelpEntry entry, int offset, int descriptionStart) {
+        ANSIBuilder ansiBuilder = ANSIBuilder.builder(ansiMode);
+        if (offset > 0)
+            ansiBuilder.append(String.format("%" + offset + "s", ""));
+        ansiBuilder.blueText(entry.name());
+        int descOffset = descriptionStart - entry.name().length();
+        if (descOffset > 0)
+            ansiBuilder.append(String.format("%" + descOffset + "s", ""));
+        else
+            ansiBuilder.append(" ");
+        if (entry.description() != null)
+            ansiBuilder.append(entry.description());
+        return ansiBuilder.toString();
     }
 
     private String helpNames() {

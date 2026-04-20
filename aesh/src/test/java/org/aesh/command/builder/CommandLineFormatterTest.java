@@ -23,7 +23,10 @@ import static org.aesh.terminal.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.aesh.AeshConsoleRunner;
 import org.aesh.command.Command;
@@ -31,6 +34,8 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
@@ -491,6 +496,154 @@ public class CommandLineFormatterTest {
 
     @CommandDefinition(name = "compile", description = "Compile project", helpGroup = "Build")
     public static class CompileSubCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testHelpSectionProviderProgrammatic() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> parent = ProcessedCommandBuilder.builder()
+                .name("jbang").description("JBang tool");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> run = ProcessedCommandBuilder.builder()
+                .name("run").description("Run a script");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> build = ProcessedCommandBuilder.builder()
+                .name("build").description("Build a script");
+
+        CommandLineParser<CommandInvocation> clpParent = new AeshCommandLineParser<>(parent.create());
+        clpParent.addChildParser(new AeshCommandLineParser<>(run.create()));
+        clpParent.addChildParser(new AeshCommandLineParser<>(build.create()));
+
+        clpParent.getProcessedCommand().setHelpSectionProvider(() -> {
+            Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();
+            sections.put("External", Arrays.asList(
+                    new HelpEntry("one", "plugin one"),
+                    new HelpEntry("two", "plugin two")));
+            return sections;
+        });
+
+        String help = clpParent.printHelp();
+
+        assertTrue("External section should appear", help.contains("External:"));
+        assertTrue("plugin one should appear", help.contains("one"));
+        assertTrue("plugin two should appear", help.contains("two"));
+        assertTrue("Built-in commands should still appear", help.contains("run"));
+        assertTrue("Built-in commands should still appear", help.contains("build"));
+    }
+
+    @Test
+    public void testHelpSectionProviderMergesWithExistingGroups() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> parent = ProcessedCommandBuilder.builder()
+                .name("cli").description("CLI tool");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> compile = ProcessedCommandBuilder.builder()
+                .name("compile").description("Compile sources");
+
+        CommandLineParser<CommandInvocation> clpParent = new AeshCommandLineParser<>(compile.create());
+        CommandLineParser<CommandInvocation> clpCompile = new AeshCommandLineParser<>(
+                ProcessedCommandBuilder.<Command<CommandInvocation>, CommandInvocation> builder()
+                        .name("compile").description("Compile sources").create());
+        clpCompile.getProcessedCommand().setHelpGroup("Build");
+
+        CommandLineParser<CommandInvocation> clpMain = new AeshCommandLineParser<>(parent.create());
+        clpMain.addChildParser(clpCompile);
+
+        clpMain.getProcessedCommand().setHelpSectionProvider(() -> {
+            Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();
+            sections.put("Build", Arrays.asList(
+                    new HelpEntry("package", "Package artifacts")));
+            sections.put("External", Arrays.asList(
+                    new HelpEntry("my-plugin", "Custom plugin")));
+            return sections;
+        });
+
+        String help = clpMain.printHelp();
+
+        assertTrue("Build group should appear", help.contains("Build:"));
+        assertTrue("External group should appear", help.contains("External:"));
+        assertTrue("compile should be in Build group", help.indexOf("compile") > help.indexOf("Build:"));
+        assertTrue("package should be in Build group (merged)", help.indexOf("package") > help.indexOf("Build:"));
+        assertTrue("my-plugin should be in External group", help.indexOf("my-plugin") > help.indexOf("External:"));
+    }
+
+    @Test
+    public void testHelpSectionProviderNoChildParsers() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> parent = ProcessedCommandBuilder.builder()
+                .name("app").description("App tool");
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(parent.create());
+
+        clp.getProcessedCommand().setHelpSectionProvider(() -> {
+            Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();
+            sections.put("Plugins", Arrays.asList(
+                    new HelpEntry("ext-one", "Extension one"),
+                    new HelpEntry("ext-two", "Extension two")));
+            return sections;
+        });
+
+        String help = clp.printHelp();
+
+        assertTrue("Plugins section should appear", help.contains("Plugins:"));
+        assertTrue("ext-one should appear", help.contains("ext-one"));
+        assertTrue("ext-two should appear", help.contains("ext-two"));
+    }
+
+    @Test
+    public void testHelpSectionProviderFromAnnotation() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(AppWithPluginsCommand.class).getParser();
+
+        String help = clp.printHelp();
+
+        assertTrue("External section should appear", help.contains("External:"));
+        assertTrue("plugin-a should appear", help.contains("plugin-a"));
+        assertTrue("plugin-b should appear", help.contains("plugin-b"));
+        assertTrue("Built-in run command should appear", help.contains("run"));
+    }
+
+    @Test
+    public void testHelpSectionProviderNullDescription() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> parent = ProcessedCommandBuilder.builder()
+                .name("tool").description("Tool");
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(parent.create());
+
+        clp.getProcessedCommand().setHelpSectionProvider(() -> {
+            Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();
+            sections.put("External", Arrays.asList(
+                    new HelpEntry("no-desc", null),
+                    new HelpEntry("with-desc", "Has description")));
+            return sections;
+        });
+
+        String help = clp.printHelp();
+
+        assertTrue("no-desc should appear", help.contains("no-desc"));
+        assertTrue("with-desc should appear", help.contains("with-desc"));
+    }
+
+    public static class TestHelpSectionProvider implements HelpSectionProvider {
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();
+            sections.put("External", Arrays.asList(
+                    new HelpEntry("plugin-a", "First plugin"),
+                    new HelpEntry("plugin-b", "Second plugin")));
+            return sections;
+        }
+    }
+
+    @GroupCommandDefinition(name = "app", description = "App with plugins", groupCommands = {
+            PluginRunSubCmd.class }, helpSectionProvider = TestHelpSectionProvider.class)
+    public static class AppWithPluginsCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "run", description = "Run something")
+    public static class PluginRunSubCmd implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;

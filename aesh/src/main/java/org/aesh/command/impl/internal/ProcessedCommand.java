@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
@@ -61,6 +62,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private String version;
     private String helpUrl;
     private String helpGroup = "";
+    private Class<? extends HelpSectionProvider> helpSectionProviderClass;
+    private HelpSectionProvider helpSectionProvider;
 
     private List<ProcessedOption> options;
     private ProcessedOption arguments;
@@ -258,6 +261,22 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void setHelpGroup(String helpGroup) {
         this.helpGroup = helpGroup != null ? helpGroup : "";
+    }
+
+    public Class<? extends HelpSectionProvider> getHelpSectionProviderClass() {
+        return helpSectionProviderClass;
+    }
+
+    public void setHelpSectionProviderClass(Class<? extends HelpSectionProvider> helpSectionProviderClass) {
+        this.helpSectionProviderClass = helpSectionProviderClass;
+    }
+
+    public HelpSectionProvider getHelpSectionProvider() {
+        return helpSectionProvider;
+    }
+
+    public void setHelpSectionProvider(HelpSectionProvider helpSectionProvider) {
+        this.helpSectionProvider = helpSectionProvider;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {

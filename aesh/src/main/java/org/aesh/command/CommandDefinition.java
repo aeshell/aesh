@@ -29,6 +29,7 @@ import java.lang.annotation.Target;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.activator.NullCommandActivator;
 import org.aesh.command.impl.provider.NullDefaultValueProvider;
+import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.impl.result.NullResultHandler;
 import org.aesh.command.impl.validator.NullCommandValidator;
 import org.aesh.command.result.ResultHandler;
@@ -133,6 +134,14 @@ public @interface CommandDefinition {
      * @return help group heading
      */
     String helpGroup() default "";
+
+    /**
+     * Specify a HelpSectionProvider that dynamically adds entries to help output.
+     * Only invoked at help-render time — no startup cost.
+     *
+     * @return HelpSectionProvider class
+     */
+    Class<? extends HelpSectionProvider> helpSectionProvider() default NullHelpSectionProvider.class;
 
     /**
      * When set to true, option parsing stops after the first positional argument is consumed.

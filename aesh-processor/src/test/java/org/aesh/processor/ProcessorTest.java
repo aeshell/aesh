@@ -565,6 +565,73 @@ public class ProcessorTest {
         assertEquals("helpGroup should match reflection path", reflectionPC.helpGroup(), generatedPC.helpGroup());
     }
 
+    // --- Test: @GroupCommandDefinition with helpSectionProvider (#416) ---
+
+    private static final String HELP_PROVIDER_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.Arrays;\n" +
+            "import java.util.LinkedHashMap;\n" +
+            "import java.util.List;\n" +
+            "import java.util.Map;\n" +
+            "\n" +
+            "import org.aesh.command.HelpEntry;\n" +
+            "import org.aesh.command.HelpSectionProvider;\n" +
+            "\n" +
+            "public class TestProvider implements HelpSectionProvider {\n" +
+            "    @Override\n" +
+            "    public Map<String, List<HelpEntry>> getAdditionalSections() {\n" +
+            "        Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();\n" +
+            "        sections.put(\"External\", Arrays.asList(\n" +
+            "            new HelpEntry(\"ext-one\", \"Extension one\")));\n" +
+            "        return sections;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String HELP_PROVIDER_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.GroupCommandDefinition;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@GroupCommandDefinition(name = \"app\", description = \"App with provider\",\n" +
+            "        groupCommands = {},\n" +
+            "        helpSectionProvider = TestProvider.class)\n" +
+            "public class HelpProviderCommand implements Command<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testHelpSectionProvider() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.TestProvider", HELP_PROVIDER_SOURCE),
+                new InMemorySource("test.HelpProviderCommand", HELP_PROVIDER_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.HelpProviderCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.HelpProviderCommand_AeshMetadata");
+
+        // Verify the generated provider sets helpSectionProviderClass
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        assertNotNull("helpSectionProviderClass should be set", generatedPC.getHelpSectionProviderClass());
+        assertEquals("helpSectionProviderClass should match",
+                "test.TestProvider", generatedPC.getHelpSectionProviderClass().getName());
+
+        // Also verify equivalence with reflection path
+        AeshCommandContainerBuilder reflectionBuilder = new AeshCommandContainerBuilder();
+        ProcessedCommand reflectionPC = reflectionBuilder.create(
+                (Command) commandClass.newInstance()).getParser().getProcessedCommand();
+
+        assertEquals("helpSectionProviderClass should match reflection path",
+                reflectionPC.getHelpSectionProviderClass(), generatedPC.getHelpSectionProviderClass());
+    }
+
     // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
 
     private static final String GENERIC_OPTION_SOURCE = "package test;\n" +

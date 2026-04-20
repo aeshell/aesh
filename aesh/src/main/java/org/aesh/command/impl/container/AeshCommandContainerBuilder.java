@@ -40,6 +40,7 @@ import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.metadata.CommandMetadataProvider;
@@ -133,6 +134,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             processCommand(processedCommand, clazz);
             if (command.helpGroup().length() > 0)
                 processedCommand.setHelpGroup(command.helpGroup());
+            if (command.helpSectionProvider() != NullHelpSectionProvider.class)
+                processedCommand.setHelpSectionProviderClass(command.helpSectionProvider());
 
             return new AeshCommandContainer<>(
                     new AeshCommandLineParser<>(processedCommand));
@@ -158,6 +161,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             processCommand(processedGroupCommand, clazz);
             if (groupCommand.helpGroup().length() > 0)
                 processedGroupCommand.setHelpGroup(groupCommand.helpGroup());
+            if (groupCommand.helpSectionProvider() != NullHelpSectionProvider.class)
+                processedGroupCommand.setHelpSectionProviderClass(groupCommand.helpSectionProvider());
 
             AeshCommandContainer<CI> groupContainer;
 
