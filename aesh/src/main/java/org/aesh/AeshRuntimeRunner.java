@@ -28,7 +28,9 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
+import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
@@ -37,6 +39,8 @@ import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.ShellImpl;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.TerminalConnection;
+import org.aesh.util.completer.ShellCompletionGenerator;
+import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
 
 /**
  * @author Aesh team
@@ -49,6 +53,8 @@ public class AeshRuntimeRunner {
 
     private String[] args;
     private boolean interactive = false;
+    private ShellType completionShellType;
+    private String completionProgramName;
 
     private AeshRuntimeRunner() {
     }
@@ -90,6 +96,30 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    /**
+     * Generate a shell completion script and print it to stdout.
+     * When set, {@link #execute()} outputs the script instead of running the command.
+     *
+     * @param shellType the target shell (BASH, ZSH, or FISH)
+     * @return this builder
+     */
+    public AeshRuntimeRunner generateCompletion(ShellType shellType) {
+        this.completionShellType = shellType;
+        return this;
+    }
+
+    /**
+     * Override the program name used in the completion script.
+     * Defaults to the command name from @CommandDefinition.
+     *
+     * @param programName the program name
+     * @return this builder
+     */
+    public AeshRuntimeRunner completionProgramName(String programName) {
+        this.completionProgramName = programName;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
         Connection connection = null;
@@ -97,6 +127,10 @@ public class AeshRuntimeRunner {
 
         if (commandRegistry.getAllCommandNames().size() == 0 && runtime == null)
             throw new RuntimeException("Command needs to be added");
+
+        if (completionShellType != null) {
+            return generateCompletionScript(commandRegistry);
+        }
         try {
 
             if (runtime == null) {
@@ -135,6 +169,27 @@ public class AeshRuntimeRunner {
             return result;
         } catch (IOException e) {
             throw new RuntimeException("Exception while executing command: " + e.getMessage());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private CommandResult generateCompletionScript(CommandRegistry commandRegistry) {
+        try {
+            String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) commandRegistry
+                    .getCommand(commandName, "");
+
+            String programName = completionProgramName != null
+                    ? completionProgramName
+                    : commandName;
+
+            ShellCompletionGenerator generator = ShellCompletionGenerator.forShell(completionShellType);
+            String script = generator.generate(container.getParser(), programName);
+            System.out.print(script);
+            return CommandResult.SUCCESS;
+        } catch (CommandNotFoundException e) {
+            System.err.println("Command not found: " + e.getMessage());
+            return CommandResult.FAILURE;
         }
     }
 

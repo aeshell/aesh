@@ -20,6 +20,10 @@
 package org.aesh;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -27,6 +31,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
+import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
 import org.junit.Test;
 
 public class AeshRuntimeRunnerTest {
@@ -171,6 +176,77 @@ public class AeshRuntimeRunnerTest {
             lastArg = arg;
             return CommandResult.SUCCESS;
         }
+    }
+
+    @Test
+    public void testGenerateBashCompletion() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateCompletion(ShellType.BASH)
+                .execute());
+
+        assertTrue(output.contains("#!/usr/bin/env bash"));
+        assertTrue(output.contains("_complete_capture"));
+        assertTrue(output.contains("--code"));
+    }
+
+    @Test
+    public void testGenerateZshCompletion() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateCompletion(ShellType.ZSH)
+                .execute());
+
+        assertTrue(output.contains("#compdef capture"));
+        assertTrue(output.contains("--code"));
+    }
+
+    @Test
+    public void testGenerateFishCompletion() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateCompletion(ShellType.FISH)
+                .execute());
+
+        assertTrue(output.contains("complete -c capture"));
+        assertTrue(output.contains("-l code"));
+    }
+
+    @Test
+    public void testGenerateCompletionWithCustomProgramName() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateCompletion(ShellType.BASH)
+                .completionProgramName("myapp")
+                .execute());
+
+        assertTrue(output.contains("_complete_myapp"));
+        assertTrue(output.contains("complete -o default -F _complete_myapp myapp"));
+    }
+
+    @Test
+    public void testGenerateCompletionDoesNotExecuteCommand() {
+        CaptureCommand.reset();
+        AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateCompletion(ShellType.BASH)
+                .args("-c", "should-not-run")
+                .execute();
+
+        // The command should NOT have been executed
+        assertEquals(null, CaptureCommand.lastCode);
+    }
+
+    private static String captureStdout(Runnable action) {
+        PrintStream original = System.out;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(baos));
+        try {
+            action.run();
+        } finally {
+            System.setOut(original);
+        }
+        return baos.toString();
     }
 
     @CommandDefinition(name = "bar1", description = "bar1")
