@@ -199,4 +199,11 @@ public @interface Option {
      */
     boolean url() default false;
 
+    /**
+     * Alternative long names for this option.
+     * For example, {@code @Option(name = "enableassertions", aliases = {"ea"})}
+     * accepts both {@code --enableassertions} and {@code --ea}.
+     */
+    String[] aliases() default {};
+
 }

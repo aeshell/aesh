@@ -586,4 +586,65 @@ public class AeshCommandRuntimeTest {
         assertNotNull(subNames);
         assertTrue("should contain 'child'", subNames.contains("child"));
     }
+
+    // --- #398: Option aliases ---
+
+    @Test
+    public void testOptionAliasAccepted() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(AliasOptionCmd.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // Use the alias --ea instead of --enableassertions
+        Executor<?> executor = runtime.buildExecutor("aliascmd",
+                new String[] { "--ea", "--name", "test" });
+        executor.getExecutions().get(0).populateCommand();
+        AliasOptionCmd cmd = (AliasOptionCmd) executor.getExecutions().get(0).getCommand();
+
+        assertTrue("alias --ea should set enableAssertions", cmd.enableAssertions);
+        assertEquals("test", cmd.name);
+    }
+
+    @Test
+    public void testOptionPrimaryNameStillWorks() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(AliasOptionCmd.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // Use the primary name --enableassertions
+        Executor<?> executor = runtime.buildExecutor("aliascmd",
+                new String[] { "--enableassertions" });
+        executor.getExecutions().get(0).populateCommand();
+        AliasOptionCmd cmd = (AliasOptionCmd) executor.getExecutions().get(0).getCommand();
+
+        assertTrue("primary --enableassertions should work", cmd.enableAssertions);
+    }
+
+    @Test
+    public void testOptionAliasInHelp() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(AliasOptionCmd.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        String help = runtime.commandInfo("aliascmd");
+        assertTrue("help should contain --ea alias", help.contains("--ea"));
+        assertTrue("help should contain --enableassertions", help.contains("--enableassertions"));
+    }
+
+    @CommandDefinition(name = "aliascmd", description = "Command with option aliases")
+    public static class AliasOptionCmd implements Command<CommandInvocation> {
+        @Option(name = "enableassertions", aliases = { "ea" }, hasValue = false, description = "Enable assertions")
+        boolean enableAssertions;
+
+        @Option(description = "Name")
+        String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
 }

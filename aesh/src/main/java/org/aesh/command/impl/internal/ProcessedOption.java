@@ -26,6 +26,7 @@ import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -95,6 +96,7 @@ public final class ProcessedOption {
     private boolean inherited = false;
     private String descriptionUrl;
     private boolean isUrl = false;
+    private List<String> aliases = Collections.emptyList();
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
@@ -204,6 +206,22 @@ public final class ProcessedOption {
 
     public java.util.function.Function<Object, Object> getFieldGetter() {
         return fieldGetter;
+    }
+
+    public void setAliases(List<String> aliases) {
+        this.aliases = aliases != null ? aliases : Collections.emptyList();
+    }
+
+    public List<String> getAliases() {
+        return aliases;
+    }
+
+    public boolean hasAlias(String name) {
+        for (String alias : aliases) {
+            if (alias.equals(name))
+                return true;
+        }
+        return false;
     }
 
     public void setMixinFieldName(String mixinFieldName) {
@@ -631,6 +649,20 @@ public final class ProcessedOption {
         }
     }
 
+    public List<TerminalString> getRenderedAliasNamesWithDashes() {
+        if (aliases.isEmpty())
+            return Collections.emptyList();
+        List<TerminalString> result = new ArrayList<>(aliases.size());
+        for (String alias : aliases) {
+            String text = hasValue() ? "--" + alias + "=" : "--" + alias;
+            if (renderer == null || !ansiMode)
+                result.add(new TerminalString(text, true));
+            else
+                result.add(new TerminalString(text, renderer.getColor(), renderer.getTextType()));
+        }
+        return result;
+    }
+
     /**
      * Returns the negated form of the option name with dashes for completion.
      * For example, for option "verbose" with prefix "no-", returns "--no-verbose".
@@ -655,6 +687,9 @@ public final class ProcessedOption {
             if (sb.toString().trim().length() > 0)
                 sb.append(", ");
             sb.append("--").append(name);
+            for (String alias : aliases) {
+                sb.append(", --").append(alias);
+            }
             // Add negated form for negatable options
             if (negatable) {
                 sb.append(", --").append(negationPrefix).append(name);
@@ -684,6 +719,9 @@ public final class ProcessedOption {
             if (shortName != null)
                 sb.append(", ");
             sb.append("--").append(name);
+            for (String alias : aliases) {
+                sb.append(", --").append(alias);
+            }
             // Add negated form for negatable options
             if (negatable) {
                 sb.append(", --").append(negationPrefix).append(name);

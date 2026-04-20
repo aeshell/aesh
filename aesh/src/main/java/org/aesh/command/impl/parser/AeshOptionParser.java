@@ -77,10 +77,13 @@ public class AeshOptionParser implements OptionParser {
             word = Parser.switchSpacesToEscapedSpacesInWord(word);
         if (option.isLongNameUsed()) {
             String optionPart = word.startsWith("--") ? word.substring(2) : word;
-            // For negatable options, we need to use the correct name for comparison
-            String nameToMatch = option.isNegatedByUser() && option.getNegatedName() != null
-                    ? option.getNegatedName()
-                    : option.name();
+            // Determine which name was actually used: primary, alias, or negated
+            String nameToMatch;
+            if (option.isNegatedByUser() && option.getNegatedName() != null) {
+                nameToMatch = option.getNegatedName();
+            } else {
+                nameToMatch = resolveMatchedName(option, optionPart);
+            }
             if (optionPart.length() != nameToMatch.length())
                 processOption(option, optionPart, nameToMatch);
             else if (option.getOptionType() == OptionType.BOOLEAN) {
@@ -221,6 +224,15 @@ public class AeshOptionParser implements OptionParser {
             }
         }
         status = Status.NULL;
+    }
+
+    private static String resolveMatchedName(ProcessedOption option, String input) {
+        // Check if input matches or starts with an alias
+        for (String alias : option.getAliases()) {
+            if (input.equals(alias) || input.startsWith(alias + "="))
+                return alias;
+        }
+        return option.name();
     }
 
     private enum Status {

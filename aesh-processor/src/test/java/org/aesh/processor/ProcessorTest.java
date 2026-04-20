@@ -423,6 +423,42 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: @Option with aliases (#398) ---
+
+    private static final String ALIAS_OPTION_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"aliascmd\", description = \"Alias test\")\n" +
+            "public class AliasCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"enableassertions\", aliases = {\"ea\"}, hasValue = false)\n" +
+            "    boolean enableAssertions;\n" +
+            "\n" +
+            "    @Option(name = \"output\", aliases = {\"out\", \"o\"}, description = \"Output file\")\n" +
+            "    String outputFile;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testOptionAliases() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.AliasCommand", ALIAS_OPTION_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.AliasCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.AliasCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
 
     private static final String GENERIC_OPTION_SOURCE = "package test;\n" +
@@ -520,6 +556,7 @@ public class ProcessorTest {
             assertEquals("Option negatable for " + rOpt.name(), rOpt.isNegatable(), gOpt.isNegatable());
             assertEquals("Option inherited for " + rOpt.name(), rOpt.isInherited(), gOpt.isInherited());
             assertEquals("Option mixinFieldName for " + rOpt.name(), rOpt.getMixinFieldName(), gOpt.getMixinFieldName());
+            assertEquals("Option aliases for " + rOpt.name(), rOpt.getAliases(), gOpt.getAliases());
         }
 
         // Compare argument

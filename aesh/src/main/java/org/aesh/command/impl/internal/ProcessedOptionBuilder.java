@@ -81,6 +81,7 @@ public class ProcessedOptionBuilder {
     private Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
     private String mixinFieldName;
+    private List<String> aliases;
 
     private ProcessedOptionBuilder() {
         defaultValues = java.util.Collections.emptyList();
@@ -374,6 +375,16 @@ public class ProcessedOptionBuilder {
         return apply(c -> c.mixinFieldName = mixinFieldName);
     }
 
+    public ProcessedOptionBuilder aliases(List<String> aliases) {
+        return apply(c -> c.aliases = aliases);
+    }
+
+    public ProcessedOptionBuilder aliases(String... aliases) {
+        return apply(c -> c.aliases = aliases != null && aliases.length > 0
+                ? java.util.Arrays.asList(aliases)
+                : null);
+    }
+
     public ProcessedOption build() throws OptionParserException {
         if (optionType == null) {
             if (!hasValue)
@@ -436,6 +447,8 @@ public class ProcessedOptionBuilder {
             option.setFieldGetter(fieldGetter);
         if (mixinFieldName != null)
             option.setMixinFieldName(mixinFieldName);
+        if (aliases != null)
+            option.setAliases(aliases);
         return option;
     }
 }

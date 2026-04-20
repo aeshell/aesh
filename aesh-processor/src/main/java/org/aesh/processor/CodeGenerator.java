@@ -372,6 +372,7 @@ final class CodeGenerator {
         sb.append("                        .inherited(").append(o.inherited()).append(")\n");
         sb.append("                        .descriptionUrl(").append(stringLiteral(o.descriptionUrl())).append(")\n");
         sb.append("                        .url(").append(o.url()).append(")\n");
+        generateAliases(sb, o.aliases());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -402,6 +403,7 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
+        generateAliases(sb, ol.aliases());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -508,6 +510,12 @@ final class CodeGenerator {
             generateFieldSetter(sb, simpleName, field, typeUtils);
             generateFieldResetter(sb, simpleName, field, typeUtils);
             generateFieldGetter(sb, simpleName, field);
+        }
+    }
+
+    private static void generateAliases(StringBuilder sb, String[] aliases) {
+        if (aliases != null && aliases.length > 0) {
+            sb.append("                        .aliases(").append(stringArrayLiteralAsNew(aliases)).append(")\n");
         }
     }
 

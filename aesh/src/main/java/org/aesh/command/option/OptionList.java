@@ -129,4 +129,11 @@ public @interface OptionList {
      * Only change this if you want to specify a custom parser
      */
     Class<? extends OptionParser> parser() default AeshOptionParser.class;
+
+    /**
+     * Alternative long names for this option.
+     * For example, {@code @OptionList(name = "items", aliases = {"item"})}
+     * accepts both {@code --items} and {@code --item}.
+     */
+    String[] aliases() default {};
 }
