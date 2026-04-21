@@ -930,14 +930,15 @@ public final class ProcessedOption {
     }
 
     private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
-        try {
-            return clazz.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException nsfe) {
-            if (clazz.getSuperclass() != null)
-                return getField(clazz.getSuperclass(), fieldName);
-            else
-                return null;
+        if (fieldName == null || fieldName.isEmpty())
+            return null;
+        for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
+            for (Field f : c.getDeclaredFields()) {
+                if (f.getName().equals(fieldName))
+                    return f;
+            }
         }
+        return null;
     }
 
     public boolean isCursorOption() {
