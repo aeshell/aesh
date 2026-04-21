@@ -593,7 +593,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if (o.getValues().size() == 0 &&
-                    o.isActivated(new ParsedCommand(this))) {
+                    o.isActivated(new ParsedCommand(this)) &&
+                    !isExcludedBySetOption(o)) {
                 names.add(o.getRenderedNameWithDashes());
                 names.addAll(o.getRenderedAliasNamesWithDashes());
                 // Also add the negated form for negatable options
@@ -611,6 +612,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
+            if (isExcludedBySetOption(o))
+                continue;
             if (((o.shortName() != null && o.shortName().equals(name) &&
                     !o.isLongNameUsed() && o.getValues().size() == 0) ||
                     (o.name().startsWith(name) && o.getValues().size() == 0)) &&
@@ -635,6 +638,17 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             }
         }
         return names;
+    }
+
+    private boolean isExcludedBySetOption(ProcessedOption option) {
+        if (option.getExclusiveWith().isEmpty())
+            return false;
+        for (String exclusiveName : option.getExclusiveWith()) {
+            ProcessedOption other = findLongOptionNoActivatorCheck(exclusiveName);
+            if (other != null && other.getValue() != null)
+                return true;
+        }
+        return false;
     }
 
     public List<String> findPossibleLongNames(String name) {

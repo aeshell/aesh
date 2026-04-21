@@ -214,4 +214,12 @@ public @interface Option {
      */
     String helpGroup() default "";
 
+    /**
+     * Names of options that are mutually exclusive with this one.
+     * If this option is set together with any listed option, a
+     * {@code MutuallyExclusiveOptionException} is thrown during parsing.
+     * Use long option names without the "--" prefix.
+     */
+    String[] exclusiveWith() default {};
+
 }

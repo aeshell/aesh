@@ -98,6 +98,7 @@ public final class ProcessedOption {
     private boolean isUrl = false;
     private List<String> aliases = Collections.emptyList();
     private String helpGroup = "";
+    private List<String> exclusiveWith = Collections.emptyList();
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
@@ -223,6 +224,14 @@ public final class ProcessedOption {
 
     public String getHelpGroup() {
         return helpGroup;
+    }
+
+    public void setExclusiveWith(List<String> exclusiveWith) {
+        this.exclusiveWith = exclusiveWith != null ? exclusiveWith : Collections.emptyList();
+    }
+
+    public List<String> getExclusiveWith() {
+        return exclusiveWith;
     }
 
     public boolean hasAlias(String name) {

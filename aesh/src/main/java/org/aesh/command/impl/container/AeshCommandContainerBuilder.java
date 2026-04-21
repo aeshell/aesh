@@ -250,6 +250,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .url(o.url())
                             .aliases(o.aliases())
                             .helpGroup(o.helpGroup())
+                            .exclusiveWith(o.exclusiveWith())
                             .mixinFieldName(mixinFieldName)
                             .build());
         } else if ((ol = field.getAnnotation(OptionList.class)) != null) {
@@ -282,6 +283,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .parser(ol.parser())
                             .aliases(ol.aliases())
                             .helpGroup(ol.helpGroup())
+                            .exclusiveWith(ol.exclusiveWith())
                             .mixinFieldName(mixinFieldName)
                             .build());
 

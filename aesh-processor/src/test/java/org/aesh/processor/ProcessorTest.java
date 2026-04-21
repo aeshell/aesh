@@ -632,6 +632,69 @@ public class ProcessorTest {
                 reflectionPC.getHelpSectionProviderClass(), generatedPC.getHelpSectionProviderClass());
     }
 
+    // --- Test: @Option with exclusiveWith ---
+
+    private static final String EXCLUSIVE_WITH_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"excl\", description = \"Exclusive test\")\n" +
+            "public class ExclusiveCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(hasValue = false, exclusiveWith = {\"xml\"})\n" +
+            "    public boolean json;\n" +
+            "\n" +
+            "    @Option(hasValue = false, exclusiveWith = {\"json\"})\n" +
+            "    public boolean xml;\n" +
+            "\n" +
+            "    @Option(hasValue = false)\n" +
+            "    public boolean verbose;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testExclusiveWith() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ExclusiveCommand", EXCLUSIVE_WITH_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.ExclusiveCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.ExclusiveCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // Verify exclusiveWith on generated options
+        ProcessedOption jsonOpt = generatedPC.findLongOptionNoActivatorCheck("json");
+        assertNotNull("json option should exist", jsonOpt);
+        assertEquals("json exclusiveWith should contain xml", Collections.singletonList("xml"), jsonOpt.getExclusiveWith());
+
+        ProcessedOption xmlOpt = generatedPC.findLongOptionNoActivatorCheck("xml");
+        assertNotNull("xml option should exist", xmlOpt);
+        assertEquals("xml exclusiveWith should contain json", Collections.singletonList("json"), xmlOpt.getExclusiveWith());
+
+        ProcessedOption verboseOpt = generatedPC.findLongOptionNoActivatorCheck("verbose");
+        assertNotNull("verbose option should exist", verboseOpt);
+        assertTrue("verbose exclusiveWith should be empty", verboseOpt.getExclusiveWith().isEmpty());
+
+        // Also verify equivalence with reflection path
+        AeshCommandContainerBuilder reflectionBuilder = new AeshCommandContainerBuilder();
+        ProcessedCommand reflectionPC = reflectionBuilder.create(
+                (Command) commandClass.newInstance()).getParser().getProcessedCommand();
+
+        ProcessedOption refJson = reflectionPC.findLongOptionNoActivatorCheck("json");
+        assertEquals("exclusiveWith should match reflection path",
+                refJson.getExclusiveWith(), jsonOpt.getExclusiveWith());
+    }
+
     // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
 
     private static final String GENERIC_OPTION_SOURCE = "package test;\n" +

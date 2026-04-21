@@ -393,6 +393,7 @@ final class CodeGenerator {
         sb.append("                        .url(").append(o.url()).append(")\n");
         generateAliases(sb, o.aliases());
         generateHelpGroup(sb, o.helpGroup());
+        generateExclusiveWith(sb, o.exclusiveWith());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -425,6 +426,7 @@ final class CodeGenerator {
         generateOptionParser(sb, field, "parser", elementUtils);
         generateAliases(sb, ol.aliases());
         generateHelpGroup(sb, ol.helpGroup());
+        generateExclusiveWith(sb, ol.exclusiveWith());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -543,6 +545,12 @@ final class CodeGenerator {
     private static void generateHelpGroup(StringBuilder sb, String helpGroup) {
         if (helpGroup != null && !helpGroup.isEmpty()) {
             sb.append("                        .helpGroup(").append(stringLiteral(helpGroup)).append(")\n");
+        }
+    }
+
+    private static void generateExclusiveWith(StringBuilder sb, String[] exclusiveWith) {
+        if (exclusiveWith != null && exclusiveWith.length > 0) {
+            sb.append("                        .exclusiveWith(").append(stringArrayLiteralAsNew(exclusiveWith)).append(")\n");
         }
     }
 

@@ -40,6 +40,7 @@ import org.aesh.command.map.MapCommand;
 import org.aesh.command.map.MapCommandPopulator;
 import org.aesh.command.map.MapProcessedCommand;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.parser.MutuallyExclusiveOptionException;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.parser.RequiredOptionException;
 import org.aesh.command.populator.CommandPopulator;
@@ -477,6 +478,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
                 if (re != null)
                     processedCommand.addParserException(re);
+                MutuallyExclusiveOptionException me = checkForMutuallyExclusiveOptions(processedCommand);
+                if (me != null)
+                    processedCommand.addParserException(me);
             }
         }
     }
@@ -676,6 +680,22 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 return true;
         }
         return false;
+    }
+
+    private MutuallyExclusiveOptionException checkForMutuallyExclusiveOptions(
+            ProcessedCommand<? extends Command<CI>, CI> command) {
+        for (ProcessedOption o : command.getOptions()) {
+            if (o.getExclusiveWith().isEmpty() || o.getValue() == null)
+                continue;
+            for (String exclusiveName : o.getExclusiveWith()) {
+                ProcessedOption other = command.findLongOptionNoActivatorCheck(exclusiveName);
+                if (other != null && other.getValue() != null) {
+                    return new MutuallyExclusiveOptionException(
+                            "Options --" + o.name() + " and --" + other.name() + " are mutually exclusive.");
+                }
+            }
+        }
+        return null;
     }
 
     @Override
