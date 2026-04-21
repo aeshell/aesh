@@ -363,17 +363,23 @@ final class CodeGenerator {
 
         sb.append("        processedCommand.addOption(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
-        sb.append("                        .shortName(").append(charLiteral(o.shortName())).append(")\n");
+        if (o.shortName() != '\u0000')
+            sb.append("                        .shortName(").append(charLiteral(o.shortName())).append(")\n");
         sb.append("                        .name(").append(stringLiteral(o.name().length() < 1 ? fieldName : o.name()))
                 .append(")\n");
-        sb.append("                        .description(").append(stringLiteral(o.description())).append(")\n");
-        sb.append("                        .required(").append(o.required()).append(")\n");
-        sb.append("                        .valueSeparator(' ')\n");
-        sb.append("                        .askIfNotSet(").append(o.askIfNotSet()).append(")\n");
-        sb.append("                        .acceptNameWithoutDashes(").append(o.acceptNameWithoutDashes()).append(")\n");
-        sb.append("                        .selector(").append(selectorLiteral(o.selector())).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(o.defaultValue()))
-                .append(")\n");
+        if (!o.description().isEmpty())
+            sb.append("                        .description(").append(stringLiteral(o.description())).append(")\n");
+        if (o.required())
+            sb.append("                        .required(true)\n");
+        if (o.askIfNotSet())
+            sb.append("                        .askIfNotSet(true)\n");
+        if (o.acceptNameWithoutDashes())
+            sb.append("                        .acceptNameWithoutDashes(true)\n");
+        if (o.selector() != org.aesh.selector.SelectorType.NO_OP)
+            sb.append("                        .selector(").append(selectorLiteral(o.selector())).append(")\n");
+        if (o.defaultValue().length > 0)
+            sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(o.defaultValue()))
+                    .append(")\n");
         sb.append("                        .type(").append(fieldType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(").append(optionType).append(")\n");
@@ -384,13 +390,20 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
-        sb.append("                        .overrideRequired(").append(o.overrideRequired()).append(")\n");
-        sb.append("                        .optionalValue(").append(o.optionalValue()).append(")\n");
-        sb.append("                        .negatable(").append(o.negatable()).append(")\n");
-        sb.append("                        .negationPrefix(").append(stringLiteral(o.negationPrefix())).append(")\n");
-        sb.append("                        .inherited(").append(o.inherited()).append(")\n");
-        sb.append("                        .descriptionUrl(").append(stringLiteral(o.descriptionUrl())).append(")\n");
-        sb.append("                        .url(").append(o.url()).append(")\n");
+        if (o.overrideRequired())
+            sb.append("                        .overrideRequired(true)\n");
+        if (o.optionalValue())
+            sb.append("                        .optionalValue(true)\n");
+        if (o.negatable())
+            sb.append("                        .negatable(true)\n");
+        if (!o.negationPrefix().equals("no-"))
+            sb.append("                        .negationPrefix(").append(stringLiteral(o.negationPrefix())).append(")\n");
+        if (o.inherited())
+            sb.append("                        .inherited(true)\n");
+        if (!o.descriptionUrl().isEmpty())
+            sb.append("                        .descriptionUrl(").append(stringLiteral(o.descriptionUrl())).append(")\n");
+        if (o.url())
+            sb.append("                        .url(true)\n");
         generateAliases(sb, o.aliases());
         generateHelpGroup(sb, o.helpGroup());
         generateExclusiveWith(sb, o.exclusiveWith());
@@ -405,16 +418,23 @@ final class CodeGenerator {
 
         sb.append("        processedCommand.addOption(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
-        sb.append("                        .shortName(").append(charLiteral(ol.shortName())).append(")\n");
+        if (ol.shortName() != '\u0000')
+            sb.append("                        .shortName(").append(charLiteral(ol.shortName())).append(")\n");
         sb.append("                        .name(").append(stringLiteral(ol.name().length() < 1 ? fieldName : ol.name()))
                 .append(")\n");
-        sb.append("                        .description(").append(stringLiteral(ol.description())).append(")\n");
-        sb.append("                        .required(").append(ol.required()).append(")\n");
-        sb.append("                        .valueSeparator(").append(charLiteral(ol.valueSeparator())).append(")\n");
-        sb.append("                        .askIfNotSet(").append(ol.askIfNotSet()).append(")\n");
-        sb.append("                        .selector(").append(selectorLiteral(ol.selector())).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(ol.defaultValue()))
-                .append(")\n");
+        if (!ol.description().isEmpty())
+            sb.append("                        .description(").append(stringLiteral(ol.description())).append(")\n");
+        if (ol.required())
+            sb.append("                        .required(true)\n");
+        if (ol.valueSeparator() != ',')
+            sb.append("                        .valueSeparator(").append(charLiteral(ol.valueSeparator())).append(")\n");
+        if (ol.askIfNotSet())
+            sb.append("                        .askIfNotSet(true)\n");
+        if (ol.selector() != org.aesh.selector.SelectorType.NO_OP)
+            sb.append("                        .selector(").append(selectorLiteral(ol.selector())).append(")\n");
+        if (ol.defaultValue().length > 0)
+            sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(ol.defaultValue()))
+                    .append(")\n");
         sb.append("                        .type(").append(elementType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.LIST)\n");
@@ -439,15 +459,19 @@ final class CodeGenerator {
 
         sb.append("        processedCommand.addOption(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
-        sb.append("                        .shortName(").append(charLiteral(og.shortName())).append(")\n");
+        if (og.shortName() != '\u0000')
+            sb.append("                        .shortName(").append(charLiteral(og.shortName())).append(")\n");
         sb.append("                        .name(").append(stringLiteral(og.name().length() < 1 ? fieldName : og.name()))
                 .append(")\n");
-        sb.append("                        .description(").append(stringLiteral(og.description())).append(")\n");
-        sb.append("                        .required(").append(og.required()).append(")\n");
-        sb.append("                        .valueSeparator(',')\n");
-        sb.append("                        .askIfNotSet(").append(og.askIfNotSet()).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(og.defaultValue()))
-                .append(")\n");
+        if (!og.description().isEmpty())
+            sb.append("                        .description(").append(stringLiteral(og.description())).append(")\n");
+        if (og.required())
+            sb.append("                        .required(true)\n");
+        if (og.askIfNotSet())
+            sb.append("                        .askIfNotSet(true)\n");
+        if (og.defaultValue().length > 0)
+            sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(og.defaultValue()))
+                    .append(")\n");
         sb.append("                        .type(").append(valueType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.GROUP)\n");
@@ -468,15 +492,20 @@ final class CodeGenerator {
 
         sb.append("        processedCommand.setArguments(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
-        sb.append("                        .shortName('\\u0000')\n");
         sb.append("                        .name(\"\")\n");
-        sb.append("                        .description(").append(stringLiteral(a.description())).append(")\n");
-        sb.append("                        .required(").append(a.required()).append(")\n");
-        sb.append("                        .valueSeparator(").append(charLiteral(a.valueSeparator())).append(")\n");
-        sb.append("                        .selector(").append(selectorLiteral(a.selector())).append(")\n");
-        sb.append("                        .askIfNotSet(").append(a.askIfNotSet()).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(a.defaultValue()))
-                .append(")\n");
+        if (!a.description().isEmpty())
+            sb.append("                        .description(").append(stringLiteral(a.description())).append(")\n");
+        if (a.required())
+            sb.append("                        .required(true)\n");
+        if (a.valueSeparator() != ' ')
+            sb.append("                        .valueSeparator(").append(charLiteral(a.valueSeparator())).append(")\n");
+        if (a.selector() != org.aesh.selector.SelectorType.NO_OP)
+            sb.append("                        .selector(").append(selectorLiteral(a.selector())).append(")\n");
+        if (a.askIfNotSet())
+            sb.append("                        .askIfNotSet(true)\n");
+        if (a.defaultValue().length > 0)
+            sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(a.defaultValue()))
+                    .append(")\n");
         sb.append("                        .type(").append(elementType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.ARGUMENTS)\n");
@@ -485,7 +514,8 @@ final class CodeGenerator {
         generateOptionValidator(sb, field, "validator", elementUtils);
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
-        sb.append("                        .url(").append(a.url()).append(")\n");
+        if (a.url())
+            sb.append("                        .url(true)\n");
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -497,15 +527,18 @@ final class CodeGenerator {
 
         sb.append("        processedCommand.setArgument(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
-        sb.append("                        .shortName('\\u0000')\n");
         sb.append("                        .name(\"\")\n");
-        sb.append("                        .description(").append(stringLiteral(arg.description())).append(")\n");
-        sb.append("                        .required(").append(arg.required()).append(")\n");
-        sb.append("                        .valueSeparator(' ')\n");
-        sb.append("                        .askIfNotSet(").append(arg.askIfNotSet()).append(")\n");
-        sb.append("                        .selector(").append(selectorLiteral(arg.selector())).append(")\n");
-        sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(arg.defaultValue()))
-                .append(")\n");
+        if (!arg.description().isEmpty())
+            sb.append("                        .description(").append(stringLiteral(arg.description())).append(")\n");
+        if (arg.required())
+            sb.append("                        .required(true)\n");
+        if (arg.askIfNotSet())
+            sb.append("                        .askIfNotSet(true)\n");
+        if (arg.selector() != org.aesh.selector.SelectorType.NO_OP)
+            sb.append("                        .selector(").append(selectorLiteral(arg.selector())).append(")\n");
+        if (arg.defaultValue().length > 0)
+            sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(arg.defaultValue()))
+                    .append(")\n");
         sb.append("                        .type(").append(fieldType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.ARGUMENT)\n");
@@ -515,9 +548,12 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
-        sb.append("                        .overrideRequired(").append(arg.overrideRequired()).append(")\n");
-        sb.append("                        .inherited(").append(arg.inherited()).append(")\n");
-        sb.append("                        .url(").append(arg.url()).append(")\n");
+        if (arg.overrideRequired())
+            sb.append("                        .overrideRequired(true)\n");
+        if (arg.inherited())
+            sb.append("                        .inherited(true)\n");
+        if (arg.url())
+            sb.append("                        .url(true)\n");
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -561,11 +597,8 @@ final class CodeGenerator {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_CONVERTER)) {
             sb.append("                        .converter(new ").append(className).append("())\n");
-        } else {
-            // Pass the Class so the builder can resolve via CLConverterManager
-            sb.append("                        .converter(").append(className != null ? className : NULL_CONVERTER)
-                    .append(".class)\n");
         }
+        // When NullConverter (default), skip — build() auto-resolves from type via CLConverterManager
     }
 
     private static void generateOptionCompleter(StringBuilder sb, VariableElement field,
@@ -577,9 +610,8 @@ final class CodeGenerator {
             sb.append("                        .completer(new org.aesh.command.impl.completer.BooleanOptionCompleter())\n");
         } else if (isFileOrResource) {
             sb.append("                        .completer(new org.aesh.command.impl.completer.FileOptionCompleter())\n");
-        } else {
-            sb.append("                        .completer(").append(NULL_OPTION_COMPLETER).append(".class)\n");
         }
+        // When NullOptionCompleter and not boolean/file, skip — null completer is the default
     }
 
     private static void generateOptionValidator(StringBuilder sb, VariableElement field,
@@ -587,8 +619,6 @@ final class CodeGenerator {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_VALIDATOR)) {
             sb.append("                        .validator(new ").append(className).append("())\n");
-        } else {
-            sb.append("                        .validator(").append(NULL_VALIDATOR).append(".class)\n");
         }
     }
 
@@ -597,8 +627,6 @@ final class CodeGenerator {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_ACTIVATOR)) {
             sb.append("                        .activator(new ").append(className).append("())\n");
-        } else {
-            sb.append("                        .activator(").append(NULL_ACTIVATOR).append(".class)\n");
         }
     }
 
@@ -607,8 +635,6 @@ final class CodeGenerator {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_OPTION_RENDERER)) {
             sb.append("                        .renderer(new ").append(className).append("())\n");
-        } else {
-            sb.append("                        .renderer(").append(NULL_OPTION_RENDERER).append(".class)\n");
         }
     }
 
@@ -617,9 +643,8 @@ final class CodeGenerator {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(AESH_OPTION_PARSER)) {
             sb.append("                        .parser(new ").append(className).append("())\n");
-        } else {
-            sb.append("                        .parser(").append(AESH_OPTION_PARSER).append(".class)\n");
         }
+        // When AeshOptionParser (default), skip — ProcessedOption.parser() lazy-creates it
     }
 
     // --- Annotation class value extraction (handles MirroredTypeException) ---

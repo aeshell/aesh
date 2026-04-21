@@ -49,7 +49,7 @@ public class ProcessedOptionBuilder {
 
     private char shortName;
     private String name;
-    private String description;
+    private String description = "";
     private String argument;
     private Class<?> type;
     private boolean hasValue = true;
