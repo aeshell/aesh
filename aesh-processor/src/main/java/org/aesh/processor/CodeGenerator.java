@@ -407,6 +407,7 @@ final class CodeGenerator {
         generateAliases(sb, o.aliases());
         generateHelpGroup(sb, o.helpGroup());
         generateExclusiveWith(sb, o.exclusiveWith());
+        generateVisibility(sb, o.visibility());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -447,6 +448,7 @@ final class CodeGenerator {
         generateAliases(sb, ol.aliases());
         generateHelpGroup(sb, ol.helpGroup());
         generateExclusiveWith(sb, ol.exclusiveWith());
+        generateVisibility(sb, ol.visibility());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -481,6 +483,7 @@ final class CodeGenerator {
         generateOptionActivator(sb, field, "activator", elementUtils);
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
+        generateVisibility(sb, og.visibility());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
     }
@@ -587,6 +590,13 @@ final class CodeGenerator {
     private static void generateExclusiveWith(StringBuilder sb, String[] exclusiveWith) {
         if (exclusiveWith != null && exclusiveWith.length > 0) {
             sb.append("                        .exclusiveWith(").append(stringArrayLiteralAsNew(exclusiveWith)).append(")\n");
+        }
+    }
+
+    private static void generateVisibility(StringBuilder sb, org.aesh.command.option.OptionVisibility visibility) {
+        if (visibility != org.aesh.command.option.OptionVisibility.BRIEF) {
+            sb.append("                        .visibility(org.aesh.command.option.OptionVisibility.")
+                    .append(visibility.name()).append(")\n");
         }
     }
 

@@ -222,4 +222,10 @@ public @interface Option {
      */
     String[] exclusiveWith() default {};
 
+    /**
+     * Controls how this option appears in help output and tab completion.
+     * BRIEF (default) = always shown, FULL = only with --help=all, HIDDEN = never shown.
+     */
+    OptionVisibility visibility() default OptionVisibility.BRIEF;
+
 }

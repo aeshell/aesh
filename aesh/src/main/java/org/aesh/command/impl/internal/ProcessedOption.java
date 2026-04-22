@@ -99,6 +99,7 @@ public final class ProcessedOption {
     private List<String> aliases = Collections.emptyList();
     private String helpGroup = "";
     private List<String> exclusiveWith = Collections.emptyList();
+    private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
@@ -232,6 +233,14 @@ public final class ProcessedOption {
 
     public List<String> getExclusiveWith() {
         return exclusiveWith;
+    }
+
+    public void setVisibility(org.aesh.command.option.OptionVisibility visibility) {
+        this.visibility = visibility != null ? visibility : org.aesh.command.option.OptionVisibility.BRIEF;
+    }
+
+    public org.aesh.command.option.OptionVisibility getVisibility() {
+        return visibility;
     }
 
     public boolean hasAlias(String name) {

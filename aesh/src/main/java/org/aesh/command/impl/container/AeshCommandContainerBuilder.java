@@ -251,6 +251,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .aliases(o.aliases())
                             .helpGroup(o.helpGroup())
                             .exclusiveWith(o.exclusiveWith())
+                            .visibility(o.visibility())
                             .mixinFieldName(mixinFieldName)
                             .build());
         } else if ((ol = field.getAnnotation(OptionList.class)) != null) {
@@ -284,6 +285,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .aliases(ol.aliases())
                             .helpGroup(ol.helpGroup())
                             .exclusiveWith(ol.exclusiveWith())
+                            .visibility(ol.visibility())
                             .mixinFieldName(mixinFieldName)
                             .build());
 
@@ -313,6 +315,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .activator(og.activator())
                     .renderer(og.renderer())
                     .parser(og.parser())
+                    .visibility(og.visibility())
                     .mixinFieldName(mixinFieldName)
                     .build());
         }

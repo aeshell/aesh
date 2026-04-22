@@ -152,4 +152,10 @@ public @interface OptionList {
      * Use long option names without the "--" prefix.
      */
     String[] exclusiveWith() default {};
+
+    /**
+     * Controls how this option appears in help output and tab completion.
+     * BRIEF (default) = always shown, FULL = only with --help=all, HIDDEN = never shown.
+     */
+    OptionVisibility visibility() default OptionVisibility.BRIEF;
 }

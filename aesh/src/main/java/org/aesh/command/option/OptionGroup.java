@@ -118,4 +118,10 @@ public @interface OptionGroup {
      * Only change this if you want to specify a custom parser
      */
     Class<? extends OptionParser> parser() default AeshOptionParser.class;
+
+    /**
+     * Controls how this option appears in help output and tab completion.
+     * BRIEF (default) = always shown, FULL = only with --help=all, HIDDEN = never shown.
+     */
+    OptionVisibility visibility() default OptionVisibility.BRIEF;
 }

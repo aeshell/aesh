@@ -534,11 +534,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .builder()
                         .name("help")
                         .shortName('h')
-                        .description("Displays information of the command and all options")
-                        .hasValue(false)
+                        .description("Display help (use --help=all for all options)")
                         .required(false)
-                        .optionType(OptionType.BOOLEAN)
-                        .type(Boolean.class)
+                        .optionType(OptionType.NORMAL)
+                        .type(String.class)
+                        .optionalValue(true)
+                        .addDefaultValue("brief")
                         .overrideRequired(true)
                         .fieldName("generatedHelp")
                         .build();
@@ -553,6 +554,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public boolean isGenerateHelpOptionSet() {
         ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");
         return helpOption != null && helpOption.getValue() != null;
+    }
+
+    public boolean isFullHelpRequested() {
+        ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");
+        if (helpOption == null || helpOption.getValue() == null)
+            return false;
+        String val = helpOption.getValue();
+        return "all".equalsIgnoreCase(val) || "full".equalsIgnoreCase(val);
     }
 
     private void doGenerateVersion() {
@@ -592,6 +601,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
+            if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+                continue;
             if (o.getValues().size() == 0 &&
                     o.isActivated(new ParsedCommand(this)) &&
                     !isExcludedBySetOption(o)) {
@@ -612,6 +623,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
+            if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+                continue;
             if (isExcludedBySetOption(o))
                 continue;
             if (((o.shortName() != null && o.shortName().equals(name) &&
@@ -712,7 +725,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      *
      */
     public String printHelp(String commandName) {
-        return printHelp(commandName, false);
+        return printHelp(commandName, false, false);
+    }
+
+    public String printHelp(String commandName, boolean supportsHyperlinks) {
+        return printHelp(commandName, supportsHyperlinks, false);
     }
 
     /**
@@ -721,12 +738,21 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      *
      * @param commandName the command name to display
      * @param supportsHyperlinks whether the terminal supports OSC 8 hyperlinks
+     * @param showAll when true, includes FULL visibility options in output
      */
-    public String printHelp(String commandName, boolean supportsHyperlinks) {
+    public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll) {
         int maxLength = 0;
         int width = 80;
         List<ProcessedOption> opts = getOptions();
+        List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
+            if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+                continue;
+            if (!showAll && o.getVisibility() == org.aesh.command.option.OptionVisibility.FULL)
+                continue;
+            visibleOpts.add(o);
+        }
+        for (ProcessedOption o : visibleOpts) {
             if (o.getFormattedLength() > maxLength)
                 maxLength = o.getFormattedLength();
         }
@@ -738,7 +764,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             sb.append(name());
         else
             sb.append(commandName);
-        if (opts.size() > 0)
+        if (visibleOpts.size() > 0)
             sb.append(" [<options>]");
 
         if (argument != null) {
@@ -759,9 +785,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         sb.append(description()).append(Config.getLineSeparator());
 
         //options and arguments — group by helpGroup
-        if (opts.size() > 0) {
+        if (visibleOpts.size() > 0) {
             Map<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
-            for (ProcessedOption o : opts) {
+            for (ProcessedOption o : visibleOpts) {
                 String group = o.getHelpGroup().isEmpty() ? "" : o.getHelpGroup();
                 groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
             }

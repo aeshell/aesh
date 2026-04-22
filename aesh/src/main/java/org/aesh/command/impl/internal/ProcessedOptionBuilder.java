@@ -83,6 +83,7 @@ public class ProcessedOptionBuilder {
     private List<String> aliases;
     private String helpGroup = "";
     private List<String> exclusiveWith;
+    private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
 
     private ProcessedOptionBuilder() {
         defaultValues = java.util.Collections.emptyList();
@@ -384,6 +385,11 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
+    public ProcessedOptionBuilder visibility(org.aesh.command.option.OptionVisibility visibility) {
+        this.visibility = visibility != null ? visibility : org.aesh.command.option.OptionVisibility.BRIEF;
+        return this;
+    }
+
     public ProcessedOption build() throws OptionParserException {
         if (optionType == null) {
             if (!hasValue)
@@ -452,6 +458,8 @@ public class ProcessedOptionBuilder {
             option.setHelpGroup(helpGroup);
         if (exclusiveWith != null)
             option.setExclusiveWith(exclusiveWith);
+        if (visibility != org.aesh.command.option.OptionVisibility.BRIEF)
+            option.setVisibility(visibility);
         return option;
     }
 }

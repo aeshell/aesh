@@ -226,6 +226,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      */
     @Override
     public String printHelp() {
+        boolean showAll = processedCommand.isFullHelpRequested();
         List<CommandLineParser<CI>> parsers = getChildParsers();
         Map<String, List<HelpEntry>> additionalSections = resolveAdditionalSections();
         boolean hasChildren = parsers != null && parsers.size() > 0;
@@ -233,7 +234,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
         if (hasChildren || hasAdditional) {
             StringBuilder sb = new StringBuilder();
-            sb.append(processedCommand.printHelp(helpNames()));
+            sb.append(processedCommand.printHelp(helpNames(), false, showAll));
 
             int maxLength = 0;
             if (hasChildren) {
@@ -293,7 +294,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
             return sb.toString();
         } else
-            return processedCommand.printHelp(helpNames());
+            return processedCommand.printHelp(helpNames(), false, showAll);
     }
 
     private Map<String, List<HelpEntry>> resolveAdditionalSections() {
