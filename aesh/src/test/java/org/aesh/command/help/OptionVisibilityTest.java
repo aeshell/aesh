@@ -212,6 +212,36 @@ public class OptionVisibilityTest {
         console.stop();
     }
 
+    @Test
+    public void testHelpOptionParentIsSet() throws Exception {
+        ProcessedCommand pc = ProcessedCommandBuilder.builder()
+                .name("test")
+                .description("test command")
+                .generateHelp(true)
+                .create();
+
+        pc.addOption(ProcessedOptionBuilder.builder()
+                .name("foo")
+                .type(String.class)
+                .fieldName("foo")
+                .description("a foo")
+                .optionType(OptionType.NORMAL)
+                .build());
+
+        // The auto-generated help option must have its parent set,
+        // otherwise parsing --help=all triggers NPE in AeshOptionParser
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser(pc);
+        parser.parse("test --help=all");
+        assertTrue("help option should be detected as set", pc.isGenerateHelpOptionSet());
+        assertTrue("full help should be requested", pc.isFullHelpRequested());
+
+        // Also verify bare --help works
+        parser.clear();
+        parser.parse("test --help");
+        assertTrue("help option should be detected as set", pc.isGenerateHelpOptionSet());
+        assertFalse("full help should NOT be requested for bare --help", pc.isFullHelpRequested());
+    }
+
     @CommandDefinition(name = "vis", generateHelp = true, description = "visibility test")
     public static class VisibilityCommand implements Command {
 

@@ -427,8 +427,7 @@ final class CodeGenerator {
             sb.append("                        .description(").append(stringLiteral(ol.description())).append(")\n");
         if (ol.required())
             sb.append("                        .required(true)\n");
-        if (ol.valueSeparator() != ',')
-            sb.append("                        .valueSeparator(").append(charLiteral(ol.valueSeparator())).append(")\n");
+        sb.append("                        .valueSeparator(").append(charLiteral(ol.valueSeparator())).append(")\n");
         if (ol.askIfNotSet())
             sb.append("                        .askIfNotSet(true)\n");
         if (ol.selector() != org.aesh.selector.SelectorType.NO_OP)
@@ -474,6 +473,7 @@ final class CodeGenerator {
         if (og.defaultValue().length > 0)
             sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(og.defaultValue()))
                     .append(")\n");
+        sb.append("                        .valueSeparator(',')\n");
         sb.append("                        .type(").append(valueType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
         sb.append("                        .optionType(OptionType.GROUP)\n");

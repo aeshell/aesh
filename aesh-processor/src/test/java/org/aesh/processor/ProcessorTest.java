@@ -695,6 +695,79 @@ public class ProcessorTest {
                 refJson.getExclusiveWith(), jsonOpt.getExclusiveWith());
     }
 
+    // --- Test: @Option with visibility (#418) ---
+
+    private static final String VISIBILITY_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "import java.util.Map;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "import org.aesh.command.option.OptionGroup;\n" +
+            "import org.aesh.command.option.OptionVisibility;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"vis\", description = \"Visibility test\")\n" +
+            "public class VisibilityCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Always shown\")\n" +
+            "    public String name;\n" +
+            "\n" +
+            "    @Option(description = \"Advanced\", visibility = OptionVisibility.FULL)\n" +
+            "    public String debug;\n" +
+            "\n" +
+            "    @Option(description = \"Internal\", visibility = OptionVisibility.HIDDEN)\n" +
+            "    public String secret;\n" +
+            "\n" +
+            "    @OptionList(description = \"Advanced list\", visibility = OptionVisibility.FULL)\n" +
+            "    public List<String> modules;\n" +
+            "\n" +
+            "    @OptionGroup(shortName = 'D', description = \"Hidden props\", visibility = OptionVisibility.HIDDEN)\n" +
+            "    public Map<String, String> props;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testVisibility() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.VisibilityCommand", VISIBILITY_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.VisibilityCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.VisibilityCommand_AeshMetadata");
+
+        // assertEquivalence now checks visibility and valueSeparator
+        assertEquivalence(commandClass, metadataClass);
+
+        // Also verify visibility values explicitly
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        assertEquals("name should be BRIEF",
+                org.aesh.command.option.OptionVisibility.BRIEF,
+                generatedPC.findLongOptionNoActivatorCheck("name").getVisibility());
+        assertEquals("debug should be FULL",
+                org.aesh.command.option.OptionVisibility.FULL,
+                generatedPC.findLongOptionNoActivatorCheck("debug").getVisibility());
+        assertEquals("secret should be HIDDEN",
+                org.aesh.command.option.OptionVisibility.HIDDEN,
+                generatedPC.findLongOptionNoActivatorCheck("secret").getVisibility());
+        assertEquals("modules should be FULL",
+                org.aesh.command.option.OptionVisibility.FULL,
+                generatedPC.findLongOptionNoActivatorCheck("modules").getVisibility());
+        assertEquals("props should be HIDDEN",
+                org.aesh.command.option.OptionVisibility.HIDDEN,
+                generatedPC.findLongOptionNoActivatorCheck("props").getVisibility());
+    }
+
     // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
 
     private static final String GENERIC_OPTION_SOURCE = "package test;\n" +
@@ -794,6 +867,8 @@ public class ProcessorTest {
             assertEquals("Option mixinFieldName for " + rOpt.name(), rOpt.getMixinFieldName(), gOpt.getMixinFieldName());
             assertEquals("Option aliases for " + rOpt.name(), rOpt.getAliases(), gOpt.getAliases());
             assertEquals("Option helpGroup for " + rOpt.name(), rOpt.getHelpGroup(), gOpt.getHelpGroup());
+            assertEquals("Option valueSeparator for " + rOpt.name(), rOpt.getValueSeparator(), gOpt.getValueSeparator());
+            assertEquals("Option visibility for " + rOpt.name(), rOpt.getVisibility(), gOpt.getVisibility());
         }
 
         // Compare argument

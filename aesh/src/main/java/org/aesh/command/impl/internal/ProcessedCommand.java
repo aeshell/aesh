@@ -545,6 +545,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .build();
 
                 options.add(helpOption);
+                helpOption.setParent(this);
             } catch (OptionParserException e) {
                 throw new RuntimeException("Failed to generate help option", e);
             }
@@ -582,6 +583,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .build();
 
                 options.add(versionOption);
+                versionOption.setParent(this);
             } catch (OptionParserException e) {
                 throw new RuntimeException("Failed to generate version option", e);
             }
