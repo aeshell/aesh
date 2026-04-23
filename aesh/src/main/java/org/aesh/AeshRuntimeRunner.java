@@ -196,10 +196,16 @@ public class AeshRuntimeRunner {
                 result = runtime.executeCommand(commandName, args);
             } catch (CommandNotFoundException e) {
                 System.err.println("Command not found: " + commandName);
-            } catch (CommandException | CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
+                result = CommandResult.FAILURE;
+            } catch (CommandLineParserException | OptionValidatorException e) {
                 showHelpIfNeeded(runtime, commandName, args, e);
+                result = CommandResult.valueOf(2);
+            } catch (CommandException | CommandValidatorException e) {
+                showHelpIfNeeded(runtime, commandName, args, e);
+                result = CommandResult.FAILURE;
             } catch (InterruptedException | IOException e) {
                 System.err.println(e.getMessage());
+                result = CommandResult.FAILURE;
             }
             if (connection != null)
                 connection.close();
