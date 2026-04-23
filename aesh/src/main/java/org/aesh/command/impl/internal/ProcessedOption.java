@@ -911,8 +911,14 @@ public final class ProcessedOption {
     }
 
     public void injectResource(PipelineResource resource, Object instance) {
+        if (fieldSetter != null && optionType == OptionType.ARGUMENT) {
+            fieldSetter.accept(instance, resource);
+            return;
+        }
         try {
             Field field = getField(instance.getClass(), fieldName);
+            if (field == null)
+                return;
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
 
@@ -957,6 +963,40 @@ public final class ProcessedOption {
             }
         }
         return null;
+    }
+
+    public Object getFieldValue(Object instance) {
+        if (fieldGetter != null)
+            return fieldGetter.apply(instance);
+        try {
+            Object target = resolveMixinInstance(instance);
+            Field field = getField(target.getClass(), fieldName);
+            if (field == null)
+                return null;
+            if (!Modifier.isPublic(field.getModifiers()))
+                field.setAccessible(true);
+            return field.get(target);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            return null;
+        }
+    }
+
+    public void setFieldValue(Object instance, Object value) {
+        if (fieldSetter != null) {
+            fieldSetter.accept(instance, value);
+            return;
+        }
+        try {
+            Object target = resolveMixinInstance(instance);
+            Field field = getField(target.getClass(), fieldName);
+            if (field == null)
+                return;
+            if (!Modifier.isPublic(field.getModifiers()))
+                field.setAccessible(true);
+            field.set(target, value);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            // best-effort
+        }
     }
 
     public boolean isCursorOption() {

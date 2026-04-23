@@ -135,29 +135,30 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
         // Then inject values if we have a command context
         if (commandContext != null && commandContext.isInSubCommandMode()) {
             // Inject @ParentCommand fields
-            injectParentCommands(commandContext);
+            injectParentCommands(processedCommand, commandContext);
             // Inject inherited option values
             injectInheritedValues(processedCommand, commandContext, invocationProviders, aeshContext);
         }
     }
 
-    /**
-     * Inject parent command instances into fields annotated with @ParentCommand.
-     */
-    private void injectParentCommands(CommandContext commandContext) {
+    private void injectParentCommands(ProcessedCommand<Command<CI>, CI> processedCommand,
+            CommandContext commandContext) {
+        java.util.function.BiConsumer<Object, Object> injector = processedCommand.getParentCommandInjector();
+        if (injector != null) {
+            Command<?> parent = commandContext.getParentCommand();
+            if (parent != null)
+                injector.accept(getObject(), parent);
+            return;
+        }
         List<Field> fields = getAllFields(getObject().getClass());
         for (Field field : fields) {
             if (field.isAnnotationPresent(ParentCommand.class)) {
                 Class<?> fieldType = field.getType();
-
-                // Find matching parent command in context stack
                 Command<?> parent = commandContext.getParentCommand(fieldType.asSubclass(Command.class));
-
                 if (parent != null) {
                     try {
-                        if (!Modifier.isPublic(field.getModifiers())) {
+                        if (!Modifier.isPublic(field.getModifiers()))
                             field.setAccessible(true);
-                        }
                         field.set(getObject(), parent);
                     } catch (IllegalAccessException e) {
                         // Field injection failed, continue with other fields
@@ -177,52 +178,32 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             CommandContext commandContext,
             InvocationProviders invocationProviders,
             AeshContext aeshContext) {
-        // Get all inherited options from the context
         java.util.Map<String, ProcessedOption> inheritedOptions = commandContext.getAllInheritedOptions();
 
         if (inheritedOptions.isEmpty()) {
             return;
         }
 
-        // For each option in the current command, check if there's a matching inherited option
         for (ProcessedOption currentOpt : processedCommand.getOptions()) {
-            // Only inject if the option was not explicitly set by the user
             if (currentOpt.getValues() == null || currentOpt.getValues().isEmpty()) {
-                // Check if there's an inherited option with the same field name or option name
                 ProcessedOption inheritedOpt = inheritedOptions.get(currentOpt.getFieldName());
                 if (inheritedOpt == null && currentOpt.name() != null) {
                     inheritedOpt = inheritedOptions.get(currentOpt.name());
                 }
 
                 if (inheritedOpt != null) {
-                    // Get the inherited value from context
                     Object inheritedValue = commandContext.getInheritedValue(currentOpt.getFieldName(), Object.class);
                     if (inheritedValue == null && currentOpt.name() != null) {
                         inheritedValue = commandContext.getInheritedValue(currentOpt.name(), Object.class);
                     }
 
                     if (inheritedValue != null) {
-                        // Inject the inherited value into the current command's field
-                        try {
-                            Field field = getField(getObject().getClass(), currentOpt.getFieldName());
-                            if (field != null) {
-                                if (!Modifier.isPublic(field.getModifiers())) {
-                                    field.setAccessible(true);
-                                }
-                                // Check type compatibility (handle primitive types)
-                                if (isTypeCompatible(field.getType(), inheritedValue.getClass())) {
-                                    field.set(getObject(), inheritedValue);
-                                }
-                            }
-                        } catch (NoSuchFieldException | IllegalAccessException e) {
-                            // Ignore, continue with other fields
-                        }
+                        currentOpt.setFieldValue(getObject(), inheritedValue);
                     }
                 }
             }
         }
 
-        // Also check for argument inheritance
         if (processedCommand.getArgument() != null) {
             ProcessedOption currentArg = processedCommand.getArgument();
             if (currentArg.getValues() == null || currentArg.getValues().isEmpty()) {
@@ -230,52 +211,11 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
                 if (inheritedArg != null) {
                     Object inheritedValue = commandContext.getInheritedValue(currentArg.getFieldName(), Object.class);
                     if (inheritedValue != null) {
-                        try {
-                            Field field = getField(getObject().getClass(), currentArg.getFieldName());
-                            if (field != null) {
-                                if (!Modifier.isPublic(field.getModifiers())) {
-                                    field.setAccessible(true);
-                                }
-                                if (isTypeCompatible(field.getType(), inheritedValue.getClass())) {
-                                    field.set(getObject(), inheritedValue);
-                                }
-                            }
-                        } catch (NoSuchFieldException | IllegalAccessException e) {
-                            // Ignore, continue
-                        }
+                        currentArg.setFieldValue(getObject(), inheritedValue);
                     }
                 }
             }
         }
-    }
-
-    /**
-     * Check if a value type is compatible with a field type, handling primitive types.
-     */
-    private boolean isTypeCompatible(Class<?> fieldType, Class<?> valueType) {
-        if (fieldType.isAssignableFrom(valueType)) {
-            return true;
-        }
-        // Handle primitive type boxing/unboxing
-        if (fieldType.isPrimitive()) {
-            if (fieldType == boolean.class && valueType == Boolean.class)
-                return true;
-            if (fieldType == int.class && valueType == Integer.class)
-                return true;
-            if (fieldType == long.class && valueType == Long.class)
-                return true;
-            if (fieldType == short.class && valueType == Short.class)
-                return true;
-            if (fieldType == byte.class && valueType == Byte.class)
-                return true;
-            if (fieldType == char.class && valueType == Character.class)
-                return true;
-            if (fieldType == float.class && valueType == Float.class)
-                return true;
-            if (fieldType == double.class && valueType == Double.class)
-                return true;
-        }
-        return false;
     }
 
     /**
@@ -342,14 +282,13 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
     }
 
     private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
-        try {
-            return clazz.getDeclaredField(fieldName);
-        } catch (NoSuchFieldException nsfe) {
-            if (clazz.getSuperclass() != null)
-                return getField(clazz.getSuperclass(), fieldName);
-            else
-                return null;
+        for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
+            for (Field f : c.getDeclaredFields()) {
+                if (f.getName().equals(fieldName))
+                    return f;
+            }
         }
+        return null;
     }
 
     @Override

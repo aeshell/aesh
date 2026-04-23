@@ -855,25 +855,27 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         for (ProcessedOption parentOpt : processedCommand.getOptions()) {
             if (!parentOpt.isInherited())
                 continue;
+            Object value = parentOpt.getFieldValue(getCommand());
+            if (value == null)
+                continue;
             for (CommandLineParser<CI> child : getChildParsers()) {
                 if (child.parsedCommand() == null)
                     continue;
                 Command<CI> childCmd = child.getCommand();
-                try {
-                    Field childField = findField(childCmd.getClass(), parentOpt.getFieldName());
-                    if (childField == null)
-                        continue;
-                    Field parentField = findField(getCommand().getClass(), parentOpt.getFieldName());
-                    if (parentField == null)
-                        continue;
-                    if (!Modifier.isPublic(parentField.getModifiers()))
-                        parentField.setAccessible(true);
-                    Object value = parentField.get(getCommand());
-                    if (!Modifier.isPublic(childField.getModifiers()))
-                        childField.setAccessible(true);
-                    childField.set(childCmd, value);
-                } catch (Exception e) {
-                    // inherited value propagation is best-effort
+                ProcessedOption childOpt = child.getProcessedCommand().searchAllOptions(parentOpt.name());
+                if (childOpt != null) {
+                    childOpt.setFieldValue(childCmd, value);
+                } else {
+                    try {
+                        Field childField = findField(childCmd.getClass(), parentOpt.getFieldName());
+                        if (childField == null)
+                            continue;
+                        if (!Modifier.isPublic(childField.getModifiers()))
+                            childField.setAccessible(true);
+                        childField.set(childCmd, value);
+                    } catch (Exception e) {
+                        // inherited value propagation is best-effort
+                    }
                 }
             }
         }

@@ -165,7 +165,7 @@ class Executions {
             // Inject @ParentCommand fields if in sub-command mode
             CommandContext cmdContext = getCommandInvocation().getCommandContext();
             if (cmdContext != null && cmdContext.isInSubCommandMode()) {
-                injectParentCommands(cmd.getCommand(), cmdContext);
+                injectParentCommands(cmd, cmdContext);
             }
 
             //finally we set the command that should be executed
@@ -463,45 +463,33 @@ class Executions {
         throw new IllegalArgumentException("Unsupported operator " + op);
     }
 
-    /**
-     * Inject parent command instances into fields annotated with @ParentCommand.
-     */
-    private static void injectParentCommands(Object command, CommandContext commandContext) {
-        List<Field> fields = getAllFields(command.getClass());
-        for (Field field : fields) {
-            if (field.isAnnotationPresent(ParentCommand.class)) {
-                Class<?> fieldType = field.getType();
-
-                // Find matching parent command in context stack
-                @SuppressWarnings("unchecked")
-                Command<?> parent = commandContext.getParentCommand(
-                        (Class<? extends Command<?>>) fieldType.asSubclass(Command.class));
-
-                if (parent != null) {
-                    try {
-                        if (!Modifier.isPublic(field.getModifiers())) {
-                            field.setAccessible(true);
+    private static void injectParentCommands(ProcessedCommand<?, ?> processedCommand, CommandContext commandContext) {
+        java.util.function.BiConsumer<Object, Object> injector = processedCommand.getParentCommandInjector();
+        if (injector != null) {
+            Command<?> parent = commandContext.getParentCommand();
+            if (parent != null)
+                injector.accept(processedCommand.getCommand(), parent);
+            return;
+        }
+        Object command = processedCommand.getCommand();
+        for (Class<?> c = command.getClass(); c != null; c = c.getSuperclass()) {
+            for (Field field : c.getDeclaredFields()) {
+                if (field.isAnnotationPresent(ParentCommand.class)) {
+                    Class<?> fieldType = field.getType();
+                    @SuppressWarnings("unchecked")
+                    Command<?> parent = commandContext.getParentCommand(
+                            (Class<? extends Command<?>>) fieldType.asSubclass(Command.class));
+                    if (parent != null) {
+                        try {
+                            if (!Modifier.isPublic(field.getModifiers()))
+                                field.setAccessible(true);
+                            field.set(command, parent);
+                        } catch (IllegalAccessException e) {
+                            // Field injection failed, continue
                         }
-                        field.set(command, parent);
-                    } catch (IllegalAccessException e) {
-                        // Field injection failed, continue with other fields
                     }
                 }
             }
         }
-    }
-
-    /**
-     * Get all fields from a class and its superclasses.
-     */
-    private static List<Field> getAllFields(Class<?> clazz) {
-        List<Field> fields = new ArrayList<>();
-        while (clazz != null) {
-            for (Field field : clazz.getDeclaredFields()) {
-                fields.add(field);
-            }
-            clazz = clazz.getSuperclass();
-        }
-        return fields;
     }
 }

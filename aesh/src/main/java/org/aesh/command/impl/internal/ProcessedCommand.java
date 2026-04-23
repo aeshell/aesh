@@ -72,6 +72,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
     private CompleteStatus completeStatus;
+    private java.util.function.BiConsumer<Object, Object> parentCommandInjector;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator<C, CI> validator,
@@ -277,6 +278,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void setHelpSectionProvider(HelpSectionProvider helpSectionProvider) {
         this.helpSectionProvider = helpSectionProvider;
+    }
+
+    public void setParentCommandInjector(java.util.function.BiConsumer<Object, Object> injector) {
+        this.parentCommandInjector = injector;
+    }
+
+    public java.util.function.BiConsumer<Object, Object> getParentCommandInjector() {
+        return parentCommandInjector;
     }
 
     private char verifyThatNamesAreUnique(String name, String longName) throws OptionParserException {
