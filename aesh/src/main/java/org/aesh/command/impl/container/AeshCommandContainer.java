@@ -77,6 +77,10 @@ public class AeshCommandContainer<CI extends CommandInvocation> extends DefaultC
         getParser().addChildParser(commandContainer.getParser());
     }
 
+    public void addLazyChild(String name, Class<? extends Command> clazz) throws CommandLineParserException {
+        ((AeshCommandLineParser<CI>) getParser()).addLazyChild(name, clazz);
+    }
+
     @Override
     public String toString() {
         return "AeshCommandContainer{" +

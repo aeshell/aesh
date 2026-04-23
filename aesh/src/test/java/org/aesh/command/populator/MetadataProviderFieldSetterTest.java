@@ -80,6 +80,11 @@ public class MetadataProviderFieldSetterTest {
         }
 
         @Override
+        public String commandName() {
+            return "mytest";
+        }
+
+        @Override
         public ProcessedCommand buildProcessedCommand(MyTestCommand instance) throws CommandLineParserException {
             try {
                 ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())

@@ -124,6 +124,15 @@ final class CodeGenerator {
         }
         sb.append("    }\n\n");
 
+        // commandName()
+        String cmdName = isGroup
+                ? commandElement.getAnnotation(GroupCommandDefinition.class).name()
+                : commandElement.getAnnotation(CommandDefinition.class).name();
+        sb.append("    @Override\n");
+        sb.append("    public String commandName() {\n");
+        sb.append("        return ").append(stringLiteral(cmdName)).append(";\n");
+        sb.append("    }\n\n");
+
         // buildProcessedCommand()
         sb.append("    @Override\n");
         sb.append("    public ProcessedCommand buildProcessedCommand(").append(simpleName).append(" instance)");
@@ -825,10 +834,13 @@ final class CodeGenerator {
         String fieldName = field.getSimpleName().toString();
         String fieldType = field.asType().toString();
 
-        sb.append("                        .fieldSetter((inst, val) -> { if (((").append(commandSimpleName)
-                .append(") inst).").append(mixinFieldName).append(" != null) ((").append(commandSimpleName)
-                .append(") inst).").append(mixinFieldName).append(".").append(fieldName)
-                .append(" = (").append(fieldType).append(") val; })\n");
+        sb.append("                        .fieldSetter(new java.util.function.BiConsumer<Object, Object>() {\n");
+        sb.append("                            public void accept(Object inst, Object val) { if (((")
+                .append(commandSimpleName).append(") inst).").append(mixinFieldName)
+                .append(" != null) ((").append(commandSimpleName).append(") inst).")
+                .append(mixinFieldName).append(".").append(fieldName)
+                .append(" = (").append(fieldType).append(") val; }\n");
+        sb.append("                        })\n");
     }
 
     private static void generateMixinFieldResetter(StringBuilder sb, String commandSimpleName, VariableElement field,
@@ -836,51 +848,25 @@ final class CodeGenerator {
         if (!isAccessibleField(field))
             return;
         String fieldName = field.getSimpleName().toString();
-        TypeMirror fieldType = field.asType();
+        String defaultValue = javaDefaultLiteral(field.asType());
 
-        sb.append("                        .fieldResetter(inst -> { if (((").append(commandSimpleName)
-                .append(") inst).").append(mixinFieldName).append(" != null) ((")
-                .append(commandSimpleName).append(") inst).")
-                .append(mixinFieldName).append(".").append(fieldName).append(" = ");
-
-        switch (fieldType.getKind()) {
-            case BOOLEAN:
-                sb.append("false");
-                break;
-            case BYTE:
-                sb.append("(byte) 0");
-                break;
-            case SHORT:
-                sb.append("(short) 0");
-                break;
-            case INT:
-                sb.append("0");
-                break;
-            case LONG:
-                sb.append("0L");
-                break;
-            case FLOAT:
-                sb.append("0.0f");
-                break;
-            case DOUBLE:
-                sb.append("0.0d");
-                break;
-            case CHAR:
-                sb.append("'\\u0000'");
-                break;
-            default:
-                sb.append("null");
-                break;
-        }
-        sb.append("; })\n");
+        sb.append("                        .fieldResetter(new java.util.function.Consumer<Object>() {\n");
+        sb.append("                            public void accept(Object inst) { if (((")
+                .append(commandSimpleName).append(") inst).").append(mixinFieldName)
+                .append(" != null) ((").append(commandSimpleName).append(") inst).")
+                .append(mixinFieldName).append(".").append(fieldName)
+                .append(" = ").append(defaultValue).append("; }\n");
+        sb.append("                        })\n");
     }
 
     private static void generateFieldGetter(StringBuilder sb, String commandSimpleName, VariableElement field) {
         if (!isAccessibleField(field))
             return;
         String fieldName = field.getSimpleName().toString();
-        sb.append("                        .fieldGetter(inst -> ((").append(commandSimpleName).append(") inst).")
-                .append(fieldName).append(")\n");
+        sb.append("                        .fieldGetter(new java.util.function.Function<Object, Object>() {\n");
+        sb.append("                            public Object apply(Object inst) { return ((")
+                .append(commandSimpleName).append(") inst).").append(fieldName).append("; }\n");
+        sb.append("                        })\n");
     }
 
     private static void generateMixinFieldGetter(StringBuilder sb, String commandSimpleName, VariableElement field,
@@ -888,10 +874,12 @@ final class CodeGenerator {
         if (!isAccessibleField(field))
             return;
         String fieldName = field.getSimpleName().toString();
-        sb.append("                        .fieldGetter(inst -> ((").append(commandSimpleName)
-                .append(") inst).").append(mixinFieldName)
+        sb.append("                        .fieldGetter(new java.util.function.Function<Object, Object>() {\n");
+        sb.append("                            public Object apply(Object inst) { return ((")
+                .append(commandSimpleName).append(") inst).").append(mixinFieldName)
                 .append(" != null ? ((").append(commandSimpleName).append(") inst).")
-                .append(mixinFieldName).append(".").append(fieldName).append(" : null)\n");
+                .append(mixinFieldName).append(".").append(fieldName).append(" : null; }\n");
+        sb.append("                        })\n");
     }
 
     private static void generateFieldSetter(StringBuilder sb, String commandSimpleName, VariableElement field,
@@ -901,8 +889,11 @@ final class CodeGenerator {
         String fieldName = field.getSimpleName().toString();
         String fieldType = field.asType().toString();
 
-        sb.append("                        .fieldSetter((inst, val) -> ((").append(commandSimpleName).append(") inst).")
-                .append(fieldName).append(" = (").append(fieldType).append(") val)\n");
+        sb.append("                        .fieldSetter(new java.util.function.BiConsumer<Object, Object>() {\n");
+        sb.append("                            public void accept(Object inst, Object val) { ((")
+                .append(commandSimpleName).append(") inst).").append(fieldName)
+                .append(" = (").append(fieldType).append(") val; }\n");
+        sb.append("                        })\n");
     }
 
     private static void generateFieldResetter(StringBuilder sb, String commandSimpleName, VariableElement field,
@@ -910,41 +901,36 @@ final class CodeGenerator {
         if (!isAccessibleField(field))
             return;
         String fieldName = field.getSimpleName().toString();
-        TypeMirror fieldType = field.asType();
+        String defaultValue = javaDefaultLiteral(field.asType());
 
-        sb.append("                        .fieldResetter(inst -> ((").append(commandSimpleName).append(") inst).")
-                .append(fieldName).append(" = ");
+        sb.append("                        .fieldResetter(new java.util.function.Consumer<Object>() {\n");
+        sb.append("                            public void accept(Object inst) { ((")
+                .append(commandSimpleName).append(") inst).").append(fieldName)
+                .append(" = ").append(defaultValue).append("; }\n");
+        sb.append("                        })\n");
+    }
 
-        switch (fieldType.getKind()) {
+    private static String javaDefaultLiteral(TypeMirror type) {
+        switch (type.getKind()) {
             case BOOLEAN:
-                sb.append("false");
-                break;
+                return "false";
             case BYTE:
-                sb.append("(byte) 0");
-                break;
+                return "(byte) 0";
             case SHORT:
-                sb.append("(short) 0");
-                break;
+                return "(short) 0";
             case INT:
-                sb.append("0");
-                break;
+                return "0";
             case LONG:
-                sb.append("0L");
-                break;
+                return "0L";
             case FLOAT:
-                sb.append("0.0f");
-                break;
+                return "0.0f";
             case DOUBLE:
-                sb.append("0.0d");
-                break;
+                return "0.0d";
             case CHAR:
-                sb.append("'\\u0000'");
-                break;
+                return "'\\u0000'";
             default:
-                sb.append("null");
-                break;
+                return "null";
         }
-        sb.append(")\n");
     }
 
     private static String escapeJavaString(String s) {

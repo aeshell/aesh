@@ -65,4 +65,9 @@ public interface CommandMetadataProvider<C extends Command> {
      * @return the subcommand classes for a group command, empty array if not a group
      */
     Class<? extends Command>[] groupCommandClasses();
+
+    /**
+     * @return the command name as specified in the annotation, without building the full ProcessedCommand
+     */
+    String commandName();
 }

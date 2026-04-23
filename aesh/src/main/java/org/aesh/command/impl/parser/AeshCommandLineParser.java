@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,8 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandLifecycle;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.provider.NullHelpSectionProvider;
@@ -67,6 +70,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     private final ProcessedCommand<Command<CI>, CI> processedCommand;
     private List<CommandLineParser<CI>> childParsers;
+    private Map<String, Class<? extends Command>> lazyChildClasses;
+    private InvocationProviders storedInvocationProviders;
     private boolean isChild = false;
     private ProcessedOption lastParsedOption;
     private boolean parsedCommand = false;
@@ -97,6 +102,60 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         return childParsers;
     }
 
+    @SuppressWarnings("unchecked")
+    public void addLazyChild(String name, Class<? extends Command> clazz) throws CommandLineParserException {
+        if (processedCommand.hasArgument() || processedCommand.hasArguments())
+            throw new CommandLineParserException("Group commands can not have arguments defined");
+        if (lazyChildClasses == null)
+            lazyChildClasses = new HashMap<>();
+        lazyChildClasses.put(name, clazz);
+    }
+
+    public void storeInvocationProviders(InvocationProviders providers) {
+        this.storedInvocationProviders = providers;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void resolveAllLazyChildren() {
+        if (lazyChildClasses == null || lazyChildClasses.isEmpty())
+            return;
+        AeshCommandContainerBuilder<CI> builder = new AeshCommandContainerBuilder<>();
+        for (Class<? extends Command> clazz : new ArrayList<>(lazyChildClasses.values())) {
+            try {
+                CommandContainer<CI> container = builder.create(clazz);
+                addChildParser(container.getParser());
+                applyStoredProviders(container.getParser());
+            } catch (CommandLineParserException e) {
+                // best-effort: skip unresolvable children
+            }
+        }
+        lazyChildClasses.clear();
+    }
+
+    @SuppressWarnings("unchecked")
+    private CommandLineParser<CI> resolveLazyChild(String name) {
+        if (lazyChildClasses == null)
+            return null;
+        Class<? extends Command> clazz = lazyChildClasses.remove(name);
+        if (clazz == null)
+            return null;
+        try {
+            AeshCommandContainerBuilder<CI> builder = new AeshCommandContainerBuilder<>();
+            CommandContainer<CI> container = builder.create(clazz);
+            addChildParser(container.getParser());
+            applyStoredProviders(container.getParser());
+            return container.getParser();
+        } catch (CommandLineParserException e) {
+            return null;
+        }
+    }
+
+    private void applyStoredProviders(CommandLineParser<CI> child) {
+        if (storedInvocationProviders != null) {
+            child.getProcessedCommand().updateInvocationProviders(storedInvocationProviders);
+        }
+    }
+
     @Override
     public void setChild(boolean child) {
         isChild = child;
@@ -110,7 +169,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     public CommandLineParser<CI> parsedCommand() {
         if (parsedCommand)
             return this;
-        else if (isGroupCommand()) {
+        else if (isGroupCommand() && childParsers != null) {
             CommandLineParser<CI> correct;
             for (CommandLineParser<CI> child : childParsers) {
                 correct = child.parsedCommand();
@@ -140,6 +199,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public List<String> getAllNames() {
         if (isGroupCommand()) {
+            resolveAllLazyChildren();
             List<CommandLineParser<CI>> parsers = getChildParsers();
             List<String> names = new ArrayList<>(parsers.size());
             for (CommandLineParser child : parsers) {
@@ -161,18 +221,21 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     public CommandLineParser<CI> getChildParser(String name) {
         if (!isGroupCommand())
             return null;
-        for (CommandLineParser<CI> clp : getChildParsers()) {
-            if (clp.getProcessedCommand().name().equals(name))
-                return clp;
+        if (childParsers != null) {
+            for (CommandLineParser<CI> clp : childParsers) {
+                if (clp.getProcessedCommand().name().equals(name))
+                    return clp;
+            }
         }
-        return null;
+        return resolveLazyChild(name);
     }
 
     @Override
     public List<CommandLineParser<CI>> getAllChildParsers() {
-        if (isGroupCommand())
+        if (isGroupCommand()) {
+            resolveAllLazyChildren();
             return getChildParsers();
-        else
+        } else
             return new ArrayList<>();
     }
 
@@ -226,6 +289,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      */
     @Override
     public String printHelp() {
+        resolveAllLazyChildren();
         boolean showAll = processedCommand.isFullHelpRequested();
         List<CommandLineParser<CI>> parsers = getChildParsers();
         Map<String, List<HelpEntry>> additionalSections = resolveAdditionalSections();
@@ -366,9 +430,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     if (clp == null) {
                         //if the user have written garbage in the next word, we need to check
                         // eg: group GARBAGE <tab>
-                        if ((iterator.isNextWordCursorWord() ||
+                        if (iterator.isNextWordCursorWord() ||
                                 iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-"))
-                                & !(iterator.peekWord().equalsIgnoreCase("--help")))
                             doParse(iterator, mode);
                         else {
                             processedCommand
@@ -742,7 +805,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public boolean isGroupCommand() {
         List<CommandLineParser<CI>> parsers = getChildParsers();
-        return parsers != null && parsers.size() > 0;
+        if (parsers != null && parsers.size() > 0)
+            return true;
+        return lazyChildClasses != null && !lazyChildClasses.isEmpty();
     }
 
     @Override
@@ -815,11 +880,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     private Field findField(Class<?> clazz, String fieldName) {
         while (clazz != null) {
-            try {
-                return clazz.getDeclaredField(fieldName);
-            } catch (NoSuchFieldException e) {
-                clazz = clazz.getSuperclass();
+            for (Field f : clazz.getDeclaredFields()) {
+                if (f.getName().equals(fieldName))
+                    return f;
             }
+            clazz = clazz.getSuperclass();
         }
         return null;
     }

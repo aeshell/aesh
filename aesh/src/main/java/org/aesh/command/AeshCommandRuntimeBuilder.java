@@ -21,7 +21,6 @@
 package org.aesh.command;
 
 import java.util.EnumSet;
-import java.util.function.Consumer;
 
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
@@ -88,71 +87,75 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         return this;
     }
 
-    private AeshCommandRuntimeBuilder<CI> apply(Consumer<AeshCommandRuntimeBuilder<CI>> consumer) {
-        consumer.accept(this);
+    public AeshCommandRuntimeBuilder<CI> commandInvocationProvider(CommandInvocationProvider<CI> commandInvocationProvider) {
+        this.commandInvocationProvider = commandInvocationProvider;
         return this;
     }
 
-    public AeshCommandRuntimeBuilder<CI> commandInvocationProvider(CommandInvocationProvider<CI> commandInvocationProvider) {
-        return apply(c -> c.commandInvocationProvider = commandInvocationProvider);
-    }
-
     public AeshCommandRuntimeBuilder<CI> commandNotFoundHandler(CommandNotFoundHandler commandNotFoundHandler) {
-        return apply(c -> c.commandNotFoundHandler = commandNotFoundHandler);
+        this.commandNotFoundHandler = commandNotFoundHandler;
+        return this;
     }
 
     public AeshCommandRuntimeBuilder<CI> completerInvocationProvider(
             CompleterInvocationProvider completerInvocationProvider) {
-        return apply(c -> c.completerInvocationProvider = completerInvocationProvider);
+        this.completerInvocationProvider = completerInvocationProvider;
+        return this;
     }
 
     public AeshCommandRuntimeBuilder<CI> converterInvocationProvider(
             ConverterInvocationProvider converterInvocationProvider) {
-        return apply(c -> c.converterInvocationProvider = converterInvocationProvider);
+        this.converterInvocationProvider = converterInvocationProvider;
+        return this;
     }
 
     public AeshCommandRuntimeBuilder<CI> validatorInvocationProvider(
             ValidatorInvocationProvider validatorInvocationProvider) {
-        return apply(c -> c.validatorInvocationProvider = validatorInvocationProvider);
+        this.validatorInvocationProvider = validatorInvocationProvider;
+        return this;
     }
 
     public AeshCommandRuntimeBuilder<CI> optionActivatorProvider(
             OptionActivatorProvider optionActivatorProvider) {
-        return apply(c -> c.optionActivatorProvider = optionActivatorProvider);
+        this.optionActivatorProvider = optionActivatorProvider;
+        return this;
     }
 
     public AeshCommandRuntimeBuilder<CI> commandActivatorProvider(
             CommandActivatorProvider commandActivatorProvider) {
-        return apply(c -> c.commandActivatorProvider = commandActivatorProvider);
+        this.commandActivatorProvider = commandActivatorProvider;
+        return this;
     }
 
     public AeshCommandRuntimeBuilder<CI> shell(Shell shell) {
-        return apply(c -> c.shell = shell);
+        this.shell = shell;
+        return this;
     }
 
     @SuppressWarnings("unchecked")
     public AeshCommandRuntimeBuilder<CI> commandInvocationBuilder(CommandInvocationBuilder commandInvocationBuilder) {
-        return apply(c -> c.commandInvocationBuilder = commandInvocationBuilder);
+        this.commandInvocationBuilder = commandInvocationBuilder;
+        return this;
     }
 
     public AeshCommandRuntimeBuilder<CI> aeshContext(AeshContext ctx) {
-        return apply(c -> c.ctx = ctx);
+        this.ctx = ctx;
+        return this;
     }
 
     @SuppressWarnings("unchecked")
     public AeshCommandRuntimeBuilder<CI> settings(Settings<? extends CommandInvocation> settings) {
-        return apply(c -> {
-            c.commandInvocationProvider = (CommandInvocationProvider<CI>) settings.commandInvocationProvider();
-            c.commandNotFoundHandler = settings.commandNotFoundHandler();
-            c.completerInvocationProvider = settings.completerInvocationProvider();
-            c.converterInvocationProvider = settings.converterInvocationProvider();
-            c.validatorInvocationProvider = settings.validatorInvocationProvider();
-            c.optionActivatorProvider = settings.optionActivatorProvider();
-            c.commandActivatorProvider = settings.commandActivatorProvider();
-            c.registry = (CommandRegistry<CI>) settings.commandRegistry();
-            c.ctx = settings.aeshContext();
-            c.operators = settings.operatorParserEnabled() ? EnumSet.allOf(OperatorType.class) : null;
-        });
+        this.commandInvocationProvider = (CommandInvocationProvider<CI>) settings.commandInvocationProvider();
+        this.commandNotFoundHandler = settings.commandNotFoundHandler();
+        this.completerInvocationProvider = settings.completerInvocationProvider();
+        this.converterInvocationProvider = settings.converterInvocationProvider();
+        this.validatorInvocationProvider = settings.validatorInvocationProvider();
+        this.optionActivatorProvider = settings.optionActivatorProvider();
+        this.commandActivatorProvider = settings.commandActivatorProvider();
+        this.registry = (CommandRegistry<CI>) settings.commandRegistry();
+        this.ctx = settings.aeshContext();
+        this.operators = settings.operatorParserEnabled() ? EnumSet.allOf(OperatorType.class) : null;
+        return this;
     }
 
     @SuppressWarnings("unchecked")

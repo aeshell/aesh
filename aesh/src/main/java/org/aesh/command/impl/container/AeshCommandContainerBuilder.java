@@ -103,7 +103,12 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 }
             } else {
                 for (Class<? extends Command> groupClazz : provider.groupCommandClasses()) {
-                    container.addChild(create(groupClazz));
+                    String childName = getCommandName(groupClazz);
+                    if (childName != null) {
+                        container.addLazyChild(childName, groupClazz);
+                    } else {
+                        container.addChild(create(groupClazz));
+                    }
                 }
             }
         }
@@ -184,8 +189,13 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 }
             } else {
                 for (Class<? extends Command> groupClazz : groupCommand.groupCommands()) {
-                    Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
-                    groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
+                    String childName = getCommandName(groupClazz);
+                    if (childName != null) {
+                        groupContainer.addLazyChild(childName, groupClazz);
+                    } else {
+                        Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
+                        groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
+                    }
                 }
             }
 
@@ -396,6 +406,21 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         if (clazz.getSuperclass() != null && clazz.getSuperclass() != Object.class) {
             processMixinClass(processedCommand, clazz.getSuperclass(), mixinFieldName);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String getCommandName(Class<? extends Command> clazz) {
+        CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(clazz);
+        if (provider != null) {
+            return provider.commandName();
+        }
+        CommandDefinition cd = clazz.getAnnotation(CommandDefinition.class);
+        if (cd != null)
+            return cd.name();
+        GroupCommandDefinition gcd = clazz.getAnnotation(GroupCommandDefinition.class);
+        if (gcd != null)
+            return gcd.name();
+        return null;
     }
 
     public static void parseAndPopulate(Command<CommandInvocation> instance, String input)

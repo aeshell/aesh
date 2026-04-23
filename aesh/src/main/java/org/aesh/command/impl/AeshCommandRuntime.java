@@ -44,10 +44,10 @@ import org.aesh.command.container.CommandContainer;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
-import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
@@ -274,11 +274,22 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     private void updateCommand(String commandName) throws CommandNotFoundException {
-        ProcessedCommand<Command<CI>, CI> cmd = registry.getCommand(commandName, "").getParser().getProcessedCommand();
-        List<CommandLineParser<CI>> childParsers = registry.getChildCommandParsers(commandName);
-        cmd.updateInvocationProviders(invocationProviders);
-        for (CommandLineParser<?> child : childParsers) {
-            child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+        CommandLineParser<CI> parser = registry.getCommand(commandName, "").getParser();
+        parser.getProcessedCommand().updateInvocationProviders(invocationProviders);
+        if (parser instanceof AeshCommandLineParser) {
+            AeshCommandLineParser<CI> aeshParser = (AeshCommandLineParser<CI>) parser;
+            aeshParser.storeInvocationProviders(invocationProviders);
+            List<CommandLineParser<CI>> childParsers = aeshParser.getChildParsers();
+            if (childParsers != null) {
+                for (CommandLineParser<?> child : childParsers) {
+                    child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+                }
+            }
+        } else {
+            List<CommandLineParser<CI>> childParsers = registry.getChildCommandParsers(commandName);
+            for (CommandLineParser<?> child : childParsers) {
+                child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+            }
         }
     }
 

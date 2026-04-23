@@ -27,14 +27,19 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
 
 import org.aesh.command.converter.Converter;
+import org.aesh.command.impl.converter.BooleanConverter;
+import org.aesh.command.impl.converter.ByteConverter;
+import org.aesh.command.impl.converter.CharacterConverter;
+import org.aesh.command.impl.converter.DoubleConverter;
 import org.aesh.command.impl.converter.FileConverter;
 import org.aesh.command.impl.converter.FileResourceConverter;
-import org.aesh.command.impl.converter.FunctionalConverter;
+import org.aesh.command.impl.converter.FloatConverter;
+import org.aesh.command.impl.converter.IntegerConverter;
+import org.aesh.command.impl.converter.LongConverter;
+import org.aesh.command.impl.converter.ShortConverter;
+import org.aesh.command.impl.converter.StringConverter;
 import org.aesh.command.impl.converter.URIConverter;
 import org.aesh.command.impl.converter.URLConverter;
 import org.aesh.io.Resource;
@@ -44,8 +49,7 @@ import org.aesh.io.Resource;
  */
 public class CLConverterManager {
 
-    private final Map<Class, Supplier<Converter>> factories;
-    private final ConcurrentMap<Class, Converter> cache = new ConcurrentHashMap<>();
+    private final Map<Class, Converter> converters;
 
     private static class CLConvertManagerHolder {
         static final CLConverterManager INSTANCE = new CLConverterManager();
@@ -56,55 +60,52 @@ public class CLConverterManager {
     }
 
     private CLConverterManager() {
-        factories = new HashMap<>(22);
-        addFactory(Integer.class, int.class, () -> new FunctionalConverter<>(input -> Integer.parseInt(input.getInput())));
-        addFactory(Boolean.class, boolean.class,
-                () -> new FunctionalConverter<>(input -> Boolean.parseBoolean(input.getInput())));
-        addFactory(Character.class, char.class, () -> new FunctionalConverter<>(
-                input -> input != null && input.getInput().length() > 0 ? input.getInput().charAt(0) : '\u0000'));
-        addFactory(Double.class, double.class, () -> new FunctionalConverter<>(input -> Double.parseDouble(input.getInput())));
-        addFactory(Float.class, float.class, () -> new FunctionalConverter<>(input -> Float.parseFloat(input.getInput())));
-        addFactory(Long.class, long.class, () -> new FunctionalConverter<>(input -> Long.parseLong(input.getInput())));
-        addFactory(Short.class, short.class, () -> new FunctionalConverter<>(input -> Short.valueOf(input.getInput())));
-        addFactory(Byte.class, byte.class, () -> new FunctionalConverter<>(input -> Byte.valueOf(input.getInput())));
-        factories.put(String.class, () -> new FunctionalConverter<>(input -> input.getInput()));
-        factories.put(File.class, () -> new FileConverter());
-        factories.put(Resource.class, () -> new FileResourceConverter());
-        factories.put(URL.class, () -> new URLConverter());
-        factories.put(URI.class, () -> new URIConverter());
-        // Pre-populate cache so getConverter() is a single ConcurrentHashMap.get()
-        for (Map.Entry<Class, Supplier<Converter>> entry : factories.entrySet()) {
-            cache.put(entry.getKey(), entry.getValue().get());
-        }
-    }
-
-    private void addFactory(Class<?> boxed, Class<?> primitive, Supplier<Converter> factory) {
-        factories.put(boxed, factory);
-        factories.put(primitive, factory);
+        converters = new HashMap<>(22);
+        Converter intConverter = new IntegerConverter();
+        converters.put(Integer.class, intConverter);
+        converters.put(int.class, intConverter);
+        Converter boolConverter = new BooleanConverter();
+        converters.put(Boolean.class, boolConverter);
+        converters.put(boolean.class, boolConverter);
+        Converter charConverter = new CharacterConverter();
+        converters.put(Character.class, charConverter);
+        converters.put(char.class, charConverter);
+        Converter doubleConverter = new DoubleConverter();
+        converters.put(Double.class, doubleConverter);
+        converters.put(double.class, doubleConverter);
+        Converter floatConverter = new FloatConverter();
+        converters.put(Float.class, floatConverter);
+        converters.put(float.class, floatConverter);
+        Converter longConverter = new LongConverter();
+        converters.put(Long.class, longConverter);
+        converters.put(long.class, longConverter);
+        Converter shortConverter = new ShortConverter();
+        converters.put(Short.class, shortConverter);
+        converters.put(short.class, shortConverter);
+        Converter byteConverter = new ByteConverter();
+        converters.put(Byte.class, byteConverter);
+        converters.put(byte.class, byteConverter);
+        converters.put(String.class, new StringConverter());
+        converters.put(File.class, new FileConverter());
+        converters.put(Resource.class, new FileResourceConverter());
+        converters.put(URL.class, new URLConverter());
+        converters.put(URI.class, new URIConverter());
     }
 
     public boolean hasConverter(Class clazz) {
-        return cache.containsKey(clazz) || factories.containsKey(clazz);
+        return converters.containsKey(clazz);
     }
 
     public Converter getConverter(Class clazz) {
-        Converter converter = cache.get(clazz);
-        if (converter != null)
-            return converter;
-        Supplier<Converter> factory = factories.get(clazz);
-        if (factory == null)
-            return null;
-        return cache.computeIfAbsent(clazz, k -> factory.get());
+        return converters.get(clazz);
     }
 
     public void setConverter(Class<?> clazz, Converter converter) {
-        cache.put(clazz, converter);
+        converters.put(clazz, converter);
     }
 
     public Set<Class> getConvertedTypes() {
-        Set<Class> types = new HashSet<>(factories.keySet());
-        types.addAll(cache.keySet());
-        return Collections.unmodifiableSet(types);
+        return Collections.unmodifiableSet(new HashSet<>(converters.keySet()));
     }
 
 }
