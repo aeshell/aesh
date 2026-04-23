@@ -160,7 +160,7 @@ public class ProcessedOptionBuilder {
 
     public ProcessedOptionBuilder addDefaultValue(String defaultValue) {
         if (!(this.defaultValues instanceof ArrayList))
-            this.defaultValues = new ArrayList<>();
+            this.defaultValues = new ArrayList<>(1);
         this.defaultValues.add(defaultValue);
         return this;
     }
@@ -178,7 +178,8 @@ public class ProcessedOptionBuilder {
         if (defaultValues != null && defaultValues.length > 0) {
             if (!(this.defaultValues instanceof ArrayList))
                 this.defaultValues = new ArrayList<>(defaultValues.length);
-            this.defaultValues.addAll(Arrays.asList(defaultValues));
+            for (String v : defaultValues)
+                this.defaultValues.add(v);
         }
         return this;
     }

@@ -106,6 +106,8 @@ public final class ProcessedOption {
     private Object initialValue;
     private boolean initialValueCaptured;
     private String mixinFieldName;
+    private Field cachedField;
+    private Class<?> cachedFieldClass;
 
     public ProcessedOption(char shortName, String name, String description,
             String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -180,7 +182,7 @@ public final class ProcessedOption {
         this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
         this.inherited = inherited;
         this.descriptionUrl = descriptionUrl;
-        this.isUrl = isUrl || java.net.URL.class.isAssignableFrom(type) || java.net.URI.class.isAssignableFrom(type);
+        this.isUrl = isUrl || "java.net.URL".equals(type.getName()) || "java.net.URI".equals(type.getName());
         this.optionalValue = optionalValue;
 
         properties = java.util.Collections.emptyMap();
@@ -293,6 +295,10 @@ public final class ProcessedOption {
     public void captureInitialValue(Object instance) {
         if (initialValueCaptured || instance == null || fieldName == null)
             return;
+        if (type != null && type.isPrimitive()) {
+            initialValueCaptured = true;
+            return;
+        }
         if (fieldGetter != null) {
             Object value = fieldGetter.apply(instance);
             if (value != null) {
@@ -305,8 +311,6 @@ public final class ProcessedOption {
             Object target = resolveMixinInstance(instance);
             Field field = getField(target.getClass(), fieldName);
             if (field == null)
-                return;
-            if (field.getType().isPrimitive())
                 return;
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
@@ -941,10 +945,15 @@ public final class ProcessedOption {
     private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
         if (fieldName == null || fieldName.isEmpty())
             return null;
+        if (cachedField != null && cachedFieldClass == clazz)
+            return cachedField;
         for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
             for (Field f : c.getDeclaredFields()) {
-                if (f.getName().equals(fieldName))
+                if (f.getName().equals(fieldName)) {
+                    cachedField = f;
+                    cachedFieldClass = clazz;
                     return f;
+                }
             }
         }
         return null;

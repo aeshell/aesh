@@ -75,7 +75,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private boolean isChild = false;
     private ProcessedOption lastParsedOption;
     private boolean parsedCommand = false;
-    private final LineParser lineParser;
+    private LineParser lineParser;
     private CompleteStatus completeStatus;
     private AeshCommandLineParser<CI> parent;
     private boolean ansiMode = true;
@@ -83,7 +83,6 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @SuppressWarnings("unchecked")
     public AeshCommandLineParser(ProcessedCommand<? extends Command<CI>, CI> processedCommand) {
         this.processedCommand = (ProcessedCommand<Command<CI>, CI>) processedCommand;
-        lineParser = new LineParser();
     }
 
     @Override
@@ -779,6 +778,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      */
     @Override
     public void parse(String line, Mode mode) {
+        if (lineParser == null)
+            lineParser = new LineParser();
         parse(lineParser.parseLine(line, line.length(), true).iterator(), mode);
     }
 
