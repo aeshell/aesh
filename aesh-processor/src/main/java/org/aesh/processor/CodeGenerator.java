@@ -231,8 +231,8 @@ final class CodeGenerator {
                 isGroup ? GroupCommandDefinition.class.getCanonicalName() : CommandDefinition.class.getCanonicalName(),
                 "helpSectionProvider", elementUtils);
         if (providerClass != null && !providerClass.equals(NULL_HELP_SECTION_PROVIDER)) {
-            sb.append("        processedCommand.setHelpSectionProviderClass(")
-                    .append(providerClass).append(".class);\n\n");
+            sb.append("        processedCommand.setHelpSectionProvider(new ")
+                    .append(providerClass).append("());\n\n");
         }
 
         // Process fields

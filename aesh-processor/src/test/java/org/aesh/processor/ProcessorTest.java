@@ -614,22 +614,30 @@ public class ProcessorTest {
         Class<?> commandClass = result.classLoader.loadClass("test.HelpProviderCommand");
         Class<?> metadataClass = result.classLoader.loadClass("test.HelpProviderCommand_AeshMetadata");
 
-        // Verify the generated provider sets helpSectionProviderClass
+        // Verify the generated provider instantiates helpSectionProvider directly
         CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
         Command instance = (Command) commandClass.newInstance();
         ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
 
-        assertNotNull("helpSectionProviderClass should be set", generatedPC.getHelpSectionProviderClass());
-        assertEquals("helpSectionProviderClass should match",
-                "test.TestProvider", generatedPC.getHelpSectionProviderClass().getName());
+        assertNotNull("helpSectionProvider instance should be set", generatedPC.getHelpSectionProvider());
+        assertEquals("helpSectionProvider type should match",
+                "test.TestProvider", generatedPC.getHelpSectionProvider().getClass().getName());
 
-        // Also verify equivalence with reflection path
+        // Verify the sections are actually returned
+        java.util.Map<String, java.util.List<org.aesh.command.HelpEntry>> sections = generatedPC.getHelpSectionProvider()
+                .getAdditionalSections();
+        assertNotNull("sections should not be null", sections);
+        assertTrue("sections should contain 'External'", sections.containsKey("External"));
+        assertEquals("External section should have 1 entry", 1, sections.get("External").size());
+        assertEquals("Entry name should match", "ext-one", sections.get("External").get(0).name());
+
+        // Verify reflection path uses class-based approach (both should resolve sections)
         AeshCommandContainerBuilder reflectionBuilder = new AeshCommandContainerBuilder();
         ProcessedCommand reflectionPC = reflectionBuilder.create(
                 (Command) commandClass.newInstance()).getParser().getProcessedCommand();
 
-        assertEquals("helpSectionProviderClass should match reflection path",
-                reflectionPC.getHelpSectionProviderClass(), generatedPC.getHelpSectionProviderClass());
+        assertNotNull("reflection should set helpSectionProviderClass",
+                reflectionPC.getHelpSectionProviderClass());
     }
 
     // --- Test: @Option with exclusiveWith ---
@@ -768,6 +776,55 @@ public class ProcessorTest {
                 generatedPC.findLongOptionNoActivatorCheck("props").getVisibility());
     }
 
+    // --- Test: Advanced option properties (optionalValue, overrideRequired, askIfNotSet) ---
+
+    private static final String ADVANCED_OPTS_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"adv\", description = \"Advanced options\",\n" +
+            "        generateHelp = true, stopAtFirstPositional = true)\n" +
+            "public class AdvancedCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(optionalValue = true, defaultValue = \"4004\", description = \"Debug port\")\n" +
+            "    public String debug;\n" +
+            "\n" +
+            "    @Option(hasValue = false, overrideRequired = true, description = \"Show help\")\n" +
+            "    public boolean showHelp;\n" +
+            "\n" +
+            "    @Option(askIfNotSet = true, description = \"API key\")\n" +
+            "    public String apiKey;\n" +
+            "\n" +
+            "    @Option(required = true, description = \"Target\")\n" +
+            "    public String target;\n" +
+            "\n" +
+            "    @OptionList(valueSeparator = ':', description = \"Ports\")\n" +
+            "    public List<String> ports;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testAdvancedOptionProperties() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.AdvancedCommand", ADVANCED_OPTS_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.AdvancedCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.AdvancedCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
 
     private static final String GENERIC_OPTION_SOURCE = "package test;\n" +
@@ -835,13 +892,20 @@ public class ProcessorTest {
         Command instance = (Command) commandClass.newInstance();
         ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
 
-        // Assert structural equivalence
+        // Assert structural equivalence — command level
         assertEquals("Command name", reflectionPC.name(), generatedPC.name());
         assertEquals("Command description", reflectionPC.description(), generatedPC.description());
         assertEquals("Aliases", reflectionPC.getAliases(), generatedPC.getAliases());
         assertEquals("Version",
                 reflectionPC.version() != null ? reflectionPC.version() : "",
                 generatedPC.version() != null ? generatedPC.version() : "");
+        assertEquals("generateHelp", reflectionPC.generateHelp(), generatedPC.generateHelp());
+        assertEquals("disableParsing", reflectionPC.disableParsing(), generatedPC.disableParsing());
+        assertEquals("stopAtFirstPositional", reflectionPC.stopAtFirstPositional(), generatedPC.stopAtFirstPositional());
+        assertEquals("helpUrl",
+                reflectionPC.helpUrl() != null ? reflectionPC.helpUrl() : "",
+                generatedPC.helpUrl() != null ? generatedPC.helpUrl() : "");
+        assertEquals("helpGroup", reflectionPC.helpGroup(), generatedPC.helpGroup());
 
         // Compare options
         List<ProcessedOption> reflectionOpts = reflectionPC.getOptions();
@@ -869,6 +933,10 @@ public class ProcessorTest {
             assertEquals("Option helpGroup for " + rOpt.name(), rOpt.getHelpGroup(), gOpt.getHelpGroup());
             assertEquals("Option valueSeparator for " + rOpt.name(), rOpt.getValueSeparator(), gOpt.getValueSeparator());
             assertEquals("Option visibility for " + rOpt.name(), rOpt.getVisibility(), gOpt.getVisibility());
+            assertEquals("Option overrideRequired for " + rOpt.name(), rOpt.doOverrideRequired(), gOpt.doOverrideRequired());
+            assertEquals("Option optionalValue for " + rOpt.name(), rOpt.isOptionalValue(), gOpt.isOptionalValue());
+            assertEquals("Option exclusiveWith for " + rOpt.name(), rOpt.getExclusiveWith(), gOpt.getExclusiveWith());
+            assertEquals("Option askIfNotSet for " + rOpt.name(), rOpt.askIfNotSet(), gOpt.askIfNotSet());
         }
 
         // Compare argument
