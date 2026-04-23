@@ -139,8 +139,9 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
                         } else
                             return child.printHelp();
                     }
-
                 }
+                if (current != getParser())
+                    return current.printHelp();
             }
             return "Child command " + names[1] + " not found.";
         } else

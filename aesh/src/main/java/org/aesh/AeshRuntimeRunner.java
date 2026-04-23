@@ -30,6 +30,7 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
@@ -196,7 +197,7 @@ public class AeshRuntimeRunner {
             } catch (CommandNotFoundException e) {
                 System.err.println("Command not found: " + commandName);
             } catch (CommandException | CommandLineParserException | CommandValidatorException | OptionValidatorException e) {
-                showHelpIfNeeded(runtime, commandName, e);
+                showHelpIfNeeded(runtime, commandName, args, e);
             } catch (InterruptedException | IOException e) {
                 System.err.println(e.getMessage());
             }
@@ -316,10 +317,46 @@ public class AeshRuntimeRunner {
         return true;
     }
 
-    private static void showHelpIfNeeded(CommandRuntime runtime, String commandName, Exception e) {
+    private static void showHelpIfNeeded(CommandRuntime runtime, String commandName, String[] args, Exception e) {
         if (e != null) {
             System.err.println(e.getMessage());
         }
-        System.err.println(runtime.commandInfo(commandName));
+        // Build a lookup line that includes the subcommand name so commandInfo
+        // resolves help for the correct subcommand, not the root command.
+        String helpLine = buildHelpLine(runtime, commandName, args);
+        System.err.println(runtime.commandInfo(helpLine));
+    }
+
+    private static String buildHelpLine(CommandRuntime runtime, String commandName, String[] args) {
+        if (args == null || args.length == 0) {
+            return commandName;
+        }
+        try {
+            @SuppressWarnings("unchecked")
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) runtime.getCommandRegistry()
+                    .getCommand(commandName, "");
+            if (container.getParser().isGroupCommand()) {
+                StringBuilder line = new StringBuilder(commandName);
+                CommandLineParser<?> current = container.getParser();
+                for (String arg : args) {
+                    if (arg.startsWith("-"))
+                        continue;
+                    CommandLineParser<?> child = current.getChildParser(arg);
+                    if (child != null) {
+                        line.append(' ').append(arg);
+                        if (child.isGroupCommand()) {
+                            current = child;
+                        } else {
+                            return line.toString();
+                        }
+                    }
+                }
+                if (line.length() > commandName.length())
+                    return line.toString();
+            }
+        } catch (CommandNotFoundException ex) {
+            // fall through
+        }
+        return commandName;
     }
 }
