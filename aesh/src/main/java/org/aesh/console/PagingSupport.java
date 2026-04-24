@@ -676,7 +676,7 @@ public class PagingSupport {
         getReadline().readline(getConnection(), new Prompt("/", (Character) null), newLine -> {
             out[0] = newLine;
             latch.countDown();
-        }, null, null, searchHistory, null, RED_PATTERN_READLINE_FLAGS);
+        });
         try {
             latch.await();
         } finally {

@@ -20,6 +20,7 @@
 package org.aesh.command.alias;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -56,14 +57,14 @@ public class AliasCommand implements Command<CommandInvocation> {
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-        if (print || arguments == null || arguments.size() == 0) {
+        if (print || arguments == null || arguments.isEmpty()) {
             String out = manager.printAllAliases();
-            if (out != null && out.length() > 0)
+            if (out != null && !out.isEmpty())
                 commandInvocation.println(out);
         } else if (arguments.size() == 1) {
-            String out = manager.parseAlias("alias " + arguments.get(0));
-            if (out != null && out.length() > 0)
-                commandInvocation.println(out);
+            Optional<String> out = manager.addAlias("alias " + arguments.get(0));
+            if (out.isPresent())
+                commandInvocation.println(out.orElse(null));
         }
 
         return CommandResult.SUCCESS;
