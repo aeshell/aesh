@@ -61,7 +61,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         if (!line.spaceAtEnd() && line.selectedWord() != null) {
             String currentWord = line.selectedWord().word();
             if (currentWord.length() > 1 && !currentWord.startsWith("-")
-                    && parser.getProcessedCommand().findPossibleBareLongNamesWithDash(currentWord).size() > 0) {
+                    && !parser.getProcessedCommand().findPossibleBareLongNamesWithDash(currentWord).isEmpty()) {
                 doListOptions(completeOperation, currentWord);
                 return;
             }
@@ -126,9 +126,9 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         //partial short option, contains atleast -
         else if (parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.SHORT_OPTION)) {
             //if we do not have any value, we add another -
-            if (parser.getProcessedCommand().completeStatus().value().length() == 0) {
+            if (parser.getProcessedCommand().completeStatus().value().isEmpty()) {
                 completeOperation.addCompletionCandidate("-");
-                completeOperation.doAppendSeparator(false);
+                completeOperation.setAppendSeparator(false);
                 //completeOperation.setOffset( completeOperation.getCursor() - count);
                 completeOperation.setOffset(completeOperation.getCursor());
             }
@@ -148,13 +148,13 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                     parser.lastParsedOption().hasValue()) {
                 completeOperation.addCompletionCandidate("=");
                 completeOperation.setOffset(completeOperation.getCursor());
-                completeOperation.doAppendSeparator(false);
+                completeOperation.setAppendSeparator(false);
             } else if (!parser.lastParsedOption().hasValue() &&
                     !parser.lastParsedOption().getEndsWithSeparator() &&
                     !line.spaceAtEnd()) {
                 completeOperation.addCompletionCandidate(" ");
                 completeOperation.setOffset(completeOperation.getCursor());
-                completeOperation.doAppendSeparator(false);
+                completeOperation.setAppendSeparator(false);
             }
             //complete value
             else {
@@ -174,13 +174,13 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         //append space after group command
         else if (parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.APPEND_SPACE)) {
             completeOperation.addCompletionCandidate(" ");
-            completeOperation.doAppendSeparator(false);
+            completeOperation.setAppendSeparator(false);
             completeOperation.setOffset(completeOperation.getCursor());
         }
     }
 
     private void doProcessGroupCommand(AeshCompleteOperation completeOperation, String name, ParsedLine line) {
-        if (name.length() == 0) {
+        if (name.isEmpty()) {
             for (CommandLineParser clp : parser.getAllChildParsers()) {
                 if (clp.getProcessedCommand().isActivated(new ParsedCommand(clp.getProcessedCommand())))
                     completeOperation.addCompletionCandidate(clp.getProcessedCommand().name());
@@ -197,7 +197,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             }
         }
         if (completeOperation.getCompletionCandidates().size() == 1 && !line.cursorAtEnd())
-            completeOperation.doAppendSeparator(false);
+            completeOperation.setAppendSeparator(false);
     }
 
     private void doProcessArgument(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders,
@@ -218,7 +218,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         //argument(s)
         else {
             if (parser.getProcessedCommand().completeStatus().value() != null &&
-                    parser.getProcessedCommand().completeStatus().value().length() > 0)
+                    !parser.getProcessedCommand().completeStatus().value().isEmpty())
                 arg.addValue(parser.getProcessedCommand().completeStatus().value());
             else
                 //set this to true since we do not want to use previous values in the completion value
@@ -227,7 +227,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             boolean haveCompletion = false;
 
             if (parser.getProcessedCommand().completeStatus().value() != null &&
-                    parser.getProcessedCommand().completeStatus().value().length() > 0)
+                    !parser.getProcessedCommand().completeStatus().value().isEmpty())
                 haveCompletion = doCompleteOptionValue(invocationProviders, completeOperation, arg,
                         line.selectedWord().status());
             else {
@@ -253,7 +253,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             if (!haveCompletion) {
                 if ((arg.completer() != null || !arg.isRequired())
                         && (parser.getProcessedCommand().completeStatus().value() == null
-                                || parser.getProcessedCommand().completeStatus().value().length() == 0)) {
+                                || parser.getProcessedCommand().completeStatus().value().isEmpty())) {
                     doListOptions(completeOperation, "");
                 }
             }
@@ -284,7 +284,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             completeOperation.setOffset(completeOperation.getCursor() - value.length());
             //do not append separator, we do that in the getOptionLongNames
             if (optionNamesWithDash.get(0).getCharacters().endsWith("="))
-                completeOperation.doAppendSeparator(false);
+                completeOperation.setAppendSeparator(false);
         }
 
     }
@@ -307,17 +307,17 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             verifyCompleteValue(completeOperation, completions, value, selectedWordStatus, currentOption);
         }
         //only try to complete default values if completer is null
-        else if (currentOption.getDefaultValues().size() > 0 && currentOption.selectorType() == SelectorType.NO_OP) {
+        else if (!currentOption.getDefaultValues().isEmpty() && currentOption.selectorType() == SelectorType.NO_OP) {
             CompleterInvocation completions = invocationProviders.getCompleterProvider().enhanceCompleterInvocation(
                     new CompleterData(completeOperation.getContext(), value, parser.getCommand()));
             new DefaultValueOptionCompleter(currentOption.getDefaultValues()).complete(completions);
             completeOperation.addCompletionCandidatesTerminalString(completions.getCompleterValues());
             verifyCompleteValue(completeOperation, completions, value, selectedWordStatus, currentOption);
         } else if (!currentOption.hasValue()) {
-            completeOperation.doAppendSeparator(true);
+            completeOperation.setAppendSeparator(true);
         }
 
-        return completeOperation.getCompletionCandidates().size() > 0;
+        return !completeOperation.getCompletionCandidates().isEmpty();
     }
 
     public static void verifyCompleteValue(AeshCompleteOperation completeOperation,
@@ -331,7 +331,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             if (selectedWordStatus == ParsedWord.Status.OK
                     && completions.getCompleterValues().size() == 1) {
                 numberSpaces = Parser
-                        .findNumberOfSpacesInWord(value.substring(value.length() - completions.getOffset(), value.length()));
+                        .findNumberOfSpacesInWord(value.substring(value.length() - completions.getOffset()));
             }
             completeOperation.setOffset(completeOperation.getCursor() - completions.getOffset() - numberSpaces);
         } else {
@@ -349,7 +349,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         }
 
         if (completions.getCompleterValues().size() == 1) {
-            completeOperation.doAppendSeparator(completions.isAppendSpace());
+            completeOperation.setAppendSeparator(completions.isAppendSpace());
             if (currentOption != null)
                 completeOperation.setSeparator(currentOption.getValueSeparator());
         }

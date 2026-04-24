@@ -65,6 +65,7 @@ import org.aesh.io.scanner.CommandDefinitionReporter;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.Readline;
 import org.aesh.readline.ReadlineFlag;
+import org.aesh.readline.ReadlineRequest;
 import org.aesh.readline.SuggestionProvider;
 import org.aesh.readline.alias.AliasCompletion;
 import org.aesh.readline.alias.AliasManager;
@@ -88,18 +89,17 @@ import org.aesh.terminal.utils.LoggerUtil;
 public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private AliasManager aliasManager;
-    private Settings<? extends CommandInvocation> settings;
+    private final Settings<? extends CommandInvocation> settings;
     private Prompt prompt;
     private List<Completion> completions;
     private Connection connection;
-    private AeshCommandResolver<? extends CommandInvocation> commandResolver;
-    private AeshContext context;
+    private final AeshCommandResolver<? extends CommandInvocation> commandResolver;
+    private final AeshContext context;
     private Readline readline;
-    private AeshCompletionHandler completionHandler;
     private CommandRuntime<? extends CommandInvocation> runtime;
     private ProcessManager processManager;
     private ExportManager exportManager;
-    private static List<Function<String, Optional<String>>> preProcessors = new ArrayList<>();
+    private static final List<Function<String, Optional<String>>> preProcessors = new ArrayList<>();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
@@ -258,13 +258,13 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     private void init() {
-        completionHandler = new AeshCompletionHandler(context);
+        AeshCompletionHandler completionHandler = new AeshCompletionHandler(context);
         String originalPromptString = "";
         if (prompt == null)
             prompt = new Prompt("");
         else {
             // Convert prompt's int[] back to String for CommandContext
-            int[] promptCodes = prompt.getPromptAsString();
+            int[] promptCodes = prompt.getPromptCharacters();
             if (promptCodes != null && promptCodes.length > 0) {
                 originalPromptString = new String(promptCodes, 0, promptCodes.length);
             }
@@ -302,13 +302,22 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         shell.printCollectedOutput();
 
         if (running) {
-            readline.readline(conn, prompt, line -> {
-                if (line != null && line.trim().length() > 0) {
-                    shell.startCollectOutput();
-                    processLine(line, conn);
-                } else
-                    read(conn, readline);
-            }, completions, preProcessors, history, null, readlineFlags);
+            readline.readline(
+                    ReadlineRequest.builder()
+                            .connection(conn)
+                            .prompt(prompt)
+                            .requestHandler(line -> {
+                                if (line != null && !line.trim().isEmpty()) {
+                                    shell.startCollectOutput();
+                                    processLine(line, conn);
+                                } else
+                                    read(conn, readline);
+                            })
+                            .completions(completions)
+                            .preProcessors(preProcessors)
+                            .history(history)
+                            .flags(readlineFlags)
+                            .build());
         }
         // Just call readline and get a callback when line is startBlockingReader
         else {
@@ -516,7 +525,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                     // Transfer results back to original operation
                     completeOperation.addCompletionCandidatesTerminalString(
                             prefixedOperation.getCompletionCandidates());
-                    completeOperation.setIgnoreOffset(prefixedOperation.doIgnoreOffset());
+                    completeOperation.setIgnoreOffset(prefixedOperation.isIgnoreOffset());
                     completeOperation.setIgnoreStartsWith(prefixedOperation.isIgnoreStartsWith());
 
                     // Adjust offset to account for the prefix

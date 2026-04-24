@@ -1,7 +1,7 @@
 = Aesh (Another Extendable SHell)
 
 image:https://github.com/aeshell/aesh/actions/workflows/main.yml/badge.svg[Java CI,link=https://github.com/aeshell/aesh/actions/workflows/main.yml]
-image:https://img.shields.io/github/license/aeshell/aesh[License,link=https://www.apache.org/licenses/LICENSE-2.0]
+image:https://img.shields.io/github/license/aeshell/aesh[License,link=http://www.apache.org/licenses/LICENSE-2.0]
 image:https://img.shields.io/maven-central/v/org.aesh/aesh[Maven Central,link=https://central.sonatype.com/artifact/org.aesh/aesh]
 
 https://aeshell.github.io[Website] | https://aeshell.github.io/docs/aesh[Documentation] | https://github.com/aeshell/aesh[Source]
@@ -103,4 +103,4 @@ Aesh uses https://maven.apache.org[Maven] as its build tool:
 
 == License
 
-Aesh is licensed under the https://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0].
+Aesh is licensed under the http://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0].

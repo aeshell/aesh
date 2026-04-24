@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 import org.aesh.readline.Prompt;
 import org.aesh.readline.Readline;
 import org.aesh.readline.ReadlineFlag;
+import org.aesh.readline.ReadlineRequest;
 import org.aesh.readline.action.ActionDecoder;
 import org.aesh.readline.history.History;
 import org.aesh.readline.history.InMemoryHistory;
@@ -673,17 +674,24 @@ public class PagingSupport {
                 }
             }
         });
-        getReadline().readline(getConnection(), new Prompt("/", (Character) null), newLine -> {
-            out[0] = newLine;
-            latch.countDown();
-        }, null, null, searchHistory, null, RED_PATTERN_READLINE_FLAGS);
+        getReadline().readline(
+                ReadlineRequest.builder()
+                        .connection(getConnection())
+                        .prompt(new Prompt("/", (Character) null))
+                        .requestHandler(newLine -> {
+                            out[0] = newLine;
+                            latch.countDown();
+                        })
+                        .history(searchHistory)
+                        .flags(RED_PATTERN_READLINE_FLAGS)
+                        .build());
         try {
             latch.await();
         } finally {
             getConnection().setSignalHandler(prevHandler);
         }
         // At this point, if the current thread has been interrupted
-        // then an exception has been thrown and we are not reaching this point.
+        // then an exception has been thrown, and we are not reaching this point.
         // Throws interruptedException and not take into account the returned null
         // value.
         if (out[0] == null) {

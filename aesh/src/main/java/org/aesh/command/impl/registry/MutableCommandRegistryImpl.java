@@ -84,7 +84,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
 
     @Override
     public void completeCommandName(CompleteOperation co, ParsedLine parsedLine) {
-        if (parsedLine.words().size() == 0) {
+        if (parsedLine.words().isEmpty()) {
             //add all
             for (CommandContainer<CI> command : registry.values()) {
                 ProcessedCommand<? extends Command<CI>, CI> com = command.getParser().getProcessedCommand();
@@ -99,7 +99,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                     co.addCompletionCandidate(com.name());
                     co.setOffset(co.getCursor() - parsedLine.selectedWord().word().length());
                     if (parsedLine.selectedIndex() < parsedLine.size() - 1)
-                        co.doAppendSeparator(false);
+                        co.setAppendSeparator(false);
                 }
             }
         }

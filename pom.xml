@@ -17,7 +17,7 @@
 -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -41,7 +41,7 @@
 
     <!-- aesh-tamboui is in a profile since it requires tamboui snapshot dependencies -->
     <!-- Build with: mvn compile -Ptamboui -->
-    
+
     <!-- Licenses -->
     <licenses>
         <license>
@@ -49,12 +49,11 @@
             <url>http://www.apache.org/licenses/LICENSE-2.0</url>
         </license>
     </licenses>
-  
+
     <properties>
       <!-- maven-compiler-plugin -->
-      <maven.compiler.target>1.8</maven.compiler.target>
-      <maven.compiler.source>1.8</maven.compiler.source>
-      <readline.version>3.5</readline.version>
+      <maven.compiler.release>8</maven.compiler.release>
+      <readline.version>3.6-dev</readline.version>
       <tamboui.version>0.1.0</tamboui.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -79,19 +78,19 @@
       <version.deploy.plugin>3.1.4</version.deploy.plugin>
       <version.site.plugin>3.21.0</version.site.plugin>
     </properties>
- 
+
     <developers>
         <developer>
             <name>Jean-Francois Denise</name>
             <email>jdenise@redhat.com</email>
             <organization>Red Hat</organization>
-            <organizationUrl>http://www.redhat.com</organizationUrl>
+            <organizationUrl>https://www.redhat.com</organizationUrl>
         </developer>
         <developer>
             <name>Ståle Pedersen</name>
             <email>spederse@redhat.com</email>
             <organization>Red Hat</organization>
-            <organizationUrl>http://www.redhat.com</organizationUrl>
+            <organizationUrl>https://www.redhat.com</organizationUrl>
         </developer>
     </developers>
 
