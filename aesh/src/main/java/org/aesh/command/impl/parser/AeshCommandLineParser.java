@@ -274,8 +274,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     public void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders,
             AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
         getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, mode);
-        if (isGroupCommand()) {
-            for (CommandLineParser<CI> parser : getChildParsers()) {
+        if (isGroupCommand() && childParsers != null) {
+            for (CommandLineParser<CI> parser : childParsers) {
                 parser.doPopulate(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
             }
             propagateInheritedOptions();

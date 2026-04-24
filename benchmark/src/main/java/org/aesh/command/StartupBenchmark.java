@@ -1567,12 +1567,14 @@ public class StartupBenchmark {
 
     private void buildAeshRuntimeMixinGenerated(int commandCount) throws Exception {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
         for (int i = 0; i < commandCount; i++) {
-            registry.addCommand(createGeneratedMixinContainer("mixcmd-" + i, i));
+            registry.addCommand(containerBuilder.create(AESH_MIXIN_COMMANDS[i % AESH_MIXIN_COMMANDS.length]));
         }
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
     }
 
+    @SuppressWarnings("unused")
     private CommandContainer<CommandInvocation> createGeneratedMixinContainer(String name, int index) throws Exception {
         Command<CommandInvocation> cmd = AESH_MIXIN_COMMANDS[index % AESH_MIXIN_COMMANDS.length]
                 .getDeclaredConstructor().newInstance();
@@ -1636,16 +1638,12 @@ public class StartupBenchmark {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
         AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
 
-        int annotatedCount = Math.min(commandCount, AESH_MIXIN_COMMANDS.length);
-        for (int i = 0; i < annotatedCount; i++) {
-            Command<CommandInvocation> cmd = AESH_MIXIN_COMMANDS[i].getDeclaredConstructor().newInstance();
+        for (int i = 0; i < commandCount; i++) {
+            Command<CommandInvocation> cmd = AESH_MIXIN_COMMANDS[i % AESH_MIXIN_COMMANDS.length]
+                    .getDeclaredConstructor().newInstance();
             CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
                     .invoke(containerBuilder, cmd);
             registry.addCommand(container);
-        }
-
-        for (int i = AESH_MIXIN_COMMANDS.length; i < commandCount; i++) {
-            registry.addCommand(createGeneratedMixinContainer("mixcmd-" + i, i));
         }
 
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
@@ -1766,12 +1764,14 @@ public class StartupBenchmark {
 
     private void buildAeshRuntimeGenerated(int commandCount) throws Exception {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
         for (int i = 0; i < commandCount; i++) {
-            registry.addCommand(createGeneratedContainer("cmd-" + i, i));
+            registry.addCommand(containerBuilder.create(AESH_COMMANDS[i % AESH_COMMANDS.length]));
         }
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
     }
 
+    @SuppressWarnings("unused")
     private CommandContainer<CommandInvocation> createGeneratedContainer(String name, int index) throws Exception {
         Command<CommandInvocation> cmd = AESH_COMMANDS[index % AESH_COMMANDS.length]
                 .getDeclaredConstructor().newInstance();
@@ -1831,17 +1831,12 @@ public class StartupBenchmark {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
         AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
 
-        int annotatedCount = Math.min(commandCount, AESH_COMMANDS.length);
-        for (int i = 0; i < annotatedCount; i++) {
-            Command<CommandInvocation> cmd = AESH_COMMANDS[i].getDeclaredConstructor().newInstance();
+        for (int i = 0; i < commandCount; i++) {
+            Command<CommandInvocation> cmd = AESH_COMMANDS[i % AESH_COMMANDS.length]
+                    .getDeclaredConstructor().newInstance();
             CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
                     .invoke(containerBuilder, cmd);
             registry.addCommand(container);
-        }
-
-        // For counts > 10, use ProcessedCommandBuilder (same as generated path)
-        for (int i = AESH_COMMANDS.length; i < commandCount; i++) {
-            registry.addCommand(createGeneratedContainer("cmd-" + i, i));
         }
 
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
@@ -1899,12 +1894,14 @@ public class StartupBenchmark {
 
     private void buildAeshRuntimeGroupGenerated(int groupCount) throws Exception {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
         for (int i = 0; i < groupCount; i++) {
-            registry.addCommand(createGeneratedGroupContainer("grp-" + i, i));
+            registry.addCommand(containerBuilder.create(AESH_GROUP_COMMANDS[i % AESH_GROUP_COMMANDS.length]));
         }
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
     }
 
+    @SuppressWarnings("unused")
     private CommandContainer<CommandInvocation> createGeneratedGroupContainer(String name, int index) throws Exception {
         // Create parent command
         Command<CommandInvocation> parentCmd = AESH_COMMANDS[index % AESH_COMMANDS.length]
@@ -2019,17 +2016,12 @@ public class StartupBenchmark {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
         AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
 
-        int annotatedCount = Math.min(groupCount, AESH_GROUP_COMMANDS.length);
-        for (int i = 0; i < annotatedCount; i++) {
-            Command<CommandInvocation> cmd = AESH_GROUP_COMMANDS[i].getDeclaredConstructor().newInstance();
+        for (int i = 0; i < groupCount; i++) {
+            Command<CommandInvocation> cmd = AESH_GROUP_COMMANDS[i % AESH_GROUP_COMMANDS.length]
+                    .getDeclaredConstructor().newInstance();
             CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
                     .invoke(containerBuilder, cmd);
             registry.addCommand(container);
-        }
-
-        // For counts > 5, use ProcessedCommandBuilder (same as generated path)
-        for (int i = AESH_GROUP_COMMANDS.length; i < groupCount; i++) {
-            registry.addCommand(createGeneratedGroupContainer("grp-" + i, i));
         }
 
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
@@ -2169,12 +2161,14 @@ public class StartupBenchmark {
 
     private void buildAeshNestedGenerated(int count) throws Exception {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
         for (int i = 0; i < count; i++) {
-            registry.addCommand(createGeneratedNestedGroupContainer("nested-" + i, i));
+            registry.addCommand(containerBuilder.create(AeshTopGroup.class));
         }
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
     }
 
+    @SuppressWarnings("unused")
     private CommandContainer<CommandInvocation> createGeneratedNestedGroupContainer(String name, int index)
             throws Exception {
         // Top-level group
@@ -2296,16 +2290,11 @@ public class StartupBenchmark {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
         AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
 
-        // Use the single AeshTopGroup class (contains 3-level hierarchy via annotations)
         for (int i = 0; i < count; i++) {
-            if (i == 0) {
-                Command<CommandInvocation> cmd = (Command<CommandInvocation>) new AeshTopGroup();
-                CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
-                        .invoke(containerBuilder, cmd);
-                registry.addCommand(container);
-            } else {
-                registry.addCommand(createGeneratedNestedGroupContainer("nested-" + i, i));
-            }
+            Command<CommandInvocation> cmd = (Command<CommandInvocation>) new AeshTopGroup();
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
+                    .invoke(containerBuilder, cmd);
+            registry.addCommand(container);
         }
 
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
@@ -2445,12 +2434,14 @@ public class StartupBenchmark {
 
     private void buildAeshVarietyGenerated(int commandCount) throws Exception {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
         for (int i = 0; i < commandCount; i++) {
-            registry.addCommand(createGeneratedVarietyContainer("vcmd-" + i, i));
+            registry.addCommand(containerBuilder.create(AESH_VARIETY_COMMANDS[i % AESH_VARIETY_COMMANDS.length]));
         }
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
     }
 
+    @SuppressWarnings("unused")
     private CommandContainer<CommandInvocation> createGeneratedVarietyContainer(String name, int index)
             throws Exception {
         Command<CommandInvocation> cmd = AESH_COMMANDS[index % AESH_COMMANDS.length]
@@ -2503,16 +2494,12 @@ public class StartupBenchmark {
         MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
         AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
 
-        int annotatedCount = Math.min(commandCount, AESH_VARIETY_COMMANDS.length);
-        for (int i = 0; i < annotatedCount; i++) {
-            Command<CommandInvocation> cmd = AESH_VARIETY_COMMANDS[i].getDeclaredConstructor().newInstance();
+        for (int i = 0; i < commandCount; i++) {
+            Command<CommandInvocation> cmd = AESH_VARIETY_COMMANDS[i % AESH_VARIETY_COMMANDS.length]
+                    .getDeclaredConstructor().newInstance();
             CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) REFLECTION_CREATE
                     .invoke(containerBuilder, cmd);
             registry.addCommand(container);
-        }
-
-        for (int i = AESH_VARIETY_COMMANDS.length; i < commandCount; i++) {
-            registry.addCommand(createGeneratedVarietyContainer("vcmd-" + i, i));
         }
 
         AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
