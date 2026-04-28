@@ -53,7 +53,7 @@
     <properties>
       <!-- maven-compiler-plugin -->
       <maven.compiler.release>8</maven.compiler.release>
-      <readline.version>3.6-dev</readline.version>
+      <readline.version>3.6</readline.version>
       <tamboui.version>0.1.0</tamboui.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
