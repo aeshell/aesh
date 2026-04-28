@@ -27,7 +27,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
-          server-id: jboss-testing-repository
+          server-id: jboss-releases-repository
           server-username: NEXUS_USER
           server-password: NEXUS_TOKEN
 
