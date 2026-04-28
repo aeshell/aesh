@@ -30,8 +30,6 @@ jobs:
           server-id: jboss-testing-repository
           server-username: NEXUS_USER
           server-password: NEXUS_TOKEN
-          gpg-private-key: ${{ secrets.GPG_ARMORED }}
-          gpg-passphrase: GPG_PASSPHRASE
 
       - name: Determine versions
         id: versions
@@ -78,7 +76,8 @@ jobs:
         env:
           NEXUS_USER: ${{ secrets.NEXUS_USER }}
           NEXUS_TOKEN: ${{ secrets.NEXUS_TOKEN }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_GPG_KEY: ${{ secrets.GPG_ARMORED }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Tag release
         run: |
