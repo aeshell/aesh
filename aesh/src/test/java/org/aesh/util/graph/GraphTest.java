@@ -478,4 +478,71 @@ public class GraphTest {
         }
         return -1;
     }
+
+    @Test
+    public void testMaxLabelWidthWrapsLabels() {
+        GraphNode root = GraphNode.of("Root Node With Long Name")
+                .child("Child With A Very Long Label Here");
+
+        String output = Graph.<GraphNode> builder()
+                .label(GraphNode::label)
+                .children(GraphNode::children)
+                .maxLabelWidth(15)
+                .build()
+                .render(root);
+
+        // Each part of the wrapped label should appear on separate lines
+        assertTrue("Should contain 'Root Node With'", output.contains("Root Node With"));
+        assertTrue("Should contain 'Long Name'", output.contains("Long Name"));
+        assertTrue("Should contain 'Child With A'", output.contains("Child With A"));
+        assertTrue("Should contain 'Very Long Label'", output.contains("Very Long Label"));
+        assertTrue("Should contain 'Here'", output.contains("Here"));
+    }
+
+    @Test
+    public void testMaxLabelWidthShortLabelsUnchanged() {
+        GraphNode root = GraphNode.of("Root")
+                .child("A")
+                .child("B");
+
+        String withWrap = Graph.<GraphNode> builder()
+                .label(GraphNode::label)
+                .children(GraphNode::children)
+                .maxLabelWidth(20)
+                .build()
+                .render(root);
+
+        String without = Graph.render(root, GraphStyle.UNICODE);
+
+        // Short labels should produce identical output
+        assertEquals(without, withWrap);
+    }
+
+    @Test
+    public void testMaxLabelWidthStaticMethod() {
+        GraphNode root = GraphNode.of("A Very Long Root Node Name")
+                .child("Short");
+
+        String output = Graph.render(root, GraphStyle.UNICODE, 0, 12);
+
+        assertTrue("Should contain 'A Very Long'", output.contains("A Very Long"));
+        assertTrue("Should contain 'Root Node'", output.contains("Root Node"));
+        assertTrue("Should contain 'Short'", output.contains("Short"));
+    }
+
+    @Test
+    public void testMaxLabelWidthNoWordBoundary() {
+        // Label with no spaces — hard breaks at maxLabelWidth
+        GraphNode root = GraphNode.of("ABCDEFGHIJKLMNOP");
+
+        String output = Graph.<GraphNode> builder()
+                .label(GraphNode::label)
+                .children(GraphNode::children)
+                .maxLabelWidth(8)
+                .build()
+                .render(root);
+
+        assertTrue("Should contain 'ABCDEFGH'", output.contains("ABCDEFGH"));
+        assertTrue("Should contain 'IJKLMNOP'", output.contains("IJKLMNOP"));
+    }
 }

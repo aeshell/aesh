@@ -126,7 +126,7 @@ public class Graph {
      * Terminal width is auto-detected.
      */
     public static String render(GraphNode root, GraphStyle style) {
-        return new Renderer<>(GraphNode::label, GraphNode::children, style, -1).render(root);
+        return new Renderer<>(GraphNode::label, GraphNode::children, style, -1, 0).render(root);
     }
 
     /**
@@ -136,7 +136,18 @@ public class Graph {
      * @param maxWidth maximum character width (0 = no limit)
      */
     public static String render(GraphNode root, GraphStyle style, int maxWidth) {
-        return new Renderer<>(GraphNode::label, GraphNode::children, style, maxWidth).render(root);
+        return new Renderer<>(GraphNode::label, GraphNode::children, style, maxWidth, 0).render(root);
+    }
+
+    /**
+     * Renders a {@link GraphNode} graph using the specified style
+     * with a maximum output width and label wrapping.
+     *
+     * @param maxWidth maximum character width (0 = no limit)
+     * @param maxLabelWidth maximum label width before wrapping at word boundaries (0 = no wrapping)
+     */
+    public static String render(GraphNode root, GraphStyle style, int maxWidth, int maxLabelWidth) {
+        return new Renderer<>(GraphNode::label, GraphNode::children, style, maxWidth, maxLabelWidth).render(root);
     }
 
     /**
@@ -157,6 +168,7 @@ public class Graph {
     private static class LayoutNode<T> {
         T original;
         String label;
+        String[] lines;
         int layer;
         int indexInLayer;
         int x;
@@ -165,6 +177,7 @@ public class Graph {
         LayoutNode(T original, String label, int layer) {
             this.original = original;
             this.label = label;
+            this.lines = new String[] { label };
             this.layer = layer;
         }
 
@@ -174,8 +187,36 @@ public class Graph {
             return d;
         }
 
+        void wrapLabel(int maxLabelWidth) {
+            if (maxLabelWidth <= 0 || label.length() <= maxLabelWidth || isDummy)
+                return;
+            List<String> result = new ArrayList<>();
+            int start = 0;
+            while (start < label.length()) {
+                int end = Math.min(start + maxLabelWidth, label.length());
+                if (end < label.length()) {
+                    int space = label.lastIndexOf(' ', end);
+                    if (space > start)
+                        end = space;
+                }
+                result.add(label.substring(start, end).trim());
+                start = end;
+                if (start < label.length() && label.charAt(start) == ' ')
+                    start++;
+            }
+            this.lines = result.toArray(new String[0]);
+        }
+
         int width() {
-            return Math.max(label.length(), 1);
+            int max = 0;
+            for (String line : lines) {
+                max = Math.max(max, line.length());
+            }
+            return Math.max(max, 1);
+        }
+
+        int height() {
+            return lines.length;
         }
     }
 
@@ -188,13 +229,15 @@ public class Graph {
         private final Function<T, List<T>> childrenFn;
         private final GraphStyle style;
         private final int maxWidth;
+        private final int maxLabelWidth;
 
         Renderer(Function<T, String> labelFn, Function<T, List<T>> childrenFn,
-                GraphStyle style, int maxWidth) {
+                GraphStyle style, int maxWidth, int maxLabelWidth) {
             this.labelFn = labelFn;
             this.childrenFn = childrenFn;
             this.style = style;
             this.maxWidth = maxWidth < 0 ? detectTerminalWidth() : maxWidth;
+            this.maxLabelWidth = maxLabelWidth;
         }
 
         /**
@@ -209,6 +252,13 @@ public class Graph {
             List<T> topoOrder = new ArrayList<>();
 
             discoverAndDetectCycles(root, nodeMap, parentMap, topoOrder);
+
+            // Wrap long labels if maxLabelWidth is set
+            if (maxLabelWidth > 0) {
+                for (LayoutNode<T> ln : nodeMap.values()) {
+                    ln.wrapLabel(maxLabelWidth);
+                }
+            }
 
             // Phase 2: Layer assignment
             assignLayers(topoOrder, nodeMap, parentMap);
@@ -753,8 +803,21 @@ public class Graph {
                 routingRowCounts[l] = computeRoutingRowCount(layers, allEdges, l);
             }
 
-            // Calculate grid height with variable routing rows
-            int gridHeight = layers.size();
+            // Compute per-layer max node height
+            int[] layerHeight = new int[layers.size()];
+            for (int l = 0; l < layers.size(); l++) {
+                int maxH = 1;
+                for (LayoutNode<T> ln : layers.get(l)) {
+                    maxH = Math.max(maxH, ln.height());
+                }
+                layerHeight[l] = maxH;
+            }
+
+            // Calculate grid height with variable label heights and routing rows
+            int gridHeight = 0;
+            for (int h : layerHeight) {
+                gridHeight += h;
+            }
             for (int count : routingRowCounts) {
                 gridHeight += count;
             }
@@ -766,27 +829,36 @@ public class Graph {
                 java.util.Arrays.fill(row, ' ');
             }
 
-            // Compute row mapping: which grid row corresponds to each layer
+            // Compute row mapping: which grid row corresponds to each layer's first label line
             int[] layerRow = new int[layers.size()];
             layerRow[0] = 0;
             for (int l = 1; l < layers.size(); l++) {
-                layerRow[l] = layerRow[l - 1] + 1 + routingRowCounts[l - 1];
+                layerRow[l] = layerRow[l - 1] + layerHeight[l - 1] + routingRowCounts[l - 1];
             }
 
-            // Write node labels
+            // Write node labels (potentially multi-line)
             for (int l = 0; l < layers.size(); l++) {
-                int row = layerRow[l];
+                int baseRow = layerRow[l];
                 for (LayoutNode<T> ln : layers.get(l)) {
                     if (ln.isDummy) {
-                        if (ln.x >= 0 && ln.x < gridWidth) {
-                            grid[row][ln.x] = style.vertical();
+                        for (int r = 0; r < layerHeight[l]; r++) {
+                            if (ln.x >= 0 && ln.x < gridWidth) {
+                                grid[baseRow + r][ln.x] = style.vertical();
+                            }
                         }
                     } else {
-                        int startX = ln.x - ln.label.length() / 2;
-                        for (int i = 0; i < ln.label.length(); i++) {
-                            int gx = startX + i;
-                            if (gx >= 0 && gx < gridWidth) {
-                                grid[row][gx] = ln.label.charAt(i);
+                        int nodeWidth = ln.width();
+                        for (int lineIdx = 0; lineIdx < ln.lines.length; lineIdx++) {
+                            String line = ln.lines[lineIdx];
+                            int startX = ln.x - nodeWidth / 2 + (nodeWidth - line.length()) / 2;
+                            int gridRow = baseRow + lineIdx;
+                            if (gridRow >= grid.length)
+                                break;
+                            for (int i = 0; i < line.length(); i++) {
+                                int gx = startX + i;
+                                if (gx >= 0 && gx < gridWidth) {
+                                    grid[gridRow][gx] = line.charAt(i);
+                                }
                             }
                         }
                     }
@@ -795,7 +867,7 @@ public class Graph {
 
             // Render edges in routing rows
             for (int l = 0; l < layers.size() - 1; l++) {
-                int startRoutingRow = layerRow[l] + 1;
+                int startRoutingRow = layerRow[l] + layerHeight[l];
                 int numRoutingRows = routingRowCounts[l];
                 if (numRoutingRows == 1) {
                     renderRoutingRow(grid, startRoutingRow, layers, allEdges, l, gridWidth);
@@ -1137,6 +1209,7 @@ public class Graph {
         private Function<T, List<T>> childrenFn;
         private GraphStyle style = GraphStyle.UNICODE;
         private int maxWidth = -1;
+        private int maxLabelWidth = 0;
 
         private Builder() {
         }
@@ -1178,6 +1251,15 @@ public class Graph {
         }
 
         /**
+         * Sets the maximum label width before wrapping at word boundaries.
+         * A value of 0 (the default) means no wrapping.
+         */
+        public Builder<T> maxLabelWidth(int maxLabelWidth) {
+            this.maxLabelWidth = maxLabelWidth;
+            return this;
+        }
+
+        /**
          * Builds an immutable graph renderer.
          *
          * @throws IllegalStateException if {@code label} or {@code children} is not set
@@ -1189,7 +1271,7 @@ public class Graph {
             if (childrenFn == null) {
                 throw new IllegalStateException("children function must be set");
             }
-            return new Renderer<>(labelFn, childrenFn, style, maxWidth);
+            return new Renderer<>(labelFn, childrenFn, style, maxWidth, maxLabelWidth);
         }
     }
 }
