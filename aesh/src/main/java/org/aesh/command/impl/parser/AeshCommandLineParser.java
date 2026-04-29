@@ -862,8 +862,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 if (child.parsedCommand() == null)
                     continue;
                 Command<CI> childCmd = child.getCommand();
-                ProcessedOption childOpt = child.getProcessedCommand().searchAllOptions(parentOpt.name());
+                ProcessedOption childOpt = child.getProcessedCommand().findLongOptionNoActivatorCheck(parentOpt.name());
                 if (childOpt != null) {
+                    if (childOpt.getValues() != null && !childOpt.getValues().isEmpty())
+                        continue;
                     childOpt.setFieldValue(childCmd, value);
                 } else {
                     try {

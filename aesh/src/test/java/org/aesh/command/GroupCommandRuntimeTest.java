@@ -76,6 +76,21 @@ public class GroupCommandRuntimeTest {
         assertTrue(sub.verbose);
     }
 
+    @Test
+    public void testInheritedOptionsAfterSubcommand() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(InheritGroup.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("igroup sub --verbose");
+        Execution<?> execution = executor.getExecutions().get(0);
+        execution.populateCommand();
+
+        InheritSub sub = (InheritSub) execution.getCommand();
+        assertTrue("inherited --verbose after subcommand should be true", sub.verbose);
+    }
+
     @CommandDefinition(name = "sub", description = "")
     public static class InheritSub implements Command<CommandInvocation> {
         @Option(hasValue = false, inherited = true)
