@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 import java.util.Map;
@@ -140,6 +141,11 @@ public class CommandLineParserTest {
         assertFalse(p1a.define.isEmpty());
         assertEquals("bar", p1a.define.get("N1"));
 
+        // #422: key without = should use defaultValue
+        parser.populateObject("test -f -DN2 /tmp/file.txt", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertFalse(p1a.define.isEmpty());
+        assertEquals("bar", p1a.define.get("N2"));
+
     }
 
     @Test
@@ -202,6 +208,15 @@ public class CommandLineParserTest {
         assertEquals("bar", p1.equal);
         assertEquals("g", p1.define.get("f"));
         assertEquals("/tmp/file.txt", p1.arguments.get(0));
+
+        // #422: key without = and no defaultValue should still throw
+        try {
+            parser.populateObject("test -ebar -Dfoo /tmp/file.txt", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Expected OptionParserException for -Dfoo without defaultValue");
+        } catch (CommandLineParserException e) {
+            assertTrue(e.getMessage().contains("must be part of a property"));
+        }
     }
 
     @Test

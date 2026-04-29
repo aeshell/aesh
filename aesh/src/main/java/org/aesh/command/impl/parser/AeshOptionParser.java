@@ -216,9 +216,17 @@ public class AeshOptionParser implements OptionParser {
     private void processProperty(ParsedLineIterator iterator, ProcessedOption currOption) throws OptionParserException {
         String word = currOption.isLongNameUsed() ? iterator.pollWord().substring(2) : iterator.pollWord().substring(1);
         String name = currOption.isLongNameUsed() ? currOption.name() : currOption.shortName();
-        if (word.length() < (1 + name.length()) || !word.contains(EQUALS))
+        if (word.length() < (1 + name.length()))
             throw new OptionParserException("Option " + currOption.getDisplayName() + ", must be part of a property");
-        else {
+        if (!word.contains(EQUALS)) {
+            if (currOption.hasDefaultValue()) {
+                String propertyName = word.substring(name.length());
+                currOption.addProperty(propertyName, currOption.getDefaultValues().get(0));
+            } else {
+                throw new OptionParserException(
+                        "Option " + currOption.getDisplayName() + ", must be part of a property");
+            }
+        } else {
             String propertyName = word.substring(name.length(), word.indexOf(EQUALS));
             String value = word.substring(word.indexOf(EQUALS) + 1);
             if (value.length() < 1 && currOption.hasDefaultValue())
