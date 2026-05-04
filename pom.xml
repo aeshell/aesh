@@ -70,7 +70,7 @@
       <version.javadoc.plugin>3.11.2</version.javadoc.plugin>
       <version.shade.plugin>3.6.2</version.shade.plugin>
       <version.enforcer.plugin>3.5.0</version.enforcer.plugin>
-      <version.gpg.plugin>3.2.7</version.gpg.plugin>
+      <version.gpg.plugin>3.2.8</version.gpg.plugin>
       <version.nexus-staging.plugin>1.7.0</version.nexus-staging.plugin>
       <version.clean.plugin>3.4.0</version.clean.plugin>
       <version.resources.plugin>3.5.0</version.resources.plugin>
