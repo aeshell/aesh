@@ -99,6 +99,7 @@ public final class ProcessedOption {
     private List<String> aliases = Collections.emptyList();
     private String helpGroup = "";
     private List<String> exclusiveWith = Collections.emptyList();
+    private List<String> allowedValues = Collections.emptyList();
     private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
@@ -235,6 +236,18 @@ public final class ProcessedOption {
 
     public List<String> getExclusiveWith() {
         return exclusiveWith;
+    }
+
+    public void setAllowedValues(List<String> allowedValues) {
+        this.allowedValues = allowedValues != null ? allowedValues : Collections.emptyList();
+    }
+
+    public List<String> getAllowedValues() {
+        return allowedValues;
+    }
+
+    public boolean hasAllowedValues() {
+        return allowedValues != null && !allowedValues.isEmpty();
     }
 
     public void setVisibility(org.aesh.command.option.OptionVisibility visibility) {
@@ -784,10 +797,14 @@ public final class ProcessedOption {
     @SuppressWarnings("unchecked")
     public Object doConvert(String inputValue, InvocationProviders invocationProviders,
             Object command, AeshContext aeshContext, boolean doValidation) throws OptionValidatorException {
+        if (doValidation && hasAllowedValues() && !allowedValues.contains(inputValue)) {
+            throw new OptionValidatorException("Invalid value '" + inputValue
+                    + "' for option '" + getDisplayName()
+                    + "'. Allowed values: " + String.join(", ", allowedValues));
+        }
         Object result = converter.convert(
                 invocationProviders.getConverterProvider().enhanceConverterInvocation(
                         new AeshConverterInvocation(inputValue, aeshContext)));
-        //Object result =   converter.convert(inputValue);
         if (validator != null && doValidation) {
             validator.validate(invocationProviders.getValidatorProvider().enhanceValidatorInvocation(
                     new AeshValidatorInvocation(result, command, aeshContext)));

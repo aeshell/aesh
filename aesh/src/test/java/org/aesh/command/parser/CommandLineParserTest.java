@@ -1311,4 +1311,53 @@ public class CommandLineParserTest {
         }
     }
 
+    // --- #427: allowedValues ---
+
+    @Test
+    public void testAllowedValues() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new AllowedValuesCommand<>()).getParser();
+
+        // Valid value
+        parser.populateObject("fmt --format text", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        AllowedValuesCommand<?> cmd = (AllowedValuesCommand<?>) parser.getCommand();
+        assertEquals("text", cmd.format);
+
+        // Another valid value
+        parser.populateObject("fmt --format json", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals("json", cmd.format);
+
+        // Invalid value
+        try {
+            parser.populateObject("fmt --format xml", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Expected exception for invalid allowedValues");
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("Invalid value"));
+            assertTrue(e.getMessage().contains("xml"));
+            assertTrue(e.getMessage().contains("text"));
+            assertTrue(e.getMessage().contains("json"));
+        }
+
+        // No value (option not set) should be fine
+        parser.populateObject("fmt", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertNull(cmd.format);
+    }
+
+    @CommandDefinition(name = "fmt", description = "")
+    public class AllowedValuesCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "format", allowedValues = { "text", "json" })
+        String format;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }

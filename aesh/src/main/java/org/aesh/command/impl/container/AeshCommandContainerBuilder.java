@@ -261,6 +261,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .aliases(o.aliases())
                             .helpGroup(o.helpGroup())
                             .exclusiveWith(o.exclusiveWith())
+                            .addAllAllowedValues(o.allowedValues())
                             .visibility(o.visibility())
                             .mixinFieldName(mixinFieldName)
                             .build());
@@ -295,6 +296,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .aliases(ol.aliases())
                             .helpGroup(ol.helpGroup())
                             .exclusiveWith(ol.exclusiveWith())
+                            .addAllAllowedValues(ol.allowedValues())
                             .visibility(ol.visibility())
                             .mixinFieldName(mixinFieldName)
                             .build());

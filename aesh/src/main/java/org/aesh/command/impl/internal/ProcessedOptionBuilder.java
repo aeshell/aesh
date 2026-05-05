@@ -28,6 +28,7 @@ import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.completer.BooleanOptionCompleter;
+import org.aesh.command.impl.completer.DefaultValueOptionCompleter;
 import org.aesh.command.impl.completer.NullOptionCompleter;
 import org.aesh.command.impl.converter.NullConverter;
 import org.aesh.command.impl.renderer.NullOptionRenderer;
@@ -83,6 +84,7 @@ public class ProcessedOptionBuilder {
     private List<String> aliases;
     private String helpGroup = "";
     private List<String> exclusiveWith;
+    private List<String> allowedValues = java.util.Collections.emptyList();
     private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
 
     private ProcessedOptionBuilder() {
@@ -386,6 +388,22 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
+    public ProcessedOptionBuilder addAllowedValue(String value) {
+        if (allowedValues.isEmpty())
+            allowedValues = new java.util.ArrayList<>();
+        allowedValues.add(value);
+        return this;
+    }
+
+    public ProcessedOptionBuilder addAllAllowedValues(String[] values) {
+        if (values != null && values.length > 0) {
+            if (allowedValues.isEmpty())
+                allowedValues = new java.util.ArrayList<>();
+            java.util.Collections.addAll(allowedValues, values);
+        }
+        return this;
+    }
+
     public ProcessedOptionBuilder visibility(org.aesh.command.option.OptionVisibility visibility) {
         this.visibility = visibility != null ? visibility : org.aesh.command.option.OptionVisibility.BRIEF;
         return this;
@@ -440,6 +458,9 @@ public class ProcessedOptionBuilder {
             throw new OptionParserException("Option '" + name + "' is marked as optionalValue but does not accept values");
         }
 
+        if (completer == null && !allowedValues.isEmpty())
+            completer = new DefaultValueOptionCompleter(allowedValues);
+
         ProcessedOption option = new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType,
                 converter,
@@ -459,6 +480,8 @@ public class ProcessedOptionBuilder {
             option.setHelpGroup(helpGroup);
         if (exclusiveWith != null)
             option.setExclusiveWith(exclusiveWith);
+        if (!allowedValues.isEmpty())
+            option.setAllowedValues(allowedValues);
         if (visibility != org.aesh.command.option.OptionVisibility.BRIEF)
             option.setVisibility(visibility);
         return option;

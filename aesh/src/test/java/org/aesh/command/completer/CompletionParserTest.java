@@ -680,4 +680,45 @@ public class CompletionParserTest {
         @Option(name = "verbose", hasValue = false, negatable = true, description = "enable verbose mode")
         private boolean verbose;
     }
+
+    // --- #427: allowedValues completion ---
+
+    @Test
+    public void testAllowedValuesCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new AllowedValuesCompleteTest<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // All allowed values offered when no prefix typed
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test --format ", 14);
+        clp.complete(co, ip);
+        assertEquals(3, co.getFormattedCompletionCandidates().size());
+        assertTrue(co.getFormattedCompletionCandidates().contains("text"));
+        assertTrue(co.getFormattedCompletionCandidates().contains("json"));
+        assertTrue(co.getFormattedCompletionCandidates().contains("yaml"));
+
+        // Prefix filtering
+        co = new AeshCompleteOperation(aeshContext, "test --format j", 15);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("son", co.getFormattedCompletionCandidates().get(0));
+
+        // Prefix matching multiple
+        co = new AeshCompleteOperation(aeshContext, "test --format t", 15);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("ext", co.getFormattedCompletionCandidates().get(0));
+
+        // No match
+        co = new AeshCompleteOperation(aeshContext, "test --format x", 15);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+    }
+
+    @CommandDefinition(name = "test", description = "test allowedValues completion")
+    public class AllowedValuesCompleteTest<CI extends CommandInvocation> extends TestCommand<CI> {
+
+        @Option(name = "format", allowedValues = { "text", "json", "yaml" })
+        private String format;
+    }
 }

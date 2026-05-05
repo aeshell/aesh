@@ -430,6 +430,7 @@ final class CodeGenerator {
         generateAliases(sb, o.aliases());
         generateHelpGroup(sb, o.helpGroup());
         generateExclusiveWith(sb, o.exclusiveWith());
+        generateAllowedValues(sb, o.allowedValues());
         generateVisibility(sb, o.visibility());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
@@ -470,6 +471,7 @@ final class CodeGenerator {
         generateAliases(sb, ol.aliases());
         generateHelpGroup(sb, ol.helpGroup());
         generateExclusiveWith(sb, ol.exclusiveWith());
+        generateAllowedValues(sb, ol.allowedValues());
         generateVisibility(sb, ol.visibility());
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
         sb.append("                        .build());\n\n");
@@ -613,6 +615,13 @@ final class CodeGenerator {
     private static void generateExclusiveWith(StringBuilder sb, String[] exclusiveWith) {
         if (exclusiveWith != null && exclusiveWith.length > 0) {
             sb.append("                        .exclusiveWith(").append(stringArrayLiteralAsNew(exclusiveWith)).append(")\n");
+        }
+    }
+
+    private static void generateAllowedValues(StringBuilder sb, String[] allowedValues) {
+        if (allowedValues != null && allowedValues.length > 0) {
+            sb.append("                        .addAllAllowedValues(").append(stringArrayLiteralAsNew(allowedValues))
+                    .append(")\n");
         }
     }
 

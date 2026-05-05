@@ -223,6 +223,13 @@ public @interface Option {
     String[] exclusiveWith() default {};
 
     /**
+     * Restricts the option to a fixed set of valid string values.
+     * Invalid values are rejected at parse time with a clear error message.
+     * When set, these values are also offered as tab completion candidates.
+     */
+    String[] allowedValues() default {};
+
+    /**
      * Controls how this option appears in help output and tab completion.
      * BRIEF (default) = always shown, FULL = only with --help=all, HIDDEN = never shown.
      */
