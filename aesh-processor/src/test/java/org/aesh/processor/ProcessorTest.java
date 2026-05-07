@@ -813,6 +813,154 @@ public class ProcessorTest {
             "    }\n" +
             "}\n";
 
+    // --- Test: Full callback coverage ---
+
+    private static final String CUSTOM_VALIDATOR_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.validator.OptionValidator;\n" +
+            "import org.aesh.command.validator.OptionValidatorException;\n" +
+            "import org.aesh.command.validator.ValidatorInvocation;\n" +
+            "\n" +
+            "public class CustomValidator implements OptionValidator {\n" +
+            "    @Override\n" +
+            "    public void validate(ValidatorInvocation invocation) throws OptionValidatorException {\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String CUSTOM_COMPLETER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.completer.CompleterInvocation;\n" +
+            "import org.aesh.command.completer.OptionCompleter;\n" +
+            "\n" +
+            "public class CustomCompleter implements OptionCompleter {\n" +
+            "    @Override\n" +
+            "    public void complete(CompleterInvocation invocation) {\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String CUSTOM_ACTIVATOR_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.activator.OptionActivator;\n" +
+            "import org.aesh.command.impl.internal.ParsedCommand;\n" +
+            "\n" +
+            "public class CustomActivator implements OptionActivator {\n" +
+            "    @Override\n" +
+            "    public boolean isActivated(ParsedCommand parsedCommand) {\n" +
+            "        return true;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String CUSTOM_RENDERER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.renderer.OptionRenderer;\n" +
+            "import org.aesh.terminal.formatting.TerminalColor;\n" +
+            "import org.aesh.terminal.formatting.TerminalTextStyle;\n" +
+            "\n" +
+            "public class CustomRenderer implements OptionRenderer {\n" +
+            "    @Override\n" +
+            "    public TerminalColor getColor() { return null; }\n" +
+            "    @Override\n" +
+            "    public TerminalTextStyle getTextType() { return null; }\n" +
+            "}\n";
+
+    private static final String CUSTOM_CMD_VALIDATOR_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.validator.CommandValidator;\n" +
+            "import org.aesh.command.validator.CommandValidatorException;\n" +
+            "\n" +
+            "public class CustomCommandValidator implements CommandValidator<Command<CommandInvocation>, CommandInvocation> {\n"
+            +
+            "    @Override\n" +
+            "    public void validate(Command<CommandInvocation> command) throws CommandValidatorException {\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String CUSTOM_RESULT_HANDLER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.CommandException;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.result.ResultHandler;\n" +
+            "\n" +
+            "public class CustomResultHandler implements ResultHandler {\n" +
+            "    @Override\n" +
+            "    public void onSuccess() {}\n" +
+            "    @Override\n" +
+            "    public void onFailure(CommandResult result) {}\n" +
+            "    @Override\n" +
+            "    public void onValidationFailure(CommandResult result, Exception exception) {}\n" +
+            "    @Override\n" +
+            "    public void onExecutionFailure(CommandResult result, CommandException exception) {}\n" +
+            "}\n";
+
+    private static final String CUSTOM_CMD_ACTIVATOR_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.activator.CommandActivator;\n" +
+            "import org.aesh.command.impl.internal.ParsedCommand;\n" +
+            "\n" +
+            "public class CustomCommandActivator implements CommandActivator {\n" +
+            "    @Override\n" +
+            "    public boolean isActivated(ParsedCommand command) {\n" +
+            "        return true;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String FULL_CALLBACKS_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"full\", description = \"Full callback test\",\n" +
+            "        validator = CustomCommandValidator.class,\n" +
+            "        resultHandler = CustomResultHandler.class,\n" +
+            "        activator = CustomCommandActivator.class)\n" +
+            "public class FullCallbackCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"output\",\n" +
+            "            completer = CustomCompleter.class,\n" +
+            "            validator = CustomValidator.class,\n" +
+            "            activator = CustomActivator.class,\n" +
+            "            renderer = CustomRenderer.class,\n" +
+            "            description = \"Output path\")\n" +
+            "    private String output;\n" +
+            "\n" +
+            "    @Option(name = \"bare\", acceptNameWithoutDashes = true,\n" +
+            "            description = \"Bare option\")\n" +
+            "    private String bare;\n" +
+            "\n" +
+            "    @Option(name = \"flag\", hasValue = false, negatable = true,\n" +
+            "            negationPrefix = \"without-\",\n" +
+            "            description = \"A negatable flag\")\n" +
+            "    private boolean flag;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testFullCallbackCoverage() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CustomValidator", CUSTOM_VALIDATOR_SOURCE),
+                new InMemorySource("test.CustomCompleter", CUSTOM_COMPLETER_SOURCE),
+                new InMemorySource("test.CustomActivator", CUSTOM_ACTIVATOR_SOURCE),
+                new InMemorySource("test.CustomRenderer", CUSTOM_RENDERER_SOURCE),
+                new InMemorySource("test.CustomCommandValidator", CUSTOM_CMD_VALIDATOR_SOURCE),
+                new InMemorySource("test.CustomResultHandler", CUSTOM_RESULT_HANDLER_SOURCE),
+                new InMemorySource("test.CustomCommandActivator", CUSTOM_CMD_ACTIVATOR_SOURCE),
+                new InMemorySource("test.FullCallbackCommand", FULL_CALLBACKS_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.FullCallbackCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.FullCallbackCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     @Test
     public void testAdvancedOptionProperties() throws Exception {
         CompilationResult result = compileWithProcessor(
@@ -984,6 +1132,18 @@ public class ProcessorTest {
                 generatedPC.helpUrl() != null ? generatedPC.helpUrl() : "");
         assertEquals("helpGroup", reflectionPC.helpGroup(), generatedPC.helpGroup());
 
+        // Compare command-level callbacks
+        assertCallbackEquivalence("command validator", "command",
+                reflectionPC.validator(), generatedPC.validator());
+        assertCallbackEquivalence("command resultHandler", "command",
+                reflectionPC.resultHandler(), generatedPC.resultHandler());
+        assertCallbackEquivalence("command activator", "command",
+                reflectionPC.getActivator(), generatedPC.getActivator());
+        assertCallbackEquivalence("command defaultValueProvider", "command",
+                reflectionPC.getDefaultValueProvider(), generatedPC.getDefaultValueProvider());
+        assertCallbackEquivalence("command helpSectionProvider", "command",
+                reflectionPC.getHelpSectionProvider(), generatedPC.getHelpSectionProvider());
+
         // Compare options
         List<ProcessedOption> reflectionOpts = reflectionPC.getOptions();
         List<ProcessedOption> generatedOpts = generatedPC.getOptions();
@@ -1014,6 +1174,20 @@ public class ProcessorTest {
             assertEquals("Option optionalValue for " + rOpt.name(), rOpt.isOptionalValue(), gOpt.isOptionalValue());
             assertEquals("Option exclusiveWith for " + rOpt.name(), rOpt.getExclusiveWith(), gOpt.getExclusiveWith());
             assertEquals("Option askIfNotSet for " + rOpt.name(), rOpt.askIfNotSet(), gOpt.askIfNotSet());
+            assertEquals("Option allowedValues for " + rOpt.name(), rOpt.getAllowedValues(), gOpt.getAllowedValues());
+            assertEquals("Option acceptNameWithoutDashes for " + rOpt.name(),
+                    rOpt.acceptNameWithoutDashes(), gOpt.acceptNameWithoutDashes());
+            assertEquals("Option negationPrefix for " + rOpt.name(), rOpt.getNegationPrefix(), gOpt.getNegationPrefix());
+            assertEquals("Option descriptionUrl for " + rOpt.name(),
+                    rOpt.getDescriptionUrl() != null ? rOpt.getDescriptionUrl() : "",
+                    gOpt.getDescriptionUrl() != null ? gOpt.getDescriptionUrl() : "");
+            assertEquals("Option isUrl for " + rOpt.name(), rOpt.isUrl(), gOpt.isUrl());
+            // Compare callbacks: both should be non-null or both null
+            assertCallbackEquivalence("converter", rOpt.name(), rOpt.converter(), gOpt.converter());
+            assertCallbackEquivalence("completer", rOpt.name(), rOpt.completer(), gOpt.completer());
+            assertCallbackEquivalence("validator", rOpt.name(), rOpt.validator(), gOpt.validator());
+            assertCallbackEquivalence("activator", rOpt.name(), rOpt.activator(), gOpt.activator());
+            // renderer has no public getter — it's used internally for getRenderedNameWithDashes()
         }
 
         // Compare argument
@@ -1037,6 +1211,20 @@ public class ProcessorTest {
             assertEquals("Arguments type", rArgs.type(), gArgs.type());
             assertEquals("Arguments fieldName", rArgs.getFieldName(), gArgs.getFieldName());
             assertEquals("Arguments optionType", rArgs.getOptionType(), gArgs.getOptionType());
+        }
+    }
+
+    private void assertCallbackEquivalence(String callbackName, String optionName,
+            Object reflectionCallback, Object generatedCallback) {
+        if (reflectionCallback == null) {
+            assertTrue(callbackName + " for " + optionName + " should be null in generated",
+                    generatedCallback == null);
+        } else {
+            assertNotNull(callbackName + " for " + optionName + " should not be null in generated",
+                    generatedCallback);
+            assertEquals(callbackName + " type for " + optionName,
+                    reflectionCallback.getClass().getName(),
+                    generatedCallback.getClass().getName());
         }
     }
 
