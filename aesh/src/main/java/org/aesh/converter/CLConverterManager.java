@@ -96,8 +96,14 @@ public class CLConverterManager {
         return converters.containsKey(clazz);
     }
 
+    @SuppressWarnings("unchecked")
     public Converter getConverter(Class clazz) {
-        return converters.get(clazz);
+        Converter converter = converters.get(clazz);
+        if (converter == null && clazz.isEnum()) {
+            converter = new org.aesh.command.impl.converter.EnumConverter(clazz);
+            converters.put(clazz, converter);
+        }
+        return converter;
     }
 
     public void setConverter(Class<?> clazz, Converter converter) {

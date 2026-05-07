@@ -722,6 +722,47 @@ public class CompletionParserTest {
         private String format;
     }
 
+    // --- Enum completion tests ---
+
+    public enum Color {
+        RED,
+        GREEN,
+        BLUE
+    }
+
+    @Test
+    public void testEnumOptionCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new EnumCompleteTest<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // All enum values offered
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test --color ", 13);
+        clp.complete(co, ip);
+        assertEquals(3, co.getFormattedCompletionCandidates().size());
+        assertTrue(co.getFormattedCompletionCandidates().contains("red"));
+        assertTrue(co.getFormattedCompletionCandidates().contains("green"));
+        assertTrue(co.getFormattedCompletionCandidates().contains("blue"));
+
+        // Prefix filtering
+        co = new AeshCompleteOperation(aeshContext, "test --color g", 14);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("reen", co.getFormattedCompletionCandidates().get(0));
+
+        // Prefix matching multiple
+        co = new AeshCompleteOperation(aeshContext, "test --color r", 14);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("ed", co.getFormattedCompletionCandidates().get(0));
+    }
+
+    @CommandDefinition(name = "test", description = "test enum completion")
+    public class EnumCompleteTest<CI extends CommandInvocation> extends TestCommand<CI> {
+        @Option(name = "color")
+        private Color color;
+    }
+
     // --- Sub-command mode completion tests ---
 
     @Test

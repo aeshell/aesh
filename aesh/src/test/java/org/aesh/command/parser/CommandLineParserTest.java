@@ -1431,4 +1431,61 @@ public class CommandLineParserTest {
         }
     }
 
+    // --- Enum option tests ---
+
+    public enum OutputFormat {
+        TEXT,
+        JSON,
+        YAML
+    }
+
+    @CommandDefinition(name = "enumtest", description = "")
+    public class EnumOptionCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "format", description = "Output format")
+        OutputFormat format;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testEnumOption() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new EnumOptionCmd<>()).getParser();
+
+        // Exact case
+        parser.populateObject("enumtest --format TEXT", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        EnumOptionCmd<?> cmd = (EnumOptionCmd<?>) parser.getCommand();
+        assertEquals(OutputFormat.TEXT, cmd.format);
+
+        // Case-insensitive
+        parser.populateObject("enumtest --format json", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals(OutputFormat.JSON, cmd.format);
+
+        // Mixed case
+        parser.populateObject("enumtest --format Yaml", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertEquals(OutputFormat.YAML, cmd.format);
+
+        // Invalid value
+        try {
+            parser.populateObject("enumtest --format xml", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Should throw for invalid enum value");
+        } catch (Exception e) {
+            assertTrue("Error should mention invalid value",
+                    e.getMessage().contains("xml") || e.getCause().getMessage().contains("xml"));
+        }
+
+        // No value set
+        parser.populateObject("enumtest", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertNull(cmd.format);
+    }
+
 }
