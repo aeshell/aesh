@@ -30,6 +30,7 @@ import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.context.CommandContext;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.shell.ShellOutputDelegate;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
@@ -192,15 +193,24 @@ public final class AeshCommandInvocation implements CommandInvocation {
             return false;
         }
 
-        // Push the current command onto the context
-        ctx.push(commandContainer.getParser(), command);
+        // Find the parser for the command being entered.
+        // For nested group commands, we need the child parser, not the root.
+        CommandLineParser<?> parser = commandContainer.getParser();
+        CommandLineParser<?> parsed = parser.parsedCommand();
+        if (parsed != null && parsed != parser
+                && parsed.getProcessedCommand().getCommand() == command) {
+            parser = parsed;
+        }
+
+        // Push the command onto the context
+        ctx.push(parser, command);
 
         // Update the prompt to show the context
         String newPrompt = ctx.buildPrompt(true);
         console.setPrompt(new Prompt(newPrompt));
 
         // Print entry message if configured
-        String commandName = commandContainer.getParser().getProcessedCommand().name();
+        String commandName = parser.getProcessedCommand().name();
         String enterMessage = ctx.formatEnterMessage(commandName);
         if (enterMessage != null) {
             println(enterMessage);

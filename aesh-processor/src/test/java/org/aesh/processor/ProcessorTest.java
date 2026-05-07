@@ -869,6 +869,83 @@ public class ProcessorTest {
             "public abstract class AbstractBadCommand implements Command<CommandInvocation> {\n" +
             "}\n";
 
+    // --- Test: @ParentCommand injection in generated code ---
+
+    private static final String PARENT_CMD_GROUP_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.GroupCommandDefinition;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@GroupCommandDefinition(name = \"parent\", description = \"Parent\",\n" +
+            "        groupCommands = {ParentChildCommand.class})\n" +
+            "public class ParentGroupCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Verbose\", hasValue = false)\n" +
+            "    private boolean verbose;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String PARENT_CHILD_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.ParentCommand;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"child\", description = \"Child\")\n" +
+            "public class ParentChildCommand implements Command<CommandInvocation> {\n" +
+            "    @ParentCommand\n" +
+            "    private ParentGroupCommand parent;\n" +
+            "\n" +
+            "    @Option(description = \"Name\")\n" +
+            "    private String name;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testParentCommandInjection() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ParentChildCommand", PARENT_CHILD_CMD_SOURCE),
+                new InMemorySource("test.ParentGroupCommand", PARENT_CMD_GROUP_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        // Verify the child's generated metadata has a parentCommandInjector
+        Class<?> childMetaClass = result.classLoader.loadClass("test.ParentChildCommand_AeshMetadata");
+        @SuppressWarnings("unchecked")
+        CommandMetadataProvider<Command> childProvider = (CommandMetadataProvider<Command>) childMetaClass.newInstance();
+        Command childInstance = childProvider.newInstance();
+        ProcessedCommand childPC = childProvider.buildProcessedCommand(childInstance);
+        assertNotNull("Child should have parentCommandInjector",
+                childPC.getParentCommandInjector());
+
+        // Verify the injector works: create a parent, inject into child
+        Class<?> parentClass = result.classLoader.loadClass("test.ParentGroupCommand");
+        Object parentInstance = parentClass.newInstance();
+        childPC.getParentCommandInjector().accept(childInstance, parentInstance);
+
+        // Verify the @ParentCommand field was set via reflection
+        java.lang.reflect.Field parentField = childInstance.getClass().getDeclaredField("parent");
+        parentField.setAccessible(true);
+        assertEquals("Parent should be injected", parentInstance, parentField.get(childInstance));
+
+        // Also verify equivalence with reflection path
+        assertEquivalence(
+                result.classLoader.loadClass("test.ParentChildCommand"),
+                childMetaClass);
+    }
+
     @Test
     public void testAbstractClassError() throws Exception {
         CompilationResult result = compileWithProcessor(

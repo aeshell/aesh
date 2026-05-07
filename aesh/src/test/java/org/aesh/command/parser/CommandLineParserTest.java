@@ -1360,4 +1360,75 @@ public class CommandLineParserTest {
         }
     }
 
+    // --- Combined short options ---
+
+    @Test
+    public void testCombinedShortOptions() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CombinedShortCmd<>()).getParser();
+
+        // Three boolean flags combined: -abc
+        parser.populateObject("combo -abc", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        CombinedShortCmd<?> cmd = (CombinedShortCmd<?>) parser.getCommand();
+        assertTrue(cmd.alpha);
+        assertTrue(cmd.bravo);
+        assertTrue(cmd.charlie);
+        assertNull(cmd.delta);
+
+        // Two flags combined + separate value option: -ab -d value
+        parser.populateObject("combo -ab -d hello", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertTrue(cmd.alpha);
+        assertTrue(cmd.bravo);
+        assertFalse(cmd.charlie);
+        assertEquals("hello", cmd.delta);
+
+        // Value option can't be grouped: -acd throws error
+        try {
+            parser.populateObject("combo -acd hello", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Should throw: value option -d can't be grouped");
+        } catch (CommandLineParserException e) {
+            assertTrue(e.getMessage().contains("can not be grouped"));
+        }
+
+        // All flags: -abc with value option separate
+        parser.populateObject("combo -abc -d world", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertTrue(cmd.alpha);
+        assertTrue(cmd.bravo);
+        assertTrue(cmd.charlie);
+        assertEquals("world", cmd.delta);
+
+        // Single flag
+        parser.populateObject("combo -b", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        assertFalse(cmd.alpha);
+        assertTrue(cmd.bravo);
+        assertFalse(cmd.charlie);
+        assertNull(cmd.delta);
+    }
+
+    @CommandDefinition(name = "combo", description = "")
+    public class CombinedShortCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(shortName = 'a', hasValue = false)
+        boolean alpha;
+
+        @Option(shortName = 'b', hasValue = false)
+        boolean bravo;
+
+        @Option(shortName = 'c', hasValue = false)
+        boolean charlie;
+
+        @Option(shortName = 'd')
+        String delta;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }

@@ -19,6 +19,7 @@
  */
 package org.aesh.command;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -248,6 +249,130 @@ public class SubCommandModeConsoleTest {
 
         @Override
         public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- Nested sub-command mode tests ---
+
+    @Test
+    public void testNestedSubCommandMode() throws Exception {
+        TestConnection connection = new TestConnection();
+        NestedLeafCmd.executed = false;
+        NestedLeafCmd.lastValue = null;
+
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(TopGroupCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        // Enter top-level sub-command mode
+        connection.read("top" + Config.getLineSeparator());
+        Thread.sleep(300);
+
+        // Enter nested sub-command mode
+        connection.read("mid" + Config.getLineSeparator());
+        Thread.sleep(300);
+
+        // Execute leaf command within nested context
+        connection.read("leaf --value hello" + Config.getLineSeparator());
+        Thread.sleep(300);
+
+        String output = connection.getOutputBuffer();
+        assertTrue("should enter top mode, got: " + output, output.contains("Entering top mode"));
+        assertTrue("should enter mid mode, got: " + output, output.contains("Entering mid mode"));
+        assertTrue("leaf should have executed", NestedLeafCmd.executed);
+        assertEquals("hello", NestedLeafCmd.lastValue);
+
+        // Exit nested mode back to top
+        connection.read("exit" + Config.getLineSeparator());
+        Thread.sleep(100);
+
+        // Exit top mode
+        connection.read("exit" + Config.getLineSeparator());
+        Thread.sleep(100);
+
+        console.stop();
+    }
+
+    @Test
+    public void testExitSubCommandModeWithDotDot() throws Exception {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(AppGroupCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        // Enter sub-command mode
+        connection.read("app" + Config.getLineSeparator());
+        Thread.sleep(200);
+        assertTrue(connection.getOutputBuffer().contains("Entering app mode"));
+        connection.clearOutputBuffer();
+
+        // Exit with ".."
+        connection.read(".." + Config.getLineSeparator());
+        Thread.sleep(200);
+
+        // Should be back at the main prompt — verify by typing a top-level command
+        connection.clearOutputBuffer();
+        connection.read("app" + Config.getLineSeparator());
+        Thread.sleep(200);
+        assertTrue("should re-enter app mode", connection.getOutputBuffer().contains("Entering app mode"));
+
+        connection.read("exit" + Config.getLineSeparator());
+        Thread.sleep(100);
+        console.stop();
+    }
+
+    // --- Nested command definitions ---
+
+    @GroupCommandDefinition(name = "top", description = "Top level", groupCommands = { MidGroupCommand.class })
+    public static class TopGroupCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) throws CommandException, InterruptedException {
+            invocation.enterSubCommandMode(this);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "mid", description = "Mid level", groupCommands = { NestedLeafCmd.class })
+    public static class MidGroupCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) throws CommandException, InterruptedException {
+            invocation.enterSubCommandMode(this);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "leaf", description = "Leaf command", generateHelp = true)
+    public static class NestedLeafCmd implements Command<CommandInvocation> {
+        static volatile boolean executed;
+        static volatile String lastValue;
+
+        @Option(name = "value", description = "A value")
+        private String value;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            executed = true;
+            lastValue = value;
             return CommandResult.SUCCESS;
         }
     }
