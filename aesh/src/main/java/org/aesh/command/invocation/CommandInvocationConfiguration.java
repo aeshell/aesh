@@ -94,6 +94,6 @@ public class CommandInvocationConfiguration {
     }
 
     public boolean hasPipedData() {
-        return getPipedData() != null;
+        return dataProvider != null;
     }
 }

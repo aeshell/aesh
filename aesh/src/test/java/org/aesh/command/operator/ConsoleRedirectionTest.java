@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -42,7 +41,6 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.io.Resource;
 import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
 import org.junit.Rule;
@@ -410,21 +408,14 @@ public class ConsoleRedirectionTest {
     @CommandDefinition(name = "bar", description = "")
     public class BarCommand implements Command {
 
-        @Argument
-        private Resource arg;
-
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if (arg != null) {
-                try {
-                    String result = new BufferedReader(new InputStreamReader(arg.read()))
-                            .lines().collect(Collectors.joining("\n"));
-
-                    commandInvocation.println(result);
-                    return CommandResult.SUCCESS;
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+            java.io.InputStream stdin = commandInvocation.getStdin();
+            if (stdin != null) {
+                String result = new BufferedReader(new InputStreamReader(stdin))
+                        .lines().collect(Collectors.joining("\n"));
+                commandInvocation.println(result);
+                return CommandResult.SUCCESS;
             }
             return CommandResult.FAILURE;
         }
@@ -433,21 +424,14 @@ public class ConsoleRedirectionTest {
     @CommandDefinition(name = "man", description = "")
     public class ManCommand implements Command {
 
-        @Argument
-        private Resource arg;
-
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
-            if (arg != null) {
-                try {
-                    String result = new BufferedReader(new InputStreamReader(arg.read()))
-                            .lines().collect(Collectors.joining("\n"));
-
-                    commandInvocation.println(result);
-                    return CommandResult.SUCCESS;
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+            java.io.InputStream stdin = commandInvocation.getStdin();
+            if (stdin != null) {
+                String result = new BufferedReader(new InputStreamReader(stdin))
+                        .lines().collect(Collectors.joining("\n"));
+                commandInvocation.println(result);
+                return CommandResult.SUCCESS;
             }
             return CommandResult.FAILURE;
         }
@@ -478,6 +462,159 @@ public class ConsoleRedirectionTest {
                 return CommandResult.SUCCESS;
             }
             return CommandResult.FAILURE;
+        }
+    }
+
+    @Test
+    public void testAppendOutputRedirection() throws Throwable {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(FooCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        final File out = new File(tempDir.getRoot() + Config.getPathSeparator() + "append_test.txt");
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        // First write
+        connection.read("foo > " + out.getCanonicalPath() + Config.getLineSeparator());
+        Thread.sleep(50);
+        // Append
+        connection.read("foo >> " + out.getCanonicalPath() + Config.getLineSeparator());
+        Thread.sleep(50);
+
+        console.stop();
+
+        List<String> lines = Files.readAllLines(out.toPath());
+        // FooCommand uses print("text") without newline, so appended output merges
+        assertEquals(3, lines.size());
+        assertEquals("some", lines.get(0));
+        assertEquals("textsome", lines.get(1));
+        assertEquals("text", lines.get(2));
+
+        Files.delete(out.toPath());
+    }
+
+    @Test
+    public void testHasStdinWithRedirectIn() throws Throwable {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(HasStdinCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        final File input = new File(tempDir.getRoot() + Config.getPathSeparator() + "stdin_check.txt");
+        PrintWriter writer = new PrintWriter(input, "UTF-8");
+        writer.print("test data");
+        writer.close();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("has-stdin < " + input.getCanonicalPath() + Config.getLineSeparator());
+        Thread.sleep(50);
+        connection.assertBufferEndsWith("hasStdin=true" + Config.getLineSeparator());
+
+        console.stop();
+        Files.delete(input.toPath());
+    }
+
+    @Test
+    public void testHasStdinWithoutRedirect() throws Throwable {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(HasStdinCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("has-stdin" + Config.getLineSeparator());
+        Thread.sleep(50);
+        connection.assertBufferEndsWith("hasStdin=false" + Config.getLineSeparator());
+
+        console.stop();
+    }
+
+    @Test
+    public void testGetStdinWithRedirectIn() throws Throwable {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(StdinUpperCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .logging(true)
+                .connection(connection)
+                .commandRegistry(registry)
+                .build();
+
+        final File input = new File(tempDir.getRoot() + Config.getPathSeparator() + "upper_input.txt");
+        PrintWriter writer = new PrintWriter(input, "UTF-8");
+        writer.println("hello world");
+        writer.close();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("stdin-upper < " + input.getCanonicalPath() + Config.getLineSeparator());
+        Thread.sleep(50);
+        connection.assertBufferEndsWith("HELLO WORLD" + Config.getLineSeparator());
+
+        console.stop();
+        Files.delete(input.toPath());
+    }
+
+    @CommandDefinition(name = "has-stdin", description = "")
+    public class HasStdinCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.println("hasStdin=" + commandInvocation.hasStdin());
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "stdin-upper", description = "")
+    public class StdinUpperCommand implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            java.io.InputStream stdin = commandInvocation.getStdin();
+            if (stdin != null) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(stdin))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        commandInvocation.println(line.toUpperCase());
+                    }
+                } catch (java.io.IOException e) {
+                    throw new CommandException(e);
+                }
+            }
+            return CommandResult.SUCCESS;
         }
     }
 

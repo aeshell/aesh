@@ -321,4 +321,36 @@ public interface CommandInvocation {
         return getShell().supportsHyperlinks();
     }
 
+    /**
+     * Returns the standard input stream for this command.
+     * This is available when the command receives piped input ({@code cmd1 | cmd2})
+     * or redirected input ({@code cmd < file}).
+     *
+     * @return the input stream, or null if no piped/redirected input
+     */
+    default java.io.InputStream getStdin() {
+        CommandInvocationConfiguration config = getConfiguration();
+        if (config == null)
+            return null;
+        java.io.BufferedInputStream piped = config.getPipedData();
+        if (piped != null)
+            return piped;
+        if (config.getInputRedirection() != null)
+            return config.getInputRedirection().read();
+        return null;
+    }
+
+    /**
+     * Checks whether this command has piped or redirected standard input available.
+     * This method does not allocate any streams.
+     *
+     * @return true if piped or redirected input is available
+     */
+    default boolean hasStdin() {
+        CommandInvocationConfiguration config = getConfiguration();
+        if (config == null)
+            return false;
+        return config.hasPipedData() || config.hasInputRedirection();
+    }
+
 }

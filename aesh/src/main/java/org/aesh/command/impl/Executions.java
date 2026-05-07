@@ -19,6 +19,7 @@
  */
 package org.aesh.command.impl;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -61,8 +62,6 @@ import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
-import org.aesh.io.PipelineResource;
-import org.aesh.io.Resource;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.Prompt;
 import org.aesh.selector.Selector;
@@ -179,22 +178,6 @@ class Executions {
                 throw new CommandException("The command is not available in the current context.");
             }
 
-            if (hasRedirectIn()) {
-                updateInjectedArgumentWithRedirectedInData();
-                if (invocationConfiguration.getPipedData() != null) {
-                    result = CommandResult.FAILURE;
-                    throw new CommandException("Can't inject both from input and pipe operators");
-                }
-            }
-
-            if (invocationConfiguration.getPipedData() != null) {
-                updateInjectedArgumentWithPipelinedData(new PipelineResource(invocationConfiguration.getPipedData()));
-                if (hasRedirectIn()) {
-                    result = CommandResult.FAILURE;
-                    throw new CommandException("Can't inject both from input and pipe operators");
-                }
-            }
-
             //When we check for askIfNotSet, we also need to make sure we do not have help generated
             if (cmd.hasAskIfNotSet() &&
                     !(cmd.generateHelp() && cmd.isGenerateHelpOptionSet())) {
@@ -283,36 +266,16 @@ class Executions {
                         throw new CommandException(ex);
                     }
                 }
+                if (invocationConfiguration.getInputRedirection() != null) {
+                    try {
+                        BufferedInputStream in = invocationConfiguration.getInputRedirection().read();
+                        if (in != null)
+                            in.close();
+                    } catch (IOException ignored) {
+                    }
+                }
             }
             return result;
-        }
-
-        private void updateInjectedArgumentWithPipelinedData(PipelineResource resource) {
-            ProcessedOption arg = checkProcessedCommandForResourceArgument();
-            if (arg != null)
-                arg.injectResource(resource, cmd.getCommand());
-        }
-
-        private boolean hasRedirectIn() {
-            return invocationConfiguration.getInputRedirection() != null;
-        }
-
-        private void updateInjectedArgumentWithRedirectedInData() {
-            ProcessedOption arg = checkProcessedCommandForResourceArgument();
-            if (arg != null)
-                arg.injectResource(new PipelineResource(invocationConfiguration.getInputRedirection().read()),
-                        cmd.getCommand());
-        }
-
-        private ProcessedOption checkProcessedCommandForResourceArgument() {
-            if (cmd.hasArguments() &&
-                    Resource.class.isAssignableFrom(cmd.getArguments().type())) {
-                return cmd.getArguments();
-            } else if (cmd.hasArgument() &&
-                    Resource.class.isAssignableFrom(cmd.getArgument().type())) {
-                return cmd.getArgument();
-            }
-            return null;
         }
 
         /**

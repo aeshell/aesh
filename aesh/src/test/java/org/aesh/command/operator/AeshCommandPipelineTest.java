@@ -31,13 +31,11 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.option.Argument;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.io.Resource;
 import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
@@ -109,6 +107,111 @@ public class AeshCommandPipelineTest {
         console.stop();
     }
 
+    @Test
+    public void testGetStdinWithPipe() throws InterruptedException, IOException, CommandRegistryException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(PipeCommand.class)
+                .command(StdinReaderCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .enableOperatorParser(true)
+                .commandRegistry(registry)
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("pipe | stdin-reader" + Config.getLineSeparator());
+        Thread.sleep(100);
+        connection.assertBufferEndsWith("HELLO AESH" + Config.getLineSeparator());
+        console.stop();
+    }
+
+    @Test
+    public void testHasStdinFalseWithoutPipe() throws InterruptedException, IOException, CommandRegistryException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(HasStdinCheckCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .enableOperatorParser(true)
+                .commandRegistry(registry)
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("has-stdin" + Config.getLineSeparator());
+        Thread.sleep(100);
+        connection.assertBufferEndsWith("hasStdin=false" + Config.getLineSeparator());
+        console.stop();
+    }
+
+    @Test
+    public void testHasStdinTrueWithPipe() throws InterruptedException, IOException, CommandRegistryException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(PipeCommand.class)
+                .command(HasStdinCheckCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .enableOperatorParser(true)
+                .commandRegistry(registry)
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("pipe | has-stdin" + Config.getLineSeparator());
+        Thread.sleep(100);
+        connection.assertBufferEndsWith("hasStdin=true" + Config.getLineSeparator());
+        console.stop();
+    }
+
+    @Test
+    public void testThreeStagePipeline() throws InterruptedException, IOException, CommandRegistryException {
+        TestConnection connection = new TestConnection();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(PipeCommand.class)
+                .command(UpperCommand.class)
+                .command(BarCommand.class)
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .enableOperatorParser(true)
+                .commandRegistry(registry)
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        // pipe -> upper -> bar: "hello\naesh" -> "HELLO\nAESH" -> "HELLO AESH"
+        connection.read("pipe | upper | bar" + Config.getLineSeparator());
+        Thread.sleep(200);
+        connection.assertBufferEndsWith("HELLO AESH" + Config.getLineSeparator());
+        console.stop();
+    }
+
     @CommandDefinition(name = "pipe", description = "")
     public static class PipeCommand implements Command {
 
@@ -127,12 +230,11 @@ public class AeshCommandPipelineTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             try {
-                if (commandInvocation.getConfiguration().getPipedData().available() > 0) {
+                java.io.InputStream stdin = commandInvocation.getStdin();
+                if (stdin != null && stdin.available() > 0) {
                     counter++;
                 }
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(commandInvocation.getConfiguration().getPipedData()));
-
+                BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
                 assertEquals("hello", reader.readLine());
                 assertEquals("aesh", reader.readLine());
             } catch (IOException ex) {
@@ -149,21 +251,75 @@ public class AeshCommandPipelineTest {
     @CommandDefinition(name = "bar", description = "")
     public static class BarCommand implements Command {
 
-        @Argument
-        Resource arg;
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            try {
+                java.io.InputStream stdin = commandInvocation.getStdin();
+                if (stdin != null) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
+                    commandInvocation.println(reader.readLine() + " " + reader.readLine());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "upper", description = "")
+    public static class UpperCommand implements Command {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(arg.read()));
-                commandInvocation.println(reader.readLine() + " " + reader.readLine());
+                java.io.InputStream stdin = commandInvocation.getStdin();
+                if (stdin != null) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        commandInvocation.println(line.toUpperCase());
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
             return CommandResult.SUCCESS;
         }
+    }
 
+    @CommandDefinition(name = "stdin-reader", description = "")
+    public static class StdinReaderCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            try {
+                java.io.InputStream stdin = commandInvocation.getStdin();
+                if (stdin != null) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (sb.length() > 0)
+                            sb.append(" ");
+                        sb.append(line.toUpperCase());
+                    }
+                    commandInvocation.println(sb.toString());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "has-stdin", description = "")
+    public static class HasStdinCheckCommand implements Command {
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            commandInvocation.println("hasStdin=" + commandInvocation.hasStdin());
+            return CommandResult.SUCCESS;
+        }
     }
 
 }

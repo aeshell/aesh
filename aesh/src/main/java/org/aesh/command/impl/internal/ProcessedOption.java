@@ -48,7 +48,6 @@ import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
-import org.aesh.io.PipelineResource;
 import org.aesh.io.Resource;
 import org.aesh.selector.SelectorType;
 import org.aesh.terminal.formatting.TerminalString;
@@ -924,31 +923,6 @@ public final class ProcessedOption {
                 return null;
         } else
             return (Collection) field.getType().newInstance();
-    }
-
-    public void injectResource(PipelineResource resource, Object instance) {
-        if (fieldSetter != null && optionType == OptionType.ARGUMENT) {
-            fieldSetter.accept(instance, resource);
-            return;
-        }
-        try {
-            Field field = getField(instance.getClass(), fieldName);
-            if (field == null)
-                return;
-            if (!Modifier.isPublic(field.getModifiers()))
-                field.setAccessible(true);
-
-            if (optionType == OptionType.ARGUMENT) {
-                field.set(instance, resource);
-            } else {
-                Collection<Object> set = initializeCollection(field);
-                if (set != null)
-                    set.add(resource);
-            }
-
-        } catch (NoSuchFieldException | IllegalAccessException | InstantiationException e) {
-            throw new RuntimeException("Failed to inject resource into field: " + fieldName, e);
-        }
     }
 
     public void updateInvocationProviders(InvocationProviders invocationProviders) {

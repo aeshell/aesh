@@ -44,10 +44,8 @@ public abstract class OutputDelegate {
             if (writer == null && exception == null) {
                 writer = buildWriter();
             }
-            //if we have a writer, write
             if (writer != null) {
                 writer.append(msg);
-                writer.flush();
             }
         } catch (IOException e) {
             exception = e;
@@ -55,10 +53,13 @@ public abstract class OutputDelegate {
     }
 
     public void close() throws IOException {
-        //if(writer != null)
-        //    writer.close();
-        if (exception != null)
-            throw exception;
+        try {
+            if (writer != null)
+                writer.close();
+        } finally {
+            if (exception != null)
+                throw exception;
+        }
     }
 
 }

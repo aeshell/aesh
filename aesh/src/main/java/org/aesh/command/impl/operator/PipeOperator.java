@@ -67,6 +67,12 @@ public class PipeOperator extends EndOperator implements
 
     @Override
     public BufferedInputStream getData() {
-        return new BufferedInputStream(new ByteArrayInputStream(stream.toByteArray()));
+        return new BufferedInputStream(new ByteArrayInputStream(stream.toByteArray())) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                stream.reset();
+            }
+        };
     }
 }

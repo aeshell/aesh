@@ -54,6 +54,8 @@ public final class AeshCommandInvocation implements CommandInvocation {
     private final CommandInvocationConfiguration config;
     private final CommandContainer<AeshCommandInvocation> commandContainer;
     private final CommandContext commandContext;
+    private java.io.InputStream cachedStdin;
+    private boolean stdinResolved;
 
     public AeshCommandInvocation(Console console, Shell shell,
             CommandRuntime<AeshCommandInvocation> runtime,
@@ -161,6 +163,15 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public CommandInvocationConfiguration getConfiguration() {
         return config;
+    }
+
+    @Override
+    public java.io.InputStream getStdin() {
+        if (!stdinResolved) {
+            stdinResolved = true;
+            cachedStdin = CommandInvocation.super.getStdin();
+        }
+        return cachedStdin;
     }
 
     @Override

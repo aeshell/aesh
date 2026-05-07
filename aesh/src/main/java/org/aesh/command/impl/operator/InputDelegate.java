@@ -36,15 +36,11 @@ public class InputDelegate {
     }
 
     public BufferedInputStream read() {
-        File file = new File(path);
-        if (file.isFile()) {
-            try {
-                return new BufferedInputStream(new FileInputStream(file));
-            } catch (FileNotFoundException e) {
-                return null;
-            }
+        try {
+            return new BufferedInputStream(new FileInputStream(new File(path)));
+        } catch (FileNotFoundException e) {
+            return null;
         }
-        return null;
     }
 
 }
