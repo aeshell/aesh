@@ -95,20 +95,20 @@ public class AeshCommandCompletionTest {
         assertEquals("foo --", connection.getOutputBuffer());
 
         connection.read(completeChar.getFirstValue());
-        assertEquals(String.format("foo --%1$s--bar=  --bool  --name=  %1$sfoo --", Config.getLineSeparator()),
+        assertEquals(String.format("foo --%1$s--bar  --bool  --name  %1$sfoo --", Config.getLineSeparator()),
                 connection.getOutputBuffer());
 
         connection.clearOutputBuffer();
         connection.read("name aslak --bar");
         connection.read(completeChar.getFirstValue());
-        assertEquals("name aslak --bar=", connection.getOutputBuffer());
+        assertEquals("name aslak --bar ", connection.getOutputBuffer());
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("name aslak --bar=bar\\ 2", connection.getOutputBuffer());
+        assertEquals("name aslak --bar bar\\ 2", connection.getOutputBuffer());
 
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("name aslak --bar=bar\\ 2\\ 3\\ 4 ", connection.getOutputBuffer());
+        assertEquals("name aslak --bar bar\\ 2\\ 3\\ 4 ", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
@@ -132,11 +132,11 @@ public class AeshCommandCompletionTest {
         connection.read("foo --bar foo --n");
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("foo --bar foo --name=", connection.getOutputBuffer());
+        assertEquals("foo --bar foo --name ", connection.getOutputBuffer());
         connection.read("val --");
         connection.read(completeChar.getFirstValue());
 
-        assertEquals("foo --bar foo --name=val --bool ", connection.getOutputBuffer());
+        assertEquals("foo --bar foo --name val --bool ", connection.getOutputBuffer());
 
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
@@ -191,7 +191,7 @@ public class AeshCommandCompletionTest {
 
         connection.read("foo --b");
         connection.read(completeChar.getFirstValue());
-        assertEquals("foo --bar=", connection.getOutputBuffer());
+        assertEquals("foo --bar ", connection.getOutputBuffer());
 
         console.stop();
     }
@@ -262,21 +262,21 @@ public class AeshCommandCompletionTest {
         assertEquals("arg --", connection.getOutputBuffer());
         connection.read("b");
         connection.read(completeChar.getFirstValue());
-        assertEquals("arg --bool=", connection.getOutputBuffer());
+        assertEquals("arg --bool ", connection.getOutputBuffer());
         connection.read("t");
         connection.read(completeChar.getFirstValue());
-        assertEquals("arg --bool=true ", connection.getOutputBuffer());
+        assertEquals("arg --bool true ", connection.getOutputBuffer());
         connection.read(completeChar.getFirstValue());
-        assertEquals("arg --bool=true ARG ", connection.getOutputBuffer());
+        assertEquals("arg --bool true ARG ", connection.getOutputBuffer());
         connection.read(backspace);
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
         assertEquals(" ", connection.getOutputBuffer());
         connection.read(completeChar.getFirstValue());
-        assertEquals(" --input=", connection.getOutputBuffer());
+        assertEquals(" --input ", connection.getOutputBuffer());
         connection.read("bar ");
         connection.read(completeChar.getFirstValue());
-        assertEquals(" --input=bar ", connection.getOutputBuffer());
+        assertEquals(" --input bar ", connection.getOutputBuffer());
 
         connection.read(enter);
         connection.clearOutputBuffer();
@@ -387,7 +387,7 @@ public class AeshCommandCompletionTest {
         //outputStream.flush();
 
         Thread.sleep(80);
-        connection.assertBuffer("git rebase --force --test=");
+        connection.assertBuffer("git rebase --force --test ");
         connection.read(enter.getFirstValue());
         Thread.sleep(80);
         connection.clearOutputBuffer();
@@ -500,7 +500,7 @@ public class AeshCommandCompletionTest {
         //setting argument value
         connection.read("BAR ");
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("BAR --required=");
+        connection.assertBuffer("BAR --required ");
 
         console.stop();
     }
@@ -533,17 +533,17 @@ public class AeshCommandCompletionTest {
 
         connection.assertBuffer("test ");
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("test --required=");
+        connection.assertBuffer("test --required ");
 
         connection.read("BAR ");
-        connection.assertBuffer("test --required=BAR ");
+        connection.assertBuffer("test --required BAR ");
         connection.clearOutputBuffer();
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer(Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test --required=BAR ");
+        connection.assertBuffer(Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test --required BAR ");
         connection.read("three");
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer(
-                Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test --required=BAR three_BAR ");
+                Config.getLineSeparator() + "one  two  " + Config.getLineSeparator() + "test --required BAR three_BAR ");
 
         console.stop();
     }
@@ -682,7 +682,7 @@ public class AeshCommandCompletionTest {
         connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO ");
         connection.read("} ");
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO } --bar=");
+        connection.assertBuffer("test --headers={allow-resource-service-restart=true; _FOO _FOO } --bar ");
 
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
@@ -721,10 +721,10 @@ public class AeshCommandCompletionTest {
 
         connection.read("test argvalue ");
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("test argvalue --bar=");
+        connection.assertBuffer("test argvalue --bar ");
         connection.read("FOO ");
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("test argvalue --bar=FOO ");
+        connection.assertBuffer("test argvalue --bar FOO ");
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
         connection.read("test argvalue1 argvalue2 ");
@@ -755,15 +755,13 @@ public class AeshCommandCompletionTest {
 
         connection.read("test argvalue ");
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("test argvalue --foo\\ bar=");
-        connection.read("F");
-        connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("test argvalue --foo\\ bar=FOO ");
-        connection.read(Config.getLineSeparator());
+        connection.assertBuffer("test argvalue --foo\\ bar ");
+        connection.read(Key.CTRL_C);
+        Thread.sleep(100);
         connection.clearOutputBuffer();
         connection.read("test --");
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("test --foo\\ bar=");
+        connection.assertBuffer("test --foo\\ bar ");
 
         console.stop();
     }
@@ -788,7 +786,7 @@ public class AeshCommandCompletionTest {
 
         connection.read("test ");
         connection.read(completeChar.getFirstValue());
-        connection.assertBuffer("test --bar=");
+        connection.assertBuffer("test --bar ");
 
         console.stop();
     }

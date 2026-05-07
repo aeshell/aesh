@@ -680,9 +680,8 @@ public final class ProcessedOption {
 
     public TerminalString getRenderedNameWithDashes() {
         String prefix = acceptNameWithoutDashes ? "" : "--";
-        String text = hasValue() ? prefix + name + "=" : prefix + name;
+        String text = prefix + name;
         if (renderer == null || !ansiMode)
-            //if hasValue append a = after the name
             return new TerminalString(text, true);
         else {
             String hyperlinkUrl = renderer.getHyperlinkUrl();
@@ -698,7 +697,7 @@ public final class ProcessedOption {
             return Collections.emptyList();
         List<TerminalString> result = new ArrayList<>(aliases.size());
         for (String alias : aliases) {
-            String text = hasValue() ? "--" + alias + "=" : "--" + alias;
+            String text = "--" + alias;
             if (renderer == null || !ansiMode)
                 result.add(new TerminalString(text, true));
             else

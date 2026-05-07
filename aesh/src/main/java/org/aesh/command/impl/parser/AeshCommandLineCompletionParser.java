@@ -67,6 +67,11 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             }
         }
 
+        if (parser.getProcessedCommand().completeStatus() == null) {
+            doListOptions(completeOperation, "");
+            return;
+        }
+
         //we have parsed one or more options and their values
         if (parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.COMPLETE_OPTION)) {
             //space and end, we display other options/arguments or option value if the option have a list of values
@@ -146,7 +151,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                     !parser.lastParsedOption().getEndsWithSeparator() &&
                     !line.spaceAtEnd() && !line.selectedWord().word().endsWith("=") &&
                     parser.lastParsedOption().hasValue()) {
-                completeOperation.addCompletionCandidate("=");
+                completeOperation.addCompletionCandidate(" ");
                 completeOperation.setOffset(completeOperation.getCursor());
                 completeOperation.setAppendSeparator(false);
             } else if (!parser.lastParsedOption().hasValue() &&
@@ -280,11 +285,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                 completeOperation.addCompletionCandidate(new TerminalString(optionNamesWithDash.get(0).getCharacters(), true));
             else
                 completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
-            //we should always have -- at the end here so always subtract 2
             completeOperation.setOffset(completeOperation.getCursor() - value.length());
-            //do not append separator, we do that in the getOptionLongNames
-            if (optionNamesWithDash.get(0).getCharacters().endsWith("="))
-                completeOperation.setAppendSeparator(false);
         }
 
     }
@@ -363,9 +364,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             //no validation for now when we populate for completion
             parser.getCommandPopulator().populateObject(parser.getProcessedCommand(),
                     invocationProviders, context, CommandLineParser.Mode.NONE);
-        }
-        //this should be ignored at some point
-        catch (CommandLineParserException | OptionValidatorException ignored) {
+        } catch (CommandLineParserException | OptionValidatorException | RuntimeException ignored) {
         }
     }
 

@@ -133,19 +133,11 @@ public class MapCommandTest {
         connection.read(completeChar.getFirstValue());
         assertEquals("dyn1 --opt-dyn", connection.getOutputBuffer());
 
-        connection.read("1");
-        connection.read(completeChar.getFirstValue());
-        assertEquals("dyn1 --opt-dyn1-withvalue=", connection.getOutputBuffer());
-
-        connection.read("cdcsdc ");
+        connection.read("1-withvalue=cdcsdc --");
         connection.read(completeChar.getFirstValue());
         assertEquals("dyn1 --opt-dyn1-withvalue=cdcsdc --opt-dyn", connection.getOutputBuffer());
 
-        connection.read("2");
-        connection.read(completeChar.getFirstValue());
-        assertEquals("dyn1 --opt-dyn1-withvalue=cdcsdc --opt-dyn2-withvalue=", connection.getOutputBuffer());
-
-        connection.read("xxx ");
+        connection.read("2-withvalue=xxx --");
         connection.read(completeChar.getFirstValue());
         assertEquals("dyn1 --opt-dyn1-withvalue=cdcsdc --opt-dyn2-withvalue=xxx --opt-dyn3-novalue ",
                 connection.getOutputBuffer());
@@ -233,11 +225,7 @@ public class MapCommandTest {
         connection.read(completeChar.getFirstValue());
         assertEquals("dyn1 --verbose ", connection.getOutputBuffer());
 
-        connection.read("--");
-        connection.read(completeChar.getFirstValue());
-        assertEquals("dyn1 --verbose --dir=", connection.getOutputBuffer());
-
-        connection.read("toto");
+        connection.read("--dir=toto");
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
@@ -258,19 +246,7 @@ public class MapCommandTest {
         connection.read(completeChar.getFirstValue());
         assertEquals("dyn1 --verbose --", connection.getOutputBuffer());
 
-        connection.read("opt-dyn1");
-        connection.read(completeChar.getFirstValue());
-        assertEquals("dyn1 --verbose --opt-dyn1-withvalue=", connection.getOutputBuffer());
-
-        connection.read("xxx ");
-        connection.read(completeChar.getFirstValue());
-        assertEquals("dyn1 --verbose --opt-dyn1-withvalue=xxx --", connection.getOutputBuffer());
-
-        connection.read("d");
-        connection.read(completeChar.getFirstValue());
-        assertEquals("dyn1 --verbose --opt-dyn1-withvalue=xxx --dir=", connection.getOutputBuffer());
-
-        connection.read("tutu ");
+        connection.read("opt-dyn1-withvalue=xxx --dir=tutu --");
         connection.read(completeChar.getFirstValue());
         assertEquals("dyn1 --verbose --opt-dyn1-withvalue=xxx --dir=tutu --opt-dyn", connection.getOutputBuffer());
 

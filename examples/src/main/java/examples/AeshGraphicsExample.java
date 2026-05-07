@@ -60,7 +60,7 @@ public class AeshGraphicsExample {
                 .command(new GraphicsCommand(connection))
                 .create();
 
-        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> builder = SettingsBuilder
+        SettingsBuilder<CommandInvocation> builder = SettingsBuilder
                 .builder()
                 .logging(true)
                 .enableMan(true)

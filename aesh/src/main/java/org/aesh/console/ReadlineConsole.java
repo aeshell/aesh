@@ -527,6 +527,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                             prefixedOperation.getCompletionCandidates());
                     completeOperation.setIgnoreOffset(prefixedOperation.isIgnoreOffset());
                     completeOperation.setIgnoreStartsWith(prefixedOperation.isIgnoreStartsWith());
+                    completeOperation.setAppendSeparator(prefixedOperation.isAppendSeparator());
+                    completeOperation.setSeparator(prefixedOperation.getSeparator());
 
                     // Adjust offset to account for the prefix
                     int newOffset = prefixedOperation.getOffset() - prefixLength;

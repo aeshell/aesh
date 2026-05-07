@@ -151,10 +151,9 @@ public class CommandSuggestionProvider<CI extends CommandInvocation> implements 
             if (possibleNames.size() == 1) {
                 String optionName = possibleNames.get(0);
                 String suffix = optionName.substring(prefix.length());
-                // Append = if the option takes a value
                 ProcessedOption option = processedCommand.findLongOptionNoActivatorCheck(optionName);
                 if (option != null && option.hasValue()) {
-                    suffix += "=";
+                    suffix += " ";
                 }
                 return suffix;
             }

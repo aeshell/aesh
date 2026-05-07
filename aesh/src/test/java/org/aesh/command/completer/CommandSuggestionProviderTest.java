@@ -74,8 +74,8 @@ public class CommandSuggestionProviderTest {
 
         CommandSuggestionProvider<CommandInvocation> provider = new CommandSuggestionProvider<>(registry);
 
-        // "connect --ho" should suggest "st=" (from "--host")
-        assertEquals("st=", provider.suggest("connect --ho"));
+        // "connect --ho" should suggest "st " (from "--host")
+        assertEquals("st ", provider.suggest("connect --ho"));
 
         // "connect --p" is ambiguous (port and password) -> null
         assertNull(provider.suggest("connect --p"));

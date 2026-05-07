@@ -122,7 +122,7 @@ public class Example {
                 }).create())
                 .create();
 
-        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> builder = SettingsBuilder
+        SettingsBuilder<CommandInvocation> builder = SettingsBuilder
                 .builder()
                 .logging(true)
                 .enableMan(true)
@@ -524,10 +524,10 @@ public class Example {
     }
 
     public static class ExampleValidatorInvocationProvider
-            implements ValidatorInvocationProvider<ValidatorInvocation<File, Command>> {
+            implements ValidatorInvocationProvider {
 
         @Override
-        public ValidatorInvocation<File, Command> enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
+        public ValidatorInvocation enhanceValidatorInvocation(ValidatorInvocation validatorInvocation) {
             if (validatorInvocation.getValue() instanceof File)
                 return new DirectoryValidatorInvocation((File) validatorInvocation.getValue(),
                         (Command) validatorInvocation.getCommand(), validatorInvocation.getAeshContext());

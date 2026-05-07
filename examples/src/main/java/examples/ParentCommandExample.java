@@ -93,7 +93,7 @@ public class ParentCommandExample {
                 .exitOnCtrlC(true) // Ctrl+C exits sub-command mode (default: true)
                 .build();
 
-        SettingsBuilder<CommandInvocation, ConverterInvocation, CompleterInvocation, ValidatorInvocation, OptionActivator, CommandActivator> builder = SettingsBuilder
+        SettingsBuilder<CommandInvocation> builder = SettingsBuilder
                 .builder()
                 .logging(true)
                 .commandRegistry(registry)

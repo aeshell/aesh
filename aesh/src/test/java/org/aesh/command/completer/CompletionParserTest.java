@@ -97,7 +97,7 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test --foo", 9);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("=", co.getFormattedCompletionCandidates().get(0));
+        assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "test --foo ", 10);
         clp.complete(co, ip);
@@ -152,12 +152,12 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test --com", 10);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("plex-value=", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("plex-value", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "test --complex-value", 20);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("=", co.getFormattedCompletionCandidates().get(0));
+        assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "test --complex-value=", 21);
         clp.complete(co, ip);
@@ -245,7 +245,7 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test one! --f", 16);
         clp2.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("oo=", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("oo", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "test --X foo -- ", 20);
         clp2.complete(co, ip);
@@ -350,18 +350,18 @@ public class CompletionParserTest {
 
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("able=", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("able", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "group child1 --enable foo ", 100);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("--help=", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("--help", co.getFormattedCompletionCandidates().get(0));
 
         co = new AeshCompleteOperation(aeshContext, "group child2 --", 100);
         clp.complete(co, ip);
         assertEquals(2, co.getFormattedCompletionCandidates().size());
-        assertEquals("--print=", co.getCompletionCandidates().get(0).getCharacters());
-        assertEquals("--help=", co.getCompletionCandidates().get(1).getCharacters());
+        assertEquals("--print", co.getCompletionCandidates().get(0).getCharacters());
+        assertEquals("--help", co.getCompletionCandidates().get(1).getCharacters());
 
         co = new AeshCompleteOperation(aeshContext, "group xx ", 100);
         clp.complete(co, ip);
@@ -614,7 +614,7 @@ public class CompletionParserTest {
         co = new AeshCompleteOperation(aeshContext, "test out", 8);
         clp.complete(co, ip);
         assertEquals(1, co.getFormattedCompletionCandidates().size());
-        assertEquals("put=", co.getFormattedCompletionCandidates().get(0));
+        assertEquals("put", co.getFormattedCompletionCandidates().get(0));
 
         // Test completion after bare long name (should list remaining options)
         co = new AeshCompleteOperation(aeshContext, "test verbose ", 12);
@@ -720,5 +720,212 @@ public class CompletionParserTest {
 
         @Option(name = "format", allowedValues = { "text", "json", "yaml" })
         private String format;
+    }
+
+    // --- Sub-command mode completion tests ---
+
+    @Test
+    public void testSubCommandListCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new SubCmdParent<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // Typing just the parent name + space should list all child commands
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "app ", 4);
+        clp.complete(co, ip);
+        assertEquals(3, co.getCompletionCandidates().size());
+        assertTrue(co.getCompletionCandidates().stream()
+                .anyMatch(c -> c.getCharacters().equals("build")));
+        assertTrue(co.getCompletionCandidates().stream()
+                .anyMatch(c -> c.getCharacters().equals("deploy")));
+        assertTrue(co.getCompletionCandidates().stream()
+                .anyMatch(c -> c.getCharacters().equals("status")));
+    }
+
+    @Test
+    public void testSubCommandPartialNameCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new SubCmdParent<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // Partial child name should complete matching children
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "app d", 5);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("eploy", co.getFormattedCompletionCandidates().get(0));
+
+        // 'b' matches only 'build'
+        co = new AeshCompleteOperation(aeshContext, "app b", 5);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("uild", co.getFormattedCompletionCandidates().get(0));
+
+        // 'st' matches 'status'
+        co = new AeshCompleteOperation(aeshContext, "app st", 6);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("atus", co.getFormattedCompletionCandidates().get(0));
+    }
+
+    @Test
+    public void testSubCommandChildOptionCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new SubCmdParent<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // After child name + space, should list child's options
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "app build --", 12);
+        clp.complete(co, ip);
+        assertTrue(co.getFormattedCompletionCandidates().size() >= 2);
+        assertTrue(co.getFormattedCompletionCandidates().stream()
+                .anyMatch(c -> c.contains("target")));
+        assertTrue(co.getFormattedCompletionCandidates().stream()
+                .anyMatch(c -> c.contains("clean")));
+
+        // Partial option name on child — should complete to --target= without trailing space
+        co = new AeshCompleteOperation(aeshContext, "app build --ta", 14);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("rget", co.getFormattedCompletionCandidates().get(0));
+
+        // Different child's options
+        co = new AeshCompleteOperation(aeshContext, "app deploy --", 13);
+        clp.complete(co, ip);
+        assertTrue(co.getFormattedCompletionCandidates().stream()
+                .anyMatch(c -> c.contains("environment")));
+    }
+
+    @Test
+    public void testSubCommandChildOptionValueCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new SubCmdParent<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // allowedValues on child option should complete
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "app deploy --environment ", 24);
+        clp.complete(co, ip);
+        assertEquals(3, co.getFormattedCompletionCandidates().size());
+        assertTrue(co.getFormattedCompletionCandidates().contains("dev"));
+        assertTrue(co.getFormattedCompletionCandidates().contains("staging"));
+        assertTrue(co.getFormattedCompletionCandidates().contains("prod"));
+
+        // Partial value
+        co = new AeshCompleteOperation(aeshContext, "app deploy --environment p", 26);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals("rod", co.getFormattedCompletionCandidates().get(0));
+    }
+
+    @Test
+    public void testSubCommandHelpCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new SubCmdParent<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // Child with generateHelp should have --help in completions
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "app build --he", 14);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertTrue(co.getFormattedCompletionCandidates().get(0).startsWith("lp"));
+
+        // --help on deploy child too
+        co = new AeshCompleteOperation(aeshContext, "app deploy --he", 15);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertTrue(co.getFormattedCompletionCandidates().get(0).startsWith("lp"));
+    }
+
+    @Test
+    public void testSubCommandHelpOutput() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new SubCmdParent<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshContext aeshCtx = SettingsBuilder.builder().build().aeshContext();
+
+        // Parse child with --help and verify help output is generated
+        clp.populateObject("app build --help", ip, aeshCtx, CommandLineParser.Mode.VALIDATE);
+        CommandLineParser<CommandInvocation> parsedChild = clp.parsedCommand();
+        assertTrue("parsed command should have help set",
+                parsedChild.getProcessedCommand().findLongOptionNoActivatorCheck("help") != null);
+        String help = parsedChild.printHelp();
+        assertTrue("help should contain command name", help.contains("build"));
+        assertTrue("help should contain --target option", help.contains("target"));
+        assertTrue("help should contain --clean option", help.contains("clean"));
+
+        // Parse deploy child with --help
+        clp.populateObject("app deploy --help", ip, aeshCtx, CommandLineParser.Mode.VALIDATE);
+        parsedChild = clp.parsedCommand();
+        help = parsedChild.printHelp();
+        assertTrue("deploy help should contain command name", help.contains("deploy"));
+        assertTrue("deploy help should contain --environment", help.contains("environment"));
+    }
+
+    @Test
+    public void testSubCommandModeSimulation() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new SubCmdParent<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // Simulate sub-command mode: user has entered "app" context
+        // Now typing just the child name (prefixed with parent for the parser)
+
+        // List children when in parent context
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "app ", 4);
+        clp.complete(co, ip);
+        assertEquals(3, co.getCompletionCandidates().size());
+
+        // Complete child option after entering child
+        co = new AeshCompleteOperation(aeshContext, "app build ", 10);
+        clp.complete(co, ip);
+        assertTrue("should offer options after child name + space",
+                co.getCompletionCandidates().size() > 0);
+
+        // After setting one option, should still offer remaining options
+        co = new AeshCompleteOperation(aeshContext, "app build --clean ", 18);
+        clp.complete(co, ip);
+        assertTrue("should offer remaining options",
+                co.getCompletionCandidates().size() > 0);
+        assertTrue(co.getCompletionCandidates().stream()
+                .anyMatch(c -> c.getCharacters().contains("target")));
+    }
+
+    @Test
+    public void testSubCommandStatusNoOptions() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new SubCmdParent<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // Status command has only --help (from generateHelp), no custom options
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "app status --", 13);
+        clp.complete(co, ip);
+        assertEquals(1, co.getCompletionCandidates().size());
+        assertTrue(co.getCompletionCandidates().get(0).getCharacters().contains("help"));
+    }
+
+    @GroupCommandDefinition(name = "app", description = "Application manager", groupCommands = { SubCmdBuild.class,
+            SubCmdDeploy.class, SubCmdStatus.class })
+    public class SubCmdParent<CI extends CommandInvocation> extends TestCommand<CI> {
+    }
+
+    @CommandDefinition(name = "build", description = "Build the project", generateHelp = true)
+    public class SubCmdBuild extends TestCommand<CommandInvocation> {
+        @Option(name = "target", description = "Build target")
+        private String target;
+
+        @Option(name = "clean", hasValue = false, description = "Clean before build")
+        private boolean clean;
+    }
+
+    @CommandDefinition(name = "deploy", description = "Deploy the application", generateHelp = true)
+    public class SubCmdDeploy extends TestCommand<CommandInvocation> {
+        @Option(name = "environment", allowedValues = { "dev", "staging", "prod" }, description = "Target environment")
+        private String environment;
+
+        @Option(name = "force", hasValue = false, description = "Force deployment")
+        private boolean force;
+    }
+
+    @CommandDefinition(name = "status", description = "Show status", generateHelp = true)
+    public class SubCmdStatus extends TestCommand<CommandInvocation> {
     }
 }
