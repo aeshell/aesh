@@ -17,9 +17,9 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.readline.CompositeSuggestionProvider;
-import org.aesh.readline.SuggestionProvider;
-import org.aesh.terminal.Prompt;
+import org.aesh.readline.prompt.Prompt;
+import org.aesh.readline.suggestion.CompositeSuggestionProvider;
+import org.aesh.readline.suggestion.SuggestionProvider;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 

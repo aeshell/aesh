@@ -32,8 +32,8 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.KeyAction;
-import org.aesh.terminal.Prompt;
 
 /**
  * A CommandInvocation is the value object passed to a Command when it is executed.

@@ -4,8 +4,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.impl.operator.OutputDelegate;
 import org.aesh.command.shell.Shell;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Key;
-import org.aesh.terminal.Prompt;
 import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.utils.Config;
 import org.aesh.terminal.utils.Parser;

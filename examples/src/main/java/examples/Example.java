@@ -63,7 +63,7 @@ import org.aesh.console.AeshContext;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
-import org.aesh.readline.Prompt;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.selector.Selector;
 import org.aesh.selector.SelectorType;
 import org.aesh.terminal.Key;

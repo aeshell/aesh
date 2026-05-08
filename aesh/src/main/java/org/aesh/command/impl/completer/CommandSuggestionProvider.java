@@ -12,7 +12,7 @@ import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
-import org.aesh.readline.SuggestionProvider;
+import org.aesh.readline.suggestion.SuggestionProvider;
 import org.aesh.terminal.utils.LoggerUtil;
 
 /**

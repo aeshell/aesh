@@ -40,8 +40,8 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.Console;
 import org.aesh.console.ReadlineConsole;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.KeyAction;
-import org.aesh.terminal.Prompt;
 
 /**
  * @author Aesh team

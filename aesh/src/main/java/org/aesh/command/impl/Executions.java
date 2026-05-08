@@ -63,8 +63,8 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.AeshContext;
 import org.aesh.parser.ParsedLine;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.selector.Selector;
-import org.aesh.terminal.Prompt;
 import org.aesh.terminal.formatting.TerminalString;
 
 /**

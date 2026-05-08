@@ -21,7 +21,7 @@ package org.aesh.command.impl.completer;
 
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.console.AeshContext;
-import org.aesh.readline.completion.CompletionHandler;
+import org.aesh.readline.completion.impl.CompletionHandler;
 
 /**
  * @author Aesh team
