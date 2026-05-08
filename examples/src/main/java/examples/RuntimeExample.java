@@ -27,7 +27,6 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.OptionList;
-import org.aesh.selector.SelectorType;
 
 /**
  * @author <a href="mailto:stalep@gmail.com">Ståle Pedersen</a>
@@ -35,20 +34,18 @@ import org.aesh.selector.SelectorType;
 public class RuntimeExample {
 
     public static void main(String[] args) {
-        AeshRuntimeRunner.builder().interactive(true).command(TestConsoleCommand.class).args(args).execute();
+        AeshRuntimeRunner.builder().command(TestConsoleCommand.class).args(args).execute();
     }
 
     @CommandDefinition(name = "test", description = "testing")
     public static class TestConsoleCommand implements Command {
 
-        @OptionList(defaultValue = { "one", "two", "three", "four" }, selector = SelectorType.SELECTIONS)
+        @OptionList(defaultValue = { "one", "two", "three", "four" })
         private List<String> bar;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
-
             commandInvocation.println("bar is: " + bar.toString());
-
             return CommandResult.SUCCESS;
         }
     }
