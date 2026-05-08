@@ -34,3 +34,6 @@ classes
 
 # ignore shade plugin output
 dependency-reduced-pom.xml
+
+.cachebro/*
+.cachebro/

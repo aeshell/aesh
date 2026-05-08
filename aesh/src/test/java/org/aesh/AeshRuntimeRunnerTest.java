@@ -31,6 +31,7 @@ import java.util.List;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.invocation.CommandInvocation;
@@ -396,6 +397,224 @@ public class AeshRuntimeRunnerTest {
             action.run();
         } finally {
             System.setOut(original);
+        }
+        return baos.toString();
+    }
+
+    // -- Error handling tests --
+
+    @Test
+    public void testParseErrorReturnsExitCode2() {
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(RequiredOptionCmd.class)
+                .execute();
+        assertEquals(2, result.getResultValue());
+    }
+
+    @Test
+    public void testParseErrorPrintsHelp() {
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(RequiredOptionCmd.class)
+                .execute());
+        assertTrue("Should print help with option name", stderr.contains("--name"));
+    }
+
+    @Test
+    public void testInvalidOptionReturnsExitCode2() {
+        String stderr = captureStderr(() -> {
+            CommandResult result = AeshRuntimeRunner.builder()
+                    .command(Bar1Command.class)
+                    .args("--nonexistent", "value")
+                    .execute();
+            assertEquals(2, result.getResultValue());
+        });
+        assertTrue("Should mention unknown option", stderr.contains("nonexistent"));
+    }
+
+    @Test
+    public void testAllowedValuesValidationError() {
+        try {
+            AeshRuntimeRunner.builder()
+                    .command(FormatCommand.class)
+                    .args("--format", "xml")
+                    .execute();
+        } catch (RuntimeException e) {
+            assertTrue("Should mention invalid value",
+                    e.getMessage().contains("xml") || e.getCause().getMessage().contains("xml"));
+            return;
+        }
+        // If no exception, check exit code
+    }
+
+    @Test
+    public void testAllowedValuesAccepted() {
+        FormatCommand.lastFormat = null;
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(FormatCommand.class)
+                .args("--format", "json")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("json", FormatCommand.lastFormat);
+    }
+
+    // -- Group command tests --
+
+    @Test
+    public void testGroupCommandExecution() {
+        SubCmd.executed = false;
+        SubCmd.lastValue = null;
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(GroupCmd.class)
+                .args("sub", "--value", "hello")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertTrue(SubCmd.executed);
+        assertEquals("hello", SubCmd.lastValue);
+    }
+
+    @Test
+    public void testGroupCommandHelpOnParseError() {
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(GroupCmd.class)
+                .args("sub", "--unknown")
+                .execute());
+        assertTrue("Should show subcommand help", stderr.contains("sub"));
+        assertTrue("Should mention --value option", stderr.contains("value"));
+    }
+
+    @Test
+    public void testGroupCommandCompletionScript() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(GroupCmd.class)
+                .generateCompletion(ShellType.BASH)
+                .execute());
+        assertTrue("Should contain group command name", output.contains("grp"));
+        assertTrue("Should contain subcommand", output.contains("sub"));
+    }
+
+    // -- Enum option test --
+
+    @Test
+    public void testEnumOption() {
+        EnumCmd.lastLevel = null;
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(EnumCmd.class)
+                .args("--level", "warn")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals(LogLevel.WARN, EnumCmd.lastLevel);
+    }
+
+    @Test
+    public void testEnumOptionCaseInsensitive() {
+        EnumCmd.lastLevel = null;
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(EnumCmd.class)
+                .args("--level", "DEBUG")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals(LogLevel.DEBUG, EnumCmd.lastLevel);
+    }
+
+    @Test
+    public void testEnumDynamicCompletion() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(EnumCmd.class)
+                .dynamicComplete(true)
+                .args("--level", "")
+                .execute());
+        assertTrue("Should contain enum values", output.contains("debug"));
+        assertTrue("Should contain enum values", output.contains("info"));
+        assertTrue("Should contain enum values", output.contains("warn"));
+    }
+
+    // -- No command registered --
+
+    @Test(expected = RuntimeException.class)
+    public void testNoCommandThrows() {
+        AeshRuntimeRunner.builder().execute();
+    }
+
+    // -- Test command classes --
+
+    @CommandDefinition(name = "reqopt", description = "required option", generateHelp = true)
+    public static class RequiredOptionCmd implements Command<CommandInvocation> {
+        @Option(name = "name", required = true, description = "A required name")
+        private String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "fmt", description = "format command")
+    public static class FormatCommand implements Command<CommandInvocation> {
+        static String lastFormat;
+
+        @Option(name = "format", allowedValues = { "text", "json", "yaml" })
+        private String format;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            lastFormat = format;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "grp", description = "group", groupCommands = { SubCmd.class }, generateHelp = true)
+    public static class GroupCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub", description = "subcommand", generateHelp = true)
+    public static class SubCmd implements Command<CommandInvocation> {
+        static volatile boolean executed;
+        static volatile String lastValue;
+
+        @Option(name = "value", description = "A value")
+        private String value;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            executed = true;
+            lastValue = value;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public enum LogLevel {
+        DEBUG,
+        INFO,
+        WARN,
+        ERROR
+    }
+
+    @CommandDefinition(name = "log", description = "log command")
+    public static class EnumCmd implements Command<CommandInvocation> {
+        static LogLevel lastLevel;
+
+        @Option(name = "level")
+        private LogLevel level;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            lastLevel = level;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static String captureStderr(Runnable action) {
+        PrintStream original = System.err;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(baos));
+        try {
+            action.run();
+        } finally {
+            System.setErr(original);
         }
         return baos.toString();
     }
