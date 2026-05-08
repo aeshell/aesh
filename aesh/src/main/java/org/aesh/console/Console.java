@@ -19,9 +19,9 @@
  */
 package org.aesh.console;
 
-import org.aesh.readline.Prompt;
 import org.aesh.readline.Readline;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.Prompt;
 
 /**
  * Generic console that's targeting terminal prompt usages

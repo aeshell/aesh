@@ -27,8 +27,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.aesh.command.shell.Shell;
-import org.aesh.readline.Prompt;
 import org.aesh.terminal.Key;
+import org.aesh.terminal.Prompt;
 import org.aesh.terminal.utils.ANSI;
 
 public class Selector {

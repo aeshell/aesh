@@ -18,8 +18,8 @@ import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.CompositeSuggestionProvider;
-import org.aesh.readline.Prompt;
 import org.aesh.readline.SuggestionProvider;
+import org.aesh.terminal.Prompt;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 

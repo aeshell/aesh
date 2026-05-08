@@ -54,6 +54,12 @@
    <dependencies>
       <dependency>
          <groupId>org.aesh</groupId>
+         <artifactId>terminal-api</artifactId>
+         <version>${readline.version}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.aesh</groupId>
          <artifactId>readline</artifactId>
          <version>${readline.version}</version>
       </dependency>

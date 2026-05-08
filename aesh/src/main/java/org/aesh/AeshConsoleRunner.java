@@ -31,8 +31,8 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
-import org.aesh.readline.Prompt;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.Prompt;
 
 /**
  * Use the AeshConsoleRunner when you want to easily create an interactive CLI application.
