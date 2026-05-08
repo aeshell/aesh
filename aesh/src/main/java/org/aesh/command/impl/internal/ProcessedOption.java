@@ -103,6 +103,7 @@ public final class ProcessedOption {
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
+    private FieldAccessor fieldAccessor;
     private Object initialValue;
     private boolean initialValueCaptured;
     private String mixinFieldName;
@@ -213,6 +214,14 @@ public final class ProcessedOption {
         return fieldGetter;
     }
 
+    public void setFieldAccessor(FieldAccessor fieldAccessor) {
+        this.fieldAccessor = fieldAccessor;
+    }
+
+    public FieldAccessor getFieldAccessor() {
+        return fieldAccessor;
+    }
+
     public void setAliases(List<String> aliases) {
         this.aliases = aliases != null ? aliases : Collections.emptyList();
     }
@@ -311,6 +320,14 @@ public final class ProcessedOption {
             initialValueCaptured = true;
             return;
         }
+        if (fieldAccessor != null) {
+            Object value = fieldAccessor.get(instance);
+            if (value != null) {
+                initialValue = value;
+            }
+            initialValueCaptured = true;
+            return;
+        }
         if (fieldGetter != null) {
             Object value = fieldGetter.apply(instance);
             if (value != null) {
@@ -339,8 +356,16 @@ public final class ProcessedOption {
             restoreInitialValue(instance);
             return;
         }
+        if (fieldAccessor != null) {
+            fieldAccessor.set(instance, typeDefault());
+            return;
+        }
         if (fieldResetter != null) {
             fieldResetter.accept(instance);
+            return;
+        }
+        if (fieldSetter != null) {
+            fieldSetter.accept(instance, typeDefault());
             return;
         }
         // Fallback to reflection
@@ -375,24 +400,49 @@ public final class ProcessedOption {
         }
     }
 
+    private Object typeDefault() {
+        if (type == null || !type.isPrimitive())
+            return null;
+        if (type == boolean.class)
+            return Boolean.FALSE;
+        if (type == int.class)
+            return 0;
+        if (type == long.class)
+            return 0L;
+        if (type == short.class)
+            return (short) 0;
+        if (type == byte.class)
+            return (byte) 0;
+        if (type == char.class)
+            return ' ';
+        if (type == float.class)
+            return 0.0f;
+        if (type == double.class)
+            return 0.0d;
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     private void restoreInitialValue(Object instance) {
-        if (fieldSetter != null) {
+        if (fieldAccessor != null || fieldSetter != null) {
+            Object val = initialValue;
             if (initialValue instanceof Collection) {
                 try {
-                    fieldSetter.accept(instance, initialValue.getClass().getDeclaredConstructor().newInstance());
+                    val = initialValue.getClass().getDeclaredConstructor().newInstance();
                 } catch (ReflectiveOperationException e) {
-                    fieldSetter.accept(instance, new ArrayList<>());
+                    val = new ArrayList<>();
                 }
             } else if (initialValue instanceof Map) {
                 try {
-                    fieldSetter.accept(instance, initialValue.getClass().getDeclaredConstructor().newInstance());
+                    val = initialValue.getClass().getDeclaredConstructor().newInstance();
                 } catch (ReflectiveOperationException e) {
-                    fieldSetter.accept(instance, new HashMap<>());
+                    val = new HashMap<>();
                 }
-            } else {
-                fieldSetter.accept(instance, initialValue);
             }
+            if (fieldAccessor != null)
+                fieldAccessor.set(instance, val);
+            else
+                fieldSetter.accept(instance, val);
             return;
         }
         try {
@@ -815,22 +865,29 @@ public final class ProcessedOption {
             boolean doValidation) throws OptionValidatorException {
         if (converter == null || instance == null)
             return;
-        if (fieldSetter != null) {
+        if (fieldAccessor != null || fieldSetter != null) {
             injectValueWithSetter(instance, invocationProviders, aeshContext, doValidation);
         } else {
             injectValueWithReflection(resolveMixinInstance(instance), invocationProviders, aeshContext, doValidation);
         }
     }
 
+    private void setField(Object instance, Object value) {
+        if (fieldAccessor != null)
+            fieldAccessor.set(instance, value);
+        else
+            fieldSetter.accept(instance, value);
+    }
+
     private void injectValueWithSetter(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
             boolean doValidation) throws OptionValidatorException {
         if (optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
             if (negatedByUser && optionType == OptionType.BOOLEAN) {
-                fieldSetter.accept(instance, doConvert("false", invocationProviders, instance, aeshContext, doValidation));
+                setField(instance, doConvert("false", invocationProviders, instance, aeshContext, doValidation));
             } else if (getValue() != null)
-                fieldSetter.accept(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
+                setField(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
             else if (defaultValues.size() > 0) {
-                fieldSetter.accept(instance,
+                setField(instance,
                         doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation));
             }
         } else if (optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
@@ -846,13 +903,13 @@ public final class ProcessedOption {
                 for (String in : defaultValues)
                     tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
             }
-            fieldSetter.accept(instance, tmpSet);
+            setField(instance, tmpSet);
         } else if (optionType == OptionType.GROUP) {
             Map<String, Object> tmpMap = newHashMap();
             for (String propertyKey : properties.keySet())
                 tmpMap.put(propertyKey, doConvert(properties.get(propertyKey), invocationProviders, instance,
                         aeshContext, doValidation));
-            fieldSetter.accept(instance, tmpMap);
+            setField(instance, tmpMap);
         }
     }
 
@@ -956,6 +1013,8 @@ public final class ProcessedOption {
     }
 
     public Object getFieldValue(Object instance) {
+        if (fieldAccessor != null)
+            return fieldAccessor.get(instance);
         if (fieldGetter != null)
             return fieldGetter.apply(instance);
         try {
@@ -972,6 +1031,10 @@ public final class ProcessedOption {
     }
 
     public void setFieldValue(Object instance, Object value) {
+        if (fieldAccessor != null) {
+            fieldAccessor.set(instance, value);
+            return;
+        }
         if (fieldSetter != null) {
             fieldSetter.accept(instance, value);
             return;

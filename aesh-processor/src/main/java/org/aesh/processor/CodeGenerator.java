@@ -78,9 +78,7 @@ final class CodeGenerator {
         }
 
         // Imports
-        sb.append("import java.util.Arrays;\n");
-        sb.append("import java.util.function.BiConsumer;\n");
-        sb.append("import java.util.function.Consumer;\n\n");
+        sb.append("import java.util.Arrays;\n\n");
         sb.append("import org.aesh.command.Command;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedCommand;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedCommandBuilder;\n");
@@ -137,12 +135,29 @@ final class CodeGenerator {
         sb.append("        return ").append(stringLiteral(cmdName)).append(";\n");
         sb.append("    }\n\n");
 
+        // Collect field accessor info for the switch-based Accessor class
+        List<FieldAccessorInfo> accessorInfos = new java.util.ArrayList<>();
+
+        // Find @ParentCommand field for the Accessor class
+        FieldAccessorInfo parentInfo = null;
+        for (VariableElement field : fields) {
+            if (field.getAnnotation(ParentCommand.class) != null) {
+                parentInfo = new FieldAccessorInfo(-1, field.getSimpleName().toString(),
+                        field.asType().toString(), null, isPrivateField(field), simpleName);
+                break;
+            }
+        }
+
         // buildProcessedCommand()
         sb.append("    @Override\n");
         sb.append("    public ProcessedCommand buildProcessedCommand(").append(simpleName).append(" instance)");
         sb.append(" throws CommandLineParserException {\n");
-        generateBuildProcessedCommand(sb, simpleName, commandElement, fields, isGroup, elementUtils, typeUtils);
-        sb.append("    }\n");
+        generateBuildProcessedCommand(sb, simpleName, commandElement, fields, isGroup, elementUtils, typeUtils,
+                accessorInfos);
+        sb.append("    }\n\n");
+
+        // Generate the single Accessor inner class
+        generateAccessorClass(sb, simpleName, accessorInfos, parentInfo);
 
         // End class
         sb.append("}\n");
@@ -190,9 +205,29 @@ final class CodeGenerator {
         return classNames;
     }
 
+    private static class FieldAccessorInfo {
+        final int index;
+        final String fieldName;
+        final String fieldType;
+        final String mixinFieldName;
+        final boolean isPrivate;
+        final String commandSimpleName;
+
+        FieldAccessorInfo(int index, String fieldName, String fieldType, String mixinFieldName,
+                boolean isPrivate, String commandSimpleName) {
+            this.index = index;
+            this.fieldName = fieldName;
+            this.fieldType = fieldType;
+            this.mixinFieldName = mixinFieldName;
+            this.isPrivate = isPrivate;
+            this.commandSimpleName = commandSimpleName;
+        }
+    }
+
     private static void generateBuildProcessedCommand(StringBuilder sb, String simpleName, TypeElement commandElement,
             List<VariableElement> fields, boolean isGroup,
-            Elements elementUtils, Types typeUtils) {
+            Elements elementUtils, Types typeUtils,
+            List<FieldAccessorInfo> accessorInfos) {
 
         sb.append(
                 "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
@@ -250,7 +285,7 @@ final class CodeGenerator {
 
         // Process fields
         for (VariableElement field : fields) {
-            generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils);
+            generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils, accessorInfos);
         }
 
         generateParentCommandInjector(sb, simpleName, fields);
@@ -299,12 +334,12 @@ final class CodeGenerator {
     }
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
-            Elements elementUtils, Types typeUtils) {
-        generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils);
+            Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
+        generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils, accessorInfos);
     }
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
-            String mixinFieldName, Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         Option o = field.getAnnotation(Option.class);
         OptionList ol = field.getAnnotation(OptionList.class);
         OptionGroup og = field.getAnnotation(OptionGroup.class);
@@ -312,22 +347,22 @@ final class CodeGenerator {
         Argument arg = field.getAnnotation(Argument.class);
 
         if (o != null) {
-            generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils);
+            generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils, accessorInfos);
         } else if (ol != null) {
-            generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils);
+            generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils, accessorInfos);
         } else if (og != null) {
-            generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils);
+            generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils, accessorInfos);
         } else if (args != null) {
-            generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils);
+            generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils, accessorInfos);
         } else if (arg != null) {
-            generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils);
+            generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils, accessorInfos);
         } else if (field.getAnnotation(Mixin.class) != null) {
-            generateMixin(sb, simpleName, field, elementUtils, typeUtils);
+            generateMixin(sb, simpleName, field, elementUtils, typeUtils, accessorInfos);
         }
     }
 
     private static void generateMixin(StringBuilder sb, String simpleName, VariableElement mixinField,
-            Elements elementUtils, Types typeUtils) {
+            Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String mixinFieldName = mixinField.getSimpleName().toString();
         TypeMirror mixinType = mixinField.asType();
         if (!(mixinType instanceof DeclaredType))
@@ -350,15 +385,15 @@ final class CodeGenerator {
             sb.append("        }\n\n");
         }
 
-        generateMixinFields(sb, simpleName, mixinFieldName, mixinElement, elementUtils, typeUtils);
+        generateMixinFields(sb, simpleName, mixinFieldName, mixinElement, elementUtils, typeUtils, accessorInfos);
     }
 
     private static void generateMixinFields(StringBuilder sb, String simpleName, String mixinFieldName,
-            TypeElement typeElement, Elements elementUtils, Types typeUtils) {
+            TypeElement typeElement, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
             if (enclosed instanceof VariableElement) {
                 generateFieldProcessing(sb, simpleName, (VariableElement) enclosed, mixinFieldName,
-                        elementUtils, typeUtils);
+                        elementUtils, typeUtils, accessorInfos);
             }
         }
         // Recurse into superclass
@@ -366,13 +401,13 @@ final class CodeGenerator {
         if (superclass.getKind() != TypeKind.NONE && !superclass.toString().equals("java.lang.Object")) {
             if (superclass instanceof DeclaredType) {
                 TypeElement superElement = (TypeElement) ((DeclaredType) superclass).asElement();
-                generateMixinFields(sb, simpleName, mixinFieldName, superElement, elementUtils, typeUtils);
+                generateMixinFields(sb, simpleName, mixinFieldName, superElement, elementUtils, typeUtils, accessorInfos);
             }
         }
     }
 
     private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
-            String mixinFieldName, Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
         String fieldType = getBoxedTypeName(field.asType(), typeUtils);
         boolean isBooleanType = isBooleanType(field.asType(), typeUtils);
@@ -432,12 +467,12 @@ final class CodeGenerator {
         generateExclusiveWith(sb, o.exclusiveWith());
         generateAllowedValues(sb, o.allowedValues());
         generateVisibility(sb, o.visibility());
-        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
-            String mixinFieldName, Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
         String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
 
@@ -473,12 +508,12 @@ final class CodeGenerator {
         generateExclusiveWith(sb, ol.exclusiveWith());
         generateAllowedValues(sb, ol.allowedValues());
         generateVisibility(sb, ol.visibility());
-        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
-            String mixinFieldName, Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
         // For Map<K,V>, extract V (index 1)
         String valueType = getGenericTypeArgument(field.asType(), 1, typeUtils);
@@ -509,12 +544,12 @@ final class CodeGenerator {
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
         generateVisibility(sb, og.visibility());
-        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
-            String mixinFieldName, Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
         String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
 
@@ -544,12 +579,12 @@ final class CodeGenerator {
         generateOptionParser(sb, field, "parser", elementUtils);
         if (a.url())
             sb.append("                        .url(true)\n");
-        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
-            String mixinFieldName, Elements elementUtils, Types typeUtils) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
         String fieldType = getBoxedTypeName(field.asType(), typeUtils);
 
@@ -582,22 +617,115 @@ final class CodeGenerator {
             sb.append("                        .inherited(true)\n");
         if (arg.url())
             sb.append("                        .url(true)\n");
-        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils);
+        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
         sb.append("                        .build());\n\n");
     }
 
     private static void generateFieldAccessors(StringBuilder sb, String simpleName, VariableElement field,
-            String mixinFieldName, Types typeUtils) {
+            String mixinFieldName, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         if (mixinFieldName != null) {
             sb.append("                        .mixinFieldName(").append(stringLiteral(mixinFieldName)).append(")\n");
-            generateMixinFieldSetter(sb, simpleName, field, mixinFieldName, typeUtils);
-            generateMixinFieldResetter(sb, simpleName, field, mixinFieldName, typeUtils);
-            generateMixinFieldGetter(sb, simpleName, field, mixinFieldName);
-        } else {
-            generateFieldSetter(sb, simpleName, field, typeUtils);
-            generateFieldResetter(sb, simpleName, field, typeUtils);
-            generateFieldGetter(sb, simpleName, field);
         }
+        int index = accessorInfos.size();
+        accessorInfos.add(new FieldAccessorInfo(index, field.getSimpleName().toString(),
+                field.asType().toString(), mixinFieldName, isPrivateField(field), simpleName));
+        sb.append("                        .fieldAccessor(new Accessor(").append(index).append("))\n");
+    }
+
+    private static void generateAccessorClass(StringBuilder sb, String commandSimpleName,
+            List<FieldAccessorInfo> infos, FieldAccessorInfo parentInfo) {
+        if (infos.isEmpty() && parentInfo == null)
+            return;
+
+        sb.append("    static final class Accessor implements org.aesh.command.impl.internal.FieldAccessor,\n");
+        sb.append("            java.util.function.BiConsumer<Object, Object> {\n");
+
+        if (parentInfo != null) {
+            sb.append("        static final Accessor PARENT_INJECTOR = new Accessor(-1);\n\n");
+        }
+
+        sb.append("        private final int idx;\n");
+        sb.append("        Accessor(int idx) { this.idx = idx; }\n\n");
+
+        // set method
+        sb.append("        public void set(Object inst, Object val) {\n");
+        sb.append("            switch (idx) {\n");
+        for (FieldAccessorInfo info : infos) {
+            sb.append("                case ").append(info.index).append(": ");
+            if (info.mixinFieldName != null) {
+                if (info.isPrivate) {
+                    sb.append("try { Object m = ").append(fieldConstantName(info.mixinFieldName))
+                            .append(".get(inst); if (m != null) ")
+                            .append(fieldConstantName(info.mixinFieldName, info.fieldName))
+                            .append(".set(m, val); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+                } else {
+                    sb.append("if (((").append(info.commandSimpleName).append(") inst).")
+                            .append(info.mixinFieldName).append(" != null) ((")
+                            .append(info.commandSimpleName).append(") inst).")
+                            .append(info.mixinFieldName).append(".").append(info.fieldName)
+                            .append(" = (").append(info.fieldType).append(") val;");
+                }
+            } else {
+                if (info.isPrivate) {
+                    sb.append("try { ").append(fieldConstantName(info.fieldName))
+                            .append(".set(inst, val); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+                } else {
+                    sb.append("((").append(info.commandSimpleName).append(") inst).")
+                            .append(info.fieldName).append(" = (").append(info.fieldType).append(") val;");
+                }
+            }
+            sb.append(" break;\n");
+        }
+        sb.append("            }\n");
+        sb.append("        }\n\n");
+
+        // get method
+        sb.append("        public Object get(Object inst) {\n");
+        sb.append("            switch (idx) {\n");
+        for (FieldAccessorInfo info : infos) {
+            sb.append("                case ").append(info.index).append(": ");
+            if (info.mixinFieldName != null) {
+                if (info.isPrivate) {
+                    sb.append("try { Object m = ").append(fieldConstantName(info.mixinFieldName))
+                            .append(".get(inst); return m != null ? ")
+                            .append(fieldConstantName(info.mixinFieldName, info.fieldName))
+                            .append(".get(m) : null; } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+                } else {
+                    sb.append("return ((").append(info.commandSimpleName).append(") inst).")
+                            .append(info.mixinFieldName).append(" != null ? ((")
+                            .append(info.commandSimpleName).append(") inst).")
+                            .append(info.mixinFieldName).append(".").append(info.fieldName).append(" : null;");
+                }
+            } else {
+                if (info.isPrivate) {
+                    sb.append("try { return ").append(fieldConstantName(info.fieldName))
+                            .append(".get(inst); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+                } else {
+                    sb.append("return ((").append(info.commandSimpleName).append(") inst).")
+                            .append(info.fieldName).append(";");
+                }
+            }
+            sb.append("\n");
+        }
+        sb.append("                default: return null;\n");
+        sb.append("            }\n");
+        sb.append("        }\n\n");
+
+        // accept method (BiConsumer for parent command injection)
+        sb.append("        @Override\n");
+        sb.append("        public void accept(Object cmd, Object parent) {\n");
+        if (parentInfo != null) {
+            if (parentInfo.isPrivate) {
+                sb.append("            try { ").append(fieldConstantName(parentInfo.fieldName))
+                        .append(".set(cmd, parent); }\n");
+                sb.append("            catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
+            } else {
+                sb.append("            ((").append(commandSimpleName).append(") cmd).").append(parentInfo.fieldName)
+                        .append(" = (").append(parentInfo.fieldType).append(") parent;\n");
+            }
+        }
+        sb.append("        }\n");
+        sb.append("    }\n");
     }
 
     private static void generateAliases(StringBuilder sb, String[] aliases) {
@@ -691,32 +819,12 @@ final class CodeGenerator {
 
     private static void generateParentCommandInjector(StringBuilder sb, String simpleName,
             List<VariableElement> fields) {
-        VariableElement parentField = null;
         for (VariableElement field : fields) {
             if (field.getAnnotation(ParentCommand.class) != null) {
-                parentField = field;
-                break;
+                sb.append("        processedCommand.setParentCommandInjector(Accessor.PARENT_INJECTOR);\n\n");
+                return;
             }
         }
-        if (parentField == null)
-            return;
-
-        String fieldName = parentField.getSimpleName().toString();
-        String parentType = parentField.asType().toString();
-        boolean isPrivate = isPrivateField(parentField);
-
-        sb.append("        processedCommand.setParentCommandInjector(new java.util.function.BiConsumer<Object, Object>() {\n");
-        sb.append("            public void accept(Object cmd, Object parent) {\n");
-        if (isPrivate) {
-            String constName = fieldConstantName(fieldName);
-            sb.append("                try { ").append(constName).append(".set(cmd, parent); }\n");
-            sb.append("                catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
-        } else {
-            sb.append("                ((").append(simpleName).append(") cmd).").append(fieldName)
-                    .append(" = (").append(parentType).append(") parent;\n");
-        }
-        sb.append("            }\n");
-        sb.append("        });\n\n");
     }
 
     private static boolean isPrivateField(VariableElement field) {
@@ -969,147 +1077,6 @@ final class CodeGenerator {
 
     private static String selectorLiteral(org.aesh.selector.SelectorType selectorType) {
         return "org.aesh.selector.SelectorType." + selectorType.name();
-    }
-
-    private static boolean isAccessibleField(VariableElement field) {
-        java.util.Set<javax.lang.model.element.Modifier> modifiers = field.getModifiers();
-        return !modifiers.contains(javax.lang.model.element.Modifier.PRIVATE);
-    }
-
-    private static void generateMixinFieldSetter(StringBuilder sb, String commandSimpleName, VariableElement field,
-            String mixinFieldName, Types typeUtils) {
-        String fieldName = field.getSimpleName().toString();
-        String fieldType = field.asType().toString();
-
-        sb.append("                        .fieldSetter(new java.util.function.BiConsumer<Object, Object>() {\n");
-        if (isPrivateField(field)) {
-            String constName = fieldConstantName(mixinFieldName, fieldName);
-            sb.append("                            public void accept(Object inst, Object val) { try { Object mixin = ")
-                    .append(fieldConstantName(mixinFieldName)).append(".get(inst); if (mixin != null) ")
-                    .append(constName)
-                    .append(".set(mixin, val); } catch (IllegalAccessException e) { throw new RuntimeException(e); } }\n");
-        } else {
-            sb.append("                            public void accept(Object inst, Object val) { if (((")
-                    .append(commandSimpleName).append(") inst).").append(mixinFieldName)
-                    .append(" != null) ((").append(commandSimpleName).append(") inst).")
-                    .append(mixinFieldName).append(".").append(fieldName)
-                    .append(" = (").append(fieldType).append(") val; }\n");
-        }
-        sb.append("                        })\n");
-    }
-
-    private static void generateMixinFieldResetter(StringBuilder sb, String commandSimpleName, VariableElement field,
-            String mixinFieldName, Types typeUtils) {
-        String fieldName = field.getSimpleName().toString();
-        String defaultValue = javaDefaultLiteral(field.asType());
-
-        sb.append("                        .fieldResetter(new java.util.function.Consumer<Object>() {\n");
-        if (isPrivateField(field)) {
-            String constName = fieldConstantName(mixinFieldName, fieldName);
-            sb.append("                            public void accept(Object inst) { try { Object mixin = ")
-                    .append(fieldConstantName(mixinFieldName)).append(".get(inst); if (mixin != null) ")
-                    .append(constName).append(".set(mixin, ").append(defaultValue)
-                    .append("); } catch (IllegalAccessException e) { throw new RuntimeException(e); } }\n");
-        } else {
-            sb.append("                            public void accept(Object inst) { if (((")
-                    .append(commandSimpleName).append(") inst).").append(mixinFieldName)
-                    .append(" != null) ((").append(commandSimpleName).append(") inst).")
-                    .append(mixinFieldName).append(".").append(fieldName)
-                    .append(" = ").append(defaultValue).append("; }\n");
-        }
-        sb.append("                        })\n");
-    }
-
-    private static void generateFieldGetter(StringBuilder sb, String commandSimpleName, VariableElement field) {
-        String fieldName = field.getSimpleName().toString();
-        sb.append("                        .fieldGetter(new java.util.function.Function<Object, Object>() {\n");
-        if (isPrivateField(field)) {
-            sb.append("                            public Object apply(Object inst) { try { return ")
-                    .append(fieldConstantName(fieldName))
-                    .append(".get(inst); } catch (IllegalAccessException e) { throw new RuntimeException(e); } }\n");
-        } else {
-            sb.append("                            public Object apply(Object inst) { return ((")
-                    .append(commandSimpleName).append(") inst).").append(fieldName).append("; }\n");
-        }
-        sb.append("                        })\n");
-    }
-
-    private static void generateMixinFieldGetter(StringBuilder sb, String commandSimpleName, VariableElement field,
-            String mixinFieldName) {
-        String fieldName = field.getSimpleName().toString();
-        sb.append("                        .fieldGetter(new java.util.function.Function<Object, Object>() {\n");
-        if (isPrivateField(field)) {
-            String constName = fieldConstantName(mixinFieldName, fieldName);
-            sb.append("                            public Object apply(Object inst) { try { Object mixin = ")
-                    .append(fieldConstantName(mixinFieldName)).append(".get(inst); return mixin != null ? ")
-                    .append(constName)
-                    .append(".get(mixin) : null; } catch (IllegalAccessException e) { throw new RuntimeException(e); } }\n");
-        } else {
-            sb.append("                            public Object apply(Object inst) { return ((")
-                    .append(commandSimpleName).append(") inst).").append(mixinFieldName)
-                    .append(" != null ? ((").append(commandSimpleName).append(") inst).")
-                    .append(mixinFieldName).append(".").append(fieldName).append(" : null; }\n");
-        }
-        sb.append("                        })\n");
-    }
-
-    private static void generateFieldSetter(StringBuilder sb, String commandSimpleName, VariableElement field,
-            Types typeUtils) {
-        String fieldName = field.getSimpleName().toString();
-        String fieldType = field.asType().toString();
-
-        sb.append("                        .fieldSetter(new java.util.function.BiConsumer<Object, Object>() {\n");
-        if (isPrivateField(field)) {
-            sb.append("                            public void accept(Object inst, Object val) { try { ")
-                    .append(fieldConstantName(fieldName))
-                    .append(".set(inst, val); } catch (IllegalAccessException e) { throw new RuntimeException(e); } }\n");
-        } else {
-            sb.append("                            public void accept(Object inst, Object val) { ((")
-                    .append(commandSimpleName).append(") inst).").append(fieldName)
-                    .append(" = (").append(fieldType).append(") val; }\n");
-        }
-        sb.append("                        })\n");
-    }
-
-    private static void generateFieldResetter(StringBuilder sb, String commandSimpleName, VariableElement field,
-            Types typeUtils) {
-        String fieldName = field.getSimpleName().toString();
-        String defaultValue = javaDefaultLiteral(field.asType());
-
-        sb.append("                        .fieldResetter(new java.util.function.Consumer<Object>() {\n");
-        if (isPrivateField(field)) {
-            sb.append("                            public void accept(Object inst) { try { ")
-                    .append(fieldConstantName(fieldName)).append(".set(inst, ").append(defaultValue)
-                    .append("); } catch (IllegalAccessException e) { throw new RuntimeException(e); } }\n");
-        } else {
-            sb.append("                            public void accept(Object inst) { ((")
-                    .append(commandSimpleName).append(") inst).").append(fieldName)
-                    .append(" = ").append(defaultValue).append("; }\n");
-        }
-        sb.append("                        })\n");
-    }
-
-    private static String javaDefaultLiteral(TypeMirror type) {
-        switch (type.getKind()) {
-            case BOOLEAN:
-                return "false";
-            case BYTE:
-                return "(byte) 0";
-            case SHORT:
-                return "(short) 0";
-            case INT:
-                return "0";
-            case LONG:
-                return "0L";
-            case FLOAT:
-                return "0.0f";
-            case DOUBLE:
-                return "0.0d";
-            case CHAR:
-                return "'\\u0000'";
-            default:
-                return "null";
-        }
     }
 
     private static String escapeJavaString(String s) {

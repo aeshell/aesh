@@ -80,6 +80,7 @@ public class ProcessedOptionBuilder {
     private BiConsumer<Object, Object> fieldSetter;
     private java.util.function.Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
+    private FieldAccessor fieldAccessor;
     private String mixinFieldName;
     private List<String> aliases;
     private String helpGroup = "";
@@ -359,6 +360,11 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
+    public ProcessedOptionBuilder fieldAccessor(FieldAccessor fieldAccessor) {
+        this.fieldAccessor = fieldAccessor;
+        return this;
+    }
+
     public ProcessedOptionBuilder mixinFieldName(String mixinFieldName) {
         this.mixinFieldName = mixinFieldName;
         return this;
@@ -472,6 +478,8 @@ public class ProcessedOptionBuilder {
                 converter,
                 completer, validator, activator, renderer, parser, overrideRequired, negatable, negationPrefix, inherited,
                 descriptionUrl, isUrl, optionalValue);
+        if (fieldAccessor != null)
+            option.setFieldAccessor(fieldAccessor);
         if (fieldSetter != null)
             option.setFieldSetter(fieldSetter);
         if (fieldResetter != null)
