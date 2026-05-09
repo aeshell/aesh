@@ -201,11 +201,15 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
 
         if (option.isTypeAssignableByResourcesOrFile()) {
             spec.append(":").append(desc).append(":_files");
-        } else if (option.hasDefaultValue()) {
+        } else if (option.hasAllowedValues() || option.hasDefaultValue()) {
             StringBuilder vals = new StringBuilder();
             vals.append("(");
-            for (String v : option.getDefaultValues())
-                vals.append(v).append(" ");
+            if (option.hasAllowedValues())
+                for (String v : option.getAllowedValues())
+                    vals.append(v).append(" ");
+            else
+                for (String v : option.getDefaultValues())
+                    vals.append(v).append(" ");
             if (BashCompletionGenerator.isBooleanType(option))
                 vals.append("true false ");
             vals.append(")");

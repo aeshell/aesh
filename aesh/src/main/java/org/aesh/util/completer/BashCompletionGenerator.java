@@ -157,10 +157,14 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
                 if (option.isTypeAssignableByResourcesOrFile()) {
                     out.append("            _filedir").append(NL);
                     out.append("            return;;").append(NL);
-                } else if (option.hasDefaultValue() || isBooleanType(option)) {
+                } else if (option.hasAllowedValues() || option.hasDefaultValue() || isBooleanType(option)) {
                     StringBuilder vals = new StringBuilder();
-                    for (String v : option.getDefaultValues())
-                        vals.append(v).append(" ");
+                    if (option.hasAllowedValues())
+                        for (String v : option.getAllowedValues())
+                            vals.append(v).append(" ");
+                    else
+                        for (String v : option.getDefaultValues())
+                            vals.append(v).append(" ");
                     if (isBooleanType(option))
                         vals.append("true false");
                     out.append("            COMPREPLY=( $(compgen -W \"").append(vals.toString().trim())

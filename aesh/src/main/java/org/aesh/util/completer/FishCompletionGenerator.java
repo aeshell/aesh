@@ -162,7 +162,9 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
 
         if (option.hasValue() && !isNegated && !isFileOpt) {
             List<String> vals = new ArrayList<>();
-            if (option.hasDefaultValue())
+            if (option.hasAllowedValues())
+                vals.addAll(option.getAllowedValues());
+            else if (option.hasDefaultValue())
                 vals.addAll(option.getDefaultValues());
             if (BashCompletionGenerator.isBooleanType(option)) {
                 vals.add("true");
