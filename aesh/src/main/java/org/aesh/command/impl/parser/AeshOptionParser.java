@@ -19,6 +19,8 @@
  */
 package org.aesh.command.impl.parser;
 
+import java.util.regex.Pattern;
+
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.parser.OptionParser;
@@ -180,7 +182,7 @@ public class AeshOptionParser implements OptionParser {
     private void doAddValueToOption(ProcessedOption currOption, String word) {
         if (currOption.hasMultipleValues()) {
             if (word.contains(String.valueOf(currOption.getValueSeparator()))) {
-                for (String value : word.split(String.valueOf(currOption.getValueSeparator()))) {
+                for (String value : word.split(Pattern.quote(String.valueOf(currOption.getValueSeparator())))) {
                     currOption.addValue(value.trim());
                 }
                 if (word.endsWith(String.valueOf(currOption.getValueSeparator())))
@@ -201,7 +203,7 @@ public class AeshOptionParser implements OptionParser {
     private void processList(ProcessedOption currOption, String rest) {
         if (rest.length() > 1 && rest.startsWith("=")) {
             if (rest.indexOf(currOption.getValueSeparator()) > -1) {
-                for (String value : rest.substring(1).split(String.valueOf(currOption.getValueSeparator()))) {
+                for (String value : rest.substring(1).split(Pattern.quote(String.valueOf(currOption.getValueSeparator())))) {
                     currOption.addValue(value.trim());
                 }
                 if (rest.endsWith(String.valueOf(currOption.getValueSeparator())))

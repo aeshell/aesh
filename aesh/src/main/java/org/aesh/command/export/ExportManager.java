@@ -99,7 +99,8 @@ public class ExportManager {
             String name = variableMatcher.group(2);
             String value = variableMatcher.group(3);
             if (value.contains(String.valueOf(DOLLAR + name))) {
-                value = value.replace(String.valueOf(DOLLAR + name), variables.get(name));
+                String existing = variables.get(name);
+                value = value.replace(String.valueOf(DOLLAR + name), existing != null ? existing : "");
             }
             variables.put(name, value);
             if (listener != null)
@@ -237,7 +238,7 @@ public class ExportManager {
 
         if (this.exportUsesSystemEnvironment) {
             for (String key : System.getenv().keySet()) {
-                builder.append(key).append('=').append(parseValue(variables.get(key))).append(Config.getLineSeparator());
+                builder.append(key).append('=').append(parseValue(getVariable(key))).append(Config.getLineSeparator());
             }
         }
         return builder.toString();
@@ -258,12 +259,12 @@ public class ExportManager {
             }
 
             if (keepGoing) {
-                FileWriter fw = new FileWriter(exportFile);
-                for (String key : variables.keySet()) {
-                    fw.write(EXPORT + " " + key + "=" + variables.get(key) + Config.getLineSeparator());
+                try (FileWriter fw = new FileWriter(exportFile)) {
+                    for (String key : variables.keySet()) {
+                        fw.write(EXPORT + " " + key + "=" + variables.get(key) + Config.getLineSeparator());
+                    }
+                    fw.flush();
                 }
-                fw.flush();
-                fw.close();
             }
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, "Failed to persist variables to file " + exportFile, e);

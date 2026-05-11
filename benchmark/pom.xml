@@ -61,6 +61,7 @@
          <plugin>
             <artifactId>maven-compiler-plugin</artifactId>
             <configuration>
+               <release>11</release>
                <annotationProcessorPaths>
                   <path>
                      <groupId>org.aesh</groupId>

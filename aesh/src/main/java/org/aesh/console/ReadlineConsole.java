@@ -99,7 +99,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private CommandRuntime<? extends CommandInvocation> runtime;
     private ProcessManager processManager;
     private ExportManager exportManager;
-    private static final List<Function<String, Optional<String>>> preProcessors = new ArrayList<>();
+    private final List<Function<String, Optional<String>>> preProcessors = new ArrayList<>();
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
