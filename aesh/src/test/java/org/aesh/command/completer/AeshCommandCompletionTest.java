@@ -147,9 +147,8 @@ public class AeshCommandCompletionTest {
 
         connection.read("-n");
         connection.read(completeChar.getFirstValue());
-        assertEquals("foo -n", connection.getOutputBuffer());
+        assertEquals("foo -n ", connection.getOutputBuffer());
 
-        connection.read(" ");
         connection.read(completeChar.getFirstValue());
         assertEquals("foo -n two ", connection.getOutputBuffer());
 

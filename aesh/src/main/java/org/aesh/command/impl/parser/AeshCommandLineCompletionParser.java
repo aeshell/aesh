@@ -145,8 +145,12 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             if (!parser.lastParsedOption().isLongNameUsed() &&
                     parser.lastParsedOption().getValue() == null && !parser.lastParsedOption().getEndsWithSeparator()
                     && !line.spaceAtEnd()) {
-                //TODO: fix this
-                //do nothing
+                //short option without value and no separator, offer a space so user can type the value
+                if (parser.lastParsedOption().hasValue()) {
+                    completeOperation.addCompletionCandidate(" ");
+                    completeOperation.setOffset(completeOperation.getCursor());
+                    completeOperation.setAppendSeparator(false);
+                }
             } else if (parser.lastParsedOption().isLongNameUsed() &&
                     !parser.lastParsedOption().getEndsWithSeparator() &&
                     !line.spaceAtEnd() && !line.selectedWord().word().endsWith("=") &&

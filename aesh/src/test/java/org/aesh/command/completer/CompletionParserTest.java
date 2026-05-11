@@ -715,6 +715,86 @@ public class CompletionParserTest {
         assertEquals(0, co.getFormattedCompletionCandidates().size());
     }
 
+    @Test
+    public void testShortOptionCompletionOffersSpace() throws Exception {
+        // Issue #10: short option without value should offer a space, just like long options do
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest1<>())
+                .getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // "test -e" (short option that requires a String value, no space at end)
+        // Should offer a space so the user can type the value
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test -e", 7);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
+
+        // "test -D" (another short option that requires a String value)
+        co = new AeshCompleteOperation(aeshContext, "test -D", 7);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
+
+        // "test -e " (with trailing space) should offer value completions, not just a space
+        // -e has no completer and no default values, so no candidates
+        co = new AeshCompleteOperation(aeshContext, "test -e ", 8);
+        clp.complete(co, ip);
+        assertEquals(0, co.getFormattedCompletionCandidates().size());
+
+        // "test -f" (boolean short option, no space) should also offer a space
+        co = new AeshCompleteOperation(aeshContext, "test -f", 7);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
+
+        // Verify long option equivalent still works: "test --equal" should offer space
+        co = new AeshCompleteOperation(aeshContext, "test --equal", 12);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals(" ", co.getFormattedCompletionCandidates().get(0));
+    }
+
+    @Test
+    public void testCompletionWithInvalidOptionGroup() throws Exception {
+        // Issue #11: grouped short options with errors should produce INVALID_INPUT,
+        // not OPTION_MISSING_VALUE
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest3<>())
+                .getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // "-bz" where -b is boolean (valid) but -z doesn't exist
+        // Should set INVALID_INPUT status, and completion should fall through to listing options
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test -bz", 8);
+        clp.complete(co, ip);
+        assertEquals(CompleteStatus.Status.INVALID_INPUT, clp.getProcessedCommand().completeStatus().status());
+
+        // "-bX" where -b is boolean and -X requires a value — cannot be grouped
+        // Should set INVALID_INPUT status
+        co = new AeshCompleteOperation(aeshContext, "test -bX", 8);
+        clp.complete(co, ip);
+        // -X needs a value so it can't be in a group — this is INVALID_INPUT
+        assertEquals(CompleteStatus.Status.INVALID_INPUT, clp.getProcessedCommand().completeStatus().status());
+    }
+
+    @Test
+    public void testCompletionMissingValueStatus() throws Exception {
+        // Issue #11: genuine missing value should still produce OPTION_MISSING_VALUE
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest1<>())
+                .getParser();
+
+        // "test -e" is a short option that requires a value — parse in COMPLETION mode
+        clp.parse("test -e", CommandLineParser.Mode.COMPLETION);
+        assertEquals(CompleteStatus.Status.OPTION_MISSING_VALUE, clp.getProcessedCommand().completeStatus().status());
+
+        // "test --equal" is the same option via long name
+        clp.parse("test --equal", CommandLineParser.Mode.COMPLETION);
+        assertEquals(CompleteStatus.Status.OPTION_MISSING_VALUE, clp.getProcessedCommand().completeStatus().status());
+
+        // "test --equal " with trailing space and a value — should be COMPLETE_OPTION
+        clp.parse("test --equal foo", CommandLineParser.Mode.COMPLETION);
+        assertEquals(CompleteStatus.Status.COMPLETE_OPTION, clp.getProcessedCommand().completeStatus().status());
+    }
+
     @CommandDefinition(name = "test", description = "test allowedValues completion")
     public class AllowedValuesCompleteTest<CI extends CommandInvocation> extends TestCommand<CI> {
 

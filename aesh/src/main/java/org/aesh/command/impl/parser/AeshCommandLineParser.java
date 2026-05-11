@@ -680,9 +680,16 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 if (argumentMarker && processedCommand.completeStatus() == null)
                     setCompletionArgStatus(null);
             } catch (OptionParserException e) {
-                //TODO: needs to be improved
-                //ignored for now
-                processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
+                String msg = e.getMessage();
+                if (msg != null && msg.contains("no value was given")) {
+                    // Option was recognized but needs a value — offer value completion
+                    processedCommand.setCompleteStatus(
+                            new CompleteStatus(CompleteStatus.Status.OPTION_MISSING_VALUE, ""));
+                } else {
+                    // Genuine parse error (unknown option in group, property syntax error, etc.)
+                    processedCommand.setCompleteStatus(
+                            new CompleteStatus(CompleteStatus.Status.INVALID_INPUT, msg != null ? msg : ""));
+                }
             }
         }
     }
