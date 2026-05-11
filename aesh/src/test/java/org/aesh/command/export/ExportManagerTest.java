@@ -20,6 +20,9 @@
 package org.aesh.command.export;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -98,5 +101,131 @@ public class ExportManagerTest {
         if (Config.isOSPOSIXCompatible()) {
             assertTrue(result.contains("/usr"));
         }
+    }
+
+    // Regression test for: self-referencing undefined variable should not NPE
+    @Test
+    public void testSelfReferencingUndefinedVariable() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+
+        // PATH is not defined yet; export PATH=$PATH:/new/dir should not throw NPE
+        String error = exportManager.addVariable("export PATH=$PATH:/new/dir");
+        assertNull("addVariable should succeed (return null)", error);
+        // $PATH was undefined, so it expands to empty string
+        assertEquals(":/new/dir", exportManager.getValue("PATH"));
+
+        // Now set it again — this time PATH exists
+        exportManager.addVariable("export PATH=$PATH:/extra");
+        assertEquals(":/new/dir:/extra", exportManager.getValue("PATH"));
+    }
+
+    // Regression test for: listAllVariables with system env should use correct map
+    @Test
+    public void testListAllVariablesWithSystemEnv() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"), true);
+
+        exportManager.addVariable("export MY_CUSTOM_VAR=hello");
+
+        String listing = exportManager.listAllVariables();
+
+        // Should contain our custom variable
+        assertTrue("Should contain custom variable", listing.contains("MY_CUSTOM_VAR=hello"));
+
+        // If on a POSIX system, PATH should be listed with its actual value, not "null"
+        if (Config.isOSPOSIXCompatible()) {
+            assertTrue("System env PATH should appear in listing", listing.contains("PATH="));
+            assertFalse("PATH value should not be 'null'", listing.contains("PATH=null"));
+        }
+    }
+
+    @Test
+    public void testPersistAndReload() throws IOException {
+        File exportFile = new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_persist_test");
+        try {
+            ExportManager exportManager = new ExportManager(exportFile);
+            exportManager.addVariable("export FOO=bar");
+            exportManager.addVariable("export BAZ=qux");
+            exportManager.persistVariables();
+
+            assertTrue("Export file should exist after persist", exportFile.isFile());
+
+            // Reload from file
+            ExportManager reloaded = new ExportManager(exportFile);
+            assertEquals("bar", reloaded.getValue("FOO"));
+            assertEquals("qux", reloaded.getValue("BAZ"));
+        } finally {
+            exportFile.delete();
+        }
+    }
+
+    @Test
+    public void testFindAllMatchingKeys() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+
+        exportManager.addVariable("export FOO=1");
+        exportManager.addVariable("export FOOBAR=2");
+        exportManager.addVariable("export BAZ=3");
+
+        java.util.List<String> matches = exportManager.findAllMatchingKeys("FOO");
+        assertEquals(2, matches.size());
+        assertTrue(matches.contains("FOO"));
+        assertTrue(matches.contains("FOOBAR"));
+
+        // With $ prefix
+        matches = exportManager.findAllMatchingKeys("$FOO");
+        assertEquals(2, matches.size());
+        assertTrue(matches.contains("$FOO"));
+        assertTrue(matches.contains("$FOOBAR"));
+
+        // No matches
+        matches = exportManager.findAllMatchingKeys("XYZ");
+        assertEquals(0, matches.size());
+    }
+
+    @Test
+    public void testGetAllNamesAndNamesWithEquals() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+
+        exportManager.addVariable("export A=1");
+        exportManager.addVariable("export B=2");
+
+        java.util.List<String> names = exportManager.getAllNames();
+        assertTrue(names.contains("A"));
+        assertTrue(names.contains("B"));
+
+        java.util.List<String> namesWithEquals = exportManager.getAllNamesWithEquals();
+        assertTrue(namesWithEquals.contains("A="));
+        assertTrue(namesWithEquals.contains("B="));
+    }
+
+    @Test
+    public void testInvalidExportFormat() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+
+        // Invalid format should return usage message
+        String result = exportManager.addVariable("not_an_export");
+        assertNotNull(result);
+        assertTrue(result.contains("usage"));
+
+        // Valid format returns null
+        String valid = exportManager.addVariable("export VALID=yes");
+        assertNull(valid);
+    }
+
+    @Test
+    public void testGetValueIgnoreCase() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+
+        exportManager.addVariable("export MyVar=hello");
+        assertEquals("hello", exportManager.getValueIgnoreCase("myvar"));
+        assertEquals("hello", exportManager.getValueIgnoreCase("MYVAR"));
+        assertEquals("hello", exportManager.getValueIgnoreCase("MyVar"));
+        assertEquals("", exportManager.getValueIgnoreCase("nonexistent"));
     }
 }
