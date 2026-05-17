@@ -49,4 +49,26 @@ public interface HelpSectionProvider {
      * @return map of section name to help entries, never null
      */
     Map<String, List<HelpEntry>> getAdditionalSections();
+
+    /**
+     * Returns header text to display before the synopsis in help output.
+     * Can contain multiple lines separated by newline characters.
+     * This is useful for brand text, taglines, or usage examples.
+     *
+     * @return header text, or null if no header should be shown
+     */
+    default String getHeader() {
+        return null;
+    }
+
+    /**
+     * Returns footer text to display after all other help content.
+     * Can contain multiple lines separated by newline characters.
+     * This is useful for copyright notices, links, or "see also" text.
+     *
+     * @return footer text, or null if no footer should be shown
+     */
+    default String getFooter() {
+        return null;
+    }
 }

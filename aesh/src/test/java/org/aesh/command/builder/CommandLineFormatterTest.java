@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -734,6 +735,147 @@ public class CommandLineFormatterTest {
             if (help)
                 commandInvocation.println(commandInvocation.getHelpInfo());
 
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ========== Header and Footer tests ==========
+
+    @Test
+    public void testHelpSectionProviderHeader() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> cmd = ProcessedCommandBuilder.builder()
+                .name("mycli").description("My CLI tool");
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(cmd.create());
+
+        clp.getProcessedCommand().setHelpSectionProvider(new HelpSectionProvider() {
+            @Override
+            public Map<String, List<HelpEntry>> getAdditionalSections() {
+                return Collections.emptyMap();
+            }
+
+            @Override
+            public String getHeader() {
+                return "My CLI Tool v1.0\nA powerful command line interface";
+            }
+        });
+
+        String help = clp.printHelp();
+
+        // Header should appear before the Usage line
+        assertTrue("Header should be present", help.contains("My CLI Tool v1.0"));
+        assertTrue("Multi-line header should work", help.contains("A powerful command line interface"));
+        int headerPos = help.indexOf("My CLI Tool v1.0");
+        int usagePos = help.indexOf("Usage:");
+        assertTrue("Header should appear before Usage", headerPos < usagePos);
+    }
+
+    @Test
+    public void testHelpSectionProviderFooter() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> cmd = ProcessedCommandBuilder.builder()
+                .name("mycli").description("My CLI tool");
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(cmd.create());
+
+        clp.getProcessedCommand().setHelpSectionProvider(new HelpSectionProvider() {
+            @Override
+            public Map<String, List<HelpEntry>> getAdditionalSections() {
+                return Collections.emptyMap();
+            }
+
+            @Override
+            public String getFooter() {
+                return "Copyright (c) 2026 Aesh Project";
+            }
+        });
+
+        String help = clp.printHelp();
+
+        // Footer should appear after everything
+        assertTrue("Footer should be present", help.contains("Copyright (c) 2026 Aesh Project"));
+        int footerPos = help.indexOf("Copyright (c) 2026");
+        int usagePos = help.indexOf("Usage:");
+        assertTrue("Footer should appear after Usage", footerPos > usagePos);
+    }
+
+    @Test
+    public void testHelpSectionProviderHeaderAndFooter() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> parent = ProcessedCommandBuilder.builder()
+                .name("jbang").description("JBang tool");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> run = ProcessedCommandBuilder.builder()
+                .name("run").description("Run a script");
+
+        CommandLineParser<CommandInvocation> clpParent = new AeshCommandLineParser<>(parent.create());
+        clpParent.addChildParser(new AeshCommandLineParser<>(run.create()));
+
+        clpParent.getProcessedCommand().setHelpSectionProvider(new HelpSectionProvider() {
+            @Override
+            public Map<String, List<HelpEntry>> getAdditionalSections() {
+                return Collections.emptyMap();
+            }
+
+            @Override
+            public String getHeader() {
+                return "jbang - Unleash the power of Java";
+            }
+
+            @Override
+            public String getFooter() {
+                return "See https://jbang.dev for more info";
+            }
+        });
+
+        String help = clpParent.printHelp();
+
+        // Verify ordering: header, then usage, then footer
+        int headerPos = help.indexOf("Unleash the power");
+        int usagePos = help.indexOf("Usage:");
+        int footerPos = help.indexOf("https://jbang.dev");
+
+        assertTrue("Header should be present", headerPos >= 0);
+        assertTrue("Usage should be present", usagePos >= 0);
+        assertTrue("Footer should be present", footerPos >= 0);
+        assertTrue("Header before Usage", headerPos < usagePos);
+        assertTrue("Usage before Footer", usagePos < footerPos);
+        // Subcommand should still be listed
+        assertTrue("Subcommand run should appear", help.contains("run"));
+    }
+
+    @Test
+    public void testHelpSectionProviderHeaderWithAnnotation() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(AppWithHeaderFooterCommand.class).getParser();
+
+        String help = clp.printHelp();
+
+        assertTrue("Header from annotation provider should appear", help.contains("Welcome to AppHF"));
+        assertTrue("Footer from annotation provider should appear", help.contains("License: Apache 2.0"));
+    }
+
+    public static class HeaderFooterProvider implements HelpSectionProvider {
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public String getHeader() {
+            return "Welcome to AppHF";
+        }
+
+        @Override
+        public String getFooter() {
+            return "License: Apache 2.0";
+        }
+    }
+
+    @CommandDefinition(name = "apphf", description = "App with header/footer", helpSectionProvider = HeaderFooterProvider.class)
+    public static class AppWithHeaderFooterCommand implements Command<CommandInvocation> {
+        @Option(description = "verbose output")
+        private boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
         }
     }

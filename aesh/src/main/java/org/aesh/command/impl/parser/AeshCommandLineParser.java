@@ -291,12 +291,21 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         resolveAllLazyChildren();
         boolean showAll = processedCommand.isFullHelpRequested();
         List<CommandLineParser<CI>> parsers = getChildParsers();
-        Map<String, List<HelpEntry>> additionalSections = resolveAdditionalSections();
+        HelpSectionProvider provider = resolveHelpSectionProvider();
+        Map<String, List<HelpEntry>> additionalSections = provider != null
+                ? provider.getAdditionalSections()
+                : Collections.emptyMap();
         boolean hasChildren = parsers != null && parsers.size() > 0;
         boolean hasAdditional = !additionalSections.isEmpty();
 
+        StringBuilder sb = new StringBuilder();
+
+        // Header from HelpSectionProvider — shown before synopsis
+        if (provider != null && provider.getHeader() != null) {
+            sb.append(provider.getHeader()).append(Config.getLineSeparator());
+        }
+
         if (hasChildren || hasAdditional) {
-            StringBuilder sb = new StringBuilder();
             sb.append(processedCommand.printHelp(helpNames(), false, showAll));
 
             int maxLength = 0;
@@ -354,27 +363,32 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 for (String line : outputGroups.getOrDefault("", Collections.emptyList()))
                     sb.append(line).append(Config.getLineSeparator());
             }
+        } else {
+            sb.append(processedCommand.printHelp(helpNames(), false, showAll));
+        }
 
-            return sb.toString();
-        } else
-            return processedCommand.printHelp(helpNames(), false, showAll);
+        // Footer from HelpSectionProvider — shown after everything
+        if (provider != null && provider.getFooter() != null) {
+            sb.append(Config.getLineSeparator()).append(provider.getFooter()).append(Config.getLineSeparator());
+        }
+
+        return sb.toString();
     }
 
-    private Map<String, List<HelpEntry>> resolveAdditionalSections() {
+    private HelpSectionProvider resolveHelpSectionProvider() {
         HelpSectionProvider provider = processedCommand.getHelpSectionProvider();
         if (provider != null)
-            return provider.getAdditionalSections();
+            return provider;
 
         Class<? extends HelpSectionProvider> providerClass = processedCommand.getHelpSectionProviderClass();
         if (providerClass != null && providerClass != NullHelpSectionProvider.class) {
             try {
-                provider = providerClass.getDeclaredConstructor().newInstance();
-                return provider.getAdditionalSections();
+                return providerClass.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
                 // fall through
             }
         }
-        return Collections.emptyMap();
+        return null;
     }
 
     private String formatHelpEntry(HelpEntry entry, int offset, int descriptionStart) {
