@@ -87,6 +87,7 @@ public class CLConverterManager {
         converters.put(byte.class, byteConverter);
         converters.put(String.class, new StringConverter());
         converters.put(File.class, new FileConverter());
+        converters.put(java.nio.file.Path.class, new org.aesh.command.impl.converter.PathConverter());
         converters.put(Resource.class, new FileResourceConverter());
         converters.put(URL.class, new URLConverter());
         converters.put(URI.class, new URIConverter());

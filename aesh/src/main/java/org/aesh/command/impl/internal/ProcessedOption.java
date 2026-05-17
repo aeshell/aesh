@@ -607,7 +607,7 @@ public final class ProcessedOption {
     }
 
     public OptionCompleter completer() {
-        if (completer == null && (type == File.class || type == Resource.class)) {
+        if (completer == null && (type == File.class || type == Resource.class || type == Path.class)) {
             completer = new org.aesh.command.impl.completer.FileOptionCompleter();
         }
         return completer;

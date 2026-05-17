@@ -21,6 +21,7 @@ package org.aesh.command.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -1808,6 +1809,63 @@ public class CommandLineParserTest {
     public class NoArityCommand<CI extends CommandInvocation> implements Command<CI> {
         @Arguments(description = "any arguments")
         private java.util.List<String> args;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ========== Path support tests ==========
+
+    @Test
+    public void testPathOptionConversion() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new PathCommand<>()).getParser();
+
+        parser.populateObject("pathcmd --config /tmp/config.yml", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        PathCommand<CommandInvocation> cmd = (PathCommand<CommandInvocation>) parser.getCommand();
+        assertNotNull(cmd.config);
+        assertTrue("Path should end with config.yml", cmd.config.toString().endsWith("config.yml"));
+    }
+
+    @Test
+    public void testPathArgumentConversion() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new PathCommand<>()).getParser();
+
+        parser.populateObject("pathcmd /tmp/input.txt", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        PathCommand<CommandInvocation> cmd = (PathCommand<CommandInvocation>) parser.getCommand();
+        assertNotNull(cmd.input);
+        assertTrue("Path should end with input.txt", cmd.input.toString().endsWith("input.txt"));
+    }
+
+    @Test
+    public void testPathFileCompletion() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new PathCommand<>()).getParser();
+
+        // Path-typed option should get a file completer automatically
+        ProcessedOption configOption = parser.getProcessedCommand().findLongOptionNoActivatorCheck("config");
+        assertNotNull("config option should exist", configOption);
+        assertNotNull("Path-typed option should have a completer", configOption.completer());
+
+        // Path-typed argument should show as <file> in synopsis
+        String help = parser.printHelp();
+        assertTrue("Path argument should show as <file> in help", help.contains("<file>"));
+    }
+
+    @CommandDefinition(name = "pathcmd", description = "test Path support")
+    public class PathCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Option(description = "config file")
+        private java.nio.file.Path config;
+
+        @Argument(description = "input file")
+        private java.nio.file.Path input;
 
         @Override
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
