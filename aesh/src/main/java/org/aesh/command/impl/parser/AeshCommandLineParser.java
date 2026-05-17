@@ -560,6 +560,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 MutuallyExclusiveOptionException me = checkForMutuallyExclusiveOptions(processedCommand);
                 if (me != null)
                     processedCommand.addParserException(me);
+                // Check arity min constraints on arguments
+                RequiredOptionException arityEx = checkArityMin(processedCommand.getArgument());
+                if (arityEx != null)
+                    processedCommand.addParserException(arityEx);
+                arityEx = checkArityMin(processedCommand.getArguments());
+                if (arityEx != null)
+                    processedCommand.addParserException(arityEx);
             }
         }
     }
@@ -568,7 +575,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (processedCommand.hasArgumentWithNoValue()) {
             processedCommand.getArgument().addValue(word);
         } else if (processedCommand.hasArguments()) {
-            processedCommand.getArguments().addValue(word);
+            if (processedCommand.getArguments().isArityFull()) {
+                processedCommand.addParserException(
+                        new OptionParserException(
+                                "Too many arguments. Maximum is " + processedCommand.getArguments().getArity().getMax() + "."));
+            } else {
+                processedCommand.getArguments().addValue(word);
+            }
         } else {
             processedCommand.addParserException(
                     new OptionParserException(
@@ -738,6 +751,20 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 return generateRequiredExceptionFor(command.getArguments(), true);
         }
 
+        return null;
+    }
+
+    private RequiredOptionException checkArityMin(ProcessedOption arg) {
+        if (arg == null || arg.getArity() == null)
+            return null;
+        int count = arg.getValues().size();
+        int min = arg.getArity().getMin();
+        if (count < min) {
+            String label = arg.getDisplayLabel();
+            return new RequiredOptionException(
+                    "Argument '" + label + "' requires at least " + min
+                            + " value" + (min > 1 ? "s" : "") + ", but got " + count + ".");
+        }
         return null;
     }
 

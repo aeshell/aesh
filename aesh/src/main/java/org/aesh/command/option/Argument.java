@@ -66,6 +66,26 @@ public @interface Argument {
     String paramLabel() default "";
 
     /**
+     * Specifies how many values this argument accepts.
+     * Format: "min..max" or a single number for an exact count.
+     * Use "*" for unlimited maximum.
+     *
+     * <p>
+     * Examples:
+     * </p>
+     * <ul>
+     * <li>{@code "0..1"} — optional single value</li>
+     * <li>{@code "1"} — exactly one (same as required=true)</li>
+     * </ul>
+     *
+     * <p>
+     * If not set, the default behavior applies:
+     * a single @Argument accepts 0 or 1 values.
+     * </p>
+     */
+    String arity() default "";
+
+    /**
      * Specify if this option is required
      */
     boolean required() default false;

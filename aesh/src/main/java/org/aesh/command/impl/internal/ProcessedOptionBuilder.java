@@ -62,6 +62,7 @@ public class ProcessedOptionBuilder {
     private Converter converter;
     private String fieldName;
     private String paramLabel;
+    private String arity;
     private OptionCompleter completer;
     private List<String> defaultValues;
     private OptionValidator validator;
@@ -149,6 +150,11 @@ public class ProcessedOptionBuilder {
 
     public ProcessedOptionBuilder paramLabel(String paramLabel) {
         this.paramLabel = paramLabel;
+        return this;
+    }
+
+    public ProcessedOptionBuilder arity(String arity) {
+        this.arity = arity;
         return this;
     }
 
@@ -508,6 +514,8 @@ public class ProcessedOptionBuilder {
             option.setVisibility(visibility);
         if (paramLabel != null && !paramLabel.isEmpty())
             option.setParamLabel(paramLabel);
+        if (arity != null && !arity.isEmpty())
+            option.setArity(org.aesh.command.option.Arity.parse(arity));
         return option;
     }
 }

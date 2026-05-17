@@ -779,17 +779,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             sb.append(" [<options>]");
 
         if (argument != null) {
-            if (argument.isTypeAssignableByResourcesOrFile())
-                sb.append(" <file>");
-            else
-                sb.append(" <").append(argument.getDisplayLabel()).append(">");
+            sb.append(formatArgumentSynopsis(argument));
         }
 
         if (arguments != null) {
-            if (arguments.isTypeAssignableByResourcesOrFile())
-                sb.append(" [<files>]");
-            else
-                sb.append(" [<").append(arguments.getDisplayLabel()).append(">]");
+            sb.append(formatArgumentSynopsis(arguments));
         }
         sb.append(Config.getLineSeparator());
         //second line
@@ -851,6 +845,40 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 ", description='" + description + '\'' +
                 ", options=" + getOptions()
                 + '}';
+    }
+
+    private String formatArgumentSynopsis(ProcessedOption arg) {
+        String label = arg.isTypeAssignableByResourcesOrFile()
+                ? (arg.getOptionType() == OptionType.ARGUMENTS ? "files" : "file")
+                : arg.getDisplayLabel();
+
+        org.aesh.command.option.Arity arity = arg.getArity();
+        if (arity != null) {
+            StringBuilder sb = new StringBuilder();
+            boolean optional = arity.getMin() == 0;
+            sb.append(optional ? " [" : " ");
+            // Show repeated labels for small fixed arities
+            if (arity.getMax() == arity.getMin() && arity.getMax() <= 3) {
+                for (int i = 0; i < arity.getMax(); i++) {
+                    if (i > 0)
+                        sb.append(" ");
+                    sb.append("<").append(label).append(">");
+                }
+            } else {
+                sb.append("<").append(label).append(">");
+                if (arity.getMax() > 1 || arity.isUnlimited())
+                    sb.append("...");
+            }
+            if (optional)
+                sb.append("]");
+            return sb.toString();
+        }
+
+        // Legacy behavior when no arity is set
+        if (arg.getOptionType() == OptionType.ARGUMENTS)
+            return " [<" + label + ">]";
+        else
+            return " <" + label + ">";
     }
 
     @Override

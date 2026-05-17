@@ -73,6 +73,7 @@ public final class ProcessedOption {
     private char valueSeparator;
     private String fieldName;
     private String paramLabel;
+    private org.aesh.command.option.Arity arity;
     private OptionCompleter completer;
     private Map<String, String> properties;
     private boolean longNameUsed = true;
@@ -581,6 +582,24 @@ public final class ProcessedOption {
 
     public String getParamLabel() {
         return paramLabel;
+    }
+
+    public void setArity(org.aesh.command.option.Arity arity) {
+        this.arity = arity;
+    }
+
+    public org.aesh.command.option.Arity getArity() {
+        return arity;
+    }
+
+    /**
+     * Check if the argument has reached its maximum arity.
+     * Returns false if no arity is set (legacy unlimited behavior for @Arguments).
+     */
+    public boolean isArityFull() {
+        if (arity == null)
+            return false;
+        return getValues().size() >= arity.getMax();
     }
 
     public Converter converter() {

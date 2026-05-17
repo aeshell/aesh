@@ -62,6 +62,28 @@ public @interface Arguments {
     String paramLabel() default "";
 
     /**
+     * Specifies how many values these arguments accept.
+     * Format: "min..max" or a single number for an exact count.
+     * Use "*" for unlimited maximum.
+     *
+     * <p>
+     * Examples:
+     * </p>
+     * <ul>
+     * <li>{@code "2"} — exactly two values (e.g., key value)</li>
+     * <li>{@code "1..*"} — one or more values</li>
+     * <li>{@code "0..*"} — zero or more (default)</li>
+     * </ul>
+     *
+     * <p>
+     * If not set, the default behavior applies:
+     *
+     * @Arguments accepts 0 or more values.
+     *            </p>
+     */
+    String arity() default "";
+
+    /**
      * Option type, default is String.class
      */
     Class<?> type() default String.class;

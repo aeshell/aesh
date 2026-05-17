@@ -1643,4 +1643,176 @@ public class CommandLineParserTest {
         }
     }
 
+    // ========== Arity tests ==========
+
+    @Test
+    public void testArityExactTwo() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new ArityExactTwoCommand<>()).getParser();
+
+        // Exactly 2 arguments should work
+        parser.populateObject("aritycmd key value", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        ArityExactTwoCommand<CommandInvocation> cmd = (ArityExactTwoCommand<CommandInvocation>) parser.getCommand();
+        assertEquals(2, cmd.args.size());
+        assertEquals("key", cmd.args.get(0));
+        assertEquals("value", cmd.args.get(1));
+
+        // Too few (1) should fail with arity error
+        try {
+            parser.populateObject("aritycmd onlyone", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Should reject too few arguments");
+        } catch (CommandLineParserException e) {
+            assertTrue("Error should mention 'at least'", e.getMessage().contains("at least"));
+        }
+
+        // Too many (3) should fail
+        try {
+            parser.populateObject("aritycmd one two three", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Should reject too many arguments");
+        } catch (CommandLineParserException e) {
+            assertTrue("Error should mention 'Too many'", e.getMessage().contains("Too many"));
+        }
+    }
+
+    @Test
+    public void testArityOneOrMore() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new ArityOneOrMoreCommand<>()).getParser();
+
+        // 1 argument should work
+        parser.populateObject("arityone file1", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        ArityOneOrMoreCommand<CommandInvocation> cmd = (ArityOneOrMoreCommand<CommandInvocation>) parser.getCommand();
+        assertEquals(1, cmd.files.size());
+
+        // 3 arguments should work
+        parser.populateObject("arityone file1 file2 file3", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (ArityOneOrMoreCommand<CommandInvocation>) parser.getCommand();
+        assertEquals(3, cmd.files.size());
+
+        // 0 arguments should fail
+        try {
+            parser.populateObject("arityone", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Should reject zero arguments when arity is 1..*");
+        } catch (CommandLineParserException e) {
+            assertTrue("Error should mention 'at least'", e.getMessage().contains("at least"));
+        }
+    }
+
+    @Test
+    public void testArityOptional() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new ArityOptionalCommand<>()).getParser();
+
+        // 0 arguments should work
+        parser.populateObject("arityopt", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        ArityOptionalCommand<CommandInvocation> cmd = (ArityOptionalCommand<CommandInvocation>) parser.getCommand();
+        assertTrue("files should be null or empty with 0 args",
+                cmd.files == null || cmd.files.size() == 0);
+
+        // 1 argument should work
+        parser.populateObject("arityopt file1", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (ArityOptionalCommand<CommandInvocation>) parser.getCommand();
+        assertEquals(1, cmd.files.size());
+
+        // 2 arguments should fail (max is 1)
+        try {
+            parser.populateObject("arityopt file1 file2", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Should reject too many arguments when arity is 0..1");
+        } catch (CommandLineParserException e) {
+            assertTrue("Error should mention 'Too many'", e.getMessage().contains("Too many"));
+        }
+    }
+
+    @Test
+    public void testArityInSynopsis() throws Exception {
+        CommandLineParser<CommandInvocation> parser;
+
+        // Exact 2 should show: <args> <args>
+        parser = new AeshCommandContainerBuilder<>().create(new ArityExactTwoCommand<>()).getParser();
+        String help = parser.printHelp();
+        assertTrue("Synopsis should show two arg placeholders",
+                help.contains("<args> <args>"));
+
+        // 1..* should show: <files>...
+        parser = new AeshCommandContainerBuilder<>().create(new ArityOneOrMoreCommand<>()).getParser();
+        help = parser.printHelp();
+        assertTrue("Synopsis should show ellipsis for 1..*",
+                help.contains("<files>..."));
+
+        // 0..1 should show: [<files>]
+        parser = new AeshCommandContainerBuilder<>().create(new ArityOptionalCommand<>()).getParser();
+        help = parser.printHelp();
+        assertTrue("Synopsis should show brackets for 0..1",
+                help.contains("[<files>]"));
+    }
+
+    @Test
+    public void testArityNoArityLegacyBehavior() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new NoArityCommand<>()).getParser();
+
+        // Without arity, @Arguments accepts unlimited values
+        parser.populateObject("noarity a b c d e", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        NoArityCommand<CommandInvocation> cmd = (NoArityCommand<CommandInvocation>) parser.getCommand();
+        assertEquals(5, cmd.args.size());
+    }
+
+    @CommandDefinition(name = "aritycmd", description = "test exact arity 2")
+    public class ArityExactTwoCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Arguments(arity = "2", paramLabel = "args", description = "key and value")
+        private java.util.List<String> args;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "arityone", description = "test arity 1..*")
+    public class ArityOneOrMoreCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Arguments(arity = "1..*", paramLabel = "files", description = "one or more files")
+        private java.util.List<String> files;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "arityopt", description = "test arity 0..1")
+    public class ArityOptionalCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Arguments(arity = "0..1", paramLabel = "files", description = "optional file")
+        private java.util.List<String> files;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "noarity", description = "test no arity")
+    public class NoArityCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Arguments(description = "any arguments")
+        private java.util.List<String> args;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }
