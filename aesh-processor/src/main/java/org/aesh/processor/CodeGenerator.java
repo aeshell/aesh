@@ -571,6 +571,8 @@ final class CodeGenerator {
                     .append(")\n");
         sb.append("                        .type(").append(elementType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
+        if (!a.paramLabel().isEmpty())
+            sb.append("                        .paramLabel(").append(stringLiteral(a.paramLabel())).append(")\n");
         sb.append("                        .optionType(OptionType.ARGUMENTS)\n");
         generateOptionConverter(sb, field, "converter", elementUtils);
         generateOptionCompleter(sb, field, "completer", false, false, elementUtils);
@@ -604,6 +606,8 @@ final class CodeGenerator {
                     .append(")\n");
         sb.append("                        .type(").append(fieldType).append(".class)\n");
         sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
+        if (!arg.paramLabel().isEmpty())
+            sb.append("                        .paramLabel(").append(stringLiteral(arg.paramLabel())).append(")\n");
         sb.append("                        .optionType(OptionType.ARGUMENT)\n");
         generateOptionConverter(sb, field, "converter", elementUtils);
         generateOptionCompleter(sb, field, "completer", false, isFileOrResourceType(field.asType(), typeUtils), elementUtils);

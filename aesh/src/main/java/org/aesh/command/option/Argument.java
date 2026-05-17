@@ -59,6 +59,13 @@ public @interface Argument {
     String description() default "";
 
     /**
+     * A label used in the help synopsis to describe this argument.
+     * If not set, the field name is used.
+     * Example: paramLabel = "scriptOrFile" shows {@code <scriptOrFile>} in help.
+     */
+    String paramLabel() default "";
+
+    /**
      * Specify if this option is required
      */
     boolean required() default false;

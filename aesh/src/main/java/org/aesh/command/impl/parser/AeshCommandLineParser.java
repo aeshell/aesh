@@ -541,6 +541,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
                 if (re != null)
                     processedCommand.addParserException(re);
+            }
+            if (mode == Mode.STRICT || mode == Mode.VALIDATE) {
                 MutuallyExclusiveOptionException me = checkForMutuallyExclusiveOptions(processedCommand);
                 if (me != null)
                     processedCommand.addParserException(me);

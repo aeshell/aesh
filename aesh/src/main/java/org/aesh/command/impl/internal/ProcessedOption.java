@@ -72,6 +72,7 @@ public final class ProcessedOption {
     private boolean required = false;
     private char valueSeparator;
     private String fieldName;
+    private String paramLabel;
     private OptionCompleter completer;
     private Map<String, String> properties;
     private boolean longNameUsed = true;
@@ -564,6 +565,22 @@ public final class ProcessedOption {
 
     public String getFieldName() {
         return fieldName;
+    }
+
+    /**
+     * Returns the display label for this argument in help/synopsis.
+     * If paramLabel is set, returns that; otherwise returns the fieldName.
+     */
+    public String getDisplayLabel() {
+        return paramLabel != null && !paramLabel.isEmpty() ? paramLabel : fieldName;
+    }
+
+    public void setParamLabel(String paramLabel) {
+        this.paramLabel = paramLabel;
+    }
+
+    public String getParamLabel() {
+        return paramLabel;
     }
 
     public Converter converter() {

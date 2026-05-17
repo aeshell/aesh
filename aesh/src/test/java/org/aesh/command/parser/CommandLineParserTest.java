@@ -1488,4 +1488,159 @@ public class CommandLineParserTest {
         assertNull(cmd.format);
     }
 
+    @Test
+    public void testExclusiveWithEnforcement() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new ExclusiveOptionsCommand<>()).getParser();
+
+        // Single option should work fine
+        parser.populateObject("exclusive --verbose", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        ExclusiveOptionsCommand<CommandInvocation> cmd = (ExclusiveOptionsCommand<CommandInvocation>) parser.getCommand();
+        assertTrue(cmd.verbose);
+
+        // The other option alone should also work
+        parser.populateObject("exclusive --quiet", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (ExclusiveOptionsCommand<CommandInvocation>) parser.getCommand();
+        assertTrue(cmd.quiet);
+
+        // Both options together should throw MutuallyExclusiveOptionException
+        try {
+            parser.populateObject("exclusive --verbose --quiet", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Should reject mutually exclusive options");
+        } catch (CommandLineParserException e) {
+            assertTrue("Error should mention mutually exclusive",
+                    e.getMessage().contains("mutually exclusive"));
+            assertTrue("Error should mention --verbose", e.getMessage().contains("--verbose"));
+            assertTrue("Error should mention --quiet", e.getMessage().contains("--quiet"));
+        }
+    }
+
+    @Test
+    public void testExclusiveWithValueOptions() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new ExclusiveValueOptionsCommand<>()).getParser();
+
+        // Each alone should work
+        parser.populateObject("exval --output file.txt", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        ExclusiveValueOptionsCommand<CommandInvocation> cmd = (ExclusiveValueOptionsCommand<CommandInvocation>) parser
+                .getCommand();
+        assertEquals("file.txt", cmd.output);
+
+        parser.populateObject("exval --stdout", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (ExclusiveValueOptionsCommand<CommandInvocation>) parser.getCommand();
+        assertTrue(cmd.stdout);
+
+        // Both together should fail
+        try {
+            parser.populateObject("exval --output file.txt --stdout", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Should reject mutually exclusive options");
+        } catch (CommandLineParserException e) {
+            assertTrue(e.getMessage().contains("mutually exclusive"));
+        }
+    }
+
+    @CommandDefinition(name = "exclusive", description = "test exclusive options")
+    public class ExclusiveOptionsCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Option(hasValue = false, exclusiveWith = { "quiet" }, description = "verbose output")
+        private boolean verbose;
+
+        @Option(hasValue = false, exclusiveWith = { "verbose" }, description = "quiet output")
+        private boolean quiet;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "exval", description = "test exclusive value options")
+    public class ExclusiveValueOptionsCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Option(exclusiveWith = { "stdout" }, description = "output file")
+        private String output;
+
+        @Option(hasValue = false, exclusiveWith = { "output" }, description = "print to stdout")
+        private boolean stdout;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testParamLabelInHelp() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new ParamLabelCommand<>()).getParser();
+
+        String help = parser.printHelp();
+
+        // Synopsis should show the paramLabel, not the field name
+        assertTrue("Synopsis should contain <scriptOrFile>", help.contains("<scriptOrFile>"));
+        assertFalse("Synopsis should not show raw field name <input>",
+                help.contains("<input>") && !help.contains("<scriptOrFile>"));
+    }
+
+    @Test
+    public void testParamLabelDefaultsToFieldName() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new NoParamLabelCommand<>()).getParser();
+
+        String help = parser.printHelp();
+
+        // Without paramLabel, synopsis should use the field name
+        assertTrue("Synopsis should contain field name", help.contains("<myArg>"));
+    }
+
+    @Test
+    public void testParamLabelOnArguments() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new ParamLabelArgsCommand<>()).getParser();
+
+        String help = parser.printHelp();
+
+        // Synopsis should show the paramLabel for @Arguments
+        assertTrue("Synopsis should contain <sources>", help.contains("<sources>"));
+    }
+
+    @CommandDefinition(name = "plcmd", description = "test paramLabel")
+    public class ParamLabelCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Argument(paramLabel = "scriptOrFile", description = "A file or URL to a Java code file")
+        private String input;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "noplcmd", description = "test no paramLabel")
+    public class NoParamLabelCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Argument(description = "some argument")
+        private String myArg;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "argscmd", description = "test paramLabel on @Arguments")
+    public class ParamLabelArgsCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Arguments(paramLabel = "sources", description = "source files")
+        private java.util.List<String> files;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }

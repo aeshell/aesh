@@ -782,14 +782,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (argument.isTypeAssignableByResourcesOrFile())
                 sb.append(" <file>");
             else
-                sb.append(" <").append(argument.getFieldName()).append(">");
+                sb.append(" <").append(argument.getDisplayLabel()).append(">");
         }
 
         if (arguments != null) {
             if (arguments.isTypeAssignableByResourcesOrFile())
                 sb.append(" [<files>]");
             else
-                sb.append(" [<").append(arguments.getFieldName()).append(">]");
+                sb.append(" [<").append(arguments.getDisplayLabel()).append(">]");
         }
         sb.append(Config.getLineSeparator());
         //second line

@@ -61,6 +61,7 @@ public class ProcessedOptionBuilder {
     private OptionType optionType;
     private Converter converter;
     private String fieldName;
+    private String paramLabel;
     private OptionCompleter completer;
     private List<String> defaultValues;
     private OptionValidator validator;
@@ -143,6 +144,11 @@ public class ProcessedOptionBuilder {
 
     public ProcessedOptionBuilder fieldName(String fieldName) {
         this.fieldName = fieldName;
+        return this;
+    }
+
+    public ProcessedOptionBuilder paramLabel(String paramLabel) {
+        this.paramLabel = paramLabel;
         return this;
     }
 
@@ -500,6 +506,8 @@ public class ProcessedOptionBuilder {
             option.setAllowedValues(allowedValues);
         if (visibility != org.aesh.command.option.OptionVisibility.BRIEF)
             option.setVisibility(visibility);
+        if (paramLabel != null && !paramLabel.isEmpty())
+            option.setParamLabel(paramLabel);
         return option;
     }
 }

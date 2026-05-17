@@ -55,6 +55,13 @@ public @interface Arguments {
     String description() default "";
 
     /**
+     * A label used in the help synopsis to describe these arguments.
+     * If not set, the field name is used.
+     * Example: paramLabel = "files" shows {@code [<files>]} in help.
+     */
+    String paramLabel() default "";
+
+    /**
      * Option type, default is String.class
      */
     Class<?> type() default String.class;
