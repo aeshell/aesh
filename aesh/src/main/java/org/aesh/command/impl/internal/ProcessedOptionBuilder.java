@@ -464,14 +464,16 @@ public class ProcessedOptionBuilder {
             throw new OptionParserException("Option '" + name + "' is marked as optionalValue but does not accept values");
         }
 
+        // Auto-populate allowedValues for enum types when not explicitly set.
+        // This enables both validation (in doConvert) and completion consistency.
+        if (allowedValues.isEmpty() && type != null && type.isEnum()) {
+            allowedValues = new java.util.ArrayList<>();
+            for (Object constant : type.getEnumConstants())
+                allowedValues.add(((Enum<?>) constant).name().toLowerCase());
+        }
+
         if (completer == null && !allowedValues.isEmpty())
             completer = new DefaultValueOptionCompleter(allowedValues);
-        else if (completer == null && type != null && type.isEnum()) {
-            java.util.List<String> enumValues = new java.util.ArrayList<>();
-            for (Object constant : type.getEnumConstants())
-                enumValues.add(((Enum<?>) constant).name().toLowerCase());
-            completer = new DefaultValueOptionCompleter(enumValues);
-        }
 
         ProcessedOption option = new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType,

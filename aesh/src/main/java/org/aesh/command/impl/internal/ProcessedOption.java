@@ -845,7 +845,8 @@ public final class ProcessedOption {
     @SuppressWarnings("unchecked")
     public Object doConvert(String inputValue, InvocationProviders invocationProviders,
             Object command, AeshContext aeshContext, boolean doValidation) throws OptionValidatorException {
-        if (doValidation && hasAllowedValues() && !allowedValues.contains(inputValue)) {
+        if (doValidation && hasAllowedValues()
+                && !allowedValues.contains(inputValue) && !allowedValues.contains(inputValue.toLowerCase())) {
             throw new OptionValidatorException("Invalid value '" + inputValue
                     + "' for option '" + getDisplayName()
                     + "'. Allowed values: " + String.join(", ", allowedValues));

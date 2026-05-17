@@ -21,7 +21,9 @@ package org.aesh.command.completer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 
@@ -33,6 +35,7 @@ import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ParsedCommand;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.invocation.CommandInvocation;
@@ -841,6 +844,53 @@ public class CompletionParserTest {
     public class EnumCompleteTest<CI extends CommandInvocation> extends TestCommand<CI> {
         @Option(name = "color")
         private Color color;
+    }
+
+    @Test
+    public void testEnumAllowedValuesAutoPopulated() throws Exception {
+        // Enum types should auto-populate allowedValues for validation consistency
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new EnumCompleteTest<>()).getParser();
+
+        ProcessedOption colorOption = clp.getProcessedCommand().findLongOptionNoActivatorCheck("color");
+        assertNotNull(colorOption);
+        assertTrue("Enum option should have allowedValues auto-populated", colorOption.hasAllowedValues());
+        List<String> allowed = colorOption.getAllowedValues();
+        assertEquals(3, allowed.size());
+        assertTrue(allowed.contains("red"));
+        assertTrue(allowed.contains("green"));
+        assertTrue(allowed.contains("blue"));
+    }
+
+    @Test
+    public void testEnumValidationRejectsInvalidValue() throws Exception {
+        // Invalid enum value should be rejected with OptionValidatorException via allowedValues check,
+        // not just IllegalArgumentException from the converter
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new EnumCompleteTest<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshContext ctx = SettingsBuilder.builder().build().aeshContext();
+
+        try {
+            clp.populateObject("test --color invalid", ip, ctx, CommandLineParser.Mode.VALIDATE);
+            fail("Should reject invalid enum value");
+        } catch (org.aesh.command.validator.OptionValidatorException e) {
+            assertTrue("Error should mention invalid value", e.getMessage().contains("invalid"));
+            assertTrue("Error should list allowed values", e.getMessage().contains("red"));
+        }
+    }
+
+    @Test
+    public void testEnumValidationAcceptsValidValue() throws Exception {
+        // Valid enum values (case-insensitive) should be accepted
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new EnumCompleteTest<>()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+        AeshContext ctx = SettingsBuilder.builder().build().aeshContext();
+
+        clp.populateObject("test --color red", ip, ctx, CommandLineParser.Mode.VALIDATE);
+        EnumCompleteTest<?> cmd = (EnumCompleteTest<?>) clp.getCommand();
+        assertEquals(Color.RED, cmd.color);
     }
 
     // --- Sub-command mode completion tests ---
