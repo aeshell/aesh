@@ -215,9 +215,12 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
                 "_complete_" + programName + "() {" + NL +
                 "    local cur=\"${COMP_WORDS[COMP_CWORD]}\"" + NL +
                 "    local IFS=$'\\n'" + NL +
-                "    COMPREPLY=( $(compgen -W \"$(" + NL +
-                "        " + programName + " --aesh-complete -- \"${COMP_WORDS[@]:1}\"" + NL +
-                "    )\" -- \"$cur\") )" + NL +
+                "    # Get completions (strip descriptions after tab for compgen)" + NL +
+                "    local candidates" + NL +
+                "    candidates=$(" + programName + " --aesh-complete -- \"${COMP_WORDS[@]:1}\")" + NL +
+                "    local values" + NL +
+                "    values=$(echo \"$candidates\" | cut -f1)" + NL +
+                "    COMPREPLY=( $(compgen -W \"$values\" -- \"$cur\") )" + NL +
                 "}" + NL +
                 "complete -o default -F _complete_" + programName + " " + programName + NL;
     }

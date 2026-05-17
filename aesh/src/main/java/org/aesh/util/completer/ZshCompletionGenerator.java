@@ -229,11 +229,19 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
                 "# Place this file in a directory listed in $fpath (e.g., ~/.zsh/completions/)" + NL +
                 NL +
                 "_" + programName + "() {" + NL +
-                "    local -a completions" + NL +
-                "    completions=(\"${(@f)$(" + NL +
-                "        " + programName + " --aesh-complete -- \"${words[@]:1}\"" + NL +
-                "    )}\")" + NL +
-                "    compadd -a completions" + NL +
+                "    local -a completions descriptions" + NL +
+                "    local line" + NL +
+                "    while IFS=$'\\t' read -r val desc; do" + NL +
+                "        completions+=(\"$val\")" + NL +
+                "        if [[ -n \"$desc\" ]]; then" + NL +
+                "            descriptions+=(\"$val:$desc\")" + NL +
+                "        fi" + NL +
+                "    done < <(" + programName + " --aesh-complete -- \"${words[@]:1}\")" + NL +
+                "    if (( ${#descriptions} > 0 )); then" + NL +
+                "        _describe '' descriptions" + NL +
+                "    else" + NL +
+                "        compadd -a completions" + NL +
+                "    fi" + NL +
                 "}" + NL +
                 NL +
                 "_" + programName + " \"$@\"" + NL;

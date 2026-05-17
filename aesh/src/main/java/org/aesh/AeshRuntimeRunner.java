@@ -192,14 +192,58 @@ public class AeshRuntimeRunner {
             AeshCompleteOperation completeOperation = new AeshCompleteOperation(buffer, buffer.length());
             rt.complete(completeOperation);
 
+            // Build a map of subcommand/option names to descriptions for richer output
+            java.util.Map<String, String> descriptions = buildCompletionDescriptions(commandRegistry, commandName);
+
             for (org.aesh.terminal.formatting.TerminalString candidate : completeOperation.getCompletionCandidates()) {
-                System.out.println(candidate.getCharacters());
+                String value = candidate.getCharacters();
+                String desc = descriptions.get(value.trim());
+                if (desc != null && !desc.isEmpty()) {
+                    System.out.println(value + "\t" + desc);
+                } else {
+                    System.out.println(value);
+                }
             }
             return CommandResult.SUCCESS;
         } catch (Exception e) {
             System.err.println("Completion error: " + e.getMessage());
             return CommandResult.FAILURE;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private java.util.Map<String, String> buildCompletionDescriptions(CommandRegistry commandRegistry,
+            String commandName) {
+        java.util.Map<String, String> descriptions = new java.util.HashMap<>();
+        try {
+            // Add subcommand descriptions
+            java.util.List<CommandLineParser<CommandInvocation>> children = commandRegistry
+                    .getChildCommandParsers(commandName);
+            if (children != null) {
+                for (CommandLineParser<CommandInvocation> child : children) {
+                    String name = child.getProcessedCommand().name();
+                    String desc = child.getProcessedCommand().description();
+                    if (desc != null && !desc.isEmpty()) {
+                        descriptions.put(name, desc);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // Not a group command or no children -- that's fine
+        }
+        try {
+            // Add option descriptions from the main command
+            CommandContainer<CommandInvocation> container = commandRegistry.getCommand(commandName, "");
+            CommandLineParser<CommandInvocation> parser = container.getParser();
+            for (org.aesh.command.impl.internal.ProcessedOption opt : parser.getProcessedCommand().getOptions()) {
+                String optName = "--" + opt.name();
+                if (opt.description() != null && !opt.description().isEmpty()) {
+                    descriptions.put(optName, opt.description());
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return descriptions;
     }
 
     public static boolean handleDynamicCompletion(String[] args, Class<? extends Command> commandClass) {

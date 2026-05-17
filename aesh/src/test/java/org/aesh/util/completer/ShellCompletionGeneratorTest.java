@@ -250,6 +250,8 @@ public class ShellCompletionGeneratorTest {
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
         assertTrue("Should pass COMP_WORDS", out.contains("${COMP_WORDS[@]:1}"));
         assertTrue(out.contains("complete -o default -F _complete_mycli mycli"));
+        // Should strip tab-separated descriptions for compgen compatibility
+        assertTrue("Should strip descriptions with cut", out.contains("cut -f1"));
     }
 
     @Test
@@ -260,7 +262,9 @@ public class ShellCompletionGeneratorTest {
         assertTrue(out.contains("_mycli()"));
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
         assertTrue("Should use words array", out.contains("${words[@]:1}"));
-        assertTrue(out.contains("compadd"));
+        // Should support descriptions via _describe
+        assertTrue("Should support descriptions", out.contains("_describe"));
+        assertTrue("Should fall back to compadd", out.contains("compadd"));
     }
 
     @Test
@@ -270,6 +274,9 @@ public class ShellCompletionGeneratorTest {
         assertTrue(out.contains("complete -c mycli"));
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
         assertTrue("Should use commandline", out.contains("commandline -cop"));
+        // Should handle trailing space for subcommand context
+        assertTrue("Should detect trailing space", out.contains("string match"));
+        assertTrue("Should append empty token for trailing space", out.contains("set tokens $tokens ''"));
     }
 
     @Test
