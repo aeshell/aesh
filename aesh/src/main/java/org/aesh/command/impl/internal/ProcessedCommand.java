@@ -1070,6 +1070,31 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return getPositionalForIndex(getPositionalValueCount());
     }
 
+    public String positionalRangeSummary() {
+        List<ProcessedOption> positional = getPositionalOptionsInDisplayOrder();
+        if (positional.isEmpty())
+            return "none";
+        StringBuilder sb = new StringBuilder();
+        for (ProcessedOption opt : positional) {
+            if (sb.length() > 0)
+                sb.append(", ");
+            sb.append(opt.getDisplayLabel()).append("=");
+            if (opt.hasIndexRange()) {
+                int min = opt.getIndexRange().getMin();
+                int max = opt.getIndexRange().getMax();
+                if (min == max)
+                    sb.append(min);
+                else if (max == Integer.MAX_VALUE)
+                    sb.append(min).append("..*");
+                else
+                    sb.append(min).append("..").append(max);
+            } else {
+                sb.append(opt.getOptionType() == OptionType.ARGUMENT ? "0" : "1..*");
+            }
+        }
+        return sb.toString();
+    }
+
     public List<ProcessedOption> getPositionalOptionsInDisplayOrder() {
         if (argumentOptions.isEmpty() && arguments == null)
             return Collections.emptyList();

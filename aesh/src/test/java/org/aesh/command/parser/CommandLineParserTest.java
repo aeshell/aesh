@@ -1923,7 +1923,9 @@ public class CommandLineParserTest {
                     CommandLineParser.Mode.VALIDATE);
             fail("Expected missing positional index to be rejected");
         } catch (OptionParserException e) {
-            assertTrue(e.getMessage().contains("do not support"));
+            assertTrue(e.getMessage().contains("Unexpected positional value"));
+            assertTrue(e.getMessage().contains("index 1"));
+            assertTrue(e.getMessage().contains("Declared positional indexes"));
         }
     }
 
