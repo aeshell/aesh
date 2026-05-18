@@ -1200,6 +1200,12 @@ public class ProcessorTest {
             assertEquals("Argument fieldName", rArg.getFieldName(), gArg.getFieldName());
             assertEquals("Argument optionType", rArg.getOptionType(), gArg.getOptionType());
             assertEquals("Argument required", rArg.isRequired(), gArg.isRequired());
+            assertEquals("Argument indexRange",
+                    rArg.getIndexRange() != null ? rArg.getIndexRange().getMin() : -1,
+                    gArg.getIndexRange() != null ? gArg.getIndexRange().getMin() : -1);
+            assertEquals("Argument indexRange max",
+                    rArg.getIndexRange() != null ? rArg.getIndexRange().getMax() : -1,
+                    gArg.getIndexRange() != null ? gArg.getIndexRange().getMax() : -1);
         }
 
         // Compare arguments (plural)
@@ -1211,6 +1217,12 @@ public class ProcessorTest {
             assertEquals("Arguments type", rArgs.type(), gArgs.type());
             assertEquals("Arguments fieldName", rArgs.getFieldName(), gArgs.getFieldName());
             assertEquals("Arguments optionType", rArgs.getOptionType(), gArgs.getOptionType());
+            assertEquals("Arguments indexRange",
+                    rArgs.getIndexRange() != null ? rArgs.getIndexRange().getMin() : -1,
+                    gArgs.getIndexRange() != null ? gArgs.getIndexRange().getMin() : -1);
+            assertEquals("Arguments indexRange max",
+                    rArgs.getIndexRange() != null ? rArgs.getIndexRange().getMax() : -1,
+                    gArgs.getIndexRange() != null ? gArgs.getIndexRange().getMax() : -1);
         }
     }
 

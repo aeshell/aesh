@@ -137,6 +137,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .create();
 
             processCommand(processedCommand, clazz);
+            validatePositionalIndexes(processedCommand);
             if (command.helpGroup().length() > 0)
                 processedCommand.setHelpGroup(command.helpGroup());
             if (command.helpSectionProvider() != NullHelpSectionProvider.class)
@@ -164,6 +165,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .create();
 
             processCommand(processedGroupCommand, clazz);
+            validatePositionalIndexes(processedGroupCommand);
             if (groupCommand.helpGroup().length() > 0)
                 processedGroupCommand.setHelpGroup(groupCommand.helpGroup());
             if (groupCommand.helpSectionProvider() != NullHelpSectionProvider.class)
@@ -211,6 +213,30 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
         if (clazz.getSuperclass() != null)
             processCommand(processedCommand, clazz.getSuperclass());
+    }
+
+    private static void validatePositionalIndexes(ProcessedCommand processedCommand) throws CommandLineParserException {
+        org.aesh.command.impl.internal.ProcessedOption argument = processedCommand.getArgument();
+        org.aesh.command.impl.internal.ProcessedOption arguments = processedCommand.getArguments();
+        if (argument == null || arguments == null || !argument.hasIndexRange() || !arguments.hasIndexRange())
+            return;
+
+        if (argument.getIndexRange().overlaps(arguments.getIndexRange())) {
+            throw new CommandLineParserException(
+                    "@Argument and @Arguments index ranges overlap: "
+                            + rangeText(argument) + " and " + rangeText(arguments)
+                            + ". Adjust index values to use distinct positional slots.");
+        }
+    }
+
+    private static String rangeText(org.aesh.command.impl.internal.ProcessedOption option) {
+        int min = option.getIndexRange().getMin();
+        int max = option.getIndexRange().getMax();
+        if (min == max)
+            return String.valueOf(min);
+        if (max == Integer.MAX_VALUE)
+            return min + "..*";
+        return min + ".." + max;
     }
 
     private static void processField(ProcessedCommand processedCommand, Field field) throws CommandLineParserException {
@@ -353,6 +379,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .fieldName(field.getName())
                     .paramLabel(a.paramLabel())
                     .arity(a.arity())
+                    .index(a.index())
                     .optionType(OptionType.ARGUMENTS)
                     .converter(a.converter())
                     .completer(a.completer())
@@ -382,6 +409,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .fieldName(field.getName())
                             .paramLabel(arg.paramLabel())
                             .arity(arg.arity())
+                            .index(arg.index())
                             .optionType(optionType)
                             .converter(arg.converter())
                             .completer(arg.completer())

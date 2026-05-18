@@ -572,15 +572,14 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     private void setArgStatus(String word) {
-        if (processedCommand.hasArgumentWithNoValue()) {
-            processedCommand.getArgument().addValue(word);
-        } else if (processedCommand.hasArguments()) {
-            if (processedCommand.getArguments().isArityFull()) {
+        ProcessedOption positional = processedCommand.getPositionalForNextValue();
+        if (positional != null) {
+            if (positional.isArityFull()) {
                 processedCommand.addParserException(
                         new OptionParserException(
-                                "Too many arguments. Maximum is " + processedCommand.getArguments().getArity().getMax() + "."));
+                                "Too many arguments. Maximum is " + positional.getArity().getMax() + "."));
             } else {
-                processedCommand.getArguments().addValue(word);
+                positional.addValue(word);
             }
         } else {
             processedCommand.addParserException(
@@ -688,9 +687,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                 else if (processedCommand.stopAtFirstPositional())
                                     argumentMarker = true;
                             } else if (iter.isNextWordCursorWord()) {
-                                if (processedCommand.getArguments() != null ||
-                                        (processedCommand.getArgument() != null
-                                                && processedCommand.getArgument().getValue() == null)) {
+                                if (processedCommand.getPositionalForNextValue() != null) {
                                     processedCommand
                                             .setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
                                 } else {
@@ -724,12 +721,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     private void setCompletionArgStatus(String word) {
-        //add the value to argument/arguments
-        if (processedCommand.hasArgumentWithNoValue()) {
-            processedCommand.getArgument().addValue(word);
-            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
-        } else if (processedCommand.hasArguments()) {
-            processedCommand.getArguments().addValue(word);
+        ProcessedOption positional = processedCommand.getPositionalForNextValue();
+        if (positional != null) {
+            positional.addValue(word);
             processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
         } else if (processedCommand.hasArgument()) {
             //singular argument already filled and no @Arguments to overflow into

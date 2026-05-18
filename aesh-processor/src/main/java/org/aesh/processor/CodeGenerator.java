@@ -575,6 +575,7 @@ final class CodeGenerator {
             sb.append("                        .paramLabel(").append(stringLiteral(a.paramLabel())).append(")\n");
         if (!a.arity().isEmpty())
             sb.append("                        .arity(").append(stringLiteral(a.arity())).append(")\n");
+        sb.append("                        .index(").append(stringLiteral(a.index())).append(")\n");
         sb.append("                        .optionType(OptionType.ARGUMENTS)\n");
         generateOptionConverter(sb, field, "converter", elementUtils);
         generateOptionCompleter(sb, field, "completer", false, false, elementUtils);
@@ -612,6 +613,7 @@ final class CodeGenerator {
             sb.append("                        .paramLabel(").append(stringLiteral(arg.paramLabel())).append(")\n");
         if (!arg.arity().isEmpty())
             sb.append("                        .arity(").append(stringLiteral(arg.arity())).append(")\n");
+        sb.append("                        .index(").append(stringLiteral(arg.index())).append(")\n");
         sb.append("                        .optionType(OptionType.ARGUMENT)\n");
         generateOptionConverter(sb, field, "converter", elementUtils);
         generateOptionCompleter(sb, field, "completer", false, isFileOrResourceType(field.asType(), typeUtils), elementUtils);

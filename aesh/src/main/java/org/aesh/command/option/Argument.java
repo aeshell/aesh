@@ -86,6 +86,12 @@ public @interface Argument {
     String arity() default "";
 
     /**
+     * Positional index for this argument.
+     * Supports either a single index (e.g. "0") or a range (e.g. "0..0").
+     */
+    String index() default "0";
+
+    /**
      * Specify if this option is required
      */
     boolean required() default false;

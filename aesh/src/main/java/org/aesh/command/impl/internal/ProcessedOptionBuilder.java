@@ -63,6 +63,7 @@ public class ProcessedOptionBuilder {
     private String fieldName;
     private String paramLabel;
     private String arity;
+    private String index;
     private OptionCompleter completer;
     private List<String> defaultValues;
     private OptionValidator validator;
@@ -155,6 +156,11 @@ public class ProcessedOptionBuilder {
 
     public ProcessedOptionBuilder arity(String arity) {
         this.arity = arity;
+        return this;
+    }
+
+    public ProcessedOptionBuilder index(String index) {
+        this.index = index;
         return this;
     }
 
@@ -516,6 +522,8 @@ public class ProcessedOptionBuilder {
             option.setParamLabel(paramLabel);
         if (arity != null && !arity.isEmpty())
             option.setArity(org.aesh.command.option.Arity.parse(arity));
+        if (index != null && !index.isEmpty())
+            option.setIndex(index);
         return option;
     }
 }

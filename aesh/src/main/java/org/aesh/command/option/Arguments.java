@@ -84,6 +84,13 @@ public @interface Arguments {
     String arity() default "";
 
     /**
+     * Positional index range for these arguments.
+     * Supports a single index (e.g. "1"), a bounded range (e.g. "1..3"),
+     * or an open-ended range (e.g. "1..*").
+     */
+    String index() default "1..*";
+
+    /**
      * Option type, default is String.class
      */
     Class<?> type() default String.class;

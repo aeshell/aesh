@@ -74,6 +74,7 @@ public final class ProcessedOption {
     private String fieldName;
     private String paramLabel;
     private org.aesh.command.option.Arity arity;
+    private org.aesh.command.option.IndexRange indexRange;
     private OptionCompleter completer;
     private Map<String, String> properties;
     private boolean longNameUsed = true;
@@ -590,6 +591,19 @@ public final class ProcessedOption {
 
     public org.aesh.command.option.Arity getArity() {
         return arity;
+    }
+
+    public void setIndex(String index) {
+        if (index != null && !index.isEmpty())
+            this.indexRange = org.aesh.command.option.IndexRange.parse(index);
+    }
+
+    public org.aesh.command.option.IndexRange getIndexRange() {
+        return indexRange;
+    }
+
+    public boolean hasIndexRange() {
+        return indexRange != null;
     }
 
     /**

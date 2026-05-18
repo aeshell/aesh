@@ -1859,6 +1859,45 @@ public class CommandLineParserTest {
         assertTrue("Path argument should show as <file> in help", help.contains("<file>"));
     }
 
+    @Test
+    public void testIndexedPositionalsRouteByIndex() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new IndexedPositionalsCommand<>()).getParser();
+
+        parser.populateObject("idxpos first second", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        IndexedPositionalsCommand<CommandInvocation> cmd = (IndexedPositionalsCommand<CommandInvocation>) parser.getCommand();
+
+        assertNotNull(cmd.first);
+        assertEquals(1, cmd.first.size());
+        assertEquals("first", cmd.first.get(0));
+        assertEquals("second", cmd.second);
+    }
+
+    @Test
+    public void testIndexedPositionalsOverlapRejected() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<>().create(new IndexedPositionalsOverlapCommand<>());
+            fail("Expected overlap validation to fail");
+        } catch (CommandLineParserException e) {
+            assertTrue(e.getMessage().contains("overlap"));
+        }
+    }
+
+    @Test
+    public void testIndexedPositionalsSynopsisOrderByIndex() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new IndexedPositionalsCommand<>()).getParser();
+
+        String help = parser.printHelp();
+        int firstPos = help.indexOf("[<first>]");
+        int secondPos = help.indexOf("<second>");
+        assertTrue("Synopsis should include first positional", firstPos >= 0);
+        assertTrue("Synopsis should include second positional", secondPos >= 0);
+        assertTrue("Synopsis should order positionals by index", firstPos < secondPos);
+    }
+
     @CommandDefinition(name = "pathcmd", description = "test Path support")
     public class PathCommand<CI extends CommandInvocation> implements Command<CI> {
         @Option(description = "config file")
@@ -1866,6 +1905,34 @@ public class CommandLineParserTest {
 
         @Argument(description = "input file")
         private java.nio.file.Path input;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "idxpos", description = "test positional index routing")
+    public class IndexedPositionalsCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Arguments(index = "0..0", description = "first positional")
+        private List<String> first;
+
+        @Argument(index = "1", description = "second positional")
+        private String second;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "idxoverlap", description = "test positional overlap validation")
+    public class IndexedPositionalsOverlapCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Argument(index = "0..1", description = "overlapping argument")
+        private String first;
+
+        @Arguments(index = "1..*", description = "overlapping arguments")
+        private List<String> rest;
 
         @Override
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {

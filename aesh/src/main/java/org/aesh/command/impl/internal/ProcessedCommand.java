@@ -778,12 +778,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (visibleOpts.size() > 0)
             sb.append(" [<options>]");
 
-        if (argument != null) {
-            sb.append(formatArgumentSynopsis(argument));
-        }
-
-        if (arguments != null) {
-            sb.append(formatArgumentSynopsis(arguments));
+        List<ProcessedOption> positionalOptions = getPositionalOptionsInDisplayOrder();
+        for (ProcessedOption positional : positionalOptions) {
+            sb.append(formatArgumentSynopsis(positional));
         }
         sb.append(Config.getLineSeparator());
         //second line
@@ -815,14 +812,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                             .append(Config.getLineSeparator());
             }
         }
-        if (arguments != null) {
-            sb.append(Config.getLineSeparator()).append("Arguments:").append(Config.getLineSeparator());
-            sb.append(arguments.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+        for (ProcessedOption positional : positionalOptions) {
+            sb.append(Config.getLineSeparator())
+                    .append(positional.getOptionType() == OptionType.ARGUMENTS ? "Arguments:" : "Argument:")
                     .append(Config.getLineSeparator());
-        }
-        if (argument != null) {
-            sb.append(Config.getLineSeparator()).append("Argument:").append(Config.getLineSeparator());
-            sb.append(argument.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+            sb.append(positional.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
                     .append(Config.getLineSeparator());
         }
         // Append documentation link if helpUrl is set
@@ -1012,6 +1006,64 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean hasArgumentWithNoValue() {
         return argument != null && argument.getValue() == null;
+    }
+
+    public int getPositionalValueCount() {
+        int count = 0;
+        if (argument != null)
+            count += argument.getValues().size();
+        if (arguments != null)
+            count += arguments.getValues().size();
+        return count;
+    }
+
+    public ProcessedOption getPositionalForIndex(int index) {
+        ProcessedOption argMatch = null;
+        ProcessedOption argsMatch = null;
+
+        if (argument != null && argument.hasIndexRange() && argument.getIndexRange().contains(index))
+            argMatch = argument;
+        if (arguments != null && arguments.hasIndexRange() && arguments.getIndexRange().contains(index))
+            argsMatch = arguments;
+
+        if (argMatch != null && !argMatch.isArityFull())
+            return argMatch;
+        if (argsMatch != null && !argsMatch.isArityFull())
+            return argsMatch;
+        if (argMatch != null)
+            return argMatch;
+        if (argsMatch != null)
+            return argsMatch;
+
+        if (hasArgumentWithNoValue())
+            return argument;
+        if (hasArguments())
+            return arguments;
+        return null;
+    }
+
+    public ProcessedOption getPositionalForNextValue() {
+        return getPositionalForIndex(getPositionalValueCount());
+    }
+
+    public List<ProcessedOption> getPositionalOptionsInDisplayOrder() {
+        if (argument == null && arguments == null)
+            return Collections.emptyList();
+
+        List<ProcessedOption> positional = new ArrayList<>(2);
+        if (argument != null)
+            positional.add(argument);
+        if (arguments != null)
+            positional.add(arguments);
+
+        positional.sort((left, right) -> {
+            int leftMin = left.hasIndexRange() ? left.getIndexRange().getMin()
+                    : (left.getOptionType() == OptionType.ARGUMENT ? 0 : 1);
+            int rightMin = right.hasIndexRange() ? right.getIndexRange().getMin()
+                    : (right.getOptionType() == OptionType.ARGUMENT ? 0 : 1);
+            return Integer.compare(leftMin, rightMin);
+        });
+        return positional;
     }
 
     public boolean hasArgumentsWithNoValue() {
