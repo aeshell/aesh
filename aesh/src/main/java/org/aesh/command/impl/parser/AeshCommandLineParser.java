@@ -302,7 +302,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
         // Header from HelpSectionProvider — shown before synopsis
         if (provider != null && provider.getHeader() != null) {
-            sb.append(provider.getHeader()).append(Config.getLineSeparator());
+            sb.append(resolveDescriptionVariables(provider.getHeader(), null)).append(Config.getLineSeparator());
         }
 
         if (hasChildren || hasAdditional) {
@@ -369,7 +369,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
         // Footer from HelpSectionProvider — shown after everything
         if (provider != null && provider.getFooter() != null) {
-            sb.append(Config.getLineSeparator()).append(provider.getFooter()).append(Config.getLineSeparator());
+            sb.append(Config.getLineSeparator())
+                    .append(resolveDescriptionVariables(provider.getFooter(), null))
+                    .append(Config.getLineSeparator());
         }
 
         return sb.toString();

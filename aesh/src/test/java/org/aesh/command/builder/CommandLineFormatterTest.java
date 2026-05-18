@@ -842,6 +842,39 @@ public class CommandLineFormatterTest {
     }
 
     @Test
+    public void testHelpSectionProviderHeaderFooterInterpolation() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> root = ProcessedCommandBuilder.builder()
+                .name("jbang").description("JBang tool");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> completion = ProcessedCommandBuilder.builder()
+                .name("completion").description("Generate completion");
+
+        CommandLineParser<CommandInvocation> rootParser = new AeshCommandLineParser<>(root.create());
+        CommandLineParser<CommandInvocation> childParser = new AeshCommandLineParser<>(completion.create());
+        rootParser.addChildParser(childParser);
+
+        childParser.getProcessedCommand().setHelpSectionProvider(new HelpSectionProvider() {
+            @Override
+            public Map<String, List<HelpEntry>> getAdditionalSections() {
+                return Collections.emptyMap();
+            }
+
+            @Override
+            public String getHeader() {
+                return "header ${COMMAND-NAME} ${COMMAND-FULL-NAME} ${ROOT-COMMAND-NAME} ${PARENT-COMMAND-NAME}";
+            }
+
+            @Override
+            public String getFooter() {
+                return "footer ${PARENT-COMMAND-FULL-NAME}";
+            }
+        });
+
+        String help = childParser.printHelp();
+        assertTrue(help.contains("header completion jbang completion jbang jbang"));
+        assertTrue(help.contains("footer jbang"));
+    }
+
+    @Test
     public void testHelpSectionProviderHeaderWithAnnotation() throws CommandLineParserException {
         AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
         CommandLineParser<CommandInvocation> clp = builder.create(AppWithHeaderFooterCommand.class).getParser();
