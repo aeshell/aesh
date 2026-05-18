@@ -402,7 +402,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         else
             ansiBuilder.append(" ");
         if (entry.description() != null)
-            ansiBuilder.append(entry.description());
+            ansiBuilder.append(resolveDescriptionVariables(entry.description(), null));
         return ansiBuilder.toString();
     }
 
@@ -885,7 +885,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         else
             ansiBuilder.append(" ");
 
-        ansiBuilder.append(getProcessedCommand().description());
+        ansiBuilder.append(resolveDescriptionVariables(getProcessedCommand().description(), null));
 
         return ansiBuilder.toString();
     }
@@ -902,6 +902,37 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             p = p.parent;
         }
         return null;
+    }
+
+    private String resolveDescriptionVariables(String rawDescription, ProcessedOption option) {
+        String fullName = helpNames();
+        String parentFullName = null;
+        String parentName = null;
+        if (isChild() && parent != null) {
+            parentFullName = parent.helpNames();
+            parentName = parent.getProcessedCommand().name();
+        }
+        if (option == null) {
+            return getProcessedCommand().resolveCommandDescription(rawDescription,
+                    getProcessedCommand().name(),
+                    fullName,
+                    getRootProcessedCommand().name(),
+                    parentName,
+                    parentFullName);
+        }
+        return getProcessedCommand().resolveOptionDescription(option,
+                getProcessedCommand().name(),
+                fullName,
+                getRootProcessedCommand().name(),
+                parentName,
+                parentFullName);
+    }
+
+    private ProcessedCommand<Command<CI>, CI> getRootProcessedCommand() {
+        AeshCommandLineParser<CI> root = this;
+        while (root.parent != null)
+            root = root.parent;
+        return root.getProcessedCommand();
     }
 
     /**

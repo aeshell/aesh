@@ -850,6 +850,11 @@ public final class ProcessedOption {
     }
 
     public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks) {
+        return getFormattedOption(offset, descriptionStart, width, supportsHyperlinks, description);
+    }
+
+    public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks,
+            String resolvedDescription) {
         StringBuilder sb = new StringBuilder();
         if (required && ansiMode)
             sb.append(ANSI.BOLD);
@@ -874,7 +879,7 @@ public final class ProcessedOption {
         }
         if (required && ansiMode)
             sb.append(ANSI.BOLD_OFF);
-        if (description != null && description.length() > 0) {
+        if (resolvedDescription != null && resolvedDescription.length() > 0) {
             //int descOffset = descriptionStart - sb.length();
             int descOffset = descriptionStart - getFormattedLength() - offset;
             if (descOffset > 0)
@@ -883,9 +888,9 @@ public final class ProcessedOption {
                 sb.append(" ");
 
             if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
-                sb.append(ANSI.hyperlink(descriptionUrl, description));
+                sb.append(ANSI.hyperlink(descriptionUrl, resolvedDescription));
             } else {
-                sb.append(description);
+                sb.append(resolvedDescription);
             }
         }
 

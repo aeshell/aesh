@@ -852,6 +852,57 @@ public class CommandLineFormatterTest {
         assertTrue("Footer from annotation provider should appear", help.contains("License: Apache 2.0"));
     }
 
+    @Test
+    public void testDescriptionVariableInterpolationInHelp() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> root = ProcessedCommandBuilder.builder()
+                .name("root").description("Root cmd");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> child = ProcessedCommandBuilder.builder()
+                .name("child")
+                .description("cmd=${COMMAND-NAME}, full=${COMMAND-FULL-NAME}, root=${ROOT-COMMAND-NAME}, "
+                        + "parent=${PARENT-COMMAND-NAME}, parentfull=${PARENT-COMMAND-FULL-NAME}, unknown=${UNKNOWN}");
+        child.addOption(ProcessedOptionBuilder.builder()
+                .name("mode")
+                .type(String.class)
+                .description("default=${DEFAULT-VALUE}; fallback=${FALLBACK-VALUE}; choices=${COMPLETION-CANDIDATES}")
+                .addDefaultValue("fast")
+                .addAllAllowedValues(new String[] { "fast", "safe" })
+                .build());
+        child.argument(ProcessedOptionBuilder.builder()
+                .shortName('\u0000')
+                .name("")
+                .type(String.class)
+                .optionType(org.aesh.command.impl.internal.OptionType.ARGUMENT)
+                .description("arg for ${COMMAND-NAME} under ${PARENT-COMMAND-NAME}")
+                .build());
+
+        CommandLineParser<CommandInvocation> rootParser = new AeshCommandLineParser<>(root.create());
+        CommandLineParser<CommandInvocation> childParser = new AeshCommandLineParser<>(child.create());
+        rootParser.addChildParser(childParser);
+
+        String help = childParser.printHelp();
+
+        assertTrue(help.contains("cmd=child, full=root child, root=root, parent=root, parentfull=root"));
+        assertTrue(help.contains("unknown=${UNKNOWN}"));
+        assertTrue(help.contains("default=fast; fallback=fast; choices=fast, safe"));
+        assertTrue(help.contains("arg for child under root"));
+    }
+
+    @Test
+    public void testDescriptionVariableInterpolationInParentCommandListing() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> root = ProcessedCommandBuilder.builder()
+                .name("tool").description("Tool root");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> child = ProcessedCommandBuilder.builder()
+                .name("gen")
+                .description("Generate for ${ROOT-COMMAND-NAME} via ${COMMAND-FULL-NAME}");
+
+        CommandLineParser<CommandInvocation> rootParser = new AeshCommandLineParser<>(root.create());
+        CommandLineParser<CommandInvocation> childParser = new AeshCommandLineParser<>(child.create());
+        rootParser.addChildParser(childParser);
+
+        String help = rootParser.printHelp();
+        assertTrue(help.contains("Generate for tool via tool gen"));
+    }
+
     public static class HeaderFooterProvider implements HelpSectionProvider {
         @Override
         public Map<String, List<HelpEntry>> getAdditionalSections() {

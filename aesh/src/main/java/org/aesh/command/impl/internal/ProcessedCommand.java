@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
@@ -48,6 +50,8 @@ import org.aesh.terminal.utils.Parser;
  * @author Aesh team
  */
 public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocation> {
+
+    private static final Pattern DESCRIPTION_VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
 
     private final String name;
     private final String description;
@@ -774,6 +778,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll) {
         int maxLength = 0;
         int width = 80;
+        DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
         List<ProcessedOption> opts = getOptions();
         List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
@@ -804,7 +809,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
         sb.append(Config.getLineSeparator());
         //second line
-        sb.append(description()).append(Config.getLineSeparator());
+        sb.append(descriptionResolver.resolveCommandDescription(description())).append(Config.getLineSeparator());
 
         //options and arguments — group by helpGroup
         if (visibleOpts.size() > 0) {
@@ -819,7 +824,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 if (!entry.getKey().isEmpty()) {
                     sb.append(Config.getLineSeparator()).append(entry.getKey()).append(":").append(Config.getLineSeparator());
                     for (ProcessedOption o : entry.getValue())
-                        sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+                        sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
+                                descriptionResolver.resolveOptionDescription(o)))
                                 .append(Config.getLineSeparator());
                 }
             }
@@ -828,7 +834,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (defaultGroup != null && !defaultGroup.isEmpty()) {
                 sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
                 for (ProcessedOption o : defaultGroup)
-                    sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+                    sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
+                            descriptionResolver.resolveOptionDescription(o)))
                             .append(Config.getLineSeparator());
             }
         }
@@ -836,7 +843,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             sb.append(Config.getLineSeparator())
                     .append(positional.getOptionType() == OptionType.ARGUMENTS ? "Arguments:" : "Argument:")
                     .append(Config.getLineSeparator());
-            sb.append(positional.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks))
+            sb.append(positional.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
+                    descriptionResolver.resolveOptionDescription(positional)))
                     .append(Config.getLineSeparator());
         }
         // Append documentation link if helpUrl is set
@@ -1119,6 +1127,121 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             return Integer.compare(leftMin, rightMin);
         });
         return positional;
+    }
+
+    public String resolveCommandDescription(String description, String commandName, String fullCommandName,
+            String rootCommandName, String parentCommandName, String parentCommandFullName) {
+        return new DescriptionResolver(commandName, fullCommandName, rootCommandName, parentCommandName,
+                parentCommandFullName).resolveCommandDescription(description);
+    }
+
+    public String resolveOptionDescription(ProcessedOption option, String commandName, String fullCommandName,
+            String rootCommandName, String parentCommandName, String parentCommandFullName) {
+        return new DescriptionResolver(commandName, fullCommandName, rootCommandName, parentCommandName,
+                parentCommandFullName).resolveOptionDescription(option);
+    }
+
+    private static final class DescriptionResolver {
+        private final String commandName;
+        private final String commandFullName;
+        private final String rootCommandName;
+        private final String parentCommandName;
+        private final String parentCommandFullName;
+
+        private DescriptionResolver(String commandName, String commandFullName, String rootCommandName,
+                String parentCommandName, String parentCommandFullName) {
+            String fullName = commandFullName != null ? commandFullName : commandName;
+            this.commandFullName = fullName;
+            this.commandName = commandName != null ? commandName : lastToken(fullName);
+            this.rootCommandName = rootCommandName != null ? rootCommandName : firstToken(fullName);
+            this.parentCommandFullName = parentCommandFullName != null ? parentCommandFullName : parentPath(fullName);
+            this.parentCommandName = parentCommandName != null ? parentCommandName : lastToken(this.parentCommandFullName);
+        }
+
+        private String resolveCommandDescription(String raw) {
+            return resolve(raw, null);
+        }
+
+        private String resolveOptionDescription(ProcessedOption option) {
+            return resolve(option != null ? option.description() : null, option);
+        }
+
+        private String resolve(String raw, ProcessedOption option) {
+            if (raw == null || raw.isEmpty())
+                return raw;
+
+            Matcher matcher = DESCRIPTION_VARIABLE_PATTERN.matcher(raw);
+            StringBuffer out = new StringBuffer(raw.length());
+            while (matcher.find()) {
+                String key = matcher.group(1);
+                String replacement = resolveVariable(key, option);
+                if (replacement == null)
+                    replacement = matcher.group(0);
+                matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
+            }
+            matcher.appendTail(out);
+            return out.toString();
+        }
+
+        private String resolveVariable(String key, ProcessedOption option) {
+            switch (key) {
+                case "COMMAND-NAME":
+                    return commandName;
+                case "COMMAND-FULL-NAME":
+                    return commandFullName;
+                case "ROOT-COMMAND-NAME":
+                    return rootCommandName;
+                case "PARENT-COMMAND-NAME":
+                    return parentCommandName;
+                case "PARENT-COMMAND-FULL-NAME":
+                    return parentCommandFullName;
+                case "DEFAULT-VALUE":
+                case "FALLBACK-VALUE":
+                    return optionDefaultValue(option);
+                case "COMPLETION-CANDIDATES":
+                    return optionCompletionCandidates(option);
+                default:
+                    return null;
+            }
+        }
+
+        private static String optionDefaultValue(ProcessedOption option) {
+            if (option == null || option.getDefaultValues().isEmpty())
+                return "";
+            return String.join(", ", option.getDefaultValues());
+        }
+
+        private static String optionCompletionCandidates(ProcessedOption option) {
+            if (option == null)
+                return "";
+            List<String> candidates = option.getAllowedValues();
+            if (candidates == null || candidates.isEmpty())
+                return "";
+            return String.join(", ", candidates);
+        }
+
+        private static String firstToken(String value) {
+            if (value == null)
+                return null;
+            int idx = value.indexOf(' ');
+            return idx < 0 ? value : value.substring(0, idx);
+        }
+
+        private static String lastToken(String value) {
+            if (value == null)
+                return null;
+            int idx = value.lastIndexOf(' ');
+            return idx < 0 ? value : value.substring(idx + 1);
+        }
+
+        private static String parentPath(String value) {
+            if (value == null)
+                return null;
+            int idx = value.lastIndexOf(' ');
+            if (idx < 0)
+                return null;
+            return value.substring(0, idx);
+        }
     }
 
     public boolean hasArgumentsWithNoValue() {
