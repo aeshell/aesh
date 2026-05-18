@@ -698,8 +698,12 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                     processedCommand
                                             .setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, word.word()));
                                 } else {
-                                    processedCommand
-                                            .setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
+                                    boolean emptyCursorWord = word.word() == null || word.word().isEmpty();
+                                    processedCommand.setCompleteStatus(new CompleteStatus(
+                                            processedCommand.hasOptions() && emptyCursorWord
+                                                    ? CompleteStatus.Status.COMPLETE_OPTION
+                                                    : CompleteStatus.Status.ARGUMENT_ERROR,
+                                            null));
                                 }
                             } else {
                                 setCompletionArgStatus(word.word());
@@ -732,8 +736,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (positional != null) {
             positional.addValue(word);
             processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT, null));
+        } else if (processedCommand.hasOptions() && (word == null || word.isEmpty())) {
+            processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.COMPLETE_OPTION, null));
         } else if (processedCommand.hasArgument()) {
-            //singular argument already filled and no @Arguments to overflow into
+            // singular argument already filled and no @Arguments to overflow into
             processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.ARGUMENT_ERROR, null));
         }
     }

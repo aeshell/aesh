@@ -212,8 +212,11 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
     private void doProcessArgument(AeshCompleteOperation completeOperation, InvocationProviders invocationProviders,
             ParsedLine line) {
         ProcessedOption arg = parser.getProcessedCommand().getPositionalForNextValue();
-        if (arg == null)
+        if (arg == null) {
+            if (parser.getProcessedCommand().hasOptions())
+                doListOptions(completeOperation, "");
             return;
+        }
         //first check if arg is argument, if so check if it already have a value, if so to an option complete
         if (arg.getOptionType() == OptionType.ARGUMENT &&
                 (arg.getValue() != null || !arg.isActivated(new ParsedCommand(parser.getProcessedCommand())))) {

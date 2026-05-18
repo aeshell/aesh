@@ -1045,16 +1045,23 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         // Backward compatibility: commands that only define @Arguments historically
         // accepted all positional values starting from index 0.
         if (argumentOptions.isEmpty() && arguments != null
-                && arguments.hasIndexRange()
-                && arguments.getIndexRange().getMin() == 1
-                && arguments.getIndexRange().getMax() == Integer.MAX_VALUE
-                && !arguments.isArityFull()) {
+                && !arguments.isArityFull()
+                && (!arguments.hasIndexRange()
+                        || (arguments.getIndexRange().getMin() == 1
+                                && arguments.getIndexRange().getMax() == Integer.MAX_VALUE))) {
             return arguments;
         }
 
         ProcessedOption match = null;
         for (ProcessedOption positional : getPositionalOptionsInDisplayOrder()) {
-            if (positional.hasIndexRange() && positional.getIndexRange().contains(index)) {
+            boolean containsIndex;
+            if (positional.hasIndexRange()) {
+                containsIndex = positional.getIndexRange().contains(index);
+            } else {
+                containsIndex = positional.getOptionType() == OptionType.ARGUMENT ? index == 0 : index >= 1;
+            }
+
+            if (containsIndex) {
                 if (!positional.isArityFull())
                     return positional;
                 if (match == null)
