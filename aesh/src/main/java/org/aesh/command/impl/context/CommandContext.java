@@ -473,9 +473,8 @@ public class CommandContext {
                 }
             }
 
-            // Cache argument
-            if (pc.getArgument() != null) {
-                ProcessedOption arg = pc.getArgument();
+            // Cache singular arguments
+            for (ProcessedOption arg : pc.getArgumentOptions()) {
                 Object value = getFieldValueByReflection(arg.getFieldName());
                 if (value != null) {
                     cachedValues.put(arg.getFieldName(), value);

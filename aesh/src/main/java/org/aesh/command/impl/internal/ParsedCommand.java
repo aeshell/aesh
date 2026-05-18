@@ -25,7 +25,7 @@ public class ParsedCommand {
 
     public ParsedOption argument() {
         if (processedCommand.hasArgument())
-            return new ParsedOption(processedCommand.getArgument());
+            return new ParsedOption((ProcessedOption) processedCommand.getArgumentOptions().get(0));
         else
             return null;
     }

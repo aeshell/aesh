@@ -1898,6 +1898,20 @@ public class CommandLineParserTest {
         assertTrue("Synopsis should order positionals by index", firstPos < secondPos);
     }
 
+    @Test
+    public void testMultipleSingularArgumentsByIndex() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MultipleArgumentsCommand<>()).getParser();
+
+        parser.populateObject("multiarg second first", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        MultipleArgumentsCommand<CommandInvocation> cmd = (MultipleArgumentsCommand<CommandInvocation>) parser.getCommand();
+
+        assertEquals("first", cmd.first);
+        assertEquals("second", cmd.second);
+    }
+
     @CommandDefinition(name = "pathcmd", description = "test Path support")
     public class PathCommand<CI extends CommandInvocation> implements Command<CI> {
         @Option(description = "config file")
@@ -1933,6 +1947,20 @@ public class CommandLineParserTest {
 
         @Arguments(index = "1..*", description = "overlapping arguments")
         private List<String> rest;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "multiarg", description = "test multiple @Argument support")
+    public class MultipleArgumentsCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Argument(index = "1", description = "first by index")
+        private String first;
+
+        @Argument(index = "0", description = "second by index")
+        private String second;
 
         @Override
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {

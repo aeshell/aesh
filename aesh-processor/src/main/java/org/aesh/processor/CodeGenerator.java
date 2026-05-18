@@ -593,7 +593,7 @@ final class CodeGenerator {
         String fieldName = field.getSimpleName().toString();
         String fieldType = getBoxedTypeName(field.asType(), typeUtils);
 
-        sb.append("        processedCommand.setArgument(\n");
+        sb.append("        processedCommand.addArgument(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
         sb.append("                        .name(\"\")\n");
         if (!arg.description().isEmpty())

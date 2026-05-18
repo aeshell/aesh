@@ -89,15 +89,12 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             if (!applyDynamicDefault(dvp, processedCommand.getArguments(), invocationProviders, aeshContext, doValidate))
                 processedCommand.getArguments().resetField(getObject());
         }
-        //argument
-        if (processedCommand.getArgument() != null &&
-                (processedCommand.getArgument().getValues().size() > 0 ||
-                        processedCommand.getArgument().getDefaultValues().size() > 0))
-            processedCommand.getArgument().injectValueIntoField(getObject(), invocationProviders, aeshContext,
-                    doValidate);
-        else if (processedCommand.getArgument() != null) {
-            if (!applyDynamicDefault(dvp, processedCommand.getArgument(), invocationProviders, aeshContext, doValidate))
-                processedCommand.getArgument().resetField(getObject());
+        // arguments (singular)
+        for (ProcessedOption argOpt : processedCommand.getArgumentOptions()) {
+            if (argOpt.getValues().size() > 0 || argOpt.getDefaultValues().size() > 0)
+                argOpt.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
+            else if (!applyDynamicDefault(dvp, argOpt, invocationProviders, aeshContext, doValidate))
+                argOpt.resetField(getObject());
         }
     }
 
@@ -204,8 +201,7 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
             }
         }
 
-        if (processedCommand.getArgument() != null) {
-            ProcessedOption currentArg = processedCommand.getArgument();
+        for (ProcessedOption currentArg : processedCommand.getArgumentOptions()) {
             if (currentArg.getValues() == null || currentArg.getValues().isEmpty()) {
                 ProcessedOption inheritedArg = inheritedOptions.get(currentArg.getFieldName());
                 if (inheritedArg != null) {

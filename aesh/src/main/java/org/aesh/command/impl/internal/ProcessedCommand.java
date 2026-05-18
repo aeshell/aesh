@@ -68,6 +68,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private List<ProcessedOption> options;
     private ProcessedOption arguments;
     private ProcessedOption argument;
+    private final List<ProcessedOption> argumentOptions;
     private final C command;
     private final List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
@@ -134,6 +135,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.resultHandler = resultHandler;
         this.arguments = arguments;
         this.argument = argument;
+        this.argumentOptions = new ArrayList<>(1);
+        if (argument != null)
+            this.argumentOptions.add(argument);
         this.options = new ArrayList<>(
                 options.size() + (generateHelp ? 1 : 0) + (version != null && version.length() > 0 ? 1 : 0));
         this.command = command;
@@ -158,8 +162,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (command != null) {
             if (this.arguments != null)
                 this.arguments.captureInitialValue(command);
-            if (this.argument != null)
-                this.argument.captureInitialValue(command);
+            for (ProcessedOption argOpt : this.argumentOptions)
+                argOpt.captureInitialValue(command);
         }
     }
 
@@ -222,6 +226,21 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.arguments.setParent(this);
         if (command != null)
             arguments.captureInitialValue(command);
+    }
+
+    public List<ProcessedOption> getArgumentOptions() {
+        return argumentOptions;
+    }
+
+    public void addArgument(ProcessedOption arg) {
+        if (arg == null)
+            return;
+        argumentOptions.add(arg);
+        if (argument == null)
+            argument = arg;
+        arg.setParent(this);
+        if (command != null)
+            arg.captureInitialValue(command);
     }
 
     public CommandPopulator<Object, CI> getCommandPopulator() {
@@ -519,8 +538,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         clearOptions();
         if (arguments != null)
             arguments.clear();
-        if (argument != null)
-            argument.clear();
+        for (ProcessedOption argOpt : argumentOptions)
+            argOpt.clear();
 
         if (parserExceptions instanceof ArrayList)
             parserExceptions.clear();
@@ -720,9 +739,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (opt.askIfNotSet() && opt.hasValue() && opt.getValues().isEmpty() && !opt.hasDefaultValue())
                 options.add(opt);
         }
-        if (argument != null && argument.askIfNotSet() && argument.hasValue() && argument.getValues().isEmpty()
-                && !argument.hasDefaultValue())
-            options.add(argument);
+        for (ProcessedOption argOpt : argumentOptions) {
+            if (argOpt.askIfNotSet() && argOpt.hasValue() && argOpt.getValues().isEmpty() && !argOpt.hasDefaultValue())
+                options.add(argOpt);
+        }
         if (arguments != null && arguments.askIfNotSet() && arguments.hasValue() && arguments.getValues().isEmpty()
                 && !arguments.hasDefaultValue())
             options.add(arguments);
@@ -904,8 +924,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (o.hasValue() && o.getValue() != null || !o.hasValue() && o.getValue() != null)
                 return true;
         }
-        if (hasArgument() && argument.getValue() != null)
-            return true;
+        for (ProcessedOption argOpt : argumentOptions) {
+            if (argOpt.getValue() != null)
+                return true;
+        }
         if (hasArguments() && arguments.getValue() != null)
             return true;
 
@@ -940,9 +962,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void updateInvocationProviders(InvocationProviders invocationProviders) {
         updateOptionsInvocationProviders(invocationProviders);
-        if (argument != null) {
-            argument.updateInvocationProviders(invocationProviders);
-        }
+        for (ProcessedOption argOpt : argumentOptions)
+            argOpt.updateInvocationProviders(invocationProviders);
         if (arguments != null) {
             arguments.updateInvocationProviders(invocationProviders);
         }
@@ -991,9 +1012,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void setArgument(ProcessedOption arg) {
         this.argument = arg;
-        this.argument.setParent(this);
-        if (command != null)
-            arg.captureInitialValue(command);
+        this.argumentOptions.clear();
+        addArgument(arg);
     }
 
     public ProcessedOption getArgument() {
@@ -1001,44 +1021,48 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public boolean hasArgument() {
-        return argument != null;
+        return !argumentOptions.isEmpty();
     }
 
     public boolean hasArgumentWithNoValue() {
-        return argument != null && argument.getValue() == null;
+        for (ProcessedOption argOpt : argumentOptions) {
+            if (argOpt.getValue() == null)
+                return true;
+        }
+        return false;
     }
 
     public int getPositionalValueCount() {
         int count = 0;
-        if (argument != null)
-            count += argument.getValues().size();
+        for (ProcessedOption argOpt : argumentOptions)
+            count += argOpt.getValues().size();
         if (arguments != null)
             count += arguments.getValues().size();
         return count;
     }
 
     public ProcessedOption getPositionalForIndex(int index) {
-        ProcessedOption argMatch = null;
-        ProcessedOption argsMatch = null;
-
-        if (argument != null && argument.hasIndexRange() && argument.getIndexRange().contains(index))
-            argMatch = argument;
-        if (arguments != null && arguments.hasIndexRange() && arguments.getIndexRange().contains(index))
-            argsMatch = arguments;
-
-        if (argMatch != null && !argMatch.isArityFull())
-            return argMatch;
-        if (argsMatch != null && !argsMatch.isArityFull())
-            return argsMatch;
-        if (argMatch != null)
-            return argMatch;
-        if (argsMatch != null)
-            return argsMatch;
-
-        if (hasArgumentWithNoValue())
-            return argument;
-        if (hasArguments())
+        // Backward compatibility: commands that only define @Arguments historically
+        // accepted all positional values starting from index 0.
+        if (argumentOptions.isEmpty() && arguments != null
+                && arguments.hasIndexRange()
+                && arguments.getIndexRange().getMin() == 1
+                && arguments.getIndexRange().getMax() == Integer.MAX_VALUE
+                && !arguments.isArityFull()) {
             return arguments;
+        }
+
+        ProcessedOption match = null;
+        for (ProcessedOption positional : getPositionalOptionsInDisplayOrder()) {
+            if (positional.hasIndexRange() && positional.getIndexRange().contains(index)) {
+                if (!positional.isArityFull())
+                    return positional;
+                if (match == null)
+                    match = positional;
+            }
+        }
+        if (match != null)
+            return match;
         return null;
     }
 
@@ -1047,12 +1071,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public List<ProcessedOption> getPositionalOptionsInDisplayOrder() {
-        if (argument == null && arguments == null)
+        if (argumentOptions.isEmpty() && arguments == null)
             return Collections.emptyList();
 
-        List<ProcessedOption> positional = new ArrayList<>(2);
-        if (argument != null)
-            positional.add(argument);
+        List<ProcessedOption> positional = new ArrayList<>(argumentOptions.size() + 1);
+        positional.addAll(argumentOptions);
         if (arguments != null)
             positional.add(arguments);
 
@@ -1089,9 +1112,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (opt.selectorType() != SelectorType.NO_OP && opt.hasValue() && opt.getValue() == null)
                 options.add(opt);
         }
-        if (argument != null && argument.selectorType() != SelectorType.NO_OP &&
-                (argument.hasValue() || argument.getOptionType().equals(OptionType.BOOLEAN)))
-            options.add(argument);
+        for (ProcessedOption argOpt : argumentOptions) {
+            if (argOpt.selectorType() != SelectorType.NO_OP
+                    && (argOpt.hasValue() || argOpt.getOptionType().equals(OptionType.BOOLEAN)))
+                options.add(argOpt);
+        }
         if (arguments != null && arguments.selectorType() != SelectorType.NO_OP && arguments.hasValue())
             options.add(arguments);
 

@@ -561,9 +561,14 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 if (me != null)
                     processedCommand.addParserException(me);
                 // Check arity min constraints on arguments
-                RequiredOptionException arityEx = checkArityMin(processedCommand.getArgument());
-                if (arityEx != null)
-                    processedCommand.addParserException(arityEx);
+                RequiredOptionException arityEx = null;
+                for (ProcessedOption argOpt : processedCommand.getArgumentOptions()) {
+                    arityEx = checkArityMin(argOpt);
+                    if (arityEx != null) {
+                        processedCommand.addParserException(arityEx);
+                        break;
+                    }
+                }
                 arityEx = checkArityMin(processedCommand.getArguments());
                 if (arityEx != null)
                     processedCommand.addParserException(arityEx);
@@ -736,9 +741,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             if (doCheckForMissingRequiredOption(o))
                 return new RequiredOptionException("Option: " + o.getDisplayName() + " is required for this command.");
         }
-        if (command.getArgument() != null) {
-            if (doCheckForMissingRequiredOption(command.getArgument()))
-                return generateRequiredExceptionFor(command.getArgument(), false);
+        for (ProcessedOption argOpt : command.getArgumentOptions()) {
+            if (doCheckForMissingRequiredOption(argOpt))
+                return generateRequiredExceptionFor(argOpt, false);
         }
         if (command.getArguments() != null) {
             if (doCheckForMissingRequiredOption(command.getArguments()))

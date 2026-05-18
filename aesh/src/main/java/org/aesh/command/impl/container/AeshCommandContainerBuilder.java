@@ -216,16 +216,22 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     }
 
     private static void validatePositionalIndexes(ProcessedCommand processedCommand) throws CommandLineParserException {
-        org.aesh.command.impl.internal.ProcessedOption argument = processedCommand.getArgument();
-        org.aesh.command.impl.internal.ProcessedOption arguments = processedCommand.getArguments();
-        if (argument == null || arguments == null || !argument.hasIndexRange() || !arguments.hasIndexRange())
-            return;
-
-        if (argument.getIndexRange().overlaps(arguments.getIndexRange())) {
-            throw new CommandLineParserException(
-                    "@Argument and @Arguments index ranges overlap: "
-                            + rangeText(argument) + " and " + rangeText(arguments)
-                            + ". Adjust index values to use distinct positional slots.");
+        List<org.aesh.command.impl.internal.ProcessedOption> positional = processedCommand.getPositionalOptionsInDisplayOrder();
+        for (int i = 0; i < positional.size(); i++) {
+            org.aesh.command.impl.internal.ProcessedOption left = positional.get(i);
+            if (!left.hasIndexRange())
+                continue;
+            for (int j = i + 1; j < positional.size(); j++) {
+                org.aesh.command.impl.internal.ProcessedOption right = positional.get(j);
+                if (!right.hasIndexRange())
+                    continue;
+                if (left.getIndexRange().overlaps(right.getIndexRange())) {
+                    throw new CommandLineParserException(
+                            "Positional index ranges overlap: "
+                                    + rangeText(left) + " and " + rangeText(right)
+                                    + ". Adjust index values to use distinct positional slots.");
+                }
+            }
         }
     }
 
@@ -390,12 +396,10 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .mixinFieldName(mixinFieldName)
                     .build());
         } else if ((arg = field.getAnnotation(Argument.class)) != null) {
-            if (processedCommand.getArgument() != null)
-                throw new CommandLineParserException("Argument can not be defined more than once pr class");
             if (Collection.class.isAssignableFrom(field.getType()))
                 throw new CommandLineParserException("Argument field can not be an instance of Collection");
             OptionType optionType = OptionType.ARGUMENT;
-            processedCommand.setArgument(
+            processedCommand.addArgument(
                     ProcessedOptionBuilder.builder()
                             .shortName('\u0000')
                             .name("")
