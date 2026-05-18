@@ -404,6 +404,19 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
+    public static class NumberCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation invocation) {
+            String input = invocation.getGivenCompleteValue();
+            if (input == null)
+                input = "";
+            for (String candidate : Arrays.asList("one", "two", "three")) {
+                if (candidate.startsWith(input))
+                    invocation.addCompleterValue(candidate);
+            }
+        }
+    }
+
     @CommandDefinition(name = "argonly", description = "argument-only")
     public static class ArgumentOnlyCommand implements Command<CommandInvocation> {
         @Argument(completer = AlphaCompleter.class)
@@ -429,9 +442,24 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
+    @CommandDefinition(name = "multi", description = "multiple indexed arguments")
+    public static class MultipleIndexedArgumentsCommand implements Command<CommandInvocation> {
+        @Argument(index = "1", completer = AlphaCompleter.class)
+        private String second;
+
+        @Argument(index = "0", completer = NumberCompleter.class)
+        private String first;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     @GroupCommandDefinition(name = "root", description = "root", groupCommands = {
             ArgumentOnlyCommand.class,
-            ArgumentAndArgumentsCommand.class
+            ArgumentAndArgumentsCommand.class,
+            MultipleIndexedArgumentsCommand.class
     })
     public static class ArgumentCompletionGroup implements Command<CommandInvocation> {
         @Override
@@ -460,6 +488,28 @@ public class AeshRuntimeRunnerTest {
                 .execute());
 
         assertTrue("Should complete @Argument even when @Arguments exists", output.contains("alpha"));
+    }
+
+    @Test
+    public void testDynamicCompleteMultipleIndexedArgumentsFirstSlot() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ArgumentCompletionGroup.class)
+                .dynamicComplete(true)
+                .args("multi", "t")
+                .execute());
+
+        assertTrue("Should use index 0 argument completer", output.contains("two"));
+    }
+
+    @Test
+    public void testDynamicCompleteMultipleIndexedArgumentsSecondSlot() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ArgumentCompletionGroup.class)
+                .dynamicComplete(true)
+                .args("multi", "one", "a")
+                .execute());
+
+        assertTrue("Should use index 1 argument completer", output.contains("alpha"));
     }
 
     private static String captureStdout(Runnable action) {

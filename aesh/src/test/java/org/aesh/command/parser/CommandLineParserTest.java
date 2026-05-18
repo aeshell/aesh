@@ -1912,6 +1912,21 @@ public class CommandLineParserTest {
         assertEquals("second", cmd.second);
     }
 
+    @Test
+    public void testIndexedPositionalsGapIsRejected() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new IndexedGapCommand<>()).getParser();
+
+        try {
+            parser.populateObject("idxgap zero one", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Expected missing positional index to be rejected");
+        } catch (OptionParserException e) {
+            assertTrue(e.getMessage().contains("do not support"));
+        }
+    }
+
     @CommandDefinition(name = "pathcmd", description = "test Path support")
     public class PathCommand<CI extends CommandInvocation> implements Command<CI> {
         @Option(description = "config file")
@@ -1961,6 +1976,20 @@ public class CommandLineParserTest {
 
         @Argument(index = "0", description = "second by index")
         private String second;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "idxgap", description = "test indexed positional gap")
+    public class IndexedGapCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Argument(index = "0", description = "first")
+        private String first;
+
+        @Argument(index = "2", description = "third")
+        private String third;
 
         @Override
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
