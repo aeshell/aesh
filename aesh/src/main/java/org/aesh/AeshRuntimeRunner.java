@@ -216,34 +216,49 @@ public class AeshRuntimeRunner {
             String commandName) {
         java.util.Map<String, String> descriptions = new java.util.HashMap<>();
         try {
+            CommandContainer<CommandInvocation> container = commandRegistry.getCommand(commandName, "");
+            CommandLineParser<CommandInvocation> parser = container.getParser();
+
             // Add subcommand descriptions
-            java.util.List<CommandLineParser<CommandInvocation>> children = commandRegistry
-                    .getChildCommandParsers(commandName);
-            if (children != null) {
-                for (CommandLineParser<CommandInvocation> child : children) {
+            if (parser.isGroupCommand()) {
+                for (CommandLineParser<CommandInvocation> child : parser.getAllChildParsers()) {
                     String name = child.getProcessedCommand().name();
                     String desc = child.getProcessedCommand().description();
                     if (desc != null && !desc.isEmpty()) {
                         descriptions.put(name, desc);
                     }
+                    // Also add child option descriptions
+                    addOptionDescriptions(descriptions, child);
+
+                    // If child is itself a group, add grandchild descriptions
+                    if (child.isGroupCommand()) {
+                        for (CommandLineParser<?> grandchild : child.getAllChildParsers()) {
+                            String gcName = grandchild.getProcessedCommand().name();
+                            String gcDesc = grandchild.getProcessedCommand().description();
+                            if (gcDesc != null && !gcDesc.isEmpty()) {
+                                descriptions.put(gcName, gcDesc);
+                            }
+                            addOptionDescriptions(descriptions, grandchild);
+                        }
+                    }
                 }
             }
-        } catch (Exception ignored) {
-            // Not a group command or no children -- that's fine
-        }
-        try {
-            // Add option descriptions from the main command
-            CommandContainer<CommandInvocation> container = commandRegistry.getCommand(commandName, "");
-            CommandLineParser<CommandInvocation> parser = container.getParser();
-            for (org.aesh.command.impl.internal.ProcessedOption opt : parser.getProcessedCommand().getOptions()) {
-                String optName = "--" + opt.name();
-                if (opt.description() != null && !opt.description().isEmpty()) {
-                    descriptions.put(optName, opt.description());
-                }
-            }
+
+            // Add option descriptions from the root command
+            addOptionDescriptions(descriptions, parser);
         } catch (Exception ignored) {
         }
         return descriptions;
+    }
+
+    private static void addOptionDescriptions(java.util.Map<String, String> descriptions,
+            CommandLineParser<?> parser) {
+        for (org.aesh.command.impl.internal.ProcessedOption opt : parser.getProcessedCommand().getOptions()) {
+            String optName = "--" + opt.name();
+            if (opt.description() != null && !opt.description().isEmpty()) {
+                descriptions.put(optName, opt.description());
+            }
+        }
     }
 
     public static boolean handleDynamicCompletion(String[] args, Class<? extends Command> commandClass) {
@@ -269,6 +284,139 @@ public class AeshRuntimeRunner {
                 .execute();
 
         return true;
+    }
+
+    /**
+     * Handles the --aesh-completion-install flag. Detects the user's shell,
+     * generates a dynamic completion script, and installs it to the appropriate
+     * location after user confirmation.
+     *
+     * @param args the command-line arguments
+     * @param commandClass the command class to generate completions for
+     * @return true if the flag was handled, false if not a completion install request
+     */
+    public static boolean handleCompletionInstall(String[] args, Class<? extends Command> commandClass) {
+        return handleCompletionInstall(args, commandClass, null);
+    }
+
+    /**
+     * Handles the --aesh-completion-install flag with a custom program name.
+     *
+     * @param args the command-line arguments
+     * @param commandClass the command class to generate completions for
+     * @param programName the program name to use in the completion script (null = use command name)
+     * @return true if the flag was handled, false if not a completion install request
+     */
+    @SuppressWarnings("unchecked")
+    public static boolean handleCompletionInstall(String[] args, Class<? extends Command> commandClass,
+            String programName) {
+        if (args == null || args.length == 0 || !"--aesh-completion-install".equals(args[0]))
+            return false;
+
+        try {
+            CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
+                    .command(commandClass).create();
+            String commandName = registry.getAllCommandNames().iterator().next();
+            String name = programName != null ? programName : commandName;
+
+            ShellType shellType = detectShell();
+            if (shellType == null) {
+                System.err.println("Could not detect shell type. Set $SHELL or use --generate-completion instead.");
+                return true;
+            }
+
+            java.io.File installPath = getCompletionInstallPath(shellType, name);
+            if (installPath == null) {
+                System.err.println("Could not determine completion install path for " + shellType + ".");
+                return true;
+            }
+
+            // Generate the script
+            CommandContainer<CommandInvocation> container = registry.getCommand(commandName, "");
+            String script = ShellCompletionGenerator.forShell(shellType)
+                    .generateDynamic(container.getParser(), name);
+
+            // Confirm with user
+            String action = installPath.exists() ? "Overwrite" : "Write";
+            System.out.println(action + " completion script to: " + installPath.getAbsolutePath());
+            System.out.print("Proceed? [y/N] ");
+            System.out.flush();
+
+            java.io.Console console = System.console();
+            String response;
+            if (console != null) {
+                response = console.readLine();
+            } else {
+                // Fallback for non-interactive (piped input)
+                response = new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+            }
+
+            if (response != null && (response.equalsIgnoreCase("y") || response.equalsIgnoreCase("yes"))) {
+                java.io.File parentDir = installPath.getParentFile();
+                if (parentDir != null && !parentDir.exists()) {
+                    parentDir.mkdirs();
+                }
+                try (java.io.FileWriter writer = new java.io.FileWriter(installPath)) {
+                    writer.write(script);
+                }
+                System.out.println("Completion script installed to " + installPath.getAbsolutePath());
+                System.out.println("Note: '" + name + "' must be on your $PATH for completions to work.");
+                System.out.println("Restart your shell or source the file to activate completions.");
+            } else {
+                System.out.println("Installation cancelled.");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to install completion: " + e.getMessage());
+        }
+        return true;
+    }
+
+    static ShellType detectShell() {
+        // Check shell-specific environment variables first
+        if (System.getenv("FISH_VERSION") != null)
+            return ShellType.FISH;
+        if (System.getenv("ZSH_VERSION") != null)
+            return ShellType.ZSH;
+        if (System.getenv("BASH_VERSION") != null)
+            return ShellType.BASH;
+
+        // Fall back to $SHELL
+        String shell = System.getenv("SHELL");
+        if (shell == null || shell.isEmpty())
+            return null;
+        if (shell.contains("fish"))
+            return ShellType.FISH;
+        if (shell.contains("zsh"))
+            return ShellType.ZSH;
+        if (shell.contains("bash"))
+            return ShellType.BASH;
+        return null;
+    }
+
+    static java.io.File getCompletionInstallPath(ShellType shellType, String programName) {
+        String home = System.getProperty("user.home");
+        if (home == null)
+            return null;
+
+        switch (shellType) {
+            case BASH:
+                // ~/.bash_completion.d/<program>
+                return new java.io.File(home, ".bash_completion.d" + java.io.File.separator + programName);
+            case ZSH:
+                // ~/.zsh/completions/_<program>
+                return new java.io.File(home,
+                        ".zsh" + java.io.File.separator + "completions" + java.io.File.separator + "_" + programName);
+            case FISH:
+                // ~/.config/fish/completions/<program>.fish
+                String configDir = System.getenv("XDG_CONFIG_HOME");
+                if (configDir == null || configDir.isEmpty())
+                    configDir = home + java.io.File.separator + ".config";
+                return new java.io.File(
+                        configDir + java.io.File.separator + "fish" + java.io.File.separator + "completions"
+                                + java.io.File.separator + programName + ".fish");
+            default:
+                return null;
+        }
     }
 
     private static void showHelp(CommandRuntime runtime, String commandName, String[] args, Exception e) {

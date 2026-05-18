@@ -183,7 +183,13 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
                 "# Place this file in ~/.config/fish/completions/" + programName + ".fish" + NL +
                 NL +
                 "function __" + programName + "_complete" + NL +
-                "    set -l tokens (commandline -cop)" + NL +
+                "    set -l tokens (commandline -opc)" + NL +
+                "    set -l current (commandline -ct)" + NL +
+                "    # commandline -opc omits the token currently being completed." + NL +
+                "    # Add it back so partial option prefixes (e.g. --de) complete correctly." + NL +
+                "    if test -n \"$current\"" + NL +
+                "        set tokens $tokens $current" + NL +
+                "    end" + NL +
                 "    # If cursor is after a space, add empty token so the completion engine" + NL +
                 "    # knows we are starting a new word, not completing the previous one." + NL +
                 "    if string match -qr '\\s$' -- (commandline -cp)" + NL +

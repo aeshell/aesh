@@ -273,7 +273,9 @@ public class ShellCompletionGeneratorTest {
 
         assertTrue(out.contains("complete -c mycli"));
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
-        assertTrue("Should use commandline", out.contains("commandline -cop"));
+        assertTrue("Should use commandline", out.contains("commandline -opc"));
+        assertTrue("Should include current token", out.contains("commandline -ct"));
+        assertTrue("Should append current token", out.contains("set tokens $tokens $current"));
         // Should handle trailing space for subcommand context
         assertTrue("Should detect trailing space", out.contains("string match"));
         assertTrue("Should append empty token for trailing space", out.contains("set tokens $tokens ''"));

@@ -21,6 +21,7 @@ package org.aesh;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -642,6 +643,48 @@ public class AeshRuntimeRunnerTest {
             commandInvocation.println("Hello from Bar2, lets fail");
             return CommandResult.FAILURE;
         }
+    }
+
+    // ========== Completion install tests ==========
+
+    @Test
+    public void testCompletionInstallPathBash() {
+        java.io.File path = AeshRuntimeRunner.getCompletionInstallPath(ShellType.BASH, "mycli");
+        assertNotNull(path);
+        assertTrue("Bash path should contain .bash_completion.d",
+                path.getAbsolutePath().contains(".bash_completion.d"));
+        assertTrue("Bash path should end with program name",
+                path.getName().equals("mycli"));
+    }
+
+    @Test
+    public void testCompletionInstallPathZsh() {
+        java.io.File path = AeshRuntimeRunner.getCompletionInstallPath(ShellType.ZSH, "mycli");
+        assertNotNull(path);
+        assertTrue("Zsh path should contain .zsh and completions",
+                path.getAbsolutePath().contains(".zsh") && path.getAbsolutePath().contains("completions"));
+        assertTrue("Zsh completion file should be prefixed with underscore",
+                path.getName().equals("_mycli"));
+    }
+
+    @Test
+    public void testCompletionInstallPathFish() {
+        java.io.File path = AeshRuntimeRunner.getCompletionInstallPath(ShellType.FISH, "mycli");
+        assertNotNull(path);
+        assertTrue("Fish path should contain fish and completions",
+                path.getAbsolutePath().contains("fish") && path.getAbsolutePath().contains("completions"));
+        assertTrue("Fish completion file should have .fish extension",
+                path.getName().equals("mycli.fish"));
+    }
+
+    @Test
+    public void testHandleCompletionInstallIgnoresOtherFlags() {
+        assertFalse(AeshRuntimeRunner.handleCompletionInstall(
+                new String[] { "--help" }, CaptureCommand.class));
+        assertFalse(AeshRuntimeRunner.handleCompletionInstall(
+                new String[] {}, CaptureCommand.class));
+        assertFalse(AeshRuntimeRunner.handleCompletionInstall(
+                null, CaptureCommand.class));
     }
 
 }
