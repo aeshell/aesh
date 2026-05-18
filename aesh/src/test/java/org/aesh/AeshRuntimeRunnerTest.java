@@ -37,6 +37,7 @@ import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
+import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
 import org.junit.Test;
@@ -388,6 +389,77 @@ public class AeshRuntimeRunnerTest {
         public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
         }
+    }
+
+    public static class AlphaCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation invocation) {
+            String input = invocation.getGivenCompleteValue();
+            if (input == null)
+                input = "";
+            for (String candidate : Arrays.asList("alpha", "bravo", "charlie")) {
+                if (candidate.startsWith(input))
+                    invocation.addCompleterValue(candidate);
+            }
+        }
+    }
+
+    @CommandDefinition(name = "argonly", description = "argument-only")
+    public static class ArgumentOnlyCommand implements Command<CommandInvocation> {
+        @Argument(completer = AlphaCompleter.class)
+        private String first;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "both", description = "argument and arguments")
+    public static class ArgumentAndArgumentsCommand implements Command<CommandInvocation> {
+        @Argument(completer = AlphaCompleter.class)
+        private String first;
+
+        @Arguments
+        private List<String> rest;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "root", description = "root", groupCommands = {
+            ArgumentOnlyCommand.class,
+            ArgumentAndArgumentsCommand.class
+    })
+    public static class ArgumentCompletionGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testDynamicCompleteArgumentCompleterWithOnlyArgument() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ArgumentCompletionGroup.class)
+                .dynamicComplete(true)
+                .args("argonly", "a")
+                .execute());
+
+        assertTrue("Should complete @Argument value", output.contains("alpha"));
+    }
+
+    @Test
+    public void testDynamicCompleteArgumentCompleterWithArgumentAndArguments() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ArgumentCompletionGroup.class)
+                .dynamicComplete(true)
+                .args("both", "a")
+                .execute());
+
+        assertTrue("Should complete @Argument even when @Arguments exists", output.contains("alpha"));
     }
 
     private static String captureStdout(Runnable action) {
