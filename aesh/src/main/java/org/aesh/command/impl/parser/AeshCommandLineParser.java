@@ -23,7 +23,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -106,7 +105,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (processedCommand.hasArgument() || processedCommand.hasArguments())
             throw new CommandLineParserException("Group commands can not have arguments defined");
         if (lazyChildClasses == null)
-            lazyChildClasses = new HashMap<>();
+            lazyChildClasses = new LinkedHashMap<>();
         lazyChildClasses.put(name, clazz);
     }
 

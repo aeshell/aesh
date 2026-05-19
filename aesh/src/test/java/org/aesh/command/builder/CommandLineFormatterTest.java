@@ -1059,4 +1059,81 @@ public class CommandLineFormatterTest {
         }
     }
 
+    // --- Issue #441: subcommand declaration order ---
+
+    @Test
+    public void testSubcommandDeclarationOrder() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(OrderedGroupCommand.class).getParser();
+
+        String help = clp.printHelp();
+
+        // Subcommands should appear in declaration order: run, build, edit, init, info
+        int runIdx = help.indexOf("run");
+        int buildIdx = help.indexOf("build");
+        int editIdx = help.indexOf("edit");
+        int initIdx = help.indexOf("init");
+        int infoIdx = help.indexOf("info");
+
+        assertTrue("run should appear in help", runIdx > 0);
+        assertTrue("build should appear in help", buildIdx > 0);
+        assertTrue("edit should appear in help", editIdx > 0);
+        assertTrue("init should appear in help", initIdx > 0);
+        assertTrue("info should appear in help", infoIdx > 0);
+
+        assertTrue("run before build", runIdx < buildIdx);
+        assertTrue("build before edit", buildIdx < editIdx);
+        assertTrue("edit before init", editIdx < initIdx);
+        assertTrue("init before info", initIdx < infoIdx);
+    }
+
+    @GroupCommandDefinition(name = "app", description = "App with ordered subcommands", groupCommands = { SubRun.class,
+            SubBuild.class, SubEdit.class, SubInit.class, SubInfo.class })
+    public static class OrderedGroupCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "run", description = "Run the app")
+    public static class SubRun implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "build", description = "Build the project")
+    public static class SubBuild implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "edit", description = "Edit a file")
+    public static class SubEdit implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "init", description = "Initialize a project")
+    public static class SubInit implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "info", description = "Show project info")
+    public static class SubInfo implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }
