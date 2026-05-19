@@ -43,6 +43,7 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Mixin;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
@@ -1992,6 +1993,125 @@ public class CommandLineParserTest {
 
         @Argument(index = "2", description = "third")
         private String third;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- Issue #442: @Argument on @Mixin with stopAtFirstPositional ---
+
+    @Test
+    public void testMixinArgumentWithStopAtFirstPositional() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgStopCommand<>()).getParser();
+
+        // run --debug 4004 myfile.java extraArg1 extraArg2
+        parser.populateObject("run --debug 4004 myfile.java extraArg1 extraArg2",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgStopCommand<CommandInvocation> cmd = (MixinArgStopCommand<CommandInvocation>) parser.getCommand();
+
+        assertEquals("4004", cmd.debug);
+        assertNotNull("mixin should be initialized", cmd.scriptMixin);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
+        assertNotNull(cmd.userParams);
+        assertEquals(2, cmd.userParams.size());
+        assertEquals("extraArg1", cmd.userParams.get(0));
+        assertEquals("extraArg2", cmd.userParams.get(1));
+    }
+
+    @Test
+    public void testMixinArgumentWithStopAtFirstPositional_OptionsAfterPositional() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgStopCommand<>()).getParser();
+
+        // Options after the first positional should be treated as args, not parsed
+        parser.populateObject("run myfile.java --debug 4004 --unknown",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgStopCommand<CommandInvocation> cmd = (MixinArgStopCommand<CommandInvocation>) parser.getCommand();
+
+        assertNull("debug should not be set (appears after positional)", cmd.debug);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
+        assertNotNull(cmd.userParams);
+        assertEquals(3, cmd.userParams.size());
+        assertEquals("--debug", cmd.userParams.get(0));
+        assertEquals("4004", cmd.userParams.get(1));
+        assertEquals("--unknown", cmd.userParams.get(2));
+    }
+
+    public static class ScriptMixin {
+        @Argument(paramLabel = "scriptOrFile", index = "0", arity = "0..1", description = "A file or URL to a Java code file")
+        String scriptOrFile;
+    }
+
+    @CommandDefinition(name = "run", description = "Run a script", stopAtFirstPositional = true)
+    public class MixinArgStopCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Mixin
+        ScriptMixin scriptMixin;
+
+        @Option(shortName = 'd', name = "debug", description = "Debug port")
+        String debug;
+
+        @Arguments(index = "1..*", arity = "0..*")
+        List<String> userParams;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // Variant with optionalValue on --debug (the more likely real-world scenario)
+
+    @Test
+    public void testMixinArgumentWithStopAtFirstPositional_OptionalDebug() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgStopOptionalDebugCommand<>()).getParser();
+
+        // --debug 4004 myfile.java: debug should get "4004", scriptOrFile should get "myfile.java"
+        parser.populateObject("run --debug 4004 myfile.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgStopOptionalDebugCommand<CommandInvocation> cmd = (MixinArgStopOptionalDebugCommand<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("4004", cmd.debug);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
+    }
+
+    @Test
+    public void testMixinArgumentWithStopAtFirstPositional_OptionalDebugWithEquals() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgStopOptionalDebugCommand<>()).getParser();
+
+        // --debug=5005 myfile.java: debug should get "5005", scriptOrFile should get "myfile.java"
+        parser.populateObject("run --debug=5005 myfile.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgStopOptionalDebugCommand<CommandInvocation> cmd = (MixinArgStopOptionalDebugCommand<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("5005", cmd.debug);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
+    }
+
+    @CommandDefinition(name = "run", description = "Run with optional debug", stopAtFirstPositional = true)
+    public class MixinArgStopOptionalDebugCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Mixin
+        ScriptMixin scriptMixin;
+
+        @Option(shortName = 'd', name = "debug", optionalValue = true, defaultValue = "4004", description = "Debug port")
+        String debug;
+
+        @Arguments(index = "1..*", arity = "0..*")
+        List<String> userParams;
 
         @Override
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
