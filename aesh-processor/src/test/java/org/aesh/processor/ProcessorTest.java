@@ -813,6 +813,46 @@ public class ProcessorTest {
             "    }\n" +
             "}\n";
 
+    // --- Test: comprehensive parity for positional arity, paramLabel, index, allowedValues, and order on OptionList/OptionGroup ---
+
+    private static final String COMPREHENSIVE_POSITIONAL_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "import java.util.Map;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Arguments;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "import org.aesh.command.option.OptionGroup;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"comprehensive\", description = \"Comprehensive parity test\")\n" +
+            "public class ComprehensiveCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(allowedValues = {\"fast\", \"safe\"}, description = \"Build mode\", order = 5)\n" +
+            "    String mode;\n" +
+            "\n" +
+            "    @OptionList(allowedValues = {\"v1\", \"v2\", \"latest\"}, description = \"Tags\", order = 15)\n" +
+            "    List<String> tags;\n" +
+            "\n" +
+            "    @OptionGroup(shortName = 'D', description = \"Properties\", order = 25)\n" +
+            "    Map<String, String> props;\n" +
+            "\n" +
+            "    @Argument(description = \"Source file\", paramLabel = \"source\", arity = \"1\", index = \"0\")\n" +
+            "    String src;\n" +
+            "\n" +
+            "    @Arguments(description = \"Extra files\", paramLabel = \"extras\", arity = \"1..5\", index = \"1..5\")\n" +
+            "    List<String> extras;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
     // --- Test: sortOptions + option order metadata parity ---
 
     private static final String ORDERING_SOURCE = "package test;\n" +
@@ -1009,6 +1049,20 @@ public class ProcessorTest {
         Class<?> commandClass = result.classLoader.loadClass("test.OrderingCommand");
         Class<?> metadataClass = result.classLoader.loadClass("test.OrderingCommand_AeshMetadata");
 
+        assertEquivalence(commandClass, metadataClass);
+    }
+
+    @Test
+    public void testComprehensivePositionalAndOptionParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ComprehensiveCommand", COMPREHENSIVE_POSITIONAL_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.ComprehensiveCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.ComprehensiveCommand_AeshMetadata");
+
+        // assertEquivalence now checks arity, paramLabel, indexRange on positionals,
+        // allowedValues on options, and order on all option types
         assertEquivalence(commandClass, metadataClass);
     }
 
@@ -1247,6 +1301,15 @@ public class ProcessorTest {
             assertEquals("Argument indexRange max",
                     rArg.getIndexRange() != null ? rArg.getIndexRange().getMax() : -1,
                     gArg.getIndexRange() != null ? gArg.getIndexRange().getMax() : -1);
+            assertEquals("Argument paramLabel",
+                    rArg.getParamLabel() != null ? rArg.getParamLabel() : "",
+                    gArg.getParamLabel() != null ? gArg.getParamLabel() : "");
+            assertEquals("Argument arity min",
+                    rArg.getArity() != null ? rArg.getArity().getMin() : -1,
+                    gArg.getArity() != null ? gArg.getArity().getMin() : -1);
+            assertEquals("Argument arity max",
+                    rArg.getArity() != null ? rArg.getArity().getMax() : -1,
+                    gArg.getArity() != null ? gArg.getArity().getMax() : -1);
         }
 
         // Compare arguments (plural)
@@ -1264,6 +1327,15 @@ public class ProcessorTest {
             assertEquals("Arguments indexRange max",
                     rArgs.getIndexRange() != null ? rArgs.getIndexRange().getMax() : -1,
                     gArgs.getIndexRange() != null ? gArgs.getIndexRange().getMax() : -1);
+            assertEquals("Arguments paramLabel",
+                    rArgs.getParamLabel() != null ? rArgs.getParamLabel() : "",
+                    gArgs.getParamLabel() != null ? gArgs.getParamLabel() : "");
+            assertEquals("Arguments arity min",
+                    rArgs.getArity() != null ? rArgs.getArity().getMin() : -1,
+                    gArgs.getArity() != null ? gArgs.getArity().getMin() : -1);
+            assertEquals("Arguments arity max",
+                    rArgs.getArity() != null ? rArgs.getArity().getMax() : -1,
+                    gArgs.getArity() != null ? gArgs.getArity().getMax() : -1);
         }
     }
 
