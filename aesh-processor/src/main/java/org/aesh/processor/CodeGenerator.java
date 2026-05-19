@@ -421,7 +421,7 @@ final class CodeGenerator {
             optionType = "OptionType.BOOLEAN";
         }
 
-        sb.append("        processedCommand.addOption(\n");
+        sb.append("        processedCommand.addOptionDirect(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
         if (o.shortName() != '\u0000')
             sb.append("                        .shortName(").append(charLiteral(o.shortName())).append(")\n");
@@ -480,7 +480,7 @@ final class CodeGenerator {
         String fieldName = field.getSimpleName().toString();
         String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
 
-        sb.append("        processedCommand.addOption(\n");
+        sb.append("        processedCommand.addOptionDirect(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
         if (ol.shortName() != '\u0000')
             sb.append("                        .shortName(").append(charLiteral(ol.shortName())).append(")\n");
@@ -524,7 +524,7 @@ final class CodeGenerator {
         // For Map<K,V>, extract V (index 1)
         String valueType = getGenericTypeArgument(field.asType(), 1, typeUtils);
 
-        sb.append("        processedCommand.addOption(\n");
+        sb.append("        processedCommand.addOptionDirect(\n");
         sb.append("                ProcessedOptionBuilder.builder()\n");
         if (og.shortName() != '\u0000')
             sb.append("                        .shortName(").append(charLiteral(og.shortName())).append(")\n");

@@ -216,6 +216,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             opt.captureInitialValue(command);
     }
 
+    /**
+     * Add an option without verifying name uniqueness. Use only from generated
+     * (annotation-processor) code where names are validated at compile time.
+     * Skipping the O(N) scan per option eliminates O(N^2) overhead during
+     * command registration.
+     */
+    public void addOptionDirect(ProcessedOption opt) {
+        opt.setDeclarationOrder(optionDeclarationCounter++);
+        this.options.add(opt);
+        opt.setParent(this);
+        if (command != null)
+            opt.captureInitialValue(command);
+    }
+
     public List<ProcessedOption> getDisplayOptions() {
         List<ProcessedOption> display = new ArrayList<>(getOptions());
         java.util.Comparator<ProcessedOption> byOrder = (left, right) -> {
