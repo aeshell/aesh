@@ -235,4 +235,10 @@ public @interface Option {
      */
     OptionVisibility visibility() default OptionVisibility.BRIEF;
 
+    /**
+     * Explicit help-order position for this option.
+     * Lower values appear first when rendering help output.
+     */
+    int order() default Integer.MAX_VALUE;
+
 }

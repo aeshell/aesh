@@ -124,4 +124,10 @@ public @interface OptionGroup {
      * BRIEF (default) = always shown, FULL = only with --help=all, HIDDEN = never shown.
      */
     OptionVisibility visibility() default OptionVisibility.BRIEF;
+
+    /**
+     * Explicit help-order position for this option.
+     * Lower values appear first when rendering help output.
+     */
+    int order() default Integer.MAX_VALUE;
 }

@@ -813,6 +813,33 @@ public class ProcessorTest {
             "    }\n" +
             "}\n";
 
+    // --- Test: sortOptions + option order metadata parity ---
+
+    private static final String ORDERING_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"ordering\", description = \"Ordering test\", sortOptions = true)\n" +
+            "public class OrderingCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(order = 20, description = \"Second\")\n" +
+            "    String second;\n" +
+            "\n" +
+            "    @Option(order = 10, description = \"First\")\n" +
+            "    String first;\n" +
+            "\n" +
+            "    @Option(description = \"Last\")\n" +
+            "    String third;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
     // --- Test: Full callback coverage ---
 
     private static final String CUSTOM_VALIDATOR_SOURCE = "package test;\n" +
@@ -973,6 +1000,18 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    @Test
+    public void testOptionOrderingMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.OrderingCommand", ORDERING_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.OrderingCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.OrderingCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Test: @Option with generic type (List<String>) should erase generics (#397) ---
 
     private static final String GENERIC_OPTION_SOURCE = "package test;\n" +
@@ -1127,6 +1166,7 @@ public class ProcessorTest {
         assertEquals("generateHelp", reflectionPC.generateHelp(), generatedPC.generateHelp());
         assertEquals("disableParsing", reflectionPC.disableParsing(), generatedPC.disableParsing());
         assertEquals("stopAtFirstPositional", reflectionPC.stopAtFirstPositional(), generatedPC.stopAtFirstPositional());
+        assertEquals("sortOptions", reflectionPC.sortOptions(), generatedPC.sortOptions());
         assertEquals("helpUrl",
                 reflectionPC.helpUrl() != null ? reflectionPC.helpUrl() : "",
                 generatedPC.helpUrl() != null ? generatedPC.helpUrl() : "");
@@ -1170,6 +1210,7 @@ public class ProcessorTest {
             assertEquals("Option helpGroup for " + rOpt.name(), rOpt.getHelpGroup(), gOpt.getHelpGroup());
             assertEquals("Option valueSeparator for " + rOpt.name(), rOpt.getValueSeparator(), gOpt.getValueSeparator());
             assertEquals("Option visibility for " + rOpt.name(), rOpt.getVisibility(), gOpt.getVisibility());
+            assertEquals("Option order for " + rOpt.name(), rOpt.getOrder(), gOpt.getOrder());
             assertEquals("Option overrideRequired for " + rOpt.name(), rOpt.doOverrideRequired(), gOpt.doOverrideRequired());
             assertEquals("Option optionalValue for " + rOpt.name(), rOpt.isOptionalValue(), gOpt.isOptionalValue());
             assertEquals("Option exclusiveWith for " + rOpt.name(), rOpt.getExclusiveWith(), gOpt.getExclusiveWith());

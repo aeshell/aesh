@@ -90,6 +90,7 @@ public class ProcessedOptionBuilder {
     private List<String> exclusiveWith;
     private List<String> allowedValues = java.util.Collections.emptyList();
     private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
+    private int order = Integer.MAX_VALUE;
 
     private ProcessedOptionBuilder() {
         defaultValues = java.util.Collections.emptyList();
@@ -433,6 +434,11 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
+    public ProcessedOptionBuilder order(int order) {
+        this.order = order;
+        return this;
+    }
+
     public ProcessedOption build() throws OptionParserException {
         if (optionType == null) {
             if (!hasValue)
@@ -518,6 +524,8 @@ public class ProcessedOptionBuilder {
             option.setAllowedValues(allowedValues);
         if (visibility != org.aesh.command.option.OptionVisibility.BRIEF)
             option.setVisibility(visibility);
+        if (order != Integer.MAX_VALUE)
+            option.setOrder(order);
         if (paramLabel != null && !paramLabel.isEmpty())
             option.setParamLabel(paramLabel);
         if (arity != null && !arity.isEmpty())

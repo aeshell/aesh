@@ -103,6 +103,8 @@ public final class ProcessedOption {
     private List<String> exclusiveWith = Collections.emptyList();
     private List<String> allowedValues = Collections.emptyList();
     private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
+    private int order = Integer.MAX_VALUE;
+    private int declarationOrder = Integer.MAX_VALUE;
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
@@ -267,6 +269,22 @@ public final class ProcessedOption {
 
     public org.aesh.command.option.OptionVisibility getVisibility() {
         return visibility;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
+    }
+
+    public int getOrder() {
+        return order;
+    }
+
+    public void setDeclarationOrder(int declarationOrder) {
+        this.declarationOrder = declarationOrder;
+    }
+
+    public int getDeclarationOrder() {
+        return declarationOrder;
     }
 
     public boolean hasAlias(String name) {

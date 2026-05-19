@@ -147,4 +147,12 @@ public @interface GroupCommandDefinition {
      * @return true if option parsing should stop at the first positional argument
      */
     boolean stopAtFirstPositional() default false;
+
+    /**
+     * Controls option ordering in help output.
+     * When true, options are sorted alphabetically by name.
+     * When false (default), options keep declaration order, with optional
+     * per-option {@code order} overrides.
+     */
+    boolean sortOptions() default false;
 }

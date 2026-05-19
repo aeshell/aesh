@@ -61,6 +61,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private DefaultValueProvider defaultValueProvider;
     private String version;
     private String helpUrl;
+    private boolean sortOptions;
 
     private ProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -125,6 +126,11 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     public ProcessedCommandBuilder<C, CI> helpUrl(String helpUrl) {
         this.helpUrl = helpUrl;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> sortOptions(boolean sortOptions) {
+        this.sortOptions = sortOptions;
         return this;
     }
 
@@ -224,6 +230,6 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
         return new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
-                helpUrl, stopAtFirstPositional, defaultValueProvider);
+                helpUrl, stopAtFirstPositional, defaultValueProvider, sortOptions);
     }
 }

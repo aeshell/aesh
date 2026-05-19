@@ -60,6 +60,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final CommandPopulator<Object, CI> populator;
     private final boolean disableParsing;
     private final boolean stopAtFirstPositional;
+    private final boolean sortOptions;
     private final DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
     private final boolean generateHelp;
@@ -78,6 +79,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private List<CommandLineParserException> parserExceptions;
     private CompleteStatus completeStatus;
     private java.util.function.BiConsumer<Object, Object> parentCommandInjector;
+    private int optionDeclarationCounter;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator<C, CI> validator,
@@ -127,6 +129,22 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             CommandPopulator<Object, CI> populator, CommandActivator activator,
             String helpUrl, boolean stopAtFirstPositional,
             DefaultValueProvider defaultValueProvider) throws OptionParserException {
+        this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
+                version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional,
+                defaultValueProvider, false);
+    }
+
+    public ProcessedCommand(String name, List<String> aliases, C command,
+            String description, CommandValidator<C, CI> validator,
+            ResultHandler resultHandler,
+            boolean generateHelp, boolean disableParsing,
+            String version,
+            ProcessedOption arguments, List<ProcessedOption> options,
+            ProcessedOption argument,
+            CommandPopulator<Object, CI> populator, CommandActivator activator,
+            String helpUrl, boolean stopAtFirstPositional,
+            DefaultValueProvider defaultValueProvider,
+            boolean sortOptions) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -134,6 +152,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.generateHelp = generateHelp;
         this.disableParsing = disableParsing;
         this.stopAtFirstPositional = stopAtFirstPositional;
+        this.sortOptions = sortOptions;
         this.defaultValueProvider = defaultValueProvider;
         this.helpUrl = helpUrl;
         this.resultHandler = resultHandler;
@@ -144,6 +163,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             this.argumentOptions.add(argument);
         this.options = new ArrayList<>(
                 options.size() + (generateHelp ? 1 : 0) + (version != null && version.length() > 0 ? 1 : 0));
+        this.optionDeclarationCounter = 0;
         this.command = command;
         this.activator = activator;
         if (populator == null)
@@ -189,10 +209,33 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
         verifyThatNamesAreUnique(opt.shortName(), opt.name());
+        opt.setDeclarationOrder(optionDeclarationCounter++);
         this.options.add(opt);
         opt.setParent(this);
         if (command != null)
             opt.captureInitialValue(command);
+    }
+
+    public List<ProcessedOption> getDisplayOptions() {
+        List<ProcessedOption> display = new ArrayList<>(getOptions());
+        java.util.Comparator<ProcessedOption> byOrder = (left, right) -> {
+            int cmp = Integer.compare(left.getOrder(), right.getOrder());
+            return cmp;
+        };
+        java.util.Comparator<ProcessedOption> byDeclarationOrder = (left, right) -> Integer
+                .compare(left.getDeclarationOrder(), right.getDeclarationOrder());
+
+        if (sortOptions) {
+            java.util.Comparator<ProcessedOption> byName = (left, right) -> {
+                String leftName = left.name() != null ? left.name() : "";
+                String rightName = right.name() != null ? right.name() : "";
+                return leftName.compareTo(rightName);
+            };
+            display.sort(byOrder.thenComparing(byName).thenComparing(byDeclarationOrder));
+        } else {
+            display.sort(byOrder.thenComparing(byDeclarationOrder));
+        }
+        return display;
     }
 
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
@@ -265,6 +308,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean stopAtFirstPositional() {
         return stopAtFirstPositional;
+    }
+
+    public boolean sortOptions() {
+        return sortOptions;
     }
 
     public DefaultValueProvider getDefaultValueProvider() {
@@ -471,7 +518,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public List<TerminalString> findPossibleBareLongNamesWithDash(String name) {
-        List<ProcessedOption> opts = getOptions();
+        List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if (o.name() != null && o.acceptNameWithoutDashes()) {
@@ -576,6 +623,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .fieldName("generatedHelp")
                         .build();
 
+                helpOption.setDeclarationOrder(optionDeclarationCounter++);
                 options.add(helpOption);
                 helpOption.setParent(this);
             } catch (OptionParserException e) {
@@ -614,6 +662,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .fieldName("generatedVersion")
                         .build();
 
+                versionOption.setDeclarationOrder(optionDeclarationCounter++);
                 options.add(versionOption);
                 versionOption.setParent(this);
             } catch (OptionParserException e) {
@@ -632,7 +681,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * and is enabled. For negatable options, also includes the negated form.
      */
     public List<TerminalString> getOptionLongNamesWithDash() {
-        List<ProcessedOption> opts = getOptions();
+        List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
@@ -654,7 +703,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public List<TerminalString> findPossibleLongNamesWithDash(String name) {
-        List<ProcessedOption> opts = getOptions();
+        List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
@@ -701,7 +750,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public List<String> findPossibleLongNames(String name) {
         if (name.startsWith("--"))
             name = name.substring(2);
-        List<ProcessedOption> opts = getOptions();
+        List<ProcessedOption> opts = getDisplayOptions();
         List<String> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if (((o.shortName() != null && o.shortName().equals(name) &&
@@ -779,7 +828,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         int maxLength = 0;
         int width = 80;
         DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
-        List<ProcessedOption> opts = getOptions();
+        List<ProcessedOption> opts = getDisplayOptions();
         List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
             if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)

@@ -242,6 +242,7 @@ final class CodeGenerator {
             sb.append("                .command(instance)\n");
             sb.append("                .generateHelp(").append(gcd.generateHelp()).append(")\n");
             sb.append("                .stopAtFirstPositional(").append(gcd.stopAtFirstPositional()).append(")\n");
+            sb.append("                .sortOptions(").append(gcd.sortOptions()).append(")\n");
             generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
             sb.append("                .version(").append(stringLiteral(gcd.version())).append(")\n");
             generateResultHandler(sb, commandElement, isGroup, elementUtils);
@@ -258,6 +259,7 @@ final class CodeGenerator {
             sb.append("                .generateHelp(").append(cd.generateHelp()).append(")\n");
             sb.append("                .disableParsing(").append(cd.disableParsing()).append(")\n");
             sb.append("                .stopAtFirstPositional(").append(cd.stopAtFirstPositional()).append(")\n");
+            sb.append("                .sortOptions(").append(cd.sortOptions()).append(")\n");
             generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
             sb.append("                .version(").append(stringLiteral(cd.version())).append(")\n");
             sb.append("                .helpUrl(").append(stringLiteral(cd.helpUrl())).append(")\n");
@@ -467,6 +469,8 @@ final class CodeGenerator {
         generateExclusiveWith(sb, o.exclusiveWith());
         generateAllowedValues(sb, o.allowedValues());
         generateVisibility(sb, o.visibility());
+        if (o.order() != Integer.MAX_VALUE)
+            sb.append("                        .order(").append(o.order()).append(")\n");
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
         sb.append("                        .build());\n\n");
     }
@@ -508,6 +512,8 @@ final class CodeGenerator {
         generateExclusiveWith(sb, ol.exclusiveWith());
         generateAllowedValues(sb, ol.allowedValues());
         generateVisibility(sb, ol.visibility());
+        if (ol.order() != Integer.MAX_VALUE)
+            sb.append("                        .order(").append(ol.order()).append(")\n");
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
         sb.append("                        .build());\n\n");
     }
@@ -544,6 +550,8 @@ final class CodeGenerator {
         generateOptionRenderer(sb, field, "renderer", elementUtils);
         generateOptionParser(sb, field, "parser", elementUtils);
         generateVisibility(sb, og.visibility());
+        if (og.order() != Integer.MAX_VALUE)
+            sb.append("                        .order(").append(og.order()).append(")\n");
         generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
         sb.append("                        .build());\n\n");
     }

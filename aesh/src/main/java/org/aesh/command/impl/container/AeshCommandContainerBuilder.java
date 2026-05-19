@@ -131,6 +131,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .generateHelp(command.generateHelp())
                     .disableParsing(command.disableParsing())
                     .stopAtFirstPositional(command.stopAtFirstPositional())
+                    .sortOptions(command.sortOptions())
                     .defaultValueProvider(command.defaultValueProvider())
                     .version(command.version())
                     .helpUrl(command.helpUrl())
@@ -158,6 +159,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .command(commandObject)
                     .generateHelp(groupCommand.generateHelp())
                     .stopAtFirstPositional(groupCommand.stopAtFirstPositional())
+                    .sortOptions(groupCommand.sortOptions())
                     .defaultValueProvider(groupCommand.defaultValueProvider())
                     .version(groupCommand.version())
                     .resultHandler(groupCommand.resultHandler())
@@ -295,6 +297,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .exclusiveWith(o.exclusiveWith())
                             .addAllAllowedValues(o.allowedValues())
                             .visibility(o.visibility())
+                            .order(o.order())
                             .mixinFieldName(mixinFieldName)
                             .build());
         } else if ((ol = field.getAnnotation(OptionList.class)) != null) {
@@ -330,6 +333,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .exclusiveWith(ol.exclusiveWith())
                             .addAllAllowedValues(ol.allowedValues())
                             .visibility(ol.visibility())
+                            .order(ol.order())
                             .mixinFieldName(mixinFieldName)
                             .build());
 
@@ -360,6 +364,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .renderer(og.renderer())
                     .parser(og.parser())
                     .visibility(og.visibility())
+                    .order(og.order())
                     .mixinFieldName(mixinFieldName)
                     .build());
         }

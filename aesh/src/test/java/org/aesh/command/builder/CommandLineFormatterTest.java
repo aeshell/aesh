@@ -936,6 +936,101 @@ public class CommandLineFormatterTest {
         assertTrue(help.contains("Generate for tool via tool gen"));
     }
 
+    @Test
+    public void testOptionOrderOverridesInHelp() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("ordered").description("Order test");
+
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("third")
+                .description("third")
+                .type(boolean.class)
+                .build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("second")
+                .description("second")
+                .type(boolean.class)
+                .order(20)
+                .build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("first")
+                .description("first")
+                .type(boolean.class)
+                .order(10)
+                .build());
+
+        AeshCommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(pb.create());
+        String help = parser.printHelp();
+
+        assertEquals(Arrays.asList("first", "second", "third"), Arrays.asList(
+                parser.getProcessedCommand().getDisplayOptions().get(0).name(),
+                parser.getProcessedCommand().getDisplayOptions().get(1).name(),
+                parser.getProcessedCommand().getDisplayOptions().get(2).name()));
+
+        int firstIdx = help.indexOf("--first");
+        int secondIdx = help.indexOf("--second");
+        int thirdIdx = help.indexOf("--third");
+        assertTrue("--first missing in help: " + help, firstIdx >= 0);
+        assertTrue("--second missing in help: " + help, secondIdx >= 0);
+        assertTrue("--third missing in help: " + help, thirdIdx >= 0);
+        assertTrue("wrong order in help: " + help, firstIdx < secondIdx);
+        assertTrue("wrong order in help: " + help, secondIdx < thirdIdx);
+    }
+
+    @Test
+    public void testSortOptionsAlphabeticalInHelp() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("sorted").description("Sort test").sortOptions(true);
+
+        pb.addOption(ProcessedOptionBuilder.builder().name("zulu").description("z").type(boolean.class).build());
+        pb.addOption(ProcessedOptionBuilder.builder().name("alpha").description("a").type(boolean.class).build());
+        pb.addOption(ProcessedOptionBuilder.builder().name("mike").description("m").type(boolean.class).build());
+
+        AeshCommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(pb.create());
+        String help = parser.printHelp();
+
+        assertEquals(Arrays.asList("alpha", "mike", "zulu"), Arrays.asList(
+                parser.getProcessedCommand().getDisplayOptions().get(0).name(),
+                parser.getProcessedCommand().getDisplayOptions().get(1).name(),
+                parser.getProcessedCommand().getDisplayOptions().get(2).name()));
+
+        int alphaIdx = help.indexOf("--alpha");
+        int mikeIdx = help.indexOf("--mike");
+        int zuluIdx = help.indexOf("--zulu");
+        assertTrue("--alpha missing in help: " + help, alphaIdx >= 0);
+        assertTrue("--mike missing in help: " + help, mikeIdx >= 0);
+        assertTrue("--zulu missing in help: " + help, zuluIdx >= 0);
+        assertTrue("wrong order in help: " + help, alphaIdx < mikeIdx);
+        assertTrue("wrong order in help: " + help, mikeIdx < zuluIdx);
+    }
+
+    @Test
+    public void testSortOptionsRespectsExplicitOrderFirst() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("sortedordered").description("Sort+order test").sortOptions(true);
+
+        pb.addOption(ProcessedOptionBuilder.builder().name("zeta").description("z").type(boolean.class).order(1).build());
+        pb.addOption(ProcessedOptionBuilder.builder().name("beta").description("b").type(boolean.class).order(1).build());
+        pb.addOption(ProcessedOptionBuilder.builder().name("alpha").description("a").type(boolean.class).order(2).build());
+
+        AeshCommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(pb.create());
+        String help = parser.printHelp();
+
+        assertEquals(Arrays.asList("beta", "zeta", "alpha"), Arrays.asList(
+                parser.getProcessedCommand().getDisplayOptions().get(0).name(),
+                parser.getProcessedCommand().getDisplayOptions().get(1).name(),
+                parser.getProcessedCommand().getDisplayOptions().get(2).name()));
+
+        int betaIdx = help.indexOf("--beta");
+        int zetaIdx = help.indexOf("--zeta");
+        int alphaIdx = help.indexOf("--alpha");
+        assertTrue("--beta missing in help: " + help, betaIdx >= 0);
+        assertTrue("--zeta missing in help: " + help, zetaIdx >= 0);
+        assertTrue("--alpha missing in help: " + help, alphaIdx >= 0);
+        assertTrue("wrong order in help: " + help, betaIdx < zetaIdx);
+        assertTrue("wrong order in help: " + help, zetaIdx < alphaIdx);
+    }
+
     public static class HeaderFooterProvider implements HelpSectionProvider {
         @Override
         public Map<String, List<HelpEntry>> getAdditionalSections() {
