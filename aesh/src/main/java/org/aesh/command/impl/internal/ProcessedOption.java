@@ -195,6 +195,102 @@ public final class ProcessedOption {
         values = java.util.Collections.emptyList();
     }
 
+    /**
+     * Direct factory for generated (annotation-processor) code. Bypasses
+     * ProcessedOptionBuilder, PropertiesLookup regex, URL type inference,
+     * and all validation — those are resolved at compile time.
+     */
+    public static ProcessedOption createDirect(
+            String shortName, String name, String description,
+            Class<?> type, String fieldName, OptionType optionType,
+            Converter converter, FieldAccessor fieldAccessor) {
+        ProcessedOption opt = new ProcessedOption();
+        opt.shortName = shortName;
+        opt.name = name;
+        opt.description = description;
+        opt.type = type;
+        opt.fieldName = fieldName;
+        opt.optionType = optionType;
+        opt.converter = converter;
+        opt.fieldAccessor = fieldAccessor;
+        return opt;
+    }
+
+    /** No-arg constructor for createDirect(). Sets only immutable defaults. */
+    private ProcessedOption() {
+        this.selectorType = SelectorType.NO_OP;
+        this.valueSeparator = ' ';
+        this.properties = Collections.emptyMap();
+        this.values = Collections.emptyList();
+        this.defaultValues = Collections.emptyList();
+    }
+
+    // --- Setters used by generated code via createDirect() ---
+
+    public void setRequired(boolean required) {
+        this.required = required;
+    }
+
+    public void setValueSeparator(char valueSeparator) {
+        this.valueSeparator = valueSeparator;
+    }
+
+    public void setAskIfNotSet(boolean askIfNotSet) {
+        this.askIfNotSet = askIfNotSet;
+    }
+
+    public void setAcceptNameWithoutDashes(boolean acceptNameWithoutDashes) {
+        this.acceptNameWithoutDashes = acceptNameWithoutDashes;
+    }
+
+    public void setOverrideRequired(boolean overrideRequired) {
+        this.overrideRequired = overrideRequired;
+    }
+
+    public void setNegatable(boolean negatable) {
+        this.negatable = negatable;
+    }
+
+    public void setNegationPrefix(String negationPrefix) {
+        this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
+    }
+
+    public void setInherited(boolean inherited) {
+        this.inherited = inherited;
+    }
+
+    public void setDescriptionUrl(String descriptionUrl) {
+        this.descriptionUrl = descriptionUrl;
+    }
+
+    public void setIsUrl(boolean isUrl) {
+        this.isUrl = isUrl;
+    }
+
+    public void setOptionalValue(boolean optionalValue) {
+        this.optionalValue = optionalValue;
+    }
+
+    public void setDefaultValues(List<String> defaultValues) {
+        this.defaultValues = defaultValues != null ? defaultValues : Collections.emptyList();
+    }
+
+    public void setCompleter(OptionCompleter completer) {
+        this.completer = completer;
+    }
+
+    public void setValidator(OptionValidator validator) {
+        this.validator = validator;
+    }
+
+    public void setActivator(OptionActivator activator) {
+        this.activator = activator;
+    }
+
+    public void setRenderer(OptionRenderer renderer) {
+        this.renderer = renderer;
+    }
+
     public void setFieldSetter(BiConsumer<Object, Object> fieldSetter) {
         this.fieldSetter = fieldSetter;
     }
