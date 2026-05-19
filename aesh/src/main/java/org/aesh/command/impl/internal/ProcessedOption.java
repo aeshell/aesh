@@ -759,6 +759,10 @@ public final class ProcessedOption {
         return parser;
     }
 
+    public void setParser(OptionParser parser) {
+        this.parser = parser;
+    }
+
     void setParent(ProcessedCommand parent) {
         this.parent = parent;
     }

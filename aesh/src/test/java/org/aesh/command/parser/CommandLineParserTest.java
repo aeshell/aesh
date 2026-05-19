@@ -49,6 +49,7 @@ import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.AeshContext;
+import org.aesh.parser.ParsedLineIterator;
 import org.junit.Test;
 
 /**
@@ -2117,6 +2118,185 @@ public class CommandLineParserTest {
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
+    }
+
+    // --- Issue #442: @Argument on @Mixin with custom OptionParser ---
+
+    /**
+     * Custom OptionParser that only accepts values via = syntax.
+     * --option=value uses "value"; --option (without =) uses empty string.
+     */
+    public static class StrictOptionParser implements OptionParser {
+        @Override
+        public void parse(ParsedLineIterator iter, ProcessedOption option) throws OptionParserException {
+            String word = iter.peekWord();
+            String prefix = option.isLongNameUsed() ? "--" : "-";
+            String optName = option.isLongNameUsed() ? option.name() : option.shortName();
+            String fullPrefix = prefix + optName;
+
+            if (word.startsWith(fullPrefix + "=")) {
+                option.addValue(word.substring(fullPrefix.length() + 1));
+            } else {
+                option.addValue("");
+            }
+            iter.pollParsedWord();
+        }
+    }
+
+    /**
+     * Custom OptionParser that peeks ahead to distinguish debug params from positional args.
+     * Accepts: --debug=5000, --debug 5000, --debug (no value → empty string)
+     * But NOT: --debug somefile.java (next word doesn't look like a port number)
+     */
+    public static class PeekAheadOptionParser implements OptionParser {
+        private static final java.util.regex.Pattern DEBUG_VALUE = java.util.regex.Pattern
+                .compile("(?:(.*?:)?(\\d+\\??))|(?:\\S*=\\S+\\??)");
+
+        @Override
+        public void parse(ParsedLineIterator iter, ProcessedOption option) throws OptionParserException {
+            String word = iter.peekWord();
+            String prefix = option.isLongNameUsed() ? "--" : "-";
+            String optName = option.isLongNameUsed() ? option.name() : option.shortName();
+            String fullPrefix = prefix + optName;
+
+            if (word.startsWith(fullPrefix + "=")) {
+                option.addValue(word.substring(fullPrefix.length() + 1));
+                iter.pollParsedWord();
+                return;
+            }
+
+            iter.pollParsedWord();
+
+            if (iter.hasNextWord()) {
+                String nextWord = iter.peekWord();
+                if (!nextWord.startsWith("-") && DEBUG_VALUE.matcher(nextWord).matches()) {
+                    option.addValue(nextWord);
+                    iter.pollParsedWord();
+                    return;
+                }
+            }
+
+            option.addValue("");
+        }
+    }
+
+    @CommandDefinition(name = "run", description = "Run with strict code option", stopAtFirstPositional = true)
+    public class MixinArgStrictParserCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Mixin
+        ScriptMixin scriptMixin;
+
+        @Option(shortName = 'c', name = "code", parser = StrictOptionParser.class, description = "Run given string as code")
+        String code;
+
+        @Arguments(index = "1..*", arity = "0..*")
+        List<String> userParams;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "run", description = "Run with peek-ahead debug", stopAtFirstPositional = true)
+    public class MixinArgPeekAheadParserCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Mixin
+        ScriptMixin scriptMixin;
+
+        @Option(shortName = 'd', name = "debug", parser = PeekAheadOptionParser.class, description = "Debug port")
+        String debug;
+
+        @Arguments(index = "1..*", arity = "0..*")
+        List<String> userParams;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testMixinArgument_StrictParser_WithEquals() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgStrictParserCommand<>()).getParser();
+
+        // --code=println("hi") myfile.java: code should get the value, scriptOrFile should get "myfile.java"
+        parser.populateObject("run --code=println myfile.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgStrictParserCommand<CommandInvocation> cmd = (MixinArgStrictParserCommand<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("println", cmd.code);
+        assertNotNull("mixin should be initialized", cmd.scriptMixin);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
+    }
+
+    @Test
+    public void testMixinArgument_StrictParser_WithoutEquals() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgStrictParserCommand<>()).getParser();
+
+        // -c myfile.java: code should get empty string (strict parser), scriptOrFile should get "myfile.java"
+        parser.populateObject("run -c myfile.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgStrictParserCommand<CommandInvocation> cmd = (MixinArgStrictParserCommand<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("", cmd.code);
+        assertNotNull("mixin should be initialized", cmd.scriptMixin);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
+    }
+
+    @Test
+    public void testMixinArgument_PeekAheadParser_PortThenFile() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgPeekAheadParserCommand<>()).getParser();
+
+        // --debug 4004 myfile.java: debug should get "4004", scriptOrFile should get "myfile.java"
+        parser.populateObject("run --debug 4004 myfile.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgPeekAheadParserCommand<CommandInvocation> cmd = (MixinArgPeekAheadParserCommand<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("4004", cmd.debug);
+        assertNotNull("mixin should be initialized", cmd.scriptMixin);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
+    }
+
+    @Test
+    public void testMixinArgument_PeekAheadParser_FileOnly() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgPeekAheadParserCommand<>()).getParser();
+
+        // --debug myfile.java: debug should get "" (file doesn't match port pattern), scriptOrFile should get "myfile.java"
+        parser.populateObject("run --debug myfile.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgPeekAheadParserCommand<CommandInvocation> cmd = (MixinArgPeekAheadParserCommand<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("", cmd.debug);
+        assertNotNull("mixin should be initialized", cmd.scriptMixin);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
+    }
+
+    @Test
+    public void testMixinArgument_PeekAheadParser_EqualsPort() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinArgPeekAheadParserCommand<>()).getParser();
+
+        // --debug=5005 myfile.java: debug should get "5005", scriptOrFile should get "myfile.java"
+        parser.populateObject("run --debug=5005 myfile.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinArgPeekAheadParserCommand<CommandInvocation> cmd = (MixinArgPeekAheadParserCommand<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("5005", cmd.debug);
+        assertNotNull("mixin should be initialized", cmd.scriptMixin);
+        assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
     }
 
 }

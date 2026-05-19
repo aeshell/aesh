@@ -451,6 +451,7 @@ final class CodeGenerator {
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         if (o.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (o.optionalValue())
@@ -516,6 +517,7 @@ final class CodeGenerator {
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         emitAliasesSetter(sb, var, ol.aliases());
         emitHelpGroupSetter(sb, var, ol.helpGroup());
         emitExclusiveWithSetter(sb, var, ol.exclusiveWith());
@@ -564,6 +566,7 @@ final class CodeGenerator {
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         emitVisibilitySetter(sb, var, og.visibility());
         if (og.order() != Integer.MAX_VALUE)
             sb.append("            ").append(var).append(".setOrder(").append(og.order()).append(");\n");
@@ -877,6 +880,15 @@ final class CodeGenerator {
         } else if (isFileOrResource) {
             sb.append("            ").append(var)
                     .append(".setCompleter(new org.aesh.command.impl.completer.FileOptionCompleter());\n");
+        }
+    }
+
+    /** Emit parser setter if non-default (for createDirect() path). */
+    private static void emitParserSetter(StringBuilder sb, String var, VariableElement field,
+            String attributeName, Elements elementUtils) {
+        String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
+        if (className != null && !className.equals(AESH_OPTION_PARSER)) {
+            sb.append("            ").append(var).append(".setParser(new ").append(className).append("());\n");
         }
     }
 

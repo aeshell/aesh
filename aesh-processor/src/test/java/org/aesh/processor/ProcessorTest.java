@@ -973,6 +973,23 @@ public class ProcessorTest {
             "    }\n" +
             "}\n";
 
+    private static final String CUSTOM_PARSER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.impl.internal.ProcessedOption;\n" +
+            "import org.aesh.command.parser.OptionParser;\n" +
+            "import org.aesh.command.parser.OptionParserException;\n" +
+            "import org.aesh.parser.ParsedLineIterator;\n" +
+            "\n" +
+            "public class CustomParser implements OptionParser {\n" +
+            "    @Override\n" +
+            "    public void parse(ParsedLineIterator iter, ProcessedOption option) throws OptionParserException {\n" +
+            "        String word = iter.pollWord();\n" +
+            "        if (iter.hasNextWord()) {\n" +
+            "            option.addValue(iter.pollWord());\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n";
+
     private static final String FULL_CALLBACKS_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
@@ -991,6 +1008,7 @@ public class ProcessorTest {
             "            validator = CustomValidator.class,\n" +
             "            activator = CustomActivator.class,\n" +
             "            renderer = CustomRenderer.class,\n" +
+            "            parser = CustomParser.class,\n" +
             "            description = \"Output path\")\n" +
             "    private String output;\n" +
             "\n" +
@@ -1016,6 +1034,7 @@ public class ProcessorTest {
                 new InMemorySource("test.CustomCompleter", CUSTOM_COMPLETER_SOURCE),
                 new InMemorySource("test.CustomActivator", CUSTOM_ACTIVATOR_SOURCE),
                 new InMemorySource("test.CustomRenderer", CUSTOM_RENDERER_SOURCE),
+                new InMemorySource("test.CustomParser", CUSTOM_PARSER_SOURCE),
                 new InMemorySource("test.CustomCommandValidator", CUSTOM_CMD_VALIDATOR_SOURCE),
                 new InMemorySource("test.CustomResultHandler", CUSTOM_RESULT_HANDLER_SOURCE),
                 new InMemorySource("test.CustomCommandActivator", CUSTOM_CMD_ACTIVATOR_SOURCE),
@@ -1282,6 +1301,7 @@ public class ProcessorTest {
             assertCallbackEquivalence("completer", rOpt.name(), rOpt.completer(), gOpt.completer());
             assertCallbackEquivalence("validator", rOpt.name(), rOpt.validator(), gOpt.validator());
             assertCallbackEquivalence("activator", rOpt.name(), rOpt.activator(), gOpt.activator());
+            assertCallbackEquivalence("parser", rOpt.name(), rOpt.parser(), gOpt.parser());
             // renderer has no public getter — it's used internally for getRenderedNameWithDashes()
         }
 
