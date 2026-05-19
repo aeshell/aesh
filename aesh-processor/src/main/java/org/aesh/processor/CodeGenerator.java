@@ -98,6 +98,7 @@ final class CodeGenerator {
         sb.append(" implements CommandMetadataProvider<").append(simpleName).append("> {\n\n");
 
         generatePrivateFieldConstants(sb, simpleName, qualifiedCommandName, fields);
+        generateSharedConvertersAndCompleters(sb, fields, elementUtils, typeUtils);
 
         // commandType()
         sb.append("    @Override\n");
@@ -861,8 +862,7 @@ final class CodeGenerator {
         if (className != null && !className.equals(NULL_CONVERTER)) {
             sb.append("new ").append(className).append("()");
         } else {
-            sb.append("org.aesh.converter.CLConverterManager.getInstance().getConverter(")
-                    .append(fieldType).append(".class)");
+            sb.append("CONVERTER_").append(converterConstantSuffix(fieldType));
         }
     }
 
@@ -873,8 +873,7 @@ final class CodeGenerator {
         if (className != null && !className.equals(NULL_OPTION_COMPLETER)) {
             sb.append("            ").append(var).append(".setCompleter(new ").append(className).append("());\n");
         } else if (isBooleanType) {
-            sb.append("            ").append(var)
-                    .append(".setCompleter(new org.aesh.command.impl.completer.BooleanOptionCompleter());\n");
+            sb.append("            ").append(var).append(".setCompleter(BOOLEAN_COMPLETER);\n");
         } else if (isFileOrResource) {
             sb.append("            ").append(var)
                     .append(".setCompleter(new org.aesh.command.impl.completer.FileOptionCompleter());\n");
@@ -1011,6 +1010,101 @@ final class CodeGenerator {
         sb.append("            throw new RuntimeException(e);\n");
         sb.append("        }\n");
         sb.append("    }\n\n");
+    }
+
+    /**
+     * Pre-scan fields to find distinct converter types and completer needs,
+     * then emit shared static final constants to avoid per-option allocations.
+     */
+    private static void generateSharedConvertersAndCompleters(StringBuilder sb,
+            List<VariableElement> fields, Elements elementUtils, Types typeUtils) {
+        // Collect distinct default converter types (types that use CLConverterManager, not custom converters)
+        java.util.LinkedHashSet<String> converterTypes = new java.util.LinkedHashSet<>();
+        boolean needsBooleanCompleter = false;
+
+        for (VariableElement field : fields) {
+            if (field.getAnnotation(Mixin.class) != null) {
+                TypeMirror mixinType = field.asType();
+                if (mixinType instanceof DeclaredType) {
+                    TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
+                    collectConverterTypes(converterTypes, mixinElement, elementUtils, typeUtils);
+                    if (hasBooleanOptions(mixinElement, typeUtils))
+                        needsBooleanCompleter = true;
+                }
+                continue;
+            }
+            String customConverter = getFieldAnnotationClassValue(field, "converter", elementUtils);
+            if (customConverter != null && !customConverter.equals(NULL_CONVERTER))
+                continue; // custom converter, not shared
+            if (field.getAnnotation(Option.class) != null || field.getAnnotation(Argument.class) != null) {
+                converterTypes.add(getBoxedTypeName(field.asType(), typeUtils));
+                if (isBooleanType(field.asType(), typeUtils))
+                    needsBooleanCompleter = true;
+            } else if (field.getAnnotation(OptionList.class) != null || field.getAnnotation(Arguments.class) != null) {
+                converterTypes.add(getGenericTypeArgument(field.asType(), 0, typeUtils));
+            } else if (field.getAnnotation(OptionGroup.class) != null) {
+                converterTypes.add(getGenericTypeArgument(field.asType(), 1, typeUtils));
+            }
+        }
+
+        if (converterTypes.isEmpty() && !needsBooleanCompleter)
+            return;
+
+        // Emit converter constants
+        for (String type : converterTypes) {
+            sb.append("    private static final org.aesh.command.converter.Converter CONVERTER_")
+                    .append(converterConstantSuffix(type))
+                    .append(" = org.aesh.converter.CLConverterManager.getInstance().getConverter(")
+                    .append(type).append(".class);\n");
+        }
+        if (needsBooleanCompleter) {
+            sb.append("    private static final org.aesh.command.completer.OptionCompleter BOOLEAN_COMPLETER")
+                    .append(" = new org.aesh.command.impl.completer.BooleanOptionCompleter();\n");
+        }
+        sb.append("\n");
+    }
+
+    /** Generate a safe Java identifier suffix from a type name. */
+    private static String converterConstantSuffix(String typeName) {
+        return typeName.replace('.', '_').replace('$', '_');
+    }
+
+    private static void collectConverterTypes(java.util.Set<String> types, TypeElement typeElement,
+            Elements elementUtils, Types typeUtils) {
+        for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
+            if (!(enclosed instanceof VariableElement))
+                continue;
+            VariableElement f = (VariableElement) enclosed;
+            String customConverter = getFieldAnnotationClassValue(f, "converter", elementUtils);
+            if (customConverter != null && !customConverter.equals(NULL_CONVERTER))
+                continue;
+            if (f.getAnnotation(Option.class) != null || f.getAnnotation(Argument.class) != null) {
+                types.add(getBoxedTypeName(f.asType(), typeUtils));
+            } else if (f.getAnnotation(OptionList.class) != null || f.getAnnotation(Arguments.class) != null) {
+                types.add(getGenericTypeArgument(f.asType(), 0, typeUtils));
+            } else if (f.getAnnotation(OptionGroup.class) != null) {
+                types.add(getGenericTypeArgument(f.asType(), 1, typeUtils));
+            }
+        }
+        // Recurse into superclass
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() != TypeKind.NONE && !superclass.toString().equals("java.lang.Object")) {
+            if (superclass instanceof DeclaredType) {
+                collectConverterTypes(types, (TypeElement) ((DeclaredType) superclass).asElement(),
+                        elementUtils, typeUtils);
+            }
+        }
+    }
+
+    private static boolean hasBooleanOptions(TypeElement typeElement, Types typeUtils) {
+        for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
+            if (enclosed instanceof VariableElement) {
+                VariableElement f = (VariableElement) enclosed;
+                if ((f.getAnnotation(Option.class) != null) && isBooleanType(f.asType(), typeUtils))
+                    return true;
+            }
+        }
+        return false;
     }
 
     private static void collectMixinPrivateFields(List<String[]> privateFields,
