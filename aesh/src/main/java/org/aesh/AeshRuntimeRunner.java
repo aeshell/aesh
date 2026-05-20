@@ -28,6 +28,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -101,6 +102,15 @@ public class AeshRuntimeRunner {
 
     public AeshRuntimeRunner dynamicComplete(boolean dynamicComplete) {
         this.dynamicComplete = dynamicComplete;
+        return this;
+    }
+
+    /**
+     * Set a registry-level DefaultValueProvider that applies to all commands
+     * that don't declare their own per-command provider via the annotation.
+     */
+    public AeshRuntimeRunner defaultValueProvider(DefaultValueProvider provider) {
+        this.registryBuilder.defaultValueProvider(provider);
         return this;
     }
 

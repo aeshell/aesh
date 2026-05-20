@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
@@ -51,11 +52,20 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     private final Map<String, CommandContainer<CI>> aliases = new HashMap<>();
 
     private CommandContainerBuilder<CI> containerBuilder;
+    private DefaultValueProvider defaultValueProvider;
 
     private final List<CommandRegistrationListener> listeners = new ArrayList<>();
 
     public void setCommandContainerBuilder(CommandContainerBuilder<CI> containerBuilder) {
         this.containerBuilder = containerBuilder;
+    }
+
+    /**
+     * Set a registry-level DefaultValueProvider that applies to all commands
+     * that don't declare their own per-command provider.
+     */
+    public void setDefaultValueProvider(DefaultValueProvider provider) {
+        this.defaultValueProvider = provider;
     }
 
     @Override
@@ -166,6 +176,32 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
             }
             emit(commandContainer.getParser().getProcessedCommand().name(),
                     REGISTRATION_ACTION.ADDED);
+        }
+    }
+
+    /**
+     * Apply the registry-level DefaultValueProvider to all registered commands
+     * that don't have their own per-command provider. Called after all commands
+     * have been registered and the provider has been set.
+     */
+    public void applyDefaultValueProvider() {
+        if (defaultValueProvider == null)
+            return;
+        for (CommandContainer<CI> container : registry.values()) {
+            injectDefaultValueProvider(container.getParser());
+        }
+    }
+
+    private void injectDefaultValueProvider(CommandLineParser<CI> parser) {
+        ProcessedCommand<? extends Command<CI>, CI> cmd = parser.getProcessedCommand();
+        if (cmd.getDefaultValueProvider() == null) {
+            cmd.setDefaultValueProvider(defaultValueProvider);
+        }
+        // Recurse into group command children
+        if (parser.isGroupCommand()) {
+            for (CommandLineParser<CI> child : parser.getAllChildParsers()) {
+                injectDefaultValueProvider(child);
+            }
         }
     }
 

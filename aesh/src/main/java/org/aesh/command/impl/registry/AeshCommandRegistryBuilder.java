@@ -23,6 +23,7 @@ package org.aesh.command.impl.registry;
 import java.util.List;
 
 import org.aesh.command.Command;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainer;
@@ -50,6 +51,15 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
 
     public AeshCommandRegistryBuilder<CI> containerBuilder(CommandContainerBuilder<CI> builder) {
         commandRegistry.setCommandContainerBuilder(builder);
+        return this;
+    }
+
+    /**
+     * Set a registry-level DefaultValueProvider that applies to all commands
+     * that don't declare their own per-command provider via the annotation.
+     */
+    public AeshCommandRegistryBuilder<CI> defaultValueProvider(DefaultValueProvider provider) {
+        commandRegistry.setDefaultValueProvider(provider);
         return this;
     }
 
@@ -93,6 +103,7 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
     }
 
     public CommandRegistry<CI> create() {
+        commandRegistry.applyDefaultValueProvider();
         return commandRegistry;
     }
 

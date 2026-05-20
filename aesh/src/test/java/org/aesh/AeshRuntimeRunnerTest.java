@@ -871,6 +871,88 @@ public class AeshRuntimeRunnerTest {
         assertTrue("--env should still appear", output.contains("--env"));
     }
 
+    // --- Issue #445: registry-level DefaultValueProvider ---
+
+    @CommandDefinition(name = "nodvp", description = "Command without per-command provider")
+    public static class NoDvpCommand implements Command<CommandInvocation> {
+        @Option(description = "Template")
+        private String template;
+
+        static String lastTemplate;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            lastTemplate = template;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "withdvp", description = "Command with per-command provider", defaultValueProvider = PerCommandProvider.class)
+    public static class WithDvpCommand implements Command<CommandInvocation> {
+        @Option(description = "Template")
+        private String template;
+
+        static String lastTemplate;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            lastTemplate = template;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class RegistryProvider implements org.aesh.command.DefaultValueProvider {
+        @Override
+        public String defaultValue(org.aesh.command.impl.internal.ProcessedOption option) {
+            if ("template".equals(option.name()))
+                return "from-registry";
+            return null;
+        }
+    }
+
+    public static class PerCommandProvider implements org.aesh.command.DefaultValueProvider {
+        @Override
+        public String defaultValue(org.aesh.command.impl.internal.ProcessedOption option) {
+            if ("template".equals(option.name()))
+                return "from-command";
+            return null;
+        }
+    }
+
+    @Test
+    public void testRegistryLevelDefaultValueProvider() {
+        NoDvpCommand.lastTemplate = null;
+        AeshRuntimeRunner.builder()
+                .command(NoDvpCommand.class)
+                .defaultValueProvider(new RegistryProvider())
+                .execute();
+
+        assertEquals("Registry provider should apply", "from-registry", NoDvpCommand.lastTemplate);
+    }
+
+    @Test
+    public void testPerCommandProviderOverridesRegistry() {
+        WithDvpCommand.lastTemplate = null;
+        AeshRuntimeRunner.builder()
+                .command(WithDvpCommand.class)
+                .defaultValueProvider(new RegistryProvider())
+                .execute();
+
+        assertEquals("Per-command provider should override registry", "from-command", WithDvpCommand.lastTemplate);
+    }
+
+    @Test
+    public void testUserValueOverridesRegistryProvider() {
+        NoDvpCommand.lastTemplate = null;
+        AeshRuntimeRunner.builder()
+                .command(NoDvpCommand.class)
+                .defaultValueProvider(new RegistryProvider())
+                .args("--template", "user-value")
+                .execute();
+
+        assertEquals("User value should override registry provider", "user-value", NoDvpCommand.lastTemplate);
+    }
+
     @Test
     public void testHandleCompletionInstallIgnoresOtherFlags() {
         assertFalse(AeshRuntimeRunner.handleCompletionInstall(

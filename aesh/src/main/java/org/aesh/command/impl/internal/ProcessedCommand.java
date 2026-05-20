@@ -61,7 +61,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean disableParsing;
     private final boolean stopAtFirstPositional;
     private final boolean sortOptions;
-    private final DefaultValueProvider defaultValueProvider;
+    private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
     private final boolean generateHelp;
     private String version;
@@ -330,6 +330,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public DefaultValueProvider getDefaultValueProvider() {
         return defaultValueProvider;
+    }
+
+    /**
+     * Set the default value provider. Used by the registry to inject a
+     * registry-level fallback when the command has no per-command provider.
+     */
+    public void setDefaultValueProvider(DefaultValueProvider provider) {
+        this.defaultValueProvider = provider;
     }
 
     public String version() {
