@@ -952,6 +952,28 @@ public final class ProcessedOption {
             return new TerminalString("--" + negationPrefix + name, renderer.getColor(), renderer.getTextType());
     }
 
+    /**
+     * Returns the value placeholder for this option. If an explicit argument
+     * label is set, uses that. Otherwise, for options that accept values
+     * (not booleans, not optionalValue, not fallbackValue), derives a
+     * placeholder from the option name.
+     */
+    private String getValuePlaceholder() {
+        if (argument != null && argument.length() > 0)
+            return argument;
+        if (optionType == OptionType.BOOLEAN)
+            return null;
+        if (optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
+            return null;
+        if (type == Boolean.class || type == boolean.class)
+            return null;
+        if (hasValue() && !isOptionalValue() && !hasFallbackValue()) {
+            String label = name != null && !name.isEmpty() ? name : fieldName;
+            return label != null && !label.isEmpty() ? label : null;
+        }
+        return null;
+    }
+
     public int getFormattedLength() {
         StringBuilder sb = new StringBuilder();
         if (shortName != null)
@@ -968,8 +990,9 @@ public final class ProcessedOption {
                 sb.append(", --").append(negationPrefix).append(name);
             }
         }
-        if (argument != null && argument.length() > 0) {
-            sb.append("=<").append(argument).append(">");
+        String placeholder = getValuePlaceholder();
+        if (placeholder != null) {
+            sb.append("=<").append(placeholder).append(">");
         }
 
         return sb.length();
@@ -1005,8 +1028,9 @@ public final class ProcessedOption {
                 sb.append(", --").append(negationPrefix).append(name);
             }
         }
-        if (argument != null && argument.length() > 0) {
-            sb.append("=<").append(argument).append(">");
+        String placeholder = getValuePlaceholder();
+        if (placeholder != null) {
+            sb.append("=<").append(placeholder).append(">");
         }
         if (required && ansiMode)
             sb.append(ANSI.BOLD_OFF);

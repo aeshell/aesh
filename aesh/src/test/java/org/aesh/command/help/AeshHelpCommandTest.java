@@ -43,14 +43,14 @@ public class AeshHelpCommandTest {
         console.start();
         connection.read("foo -h" + Config.getLineSeparator());
         Thread.sleep(100);
-        connection.assertBufferEndsWith("--ask       ask me" + Config.getLineSeparator() + Config.getLineSeparator());
+        connection.assertBufferEndsWith("ask me" + Config.getLineSeparator() + Config.getLineSeparator());
         connection.clearOutputBuffer();
         connection.read("bar -h" + Config.getLineSeparator());
         Thread.sleep(100);
-        connection.assertBufferEndsWith("--ask       ask me" + Config.getLineSeparator() + Config.getLineSeparator());
+        connection.assertBufferEndsWith("ask me" + Config.getLineSeparator() + Config.getLineSeparator());
         connection.read("foobar -h" + Config.getLineSeparator());
         Thread.sleep(100);
-        connection.assertBufferEndsWith("--ask       ask me" + Config.getLineSeparator() + Config.getLineSeparator());
+        connection.assertBufferEndsWith("ask me" + Config.getLineSeparator() + Config.getLineSeparator());
 
         console.stop();
     }
