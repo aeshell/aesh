@@ -631,10 +631,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .shortName('h')
                         .description("Display help (use --help=all for all options)")
                         .required(false)
-                        .optionType(OptionType.NORMAL)
-                        .type(String.class)
-                        .optionalValue(true)
-                        .addDefaultValue("brief")
+                        .optionType(OptionType.BOOLEAN)
+                        .type(Boolean.class)
+                        .hasValue(false)
                         .overrideRequired(true)
                         .fieldName("generatedHelp")
                         .build();
@@ -655,10 +654,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean isFullHelpRequested() {
         ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");
-        if (helpOption == null || helpOption.getValue() == null)
+        if (helpOption == null)
             return false;
-        String val = helpOption.getValue();
-        return "all".equalsIgnoreCase(val) || "full".equalsIgnoreCase(val);
+        // --help=all or --help=full: the = value is stored even for boolean options
+        for (String val : helpOption.getValues()) {
+            if ("all".equalsIgnoreCase(val) || "full".equalsIgnoreCase(val))
+                return true;
+        }
+        return false;
     }
 
     private void doGenerateVersion() {
