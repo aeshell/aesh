@@ -42,6 +42,12 @@ public class AeshOptionParser implements OptionParser {
             processProperty(parsedLineIterator, option);
         } else {
             preProcessOption(option, parsedLineIterator);
+            // When fallbackValue is set, the option only accepts values via = syntax.
+            // A bare --option should NOT consume the next word — it uses the fallback.
+            if (option.hasFallbackValue() && option.getValue() == null) {
+                applyOptionalFallback(option);
+                return;
+            }
             while (status != Status.NULL && parsedLineIterator.hasNextWord()) {
                 String word = parsedLineIterator.peekWord();
                 ProcessedOption nextOption = option.parent().searchAllOptions(word);
@@ -57,15 +63,13 @@ public class AeshOptionParser implements OptionParser {
                     if (option.hasValue() && option.getValue() == null && !option.isOptionalValue()) {
                         throw new OptionParserException("Option " + option.name() + " was specified, but no value was given.");
                     }
-                    if (option.isOptionalValue() && option.getValue() == null && option.hasDefaultValue())
-                        option.addValue(option.getDefaultValues().get(0));
+                    applyOptionalFallback(option);
                     return;
                 }
             }
             if (option.hasValue() && option.getValue() == null && !option.isOptionalValue())
                 throw new OptionParserException("Option " + option.name() + " was specified, but no value was given.");
-            if (option.isOptionalValue() && option.getValue() == null && option.hasDefaultValue())
-                option.addValue(option.getDefaultValues().get(0));
+            applyOptionalFallback(option);
         }
     }
 
@@ -247,6 +251,20 @@ public class AeshOptionParser implements OptionParser {
                 return alias;
         }
         return option.name();
+    }
+
+    /**
+     * Apply the fallback or default value when an optionalValue option is specified bare.
+     * fallbackValue takes precedence over defaultValue for this path.
+     */
+    private static void applyOptionalFallback(ProcessedOption option) {
+        if (!option.isOptionalValue() || option.getValue() != null)
+            return;
+        if (option.hasFallbackValue()) {
+            option.addValue(option.getFallbackValue());
+        } else if (option.hasDefaultValue()) {
+            option.addValue(option.getDefaultValues().get(0));
+        }
     }
 
     private enum Status {

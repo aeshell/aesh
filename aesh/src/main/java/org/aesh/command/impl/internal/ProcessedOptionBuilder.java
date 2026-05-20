@@ -75,6 +75,7 @@ public class ProcessedOptionBuilder {
     private boolean acceptNameWithoutDashes = false;
     private SelectorType selectorType;
     private boolean optionalValue = false;
+    private String fallbackValue;
     private boolean negatable = false;
     private String negationPrefix = "no-";
     private boolean inherited = false;
@@ -339,6 +340,11 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
+    public ProcessedOptionBuilder fallbackValue(String fallbackValue) {
+        this.fallbackValue = fallbackValue;
+        return this;
+    }
+
     public ProcessedOptionBuilder negatable(boolean negatable) {
         this.negatable = negatable;
         return this;
@@ -483,6 +489,10 @@ public class ProcessedOptionBuilder {
             throw new OptionParserException("Option '" + name + "' is marked as negatable but is not a boolean type");
         }
 
+        // fallbackValue implies optionalValue
+        if (fallbackValue != null && !fallbackValue.isEmpty())
+            optionalValue = true;
+
         // Validate that optionalValue requires hasValue (NORMAL type)
         if (optionalValue && optionType != OptionType.NORMAL) {
             throw new OptionParserException("Option '" + name + "' is marked as optionalValue but does not accept values");
@@ -526,6 +536,8 @@ public class ProcessedOptionBuilder {
             option.setVisibility(visibility);
         if (order != Integer.MAX_VALUE)
             option.setOrder(order);
+        if (fallbackValue != null && !fallbackValue.isEmpty())
+            option.setFallbackValue(fallbackValue);
         if (paramLabel != null && !paramLabel.isEmpty())
             option.setParamLabel(paramLabel);
         if (arity != null && !arity.isEmpty())

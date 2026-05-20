@@ -109,6 +109,21 @@ public @interface Option {
     boolean optionalValue() default false;
 
     /**
+     * Value applied when the option is specified without a value (bare).
+     * Unlike {@code defaultValue}, this is NOT applied when the option is omitted entirely.
+     * Implies {@code optionalValue = true}.
+     *
+     * <p>
+     * Example: {@code @Option(name = "debug", fallbackValue = "4004")}
+     * <ul>
+     * <li>{@code app run test.java} → debug = null (not specified)</li>
+     * <li>{@code app run --debug test.java} → debug = "4004" (fallback)</li>
+     * <li>{@code app run --debug=5005 test.java} → debug = "5005" (explicit)</li>
+     * </ul>
+     */
+    String fallbackValue() default "";
+
+    /**
      * When this is set to true and used it will override missing Options that are
      * required by the Command.
      */

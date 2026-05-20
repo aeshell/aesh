@@ -2299,4 +2299,61 @@ public class CommandLineParserTest {
         assertEquals("myfile.java", cmd.scriptMixin.scriptOrFile);
     }
 
+    // --- Issue #446: fallbackValue ---
+
+    @CommandDefinition(name = "app", description = "test fallbackValue")
+    public class FallbackValueCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(name = "debug", fallbackValue = "4004", description = "Debug port")
+        String debug;
+
+        @Argument(description = "Script file")
+        String script;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testFallbackValue_NotSpecified() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackValueCommand<>()).getParser();
+
+        parser.populateObject("app myfile.java", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        FallbackValueCommand<CommandInvocation> cmd = (FallbackValueCommand<CommandInvocation>) parser.getCommand();
+
+        assertNull("debug should be null when not specified", cmd.debug);
+        assertEquals("myfile.java", cmd.script);
+    }
+
+    @Test
+    public void testFallbackValue_BareOption() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackValueCommand<>()).getParser();
+
+        parser.populateObject("app --debug myfile.java", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        FallbackValueCommand<CommandInvocation> cmd = (FallbackValueCommand<CommandInvocation>) parser.getCommand();
+
+        assertEquals("4004", cmd.debug);
+        assertEquals("myfile.java", cmd.script);
+    }
+
+    @Test
+    public void testFallbackValue_ExplicitValue() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackValueCommand<>()).getParser();
+
+        parser.populateObject("app --debug=5005 myfile.java", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        FallbackValueCommand<CommandInvocation> cmd = (FallbackValueCommand<CommandInvocation>) parser.getCommand();
+
+        assertEquals("5005", cmd.debug);
+        assertEquals("myfile.java", cmd.script);
+    }
+
 }

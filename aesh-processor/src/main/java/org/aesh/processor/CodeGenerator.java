@@ -456,6 +456,13 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (o.optionalValue())
             sb.append("            ").append(var).append(".setOptionalValue(true);\n");
+        if (!o.fallbackValue().isEmpty()) {
+            sb.append("            ").append(var).append(".setFallbackValue(").append(stringLiteral(o.fallbackValue()))
+                    .append(");\n");
+            // fallbackValue implies optionalValue
+            if (!o.optionalValue())
+                sb.append("            ").append(var).append(".setOptionalValue(true);\n");
+        }
         if (o.negatable())
             sb.append("            ").append(var).append(".setNegatable(true);\n");
         if (!o.negationPrefix().equals("no-"))

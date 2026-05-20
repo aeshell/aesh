@@ -95,6 +95,7 @@ public final class ProcessedOption {
     private String negationPrefix = "no-";
     private boolean negatedByUser = false;
     private boolean optionalValue = false;
+    private String fallbackValue;
     private boolean inherited = false;
     private String descriptionUrl;
     private boolean isUrl = false;
@@ -269,6 +270,18 @@ public final class ProcessedOption {
 
     public void setOptionalValue(boolean optionalValue) {
         this.optionalValue = optionalValue;
+    }
+
+    public void setFallbackValue(String fallbackValue) {
+        this.fallbackValue = fallbackValue;
+    }
+
+    public String getFallbackValue() {
+        return fallbackValue;
+    }
+
+    public boolean hasFallbackValue() {
+        return fallbackValue != null && !fallbackValue.isEmpty();
     }
 
     public void setDefaultValues(List<String> defaultValues) {

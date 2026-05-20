@@ -287,6 +287,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .parser(o.parser())
                             .overrideRequired(o.overrideRequired())
                             .optionalValue(o.optionalValue())
+                            .fallbackValue(o.fallbackValue())
                             .negatable(o.negatable())
                             .negationPrefix(o.negationPrefix())
                             .inherited(o.inherited())

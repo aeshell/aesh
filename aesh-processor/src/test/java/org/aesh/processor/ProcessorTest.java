@@ -835,6 +835,9 @@ public class ProcessorTest {
             "    @Option(allowedValues = {\"fast\", \"safe\"}, description = \"Build mode\", order = 5)\n" +
             "    String mode;\n" +
             "\n" +
+            "    @Option(fallbackValue = \"4004\", description = \"Debug port\")\n" +
+            "    String debug;\n" +
+            "\n" +
             "    @OptionList(allowedValues = {\"v1\", \"v2\", \"latest\"}, description = \"Tags\", order = 15)\n" +
             "    List<String> tags;\n" +
             "\n" +
@@ -1286,6 +1289,9 @@ public class ProcessorTest {
             assertEquals("Option order for " + rOpt.name(), rOpt.getOrder(), gOpt.getOrder());
             assertEquals("Option overrideRequired for " + rOpt.name(), rOpt.doOverrideRequired(), gOpt.doOverrideRequired());
             assertEquals("Option optionalValue for " + rOpt.name(), rOpt.isOptionalValue(), gOpt.isOptionalValue());
+            assertEquals("Option fallbackValue for " + rOpt.name(),
+                    rOpt.getFallbackValue() != null ? rOpt.getFallbackValue() : "",
+                    gOpt.getFallbackValue() != null ? gOpt.getFallbackValue() : "");
             assertEquals("Option exclusiveWith for " + rOpt.name(), rOpt.getExclusiveWith(), gOpt.getExclusiveWith());
             assertEquals("Option askIfNotSet for " + rOpt.name(), rOpt.askIfNotSet(), gOpt.askIfNotSet());
             assertEquals("Option allowedValues for " + rOpt.name(), rOpt.getAllowedValues(), gOpt.getAllowedValues());
