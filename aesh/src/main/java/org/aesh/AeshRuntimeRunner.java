@@ -240,36 +240,55 @@ public class AeshRuntimeRunner {
             CommandContainer<CommandInvocation> container = commandRegistry.getCommand(commandName, "");
             CommandLineParser<CommandInvocation> parser = container.getParser();
 
-            // Add subcommand descriptions
-            if (parser.isGroupCommand()) {
-                for (CommandLineParser<CommandInvocation> child : parser.getAllChildParsers()) {
+            // Find the deepest group command matching the partial line to scope descriptions
+            CommandLineParser<CommandInvocation> scopedParser = findScopedParser(parser, args);
+
+            // Add subcommand descriptions scoped to the current group
+            if (scopedParser.isGroupCommand()) {
+                for (CommandLineParser<CommandInvocation> child : scopedParser.getAllChildParsers()) {
                     String name = child.getProcessedCommand().name();
                     String desc = child.getProcessedCommand().description();
                     if (desc != null && !desc.isEmpty()) {
                         descriptions.put(name, desc);
                     }
-                    // Also add child option descriptions
-                    addOptionDescriptions(descriptions, child);
-
-                    // If child is itself a group, add grandchild descriptions
-                    if (child.isGroupCommand()) {
-                        for (CommandLineParser<?> grandchild : child.getAllChildParsers()) {
-                            String gcName = grandchild.getProcessedCommand().name();
-                            String gcDesc = grandchild.getProcessedCommand().description();
-                            if (gcDesc != null && !gcDesc.isEmpty()) {
-                                descriptions.put(gcName, gcDesc);
-                            }
-                            addOptionDescriptions(descriptions, grandchild);
-                        }
-                    }
                 }
             }
 
-            // Add option descriptions from the root command
-            addOptionDescriptions(descriptions, parser);
+            // Add option descriptions from the scoped parser
+            addOptionDescriptions(descriptions, scopedParser);
         } catch (Exception ignored) {
         }
         return descriptions;
+    }
+
+    /**
+     * Walk the parser tree to find the deepest group command matching the args.
+     * For example, with args ["alias", ""] and a parser tree jbang > alias > {add, list, remove},
+     * this returns the "alias" parser so descriptions come from alias's children only.
+     */
+    @SuppressWarnings("unchecked")
+    private static <CI extends CommandInvocation> CommandLineParser<CI> findScopedParser(
+            CommandLineParser<CI> root, String[] args) {
+        if (args == null || args.length == 0)
+            return root;
+        CommandLineParser<CI> current = root;
+        for (String arg : args) {
+            if (arg == null || arg.isEmpty() || arg.startsWith("-"))
+                break;
+            if (!current.isGroupCommand())
+                break;
+            boolean found = false;
+            for (CommandLineParser<CI> child : current.getAllChildParsers()) {
+                if (child.getProcessedCommand().name().equals(arg)) {
+                    current = child;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                break;
+        }
+        return current;
     }
 
     private static void addOptionDescriptions(java.util.Map<String, String> descriptions,

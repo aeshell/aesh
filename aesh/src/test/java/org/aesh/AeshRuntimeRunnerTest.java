@@ -953,6 +953,110 @@ public class AeshRuntimeRunnerTest {
         assertEquals("User value should override registry provider", "user-value", NoDvpCommand.lastTemplate);
     }
 
+    // --- Issue #448: group command completion with duplicate child names ---
+
+    @GroupCommandDefinition(name = "app", description = "App", groupCommands = {
+            AliasGroup.class, CatalogGroup.class })
+    public static class DuplicateChildApp implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "alias", description = "Manage aliases", groupCommands = {
+            AliasAdd.class, AliasList.class })
+    public static class AliasGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "catalog", description = "Manage catalogs", groupCommands = {
+            CatalogAdd.class, CatalogList.class })
+    public static class CatalogGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "add", description = "Add an alias")
+    public static class AliasAdd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "list", description = "List aliases")
+    public static class AliasList implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "add", description = "Add a catalog")
+    public static class CatalogAdd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "list", description = "List catalogs")
+    public static class CatalogList implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testDynamicComplete_GroupChildDescriptions_Alias() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DuplicateChildApp.class)
+                .dynamicComplete(true)
+                .args("alias", "")
+                .execute());
+
+        // "add" should have alias-specific description, not catalog's
+        assertTrue("add should appear", output.contains("add"));
+        assertTrue("add should have alias description",
+                output.contains("Add an alias"));
+        assertFalse("add should NOT have catalog description",
+                output.contains("Add a catalog"));
+    }
+
+    @Test
+    public void testDynamicComplete_GroupChildDescriptions_Catalog() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DuplicateChildApp.class)
+                .dynamicComplete(true)
+                .args("catalog", "")
+                .execute());
+
+        assertTrue("add should appear", output.contains("add"));
+        assertTrue("add should have catalog description",
+                output.contains("Add a catalog"));
+        assertFalse("add should NOT have alias description",
+                output.contains("Add an alias"));
+    }
+
+    @Test
+    public void testDynamicComplete_TopLevelGroupNames() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DuplicateChildApp.class)
+                .dynamicComplete(true)
+                .args("")
+                .execute());
+
+        assertTrue("alias should appear", output.contains("alias"));
+        assertTrue("catalog should appear", output.contains("catalog"));
+    }
+
     @Test
     public void testHandleCompletionInstallIgnoresOtherFlags() {
         assertFalse(AeshRuntimeRunner.handleCompletionInstall(
