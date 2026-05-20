@@ -111,7 +111,8 @@ public @interface Option {
     /**
      * Value applied when the option is specified without a value (bare).
      * Unlike {@code defaultValue}, this is NOT applied when the option is omitted entirely.
-     * Implies {@code optionalValue = true}.
+     * Implies {@code optionalValue = true}. Use empty string {@code ""} as the fallback
+     * to distinguish "specified bare" from "not specified at all".
      *
      * <p>
      * Example: {@code @Option(name = "debug", fallbackValue = "4004")}
@@ -121,7 +122,7 @@ public @interface Option {
      * <li>{@code app run --debug=5005 test.java} → debug = "5005" (explicit)</li>
      * </ul>
      */
-    String fallbackValue() default "";
+    String fallbackValue() default "\u0000";
 
     /**
      * When this is set to true and used it will override missing Options that are

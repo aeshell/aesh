@@ -489,8 +489,8 @@ public class ProcessedOptionBuilder {
             throw new OptionParserException("Option '" + name + "' is marked as negatable but is not a boolean type");
         }
 
-        // fallbackValue implies optionalValue
-        if (fallbackValue != null && !fallbackValue.isEmpty())
+        // fallbackValue implies optionalValue (null means "not set")
+        if (fallbackValue != null)
             optionalValue = true;
 
         // Validate that optionalValue requires hasValue (NORMAL type)
@@ -536,7 +536,7 @@ public class ProcessedOptionBuilder {
             option.setVisibility(visibility);
         if (order != Integer.MAX_VALUE)
             option.setOrder(order);
-        if (fallbackValue != null && !fallbackValue.isEmpty())
+        if (fallbackValue != null)
             option.setFallbackValue(fallbackValue);
         if (paramLabel != null && !paramLabel.isEmpty())
             option.setParamLabel(paramLabel);

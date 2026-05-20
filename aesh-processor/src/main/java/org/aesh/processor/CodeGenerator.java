@@ -456,7 +456,7 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (o.optionalValue())
             sb.append("            ").append(var).append(".setOptionalValue(true);\n");
-        if (!o.fallbackValue().isEmpty()) {
+        if (!"\u0000".equals(o.fallbackValue())) {
             sb.append("            ").append(var).append(".setFallbackValue(").append(stringLiteral(o.fallbackValue()))
                     .append(");\n");
             // fallbackValue implies optionalValue

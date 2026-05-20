@@ -2356,4 +2356,66 @@ public class CommandLineParserTest {
         assertEquals("myfile.java", cmd.script);
     }
 
+    // --- Issue #447: fallbackValue with short option ---
+
+    @CommandDefinition(name = "run", description = "test fallbackValue short option", stopAtFirstPositional = true)
+    public class FallbackShortCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(shortName = 'c', name = "code", fallbackValue = "", description = "Run the given string as code")
+        String literalScript;
+
+        @Argument(description = "Script file")
+        String scriptOrFile;
+
+        @Arguments(index = "1..*", arity = "0..*")
+        List<String> userParams;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testFallbackValue_ShortWithEquals() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackShortCommand<>()).getParser();
+
+        parser.populateObject("run -c=somecode firstarg",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        FallbackShortCommand<CommandInvocation> cmd = (FallbackShortCommand<CommandInvocation>) parser.getCommand();
+
+        assertEquals("somecode", cmd.literalScript);
+        assertEquals("firstarg", cmd.scriptOrFile);
+    }
+
+    @Test
+    public void testFallbackValue_ShortBare() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackShortCommand<>()).getParser();
+
+        parser.populateObject("run -c somecode firstarg",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        FallbackShortCommand<CommandInvocation> cmd = (FallbackShortCommand<CommandInvocation>) parser.getCommand();
+
+        assertEquals("fallback should be empty string", "", cmd.literalScript);
+        assertEquals("somecode", cmd.scriptOrFile);
+    }
+
+    @Test
+    public void testFallbackValue_LongBareWithSpace() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackShortCommand<>()).getParser();
+
+        parser.populateObject("run --code somecode firstarg",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        FallbackShortCommand<CommandInvocation> cmd = (FallbackShortCommand<CommandInvocation>) parser.getCommand();
+
+        assertEquals("fallback should be empty string", "", cmd.literalScript);
+        assertEquals("somecode", cmd.scriptOrFile);
+    }
+
 }

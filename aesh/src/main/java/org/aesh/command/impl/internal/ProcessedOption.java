@@ -281,7 +281,7 @@ public final class ProcessedOption {
     }
 
     public boolean hasFallbackValue() {
-        return fallbackValue != null && !fallbackValue.isEmpty();
+        return fallbackValue != null;
     }
 
     public void setDefaultValues(List<String> defaultValues) {
