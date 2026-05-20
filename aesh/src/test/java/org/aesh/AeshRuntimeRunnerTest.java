@@ -1231,13 +1231,10 @@ public class AeshRuntimeRunnerTest {
                 .args("build", "--")
                 .execute());
 
-        // Child command "build" should show its own option
+        // Child command "build" should show its own option and inherited options
         assertTrue("--target should appear (own option)", output.contains("--target"));
-        // TODO: inherited options (--verbose, --config) are not currently shown
-        // in dynamic completion for child commands. This is a known limitation —
-        // the completion parser only checks the child's own options, not the
-        // parent's inherited options. See AeshCommandLineParser.searchParentInheritedOption
-        // which is used in parsing but not in completion candidate listing.
+        assertTrue("--verbose should appear (inherited)", output.contains("--verbose"));
+        assertTrue("--config should appear (inherited)", output.contains("--config"));
     }
 
     // #18: Mutually exclusive option exclusion in completion

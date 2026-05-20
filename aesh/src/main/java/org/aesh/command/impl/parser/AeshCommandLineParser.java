@@ -163,6 +163,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         this.parent = parent;
     }
 
+    AeshCommandLineParser<CI> getParentParser() {
+        return parent;
+    }
+
     @Override
     public CommandLineParser<CI> parsedCommand() {
         if (parsedCommand)

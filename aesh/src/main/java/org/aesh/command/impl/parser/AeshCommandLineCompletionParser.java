@@ -290,6 +290,9 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             // Handle bare long name prefix
             optionNamesWithDash = parser.getProcessedCommand().findPossibleBareLongNamesWithDash(value);
 
+        // Add inherited options from parent parsers
+        addInheritedOptions(optionNamesWithDash, value);
+
         if (optionNamesWithDash.size() > 1) {
             completeOperation.addCompletionCandidatesTerminalString(optionNamesWithDash);
             completeOperation.setOffset(completeOperation.getCursor() - value.length());
@@ -303,6 +306,31 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             completeOperation.setOffset(completeOperation.getCursor() - value.length());
         }
 
+    }
+
+    /**
+     * Add inherited options from parent parsers to the completion candidates.
+     * Only includes options marked with inherited=true that haven't already been set.
+     */
+    private void addInheritedOptions(List<TerminalString> candidates, String value) {
+        AeshCommandLineParser<CI> p = parser.isChild() ? parser.getParentParser() : null;
+        while (p != null) {
+            for (ProcessedOption o : p.getProcessedCommand().getOptions()) {
+                if (!o.isInherited())
+                    continue;
+                if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+                    continue;
+                if (o.getValues().size() > 0)
+                    continue;
+                String prefix = value.startsWith("--") ? value.substring(2) : (value.length() < 3 ? "" : value);
+                if (!prefix.isEmpty() && !o.name().startsWith(prefix))
+                    continue;
+                TerminalString rendered = o.getRenderedNameWithDashes();
+                if (!candidates.contains(rendered))
+                    candidates.add(rendered);
+            }
+            p = p.isChild() ? p.getParentParser() : null;
+        }
     }
 
     @SuppressWarnings("unchecked")
