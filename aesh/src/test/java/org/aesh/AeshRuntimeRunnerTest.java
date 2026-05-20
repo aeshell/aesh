@@ -799,6 +799,78 @@ public class AeshRuntimeRunnerTest {
                 path.getName().equals("mycli.fish"));
     }
 
+    // --- Issue #443: dynamic completion fixes ---
+
+    @CommandDefinition(name = "deploy", description = "Deploy app", stopAtFirstPositional = true)
+    public static class DeployCommand implements Command<CommandInvocation> {
+        @Option(hasValue = false, description = "Verbose output")
+        private boolean verbose;
+
+        @Option(hasValue = false, negatable = true, description = "Enable CDS")
+        private boolean cds;
+
+        @Option(description = "Target environment")
+        private String env;
+
+        @Argument(description = "Artifact file")
+        private String artifact;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testDynamicComplete_PositionalShowsArgumentNotOptions() {
+        // Bug #443.1: at a positional argument position, should not list options
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DeployCommand.class)
+                .dynamicComplete(true)
+                .args("--verbose", "")
+                .execute());
+
+        // After --verbose and a space, cursor is at the argument position
+        // Should NOT list --env, --cds etc. as the primary completion
+        assertFalse("Should not list --env at argument position", output.contains("--env"));
+    }
+
+    @Test
+    public void testDynamicComplete_NegatableOptionHasDescription() {
+        // Bug #443.2: negated form should have a description
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DeployCommand.class)
+                .dynamicComplete(true)
+                .args("--")
+                .execute());
+
+        // Both --cds and --no-cds should appear, and --no-cds should have a description
+        assertTrue("--cds should appear", output.contains("--cds"));
+        assertTrue("--no-cds should appear", output.contains("--no-cds"));
+        // --no-cds line should include the description tab-separated
+        boolean negatedHasDesc = false;
+        for (String line : output.split("\n")) {
+            if (line.contains("--no-cds") && line.contains("\t")) {
+                negatedHasDesc = true;
+                break;
+            }
+        }
+        assertTrue("--no-cds should have a description", negatedHasDesc);
+    }
+
+    @Test
+    public void testDynamicComplete_AlreadyUsedOptionExcluded() {
+        // Bug #443.4: --verbose already specified should not appear in completion
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DeployCommand.class)
+                .dynamicComplete(true)
+                .args("--verbose", "--")
+                .execute());
+
+        assertFalse("--verbose should not appear (already used)", output.contains("--verbose"));
+        assertTrue("--env should still appear", output.contains("--env"));
+    }
+
     @Test
     public void testHandleCompletionInstallIgnoresOtherFlags() {
         assertFalse(AeshRuntimeRunner.handleCompletionInstall(

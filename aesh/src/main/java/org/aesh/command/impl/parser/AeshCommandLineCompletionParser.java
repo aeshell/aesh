@@ -134,8 +134,15 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             if (parser.getProcessedCommand().completeStatus().value().isEmpty()) {
                 completeOperation.addCompletionCandidate("-");
                 completeOperation.setAppendSeparator(false);
-                //completeOperation.setOffset( completeOperation.getCursor() - count);
                 completeOperation.setOffset(completeOperation.getCursor());
+            } else {
+                // User typed e.g. -a — filter to matching long options starting with that prefix
+                String prefix = parser.getProcessedCommand().completeStatus().value();
+                List<TerminalString> matches = parser.getProcessedCommand().findPossibleLongNamesWithDash(prefix);
+                if (!matches.isEmpty()) {
+                    completeOperation.addCompletionCandidatesTerminalString(matches);
+                    completeOperation.setOffset(completeOperation.getCursor() - prefix.length() - 1);
+                }
             }
         }
         //we have an option, but no value

@@ -535,7 +535,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (o.name() != null && o.acceptNameWithoutDashes()) {
+            if (o.name() != null && o.acceptNameWithoutDashes()
+                    && o.getValues().size() == 0
+                    && o.isActivated(new ParsedCommand(this))) {
                 if (o.name().startsWith(name)) {
                     names.add(o.getRenderedNameWithDashes());
                 }
