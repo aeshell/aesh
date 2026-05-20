@@ -82,7 +82,8 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
             return null;
         ParsedLine aeshLine = lines.poll();
         getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);
-        if (getParser().getProcessedCommand().parserExceptions().size() > 0) {
+        if (getParser().getProcessedCommand().parserExceptions().size() > 0
+                && !getParser().getProcessedCommand().hasOptionWithOverrideRequired()) {
             throw getParser().getProcessedCommand().parserExceptions().get(0);
         }
 

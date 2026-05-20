@@ -565,18 +565,20 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 MutuallyExclusiveOptionException me = checkForMutuallyExclusiveOptions(processedCommand);
                 if (me != null)
                     processedCommand.addParserException(me);
-                // Check arity min constraints on arguments
-                RequiredOptionException arityEx = null;
-                for (ProcessedOption argOpt : processedCommand.getArgumentOptions()) {
-                    arityEx = checkArityMin(argOpt);
-                    if (arityEx != null) {
-                        processedCommand.addParserException(arityEx);
-                        break;
+                // Check arity min constraints on arguments (skip if overrideRequired is active)
+                if (!processedCommand.hasOptionWithOverrideRequired()) {
+                    RequiredOptionException arityEx = null;
+                    for (ProcessedOption argOpt : processedCommand.getArgumentOptions()) {
+                        arityEx = checkArityMin(argOpt);
+                        if (arityEx != null) {
+                            processedCommand.addParserException(arityEx);
+                            break;
+                        }
                     }
+                    arityEx = checkArityMin(processedCommand.getArguments());
+                    if (arityEx != null)
+                        processedCommand.addParserException(arityEx);
                 }
-                arityEx = checkArityMin(processedCommand.getArguments());
-                if (arityEx != null)
-                    processedCommand.addParserException(arityEx);
             }
         }
     }

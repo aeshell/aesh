@@ -976,7 +976,12 @@ public final class ProcessedOption {
 
     public int getFormattedLength() {
         StringBuilder sb = new StringBuilder();
-        if (shortName != null)
+        if ((optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
+                && (name == null || name.isEmpty())) {
+            String label = getDisplayLabel();
+            if (label != null && !label.isEmpty())
+                sb.append("<").append(label).append(">");
+        } else if (shortName != null)
             sb.append("-").append(shortName);
         if (name != null) {
             if (sb.toString().trim().length() > 0)
@@ -1014,7 +1019,13 @@ public final class ProcessedOption {
             sb.append(ANSI.BOLD);
         if (offset > 0)
             sb.append(String.format("%" + offset + "s", ""));
-        if (shortName != null)
+        // For positional arguments (ARGUMENT/ARGUMENTS), show <label> instead of --name
+        if ((optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
+                && (name == null || name.isEmpty())) {
+            String label = getDisplayLabel();
+            if (label != null && !label.isEmpty())
+                sb.append("<").append(label).append(">");
+        } else if (shortName != null)
             sb.append("-").append(shortName);
         if (name != null && name.length() > 0) {
             if (shortName != null)
