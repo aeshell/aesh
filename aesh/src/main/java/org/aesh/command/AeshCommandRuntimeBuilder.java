@@ -62,6 +62,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     private CommandInvocationBuilder<CI> commandInvocationBuilder;
     private Shell shell;
 
+    private DefaultValueProvider defaultValueProvider;
     private boolean parseBrackets;
     private EnumSet<OperatorType> operators;
 
@@ -143,6 +144,15 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Set a registry-level DefaultValueProvider that applies to all commands
+     * that don't declare their own per-command provider via the annotation.
+     */
+    public AeshCommandRuntimeBuilder<CI> defaultValueProvider(DefaultValueProvider provider) {
+        this.defaultValueProvider = provider;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public AeshCommandRuntimeBuilder<CI> settings(Settings<? extends CommandInvocation> settings) {
         this.commandInvocationProvider = (CommandInvocationProvider<CI>) settings.commandInvocationProvider();
@@ -162,6 +172,12 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     public CommandRuntime<CI> build() {
         if (registry == null) {
             registry = new MutableCommandRegistryImpl<>();
+        }
+
+        if (defaultValueProvider != null && registry instanceof MutableCommandRegistryImpl) {
+            MutableCommandRegistryImpl<CI> mutableRegistry = (MutableCommandRegistryImpl<CI>) registry;
+            mutableRegistry.setDefaultValueProvider(defaultValueProvider);
+            mutableRegistry.applyDefaultValueProvider();
         }
 
         if (commandInvocationProvider == null) {
