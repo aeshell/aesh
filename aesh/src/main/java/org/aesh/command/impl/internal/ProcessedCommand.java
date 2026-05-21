@@ -972,7 +972,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
         int currentLineLen = visualPrefixLen;
         // Split on spaces but keep the tokens (option groups like "[--foo]")
-        String[] tokens = options.trim().split("\\s+");
+        // Note: do NOT use trim() — it strips chars <= 0x20 which includes ESC (0x1B)
+        String trimmed = options;
+        while (trimmed.startsWith(" "))
+            trimmed = trimmed.substring(1);
+        String[] tokens = trimmed.split(" +");
         for (String token : tokens) {
             int visualTokenLen = token.replaceAll("\u001B\\[[;\\d]*m", "").length();
             if (currentLineLen + 1 + visualTokenLen > width && currentLineLen > indent) {

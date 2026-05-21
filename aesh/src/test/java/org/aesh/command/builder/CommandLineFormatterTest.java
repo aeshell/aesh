@@ -22,6 +22,7 @@ package org.aesh.command.builder;
 import static org.aesh.terminal.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -1556,6 +1557,93 @@ public class CommandLineFormatterTest {
         }
         assertTrue("Long option should be present", foundLongOpt);
         assertTrue("Description should wrap to next line for long option names", descOnNextLine);
+    }
+
+    // --- Issue #463: Synopsis ANSI codes correct ---
+
+    @Test
+    public void testAnsi_SynopsisHasCorrectEscapeCodes() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("app").description("Test app");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('v').name("verbose").type(boolean.class).hasValue(false)
+                .description("Verbose").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("config").type(String.class).description("Config file").build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        // Find the synopsis line (contains "Usage:")
+        String synopsisLine = null;
+        for (String line : help.split("\\r?\\n")) {
+            if (line.contains("Usage:")) {
+                synopsisLine = line;
+                break;
+            }
+        }
+        assertNotNull("Synopsis line should exist", synopsisLine);
+
+        // Every ANSI code should have the ESC prefix (\u001B)
+        // Check that there are no bare "[0;33m" or "[0;36m" without preceding \u001B
+        assertFalse("ANSI codes should not be bare (missing ESC before [0;33m)",
+                synopsisLine.matches(".*[^\\u001B]\\[0;33m.*"));
+        assertFalse("ANSI codes should not be bare (missing ESC before [0;36m)",
+                synopsisLine.matches(".*[^\\u001B]\\[0;36m.*"));
+
+        // Verify yellow and cyan are present with ESC prefix
+        assertTrue("Synopsis should contain yellow ANSI with ESC",
+                synopsisLine.contains(ANSI.YELLOW_TEXT));
+        assertTrue("Synopsis should contain bold ANSI with ESC",
+                synopsisLine.contains(ANSI.BOLD) || synopsisLine.contains("\u001B[1m"));
+
+        // Verify every [ that's part of an ANSI code has \u001B before it
+        // (ANSI codes match pattern \u001B\[\d+(;\d+)*m)
+        // Check no orphaned ANSI codes exist by ensuring all CSI sequences start with ESC
+        for (int i = 0; i < synopsisLine.length(); i++) {
+            if (synopsisLine.charAt(i) == '[' && i > 0) {
+                char prev = synopsisLine.charAt(i - 1);
+                // If this looks like a CSI sequence (followed by digits and 'm'),
+                // it must be preceded by ESC
+                String rest = synopsisLine.substring(i);
+                if (rest.matches("^\\[\\d+(;\\d+)*m.*")) {
+                    assertEquals("CSI sequence at position " + i + " must be preceded by ESC",
+                            '\u001B', prev);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testAnsi_SynopsisWrappedHasCorrectEscapeCodes() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("myapp").description("Test app");
+        // Add enough options to trigger wrapping
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('h').name("help").type(boolean.class).hasValue(false).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('v').name("verbose").type(boolean.class).hasValue(false).build());
+        for (String name : new String[] { "alpha", "bravo", "charlie", "delta", "echo",
+                "foxtrot", "golf", "hotel" }) {
+            pb.addOption(ProcessedOptionBuilder.builder()
+                    .name(name).type(String.class).description("Option " + name).build());
+        }
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        // Check ALL lines for bare ANSI codes (missing ESC prefix)
+        String[] lines = help.split("\\r?\\n");
+        for (String line : lines) {
+            for (int i = 1; i < line.length(); i++) {
+                if (line.charAt(i) == '[') {
+                    String rest = line.substring(i);
+                    if (rest.matches("^\\[\\d+(;\\d+)*m.*")) {
+                        assertEquals(
+                                "CSI at pos " + i + " in line must have ESC prefix",
+                                '\u001B', line.charAt(i - 1));
+                    }
+                }
+            }
+        }
     }
 
     // --- Issue #460: OptionGroup short-name-only ---
