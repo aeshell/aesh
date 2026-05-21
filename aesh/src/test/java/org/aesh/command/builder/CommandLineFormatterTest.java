@@ -1557,4 +1557,54 @@ public class CommandLineFormatterTest {
         assertTrue("Description should wrap to next line for long option names", descOnNextLine);
     }
 
+    // --- Issue #460: OptionGroup short-name-only ---
+
+    @Test
+    public void testHelp_OptionGroupShortNameOnly() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run app");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('D').name("")
+                .type(String.class).optionType(org.aesh.command.impl.internal.OptionType.GROUP)
+                .valueSeparator(',').fieldName("properties")
+                .description("set a system property").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // Should show -D=<key=value> without --properties
+        assertTrue("Should contain -D", help.contains("-D"));
+        assertFalse("Should NOT contain --properties", help.contains("--properties"));
+        assertTrue("Should show key=value syntax", help.contains("=<key=value>"));
+    }
+
+    // --- Issue #461: Positional arguments inline ---
+
+    @Test
+    public void testHelp_PositionalArgsInlineNoSectionHeaders() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("copy").description("Copy files");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false)
+                .description("Verbose output").build());
+        pb.argument(ProcessedOptionBuilder.builder()
+                .name("").type(String.class).fieldName("source")
+                .paramLabel("source").description("Source file")
+                .optionType(org.aesh.command.impl.internal.OptionType.ARGUMENT).build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // Should NOT have separate "Argument:" section header
+        assertFalse("Should not have 'Argument:' section header",
+                help.contains("Argument:"));
+        // But the argument should still appear with its label and description
+        assertTrue("Should contain <source> label", help.contains("<source>"));
+        assertTrue("Should contain description", help.contains("Source file"));
+        // Should be under the Options section
+        assertTrue("Should have Options section", help.contains("Options:"));
+    }
+
 }
