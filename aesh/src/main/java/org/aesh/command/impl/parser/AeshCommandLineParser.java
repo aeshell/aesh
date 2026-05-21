@@ -303,20 +303,29 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
         StringBuilder sb = new StringBuilder();
 
-        // Header from HelpSectionProvider — shown before synopsis
-        if (provider != null && provider.getHeader() != null) {
-            sb.append(resolveDescriptionVariables(provider.getHeader(), null)).append(Config.getLineSeparator());
-        }
-
         if (hasChildren || hasAdditional) {
             String helpText = processedCommand.printHelp(helpNames(), false, showAll);
-            // Append [COMMAND] to the synopsis line for group commands
-            int firstNewline = helpText.indexOf(Config.getLineSeparator());
-            if (firstNewline > 0 && hasChildren) {
-                sb.append(helpText, 0, firstNewline).append(" [COMMAND]")
-                        .append(helpText.substring(firstNewline));
+            // Append [COMMAND] to the synopsis line for group commands.
+            // Synopsis is now the second line (after description).
+            // Find the "Usage:" line and append [COMMAND] to it.
+            int usageIdx = helpText.indexOf("Usage:");
+            if (usageIdx >= 0 && hasChildren) {
+                int usageEnd = helpText.indexOf(Config.getLineSeparator(), usageIdx);
+                if (usageEnd > 0) {
+                    sb.append(helpText, 0, usageEnd).append(" [COMMAND]")
+                            .append(helpText.substring(usageEnd));
+                } else {
+                    sb.append(helpText);
+                }
             } else {
                 sb.append(helpText);
+            }
+
+            // Header from HelpSectionProvider — shown after synopsis/description
+            if (provider != null && provider.getHeader() != null) {
+                sb.append(Config.getLineSeparator())
+                        .append(resolveDescriptionVariables(provider.getHeader(), null))
+                        .append(Config.getLineSeparator());
             }
 
             int maxLength = 0;
@@ -376,6 +385,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             }
         } else {
             sb.append(processedCommand.printHelp(helpNames(), false, showAll));
+
+            // Header from HelpSectionProvider — shown after synopsis/description
+            if (provider != null && provider.getHeader() != null) {
+                sb.append(Config.getLineSeparator())
+                        .append(resolveDescriptionVariables(provider.getHeader(), null))
+                        .append(Config.getLineSeparator());
+            }
         }
 
         // Footer from HelpSectionProvider — shown after everything

@@ -870,7 +870,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
 
         StringBuilder sb = new StringBuilder();
-        //first line — detailed synopsis
+        //first line — description
+        sb.append(descriptionResolver.resolveCommandDescription(description())).append(Config.getLineSeparator());
+        //second line — detailed synopsis
         sb.append("Usage: ");
         if (commandName == null || commandName.length() == 0)
             sb.append(name());
@@ -883,8 +885,6 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             sb.append(formatArgumentSynopsis(positional));
         }
         sb.append(Config.getLineSeparator());
-        //second line
-        sb.append(descriptionResolver.resolveCommandDescription(description())).append(Config.getLineSeparator());
 
         //options and arguments — group by helpGroup
         if (visibleOpts.size() > 0) {

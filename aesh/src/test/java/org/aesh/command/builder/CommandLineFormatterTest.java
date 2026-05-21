@@ -756,12 +756,12 @@ public class CommandLineFormatterTest {
 
         String help = clp.printHelp();
 
-        // Header should appear before the Usage line
+        // Header should appear after the Usage line
         assertTrue("Header should be present", help.contains("My CLI Tool v1.0"));
         assertTrue("Multi-line header should work", help.contains("A powerful command line interface"));
         int headerPos = help.indexOf("My CLI Tool v1.0");
         int usagePos = help.indexOf("Usage:");
-        assertTrue("Header should appear before Usage", headerPos < usagePos);
+        assertTrue("Header should appear after Usage", headerPos > usagePos);
     }
 
     @Test
@@ -821,7 +821,7 @@ public class CommandLineFormatterTest {
 
         String help = clpParent.printHelp();
 
-        // Verify ordering: header, then usage, then footer
+        // Verify ordering: usage, then header, then footer
         int headerPos = help.indexOf("Unleash the power");
         int usagePos = help.indexOf("Usage:");
         int footerPos = help.indexOf("https://jbang.dev");
@@ -829,8 +829,8 @@ public class CommandLineFormatterTest {
         assertTrue("Header should be present", headerPos >= 0);
         assertTrue("Usage should be present", usagePos >= 0);
         assertTrue("Footer should be present", footerPos >= 0);
-        assertTrue("Header before Usage", headerPos < usagePos);
-        assertTrue("Usage before Footer", usagePos < footerPos);
+        assertTrue("Usage before Header", usagePos < headerPos);
+        assertTrue("Header before Footer", headerPos < footerPos);
         // Subcommand should still be listed
         assertTrue("Subcommand run should appear", help.contains("run"));
     }
@@ -1130,6 +1130,15 @@ public class CommandLineFormatterTest {
         }
     }
 
+    /** Extract the "Usage: ..." line from help output regardless of position. */
+    private static String extractSynopsisLine(String help) {
+        for (String line : help.split("\\r?\\n")) {
+            if (line.startsWith("Usage:"))
+                return line;
+        }
+        return "";
+    }
+
     // --- Help output gap coverage tests ---
 
     @Test
@@ -1146,7 +1155,7 @@ public class CommandLineFormatterTest {
                 .name("verbose").type(boolean.class).hasValue(false).build());
 
         String help = new AeshCommandLineParser<>(pb.create()).printHelp();
-        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+        String synopsis = extractSynopsisLine(help);
 
         assertTrue("Synopsis should contain pipe notation for exclusive options",
                 synopsis.contains("--json | --xml") || synopsis.contains("--xml | --json"));
@@ -1164,7 +1173,7 @@ public class CommandLineFormatterTest {
                 .name("verbose").type(boolean.class).hasValue(false).build());
 
         String help = new AeshCommandLineParser<>(pb.create()).printHelp();
-        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+        String synopsis = extractSynopsisLine(help);
 
         assertTrue("Required option should appear without brackets",
                 synopsis.contains(" --target=<target>") && !synopsis.contains("[--target"));
@@ -1182,7 +1191,7 @@ public class CommandLineFormatterTest {
                 .name("output").type(String.class).build());
 
         String help = new AeshCommandLineParser<>(pb.create()).printHelp();
-        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+        String synopsis = extractSynopsisLine(help);
 
         assertFalse("optionalValue option should NOT show =<debug> in synopsis",
                 synopsis.contains("--debug=<debug>"));
@@ -1202,7 +1211,7 @@ public class CommandLineFormatterTest {
                 .name("config").type(String.class).build());
 
         String help = new AeshCommandLineParser<>(pb.create()).printHelp();
-        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+        String synopsis = extractSynopsisLine(help);
 
         assertFalse("fallbackValue option should NOT show =<jfr> in synopsis",
                 synopsis.contains("--jfr=<jfr>"));
@@ -1224,7 +1233,7 @@ public class CommandLineFormatterTest {
                 .name("verbose").type(boolean.class).hasValue(false).build());
 
         String help = new AeshCommandLineParser<>(pb.create()).printHelp();
-        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+        String synopsis = extractSynopsisLine(help);
 
         assertTrue("Synopsis should contain --host=<host>", synopsis.contains("--host=<host>"));
         assertTrue("Synopsis should contain --port=<port>", synopsis.contains("--port=<port>"));
@@ -1255,7 +1264,7 @@ public class CommandLineFormatterTest {
                 .negatable(true).build());
 
         String help = new AeshCommandLineParser<>(pb.create()).printHelp();
-        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+        String synopsis = extractSynopsisLine(help);
 
         // Negatable boolean should appear as a grouped short flag
         assertTrue("Negatable boolean with shortName should be in grouped flags",
