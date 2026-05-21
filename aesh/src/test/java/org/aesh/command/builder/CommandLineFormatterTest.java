@@ -21,6 +21,7 @@ package org.aesh.command.builder;
 
 import static org.aesh.terminal.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
@@ -1127,6 +1128,173 @@ public class CommandLineFormatterTest {
         public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
         }
+    }
+
+    // --- Help output gap coverage tests ---
+
+    @Test
+    public void testSynopsis_MutuallyExclusivePipes() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("export").description("Export data");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("json").type(boolean.class).hasValue(false)
+                .exclusiveWith("xml").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("xml").type(boolean.class).hasValue(false)
+                .exclusiveWith("json").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false).build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+
+        assertTrue("Synopsis should contain pipe notation for exclusive options",
+                synopsis.contains("--json | --xml") || synopsis.contains("--xml | --json"));
+        assertFalse("Exclusive options should NOT appear individually in synopsis",
+                synopsis.contains("[--json]") && synopsis.contains("[--xml]"));
+    }
+
+    @Test
+    public void testSynopsis_RequiredWithoutBrackets() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("deploy").description("Deploy app");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("target").type(String.class).required(true).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false).build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+
+        assertTrue("Required option should appear without brackets",
+                synopsis.contains(" --target=<target>") && !synopsis.contains("[--target"));
+        assertTrue("Optional option should appear with brackets",
+                synopsis.contains("[") && synopsis.contains("]"));
+    }
+
+    @Test
+    public void testSynopsis_OptionalValueNoPlaceholder() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run app");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("debug").type(String.class).optionalValue(true).addDefaultValue("4004").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("output").type(String.class).build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+
+        assertFalse("optionalValue option should NOT show =<debug> in synopsis",
+                synopsis.contains("--debug=<debug>"));
+        assertTrue("optionalValue option should appear as bare [--debug]",
+                synopsis.contains("[--debug]"));
+        assertTrue("Regular value option should show =<output>",
+                synopsis.contains("--output=<output>"));
+    }
+
+    @Test
+    public void testSynopsis_FallbackValueNoPlaceholder() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run app");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("jfr").type(String.class).fallbackValue("").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("config").type(String.class).build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+
+        assertFalse("fallbackValue option should NOT show =<jfr> in synopsis",
+                synopsis.contains("--jfr=<jfr>"));
+        assertTrue("fallbackValue option should appear as bare [--jfr]",
+                synopsis.contains("[--jfr]"));
+        assertTrue("Regular value option should show =<config>",
+                synopsis.contains("--config=<config>"));
+    }
+
+    @Test
+    public void testSynopsis_ValuePlaceholderInSynopsisLine() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("connect").description("Connect to server");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("host").type(String.class).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("port").type(int.class).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false).build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+
+        assertTrue("Synopsis should contain --host=<host>", synopsis.contains("--host=<host>"));
+        assertTrue("Synopsis should contain --port=<port>", synopsis.contains("--port=<port>"));
+        assertFalse("Boolean --verbose should NOT have =<>", synopsis.contains("--verbose="));
+    }
+
+    @Test
+    public void testSynopsis_BooleanNoPlaceholder() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("test").description("Test");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("flag").type(boolean.class).hasValue(false).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("boolObj").type(Boolean.class).hasValue(false).build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        assertFalse("boolean flag should not show =<flag>", help.contains("--flag="));
+        assertFalse("Boolean object should not show =<boolObj>", help.contains("--boolObj="));
+    }
+
+    @Test
+    public void testSynopsis_NegatableOption() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("build").description("Build");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("cds").shortName('c').type(boolean.class).hasValue(false)
+                .negatable(true).build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+        String synopsis = help.substring(0, help.indexOf(getLineSeparator()));
+
+        // Negatable boolean should appear as a grouped short flag
+        assertTrue("Negatable boolean with shortName should be in grouped flags",
+                synopsis.contains("[-c]"));
+    }
+
+    @Test
+    public void testHelp_MultipleIndexedArguments() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("copy").description("Copy files");
+        org.aesh.command.impl.internal.ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = pb.create();
+        pc.addArgument(ProcessedOptionBuilder.builder()
+                .name("").type(String.class).fieldName("source")
+                .paramLabel("source").index("0")
+                .optionType(org.aesh.command.impl.internal.OptionType.ARGUMENT).build());
+        pc.addArgument(ProcessedOptionBuilder.builder()
+                .name("").type(String.class).fieldName("dest")
+                .paramLabel("dest").index("1")
+                .optionType(org.aesh.command.impl.internal.OptionType.ARGUMENT).build());
+
+        String help = new AeshCommandLineParser<>(pc).printHelp();
+
+        assertTrue("Should show <source> label", help.contains("<source>"));
+        assertTrue("Should show <dest> label", help.contains("<dest>"));
+        // Verify order: source before dest
+        int srcIdx = help.indexOf("<source>");
+        int destIdx = help.indexOf("<dest>");
+        assertTrue("source should appear before dest", srcIdx < destIdx);
+    }
+
+    @Test
+    public void testHelp_VersionOptionShown() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("myapp").description("My app").version("2.0.0");
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        assertTrue("Version option should appear in help", help.contains("--version"));
+        assertTrue("Version description should appear", help.contains("version"));
     }
 
 }
