@@ -62,6 +62,16 @@ public class AeshRuntimeRunner {
         return new AeshRuntimeRunner();
     }
 
+    /**
+     * Set a custom CommandContainerBuilder for command creation.
+     * This allows frameworks (e.g., CDI, Spring) to inject dependencies
+     * into subcommands and option service providers.
+     */
+    public AeshRuntimeRunner containerBuilder(org.aesh.command.container.CommandContainerBuilder<?> containerBuilder) {
+        this.registryBuilder.containerBuilder(containerBuilder);
+        return this;
+    }
+
     public AeshRuntimeRunner command(Class<? extends Command> command) {
         try {
             registryBuilder.command(command);
