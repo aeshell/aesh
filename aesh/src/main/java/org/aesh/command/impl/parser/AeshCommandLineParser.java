@@ -309,7 +309,15 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         }
 
         if (hasChildren || hasAdditional) {
-            sb.append(processedCommand.printHelp(helpNames(), false, showAll));
+            String helpText = processedCommand.printHelp(helpNames(), false, showAll);
+            // Append [COMMAND] to the synopsis line for group commands
+            int firstNewline = helpText.indexOf(Config.getLineSeparator());
+            if (firstNewline > 0 && hasChildren) {
+                sb.append(helpText, 0, firstNewline).append(" [COMMAND]")
+                        .append(helpText.substring(firstNewline));
+            } else {
+                sb.append(helpText);
+            }
 
             int maxLength = 0;
             if (hasChildren) {

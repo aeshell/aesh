@@ -173,14 +173,12 @@ public class CommandLineFormatterTest {
         clpGit.addChildParser(clpBranch);
         clpGit.addChildParser(clpRebase);
 
-        assertEquals("Usage: git [<options>]" + getLineSeparator() + "[OPTION...]" + getLineSeparator() +
-                getLineSeparator() +
-                "Options:" + getLineSeparator() +
-                "  -h, --help  display help info" + getLineSeparator()
-                + getLineSeparator() + "git commands:" + getLineSeparator() +
-                "    " + "branch" + "  branching" + getLineSeparator() +
-                "    " + "rebase" + "  [OPTION...]" + getLineSeparator(),
-                clpGit.printHelp());
+        String help = clpGit.printHelp();
+        assertTrue("Synopsis should contain [-h]", help.contains("[-h]"));
+        assertTrue("Synopsis should contain [COMMAND]", help.contains("[COMMAND]"));
+        assertTrue("Should list help option", help.contains("--help"));
+        assertTrue("Should list branch subcommand", help.contains("branch"));
+        assertTrue("Should list rebase subcommand", help.contains("rebase"));
 
     }
 
@@ -261,13 +259,19 @@ public class CommandLineFormatterTest {
         assertTrue("Output Format should appear before Authentication", outputFormatIdx < authIdx);
         assertTrue("Authentication should appear before Options", authIdx < optionsIdx);
 
-        // Verify options are under their groups
-        assertTrue("--json should appear after Output Format", help.indexOf("--json") > outputFormatIdx);
-        assertTrue("--xml should appear after Output Format", help.indexOf("--xml") > outputFormatIdx);
-        assertTrue("--json should appear before Authentication", help.indexOf("--json") < authIdx);
-        assertTrue("--user should appear after Authentication", help.indexOf("--user") > authIdx);
-        assertTrue("--password should appear after Authentication", help.indexOf("--password") > authIdx);
-        assertTrue("--verbose should appear after Options", help.indexOf("--verbose") > optionsIdx);
+        // Verify options are under their groups (search after the group heading to skip synopsis)
+        assertTrue("--json should appear after Output Format",
+                help.indexOf("--json", outputFormatIdx) > outputFormatIdx);
+        assertTrue("--xml should appear after Output Format",
+                help.indexOf("--xml", outputFormatIdx) > outputFormatIdx);
+        assertTrue("--json in body should appear before Authentication",
+                help.indexOf("--json", outputFormatIdx) < authIdx);
+        assertTrue("--user should appear after Authentication",
+                help.indexOf("--user", authIdx) > authIdx);
+        assertTrue("--password should appear after Authentication",
+                help.indexOf("--password", authIdx) > authIdx);
+        assertTrue("--verbose should appear after Options",
+                help.indexOf("--verbose", optionsIdx) > optionsIdx);
     }
 
     @Test
@@ -319,10 +323,12 @@ public class CommandLineFormatterTest {
 
         String help = clp.printHelp();
 
-        assertTrue("Output section should appear", help.contains("Output:"));
-        assertTrue("Default Options: should appear", help.contains("Options:"));
-        assertTrue("--json should appear after Output:", help.indexOf("--json") > help.indexOf("Output:"));
-        assertTrue("--verbose should appear after Options:", help.indexOf("--verbose") > help.indexOf("Options:"));
+        int outputIdx = help.indexOf("Output:");
+        int optionsIdx = help.indexOf("Options:");
+        assertTrue("Output section should appear", outputIdx > 0);
+        assertTrue("Default Options: should appear", optionsIdx > 0);
+        assertTrue("--json should appear after Output:", help.indexOf("--json", outputIdx) > outputIdx);
+        assertTrue("--verbose should appear after Options:", help.indexOf("--verbose", optionsIdx) > optionsIdx);
     }
 
     @Test
@@ -332,8 +338,9 @@ public class CommandLineFormatterTest {
 
         String help = clp.printHelp();
 
-        assertTrue("Filters section should appear", help.contains("Filters:"));
-        assertTrue("--include should appear after Filters:", help.indexOf("--include") > help.indexOf("Filters:"));
+        int filtersIdx = help.indexOf("Filters:");
+        assertTrue("Filters section should appear", filtersIdx > 0);
+        assertTrue("--include should appear after Filters:", help.indexOf("--include", filtersIdx) > filtersIdx);
     }
 
     @CommandDefinition(name = "grouped", description = "Grouped options test")

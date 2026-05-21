@@ -870,14 +870,13 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
 
         StringBuilder sb = new StringBuilder();
-        //first line
+        //first line — detailed synopsis
         sb.append("Usage: ");
         if (commandName == null || commandName.length() == 0)
             sb.append(name());
         else
             sb.append(commandName);
-        if (visibleOpts.size() > 0)
-            sb.append(" [<options>]");
+        sb.append(buildDetailedSynopsis(visibleOpts));
 
         List<ProcessedOption> positionalOptions = getPositionalOptionsInDisplayOrder();
         for (ProcessedOption positional : positionalOptions) {
@@ -943,6 +942,88 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 ", description='" + description + '\'' +
                 ", options=" + getOptions()
                 + '}';
+    }
+
+    /**
+     * Build a detailed synopsis string from visible options.
+     * Groups boolean short flags together [-hVx], shows value options individually
+     * [--config=<config>], renders mutually exclusive options with pipes
+     * [--verbose | --quiet], and shows required options without brackets.
+     */
+    private String buildDetailedSynopsis(List<ProcessedOption> visibleOpts) {
+        if (visibleOpts.isEmpty())
+            return "";
+
+        // Collect mutually exclusive groups to avoid showing them individually
+        java.util.Set<String> exclusiveHandled = new java.util.HashSet<>();
+
+        // 1. Group boolean short flags
+        StringBuilder shortFlags = new StringBuilder();
+        for (ProcessedOption o : visibleOpts) {
+            if (o.getOptionType() == OptionType.BOOLEAN && o.shortName() != null
+                    && !o.isRequired() && o.getExclusiveWith().isEmpty()) {
+                shortFlags.append(o.shortName());
+            }
+        }
+
+        StringBuilder synopsis = new StringBuilder();
+
+        // Emit grouped short flags: [-hVx]
+        if (shortFlags.length() > 0) {
+            synopsis.append(" [-").append(shortFlags).append("]");
+        }
+
+        // 2. Emit remaining options
+        for (ProcessedOption o : visibleOpts) {
+            // Skip boolean short flags already grouped
+            if (o.getOptionType() == OptionType.BOOLEAN && o.shortName() != null
+                    && !o.isRequired() && o.getExclusiveWith().isEmpty()) {
+                continue;
+            }
+
+            String optName = o.shortName() != null ? "-" + o.shortName() : "--" + o.name();
+
+            // Handle mutually exclusive options
+            if (!o.getExclusiveWith().isEmpty() && !exclusiveHandled.contains(o.name())) {
+                StringBuilder exclusive = new StringBuilder();
+                exclusive.append(optName);
+                for (String exName : o.getExclusiveWith()) {
+                    ProcessedOption exOpt = findLongOptionNoActivatorCheck(exName);
+                    if (exOpt != null) {
+                        String exOptName = exOpt.shortName() != null ? "-" + exOpt.shortName() : "--" + exOpt.name();
+                        exclusive.append(" | ").append(exOptName);
+                        exclusiveHandled.add(exOpt.name());
+                    }
+                }
+                exclusiveHandled.add(o.name());
+                if (o.isRequired()) {
+                    synopsis.append(" (").append(exclusive).append(")");
+                } else {
+                    synopsis.append(" [").append(exclusive).append("]");
+                }
+                continue;
+            }
+            if (exclusiveHandled.contains(o.name()))
+                continue;
+
+            // Regular option
+            String rendered = optName;
+            if (o.hasValue() && o.getOptionType() != OptionType.BOOLEAN
+                    && (o.type() != Boolean.class && o.type() != boolean.class)) {
+                String placeholder = o.getArgument() != null && !o.getArgument().isEmpty()
+                        ? o.getArgument()
+                        : o.name();
+                rendered = optName + "=<" + placeholder + ">";
+            }
+
+            if (o.isRequired()) {
+                synopsis.append(" ").append(rendered);
+            } else {
+                synopsis.append(" [").append(rendered).append("]");
+            }
+        }
+
+        return synopsis.toString();
     }
 
     private String formatArgumentSynopsis(ProcessedOption arg) {
