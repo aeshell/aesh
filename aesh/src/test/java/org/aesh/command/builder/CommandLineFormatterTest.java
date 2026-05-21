@@ -1272,9 +1272,9 @@ public class CommandLineFormatterTest {
         String help = new AeshCommandLineParser<>(pb.create()).printHelp();
         String synopsis = extractSynopsisLine(help);
 
-        // Negatable boolean should appear as a grouped short flag
-        assertTrue("Negatable boolean with shortName should be in grouped flags",
-                synopsis.contains("[-c]"));
+        // Negatable option should show --[no-]name format in synopsis
+        assertTrue("Negatable option should show --[no-]cds in synopsis",
+                synopsis.contains("[--[no-]cds]"));
     }
 
     @Test

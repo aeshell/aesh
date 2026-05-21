@@ -957,11 +957,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         // Collect mutually exclusive groups to avoid showing them individually
         java.util.Set<String> exclusiveHandled = new java.util.HashSet<>();
 
-        // 1. Group boolean short flags
+        // 1. Group boolean short flags (exclude negatable — they need --[no-]name format)
         StringBuilder shortFlags = new StringBuilder();
         for (ProcessedOption o : visibleOpts) {
             if (o.getOptionType() == OptionType.BOOLEAN && o.shortName() != null
-                    && !o.isRequired() && o.getExclusiveWith().isEmpty()) {
+                    && !o.isRequired() && o.getExclusiveWith().isEmpty()
+                    && !o.isNegatable()) {
                 shortFlags.append(o.shortName());
             }
         }
@@ -975,13 +976,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
         // 2. Emit remaining options
         for (ProcessedOption o : visibleOpts) {
-            // Skip boolean short flags already grouped
+            // Skip boolean short flags already grouped (but not negatable ones)
             if (o.getOptionType() == OptionType.BOOLEAN && o.shortName() != null
-                    && !o.isRequired() && o.getExclusiveWith().isEmpty()) {
+                    && !o.isRequired() && o.getExclusiveWith().isEmpty()
+                    && !o.isNegatable()) {
                 continue;
             }
 
-            String optName = o.shortName() != null ? "-" + o.shortName() : "--" + o.name();
+            // For negatable options, use --[no-]name format
+            String optName;
+            if (o.isNegatable()) {
+                optName = "--[" + o.getNegationPrefix() + "]" + o.name();
+            } else {
+                optName = o.shortName() != null ? "-" + o.shortName() : "--" + o.name();
+            }
 
             // Handle mutually exclusive options
             if (!o.getExclusiveWith().isEmpty() && !exclusiveHandled.contains(o.name())) {

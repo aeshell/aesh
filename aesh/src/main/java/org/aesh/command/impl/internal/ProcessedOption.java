@@ -988,13 +988,13 @@ public final class ProcessedOption {
         if (name != null) {
             if (sb.toString().trim().length() > 0)
                 sb.append(", ");
-            sb.append("--").append(name);
+            if (negatable) {
+                sb.append("--[").append(negationPrefix).append("]").append(name);
+            } else {
+                sb.append("--").append(name);
+            }
             for (String alias : aliases) {
                 sb.append(", --").append(alias);
-            }
-            // Add negated form for negatable options
-            if (negatable) {
-                sb.append(", --").append(negationPrefix).append(name);
             }
         }
         String placeholder = getValuePlaceholder();
@@ -1038,13 +1038,13 @@ public final class ProcessedOption {
         if (name != null && name.length() > 0) {
             if (shortName != null)
                 sb.append(", ");
-            sb.append("--").append(name);
+            if (negatable) {
+                sb.append("--[").append(negationPrefix).append("]").append(name);
+            } else {
+                sb.append("--").append(name);
+            }
             for (String alias : aliases) {
                 sb.append(", --").append(alias);
-            }
-            // Add negated form for negatable options
-            if (negatable) {
-                sb.append(", --").append(negationPrefix).append(name);
             }
         }
         // End option name styling

@@ -843,11 +843,9 @@ public class CommandLineParserTest {
                 .getParser();
 
         String help = parser.printHelp();
-        // Help should include both the normal and negated forms
-        assertTrue(help.contains("--verbose"));
-        assertTrue(help.contains("--no-verbose"));
-        assertTrue(help.contains("--debug"));
-        assertTrue(help.contains("--without-debug"));
+        // Help should show combined --[no-]name format
+        assertTrue(help.contains("--[no-]verbose"));
+        assertTrue(help.contains("--[without-]debug"));
     }
 
     @CommandDefinition(name = "negatable", description = "test negatable options")
