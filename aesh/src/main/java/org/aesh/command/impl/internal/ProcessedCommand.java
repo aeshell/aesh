@@ -402,15 +402,6 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return name;
     }
 
-    private char findPossibleName(String longName) throws OptionParserException {
-        for (int i = 0; i < longName.length(); i++) {
-            if (findOption(String.valueOf(longName.charAt(i))) == null)
-                return longName.charAt(i);
-        }
-        //all chars are taken
-        throw new OptionParserException("All option names are taken, please specify a unique name");
-    }
-
     public ProcessedOption findOption(String name) {
         for (ProcessedOption option : getOptions())
             if (option.shortName() != null &&
@@ -1155,7 +1146,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean anyOptionsSet() {
         for (ProcessedOption o : getOptions()) {
-            if (o.hasValue() && o.getValue() != null || !o.hasValue() && o.getValue() != null)
+            if (o.getValue() != null)
                 return true;
         }
         for (ProcessedOption argOpt : argumentOptions) {

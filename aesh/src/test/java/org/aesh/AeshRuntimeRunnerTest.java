@@ -1268,6 +1268,73 @@ public class AeshRuntimeRunnerTest {
         assertTrue("--trace (FULL) should appear in completion", output.contains("--trace"));
     }
 
+    // --- Pre-release: registry DefaultValueProvider with group commands ---
+
+    @GroupCommandDefinition(name = "grp", description = "Group with child", groupCommands = { GrpChildCmd.class })
+    public static class GrpParentCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child", description = "Child command")
+    public static class GrpChildCmd implements Command<CommandInvocation> {
+        @Option(description = "Environment")
+        private String env;
+
+        static String lastEnv;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            lastEnv = env;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testRegistryDefaultValueProviderWithGroupCommand() {
+        GrpChildCmd.lastEnv = null;
+        AeshRuntimeRunner.builder()
+                .command(GrpParentCmd.class)
+                .defaultValueProvider(option -> "env".equals(option.name()) ? "from-registry" : null)
+                .args("child")
+                .execute();
+
+        assertEquals("Registry provider should apply to group child command",
+                "from-registry", GrpChildCmd.lastEnv);
+    }
+
+    // --- Pre-release: containerBuilder test ---
+
+    @Test
+    public void testContainerBuilderIsUsed() {
+        // Verify the containerBuilder method exists and can be called
+        // (functional verification would require a mock container builder)
+        AeshRuntimeRunner runner = AeshRuntimeRunner.builder()
+                .containerBuilder(new org.aesh.command.impl.container.AeshCommandContainerBuilder<>())
+                .command(CaptureCommand.class);
+
+        CaptureCommand.reset();
+        runner.args("-c", "test").execute();
+        assertEquals("test", CaptureCommand.lastCode);
+    }
+
+    // --- Pre-release: ansiMode propagation to child parsers ---
+
+    @Test
+    public void testAnsiModePropagatedToChildParsers() throws Exception {
+        org.aesh.command.impl.container.AeshCommandContainerBuilder<CommandInvocation> builder = new org.aesh.command.impl.container.AeshCommandContainerBuilder<>();
+        org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> clp = builder.create(GrpParentCmd.class).getParser();
+
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // No ANSI escape sequences should be present in the entire help output,
+        // including child command listings
+        assertFalse("No ANSI in group help when ansiMode=false", help.contains("\u001B["));
+    }
+
     @Test
     public void testHandleCompletionInstallIgnoresOtherFlags() {
         assertFalse(AeshRuntimeRunner.handleCompletionInstall(

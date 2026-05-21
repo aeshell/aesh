@@ -292,6 +292,12 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public String printHelp() {
         resolveAllLazyChildren();
+        // Propagate ansiMode to any newly resolved lazy children
+        if (!ansiMode && childParsers != null) {
+            for (CommandLineParser<CI> child : childParsers) {
+                child.updateAnsiMode(false);
+            }
+        }
         boolean showAll = processedCommand.isFullHelpRequested();
         List<CommandLineParser<CI>> parsers = getChildParsers();
         HelpSectionProvider provider = resolveHelpSectionProvider();
@@ -1036,6 +1042,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         this.ansiMode = mode;
         for (ProcessedOption opt : processedCommand.getOptions()) {
             opt.updateAnsiMode(mode);
+        }
+        if (childParsers != null) {
+            for (CommandLineParser<CI> child : childParsers) {
+                child.updateAnsiMode(mode);
+            }
         }
     }
 

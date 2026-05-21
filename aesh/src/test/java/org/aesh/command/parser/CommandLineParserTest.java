@@ -2416,4 +2416,56 @@ public class CommandLineParserTest {
         assertEquals("somecode", cmd.scriptOrFile);
     }
 
+    // --- fallbackValue + defaultValue interaction ---
+
+    @CommandDefinition(name = "app", description = "test fallbackValue + defaultValue")
+    public class FallbackWithDefaultCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "mode", fallbackValue = "fast", defaultValue = "safe")
+        String mode;
+
+        @Override
+        public CommandResult execute(CI ci) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testFallbackValue_WithDefaultValue_NotSpecified() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackWithDefaultCommand<>()).getParser();
+
+        parser.populateObject("app", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        FallbackWithDefaultCommand<CommandInvocation> cmd = (FallbackWithDefaultCommand<CommandInvocation>) parser.getCommand();
+
+        // Not specified: should get defaultValue, not fallbackValue
+        assertEquals("safe", cmd.mode);
+    }
+
+    @Test
+    public void testFallbackValue_WithDefaultValue_BareOption() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackWithDefaultCommand<>()).getParser();
+
+        parser.populateObject("app --mode", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        FallbackWithDefaultCommand<CommandInvocation> cmd = (FallbackWithDefaultCommand<CommandInvocation>) parser.getCommand();
+
+        // Bare: should get fallbackValue, not defaultValue
+        assertEquals("fast", cmd.mode);
+    }
+
+    @Test
+    public void testFallbackValue_WithDefaultValue_ExplicitValue() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackWithDefaultCommand<>()).getParser();
+
+        parser.populateObject("app --mode=turbo", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        FallbackWithDefaultCommand<CommandInvocation> cmd = (FallbackWithDefaultCommand<CommandInvocation>) parser.getCommand();
+
+        // Explicit: should get user value
+        assertEquals("turbo", cmd.mode);
+    }
+
 }
