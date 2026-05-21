@@ -1363,6 +1363,12 @@ public class ProcessorTest {
                     rArgs.getArity() != null ? rArgs.getArity().getMax() : -1,
                     gArgs.getArity() != null ? gArgs.getArity().getMax() : -1);
         }
+
+        // Compare rendered help output — catches rendering divergence even when metadata matches
+        String reflectionHelp = reflectionPC.printHelp(reflectionPC.name());
+        String generatedHelp = generatedPC.printHelp(generatedPC.name());
+        assertEquals("Help output should match between reflection and generated paths",
+                reflectionHelp, generatedHelp);
     }
 
     private void assertCallbackEquivalence(String callbackName, String optionName,
