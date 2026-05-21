@@ -853,6 +853,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      */
     public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll) {
         int maxLength = 0;
+        int maxOptionColumnWidth = 24;
         int width = 80;
         DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
         List<ProcessedOption> opts = getDisplayOptions();
@@ -868,22 +869,23 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (o.getFormattedLength() > maxLength)
                 maxLength = o.getFormattedLength();
         }
+        // Cap option name column width to prevent very long names from pushing descriptions too far right
+        if (maxLength > maxOptionColumnWidth)
+            maxLength = maxOptionColumnWidth;
 
         StringBuilder sb = new StringBuilder();
         //first line — description
         sb.append(descriptionResolver.resolveCommandDescription(description())).append(Config.getLineSeparator());
-        //second line — detailed synopsis
-        sb.append("Usage: ");
-        if (commandName == null || commandName.length() == 0)
-            sb.append(name());
-        else
-            sb.append(commandName);
-        sb.append(buildDetailedSynopsis(visibleOpts));
-
+        //second line — detailed synopsis with wrapping
+        String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;
+        String prefix = "Usage: " + cmdDisplay;
+        String synopsisOpts = buildDetailedSynopsis(visibleOpts);
         List<ProcessedOption> positionalOptions = getPositionalOptionsInDisplayOrder();
+        StringBuilder positionalSuffix = new StringBuilder();
         for (ProcessedOption positional : positionalOptions) {
-            sb.append(formatArgumentSynopsis(positional));
+            positionalSuffix.append(formatArgumentSynopsis(positional));
         }
+        sb.append(wrapSynopsis(prefix, synopsisOpts + positionalSuffix, width));
         sb.append(Config.getLineSeparator());
 
         //options and arguments — group by helpGroup
@@ -942,6 +944,34 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 ", description='" + description + '\'' +
                 ", options=" + getOptions()
                 + '}';
+    }
+
+    /**
+     * Wrap the synopsis line at the given width, indenting continuation lines
+     * to align with the first option (after "Usage: commandname ").
+     */
+    private static String wrapSynopsis(String prefix, String options, int width) {
+        String full = prefix + options;
+        if (full.length() <= width)
+            return full;
+
+        int indent = prefix.length() + 1;
+        String pad = String.format("%" + indent + "s", "");
+        StringBuilder result = new StringBuilder();
+        result.append(prefix);
+
+        int currentLineLen = prefix.length();
+        // Split on spaces but keep the tokens (option groups like "[--foo]")
+        String[] tokens = options.trim().split("\\s+");
+        for (String token : tokens) {
+            if (currentLineLen + 1 + token.length() > width && currentLineLen > indent) {
+                result.append(Config.getLineSeparator()).append(pad);
+                currentLineLen = indent;
+            }
+            result.append(" ").append(token);
+            currentLineLen += 1 + token.length();
+        }
+        return result.toString();
     }
 
     /**

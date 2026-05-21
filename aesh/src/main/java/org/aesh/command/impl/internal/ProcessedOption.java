@@ -1061,12 +1061,14 @@ public final class ProcessedOption {
         if (ansiMode && required)
             sb.append(ANSI.BOLD_OFF);
         if (resolvedDescription != null && resolvedDescription.length() > 0) {
-            //int descOffset = descriptionStart - sb.length();
             int descOffset = descriptionStart - getFormattedLength() - offset;
-            if (descOffset > 0)
+            if (descOffset > 0) {
                 sb.append(String.format("%" + descOffset + "s", ""));
-            else
-                sb.append(" ");
+            } else {
+                // Option name exceeds column width — wrap description to next line
+                sb.append(System.lineSeparator());
+                sb.append(String.format("%" + descriptionStart + "s", ""));
+            }
 
             if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
                 sb.append(ANSI.hyperlink(descriptionUrl, resolvedDescription));

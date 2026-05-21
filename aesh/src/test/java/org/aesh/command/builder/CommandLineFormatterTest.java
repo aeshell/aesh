@@ -1484,4 +1484,77 @@ public class CommandLineFormatterTest {
                 synopsis.contains("-D<key>=<value>"));
     }
 
+    // --- Issue #457: Synopsis wrapping ---
+
+    @Test
+    public void testSynopsis_WrapsAtWidth() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("longcmd").description("A command with many options");
+        // Add enough options to exceed 80 columns
+        for (String name : new String[] { "alpha", "bravo", "charlie", "delta", "echo",
+                "foxtrot", "golf", "hotel", "india", "juliet" }) {
+            pb.addOption(ProcessedOptionBuilder.builder()
+                    .name(name).type(String.class).description("Option " + name).build());
+        }
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // Find the synopsis block (may span multiple lines starting from "Usage:")
+        String[] lines = help.split("\\r?\\n");
+        boolean foundUsage = false;
+        int synopsisLineCount = 0;
+        for (String line : lines) {
+            if (line.startsWith("Usage:")) {
+                foundUsage = true;
+                synopsisLineCount++;
+                assertTrue("Synopsis line should not exceed 80 chars: '" + line + "'",
+                        line.length() <= 82); // small margin for edge cases
+            } else if (foundUsage && line.startsWith("        ")) {
+                // Continuation line (indented)
+                synopsisLineCount++;
+                assertTrue("Continuation line should not exceed 80 chars: '" + line + "'",
+                        line.length() <= 82);
+            } else if (foundUsage) {
+                break;
+            }
+        }
+        assertTrue("Synopsis should wrap to multiple lines", synopsisLineCount > 1);
+    }
+
+    // --- Issue #458: Option column width capping ---
+
+    @Test
+    public void testHelp_LongOptionNameWrapsDescription() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("app").description("Test app");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("very-long-option-name-that-exceeds-column-width")
+                .type(String.class).description("A description").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("short").type(boolean.class).hasValue(false)
+                .description("Short option").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // The long option name should have its description on the next line
+        String[] lines = help.split("\\r?\\n");
+        boolean foundLongOpt = false;
+        boolean descOnNextLine = false;
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].contains("--very-long-option-name") && !lines[i].contains("A description")) {
+                foundLongOpt = true;
+                // Description should be on the next line, indented
+                if (i + 1 < lines.length && lines[i + 1].trim().equals("A description")) {
+                    descOnNextLine = true;
+                }
+            }
+        }
+        assertTrue("Long option should be present", foundLongOpt);
+        assertTrue("Description should wrap to next line for long option names", descOnNextLine);
+    }
+
 }
