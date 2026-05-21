@@ -1008,7 +1008,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
             // Regular option
             String rendered = optName;
-            if (o.hasValue() && o.getOptionType() != OptionType.BOOLEAN
+            if (o.getOptionType() == OptionType.GROUP) {
+                rendered = optName + "<key>=<value>";
+            } else if (o.hasValue() && o.getOptionType() != OptionType.BOOLEAN
                     && (o.type() != Boolean.class && o.type() != boolean.class)
                     && !o.isOptionalValue() && !o.hasFallbackValue()) {
                 String placeholder = o.getArgument() != null && !o.getArgument().isEmpty()

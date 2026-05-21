@@ -965,6 +965,8 @@ public final class ProcessedOption {
             return null;
         if (optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
             return null;
+        if (optionType == OptionType.GROUP)
+            return "key=value";
         if (type == Boolean.class || type == boolean.class)
             return null;
         if (hasValue() && !isOptionalValue() && !hasFallbackValue()) {

@@ -1438,4 +1438,50 @@ public class CommandLineFormatterTest {
                 help.contains("\u001B["));
     }
 
+    // --- Issue #455: OptionGroup rendering ---
+
+    @Test
+    public void testHelp_OptionGroupShowsKeyValueSyntax() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run app");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('D').name("properties")
+                .type(String.class).optionType(org.aesh.command.impl.internal.OptionType.GROUP)
+                .valueSeparator(',')
+                .description("set a system property").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false)
+                .description("Verbose output").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // OptionGroup should show key=value syntax, not just =<properties>
+        assertTrue("OptionGroup should show <key>=<value> in options section",
+                help.contains("=<key=value>"));
+        assertFalse("OptionGroup should NOT show =<properties>",
+                help.contains("=<properties>"));
+    }
+
+    @Test
+    public void testSynopsis_OptionGroupShowsKeyValueSyntax() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run app");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('D').name("properties")
+                .type(String.class).optionType(org.aesh.command.impl.internal.OptionType.GROUP)
+                .valueSeparator(',')
+                .description("set a system property").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+        String synopsis = extractSynopsisLine(help);
+
+        // Synopsis should show -D<key>=<value>, not -D=<properties>
+        assertTrue("Synopsis should show <key>=<value> for OptionGroup",
+                synopsis.contains("-D<key>=<value>"));
+    }
+
 }
