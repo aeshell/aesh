@@ -637,7 +637,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                         .builder()
                         .name("help")
                         .shortName('h')
-                        .description("Display help (use --help=all for all options)")
+                        .description("Display this help and exit")
                         .required(false)
                         .optionType(OptionType.BOOLEAN)
                         .type(Boolean.class)
