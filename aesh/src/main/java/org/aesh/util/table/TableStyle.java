@@ -85,6 +85,20 @@ public enum TableStyle {
     },
 
     /**
+     * Plain style with no borders or separators — columns separated by spaces only.
+     */
+    PLAIN {
+        @Override
+        public Map<String, String> characters() {
+            Map<String, String> base = new HashMap<>();
+            base.put(VERTICAL, " ");
+            base.put(HORIZONTAL, " ");
+            base.put(INTERSECT, " ");
+            return Collections.unmodifiableMap(convertToFullNames(base, false));
+        }
+    },
+
+    /**
      * Double-line box-drawing style with outside borders and row separators.
      */
     DOUBLE {

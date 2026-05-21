@@ -513,4 +513,47 @@ public class TableTest {
         // Should fallback to SQLITE style which uses |, -, +
         assertTrue("Fallback should use SQLITE borders", output.contains("|"));
     }
+
+    @Test
+    public void testPlainStyleNoBorders() {
+        List<Person> people = Arrays.asList(
+                new Person("Alice", "alice@example.com", 30, 95.5),
+                new Person("Bob", "bob@example.com", 25, 87.0));
+
+        List<String> headers = Arrays.asList("Name", "Email", "Age");
+        List<Function<Person, Object>> accessors = Arrays.<Function<Person, Object>> asList(
+                p -> p.name, p -> p.email, p -> p.age);
+
+        String output = Table.render(80, people, headers, accessors,
+                TableStyle.PLAIN.characters());
+        assertNotNull(output);
+
+        // PLAIN style should have no visible border characters
+        assertFalse("PLAIN should not contain pipe characters", output.contains("|"));
+        assertFalse("PLAIN should not contain + characters", output.contains("+"));
+        assertFalse("PLAIN should not contain box-drawing characters", output.contains("\u2502"));
+
+        // Content should still be present and aligned
+        assertTrue("Should contain Alice", output.contains("Alice"));
+        assertTrue("Should contain bob@example.com", output.contains("bob@example.com"));
+        assertTrue("Should contain header Name", output.contains("Name"));
+    }
+
+    @Test
+    public void testPlainStyleViaBuilder() {
+        List<Person> people = Arrays.asList(
+                new Person("Alice", "alice@example.com", 30, 95.5));
+
+        String output = Table.<Person> builder()
+                .maxWidth(80)
+                .style(TableStyle.PLAIN)
+                .column("Name", p -> p.name)
+                .column("Email", p -> p.email)
+                .build()
+                .render(people);
+
+        assertNotNull(output);
+        assertFalse("PLAIN via builder should not contain borders", output.contains("|"));
+        assertTrue("Should contain Alice", output.contains("Alice"));
+    }
 }
