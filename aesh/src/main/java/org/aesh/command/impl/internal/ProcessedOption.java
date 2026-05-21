@@ -1230,6 +1230,10 @@ public final class ProcessedOption {
         this.ansiMode = ansiMode;
     }
 
+    public boolean isAnsiMode() {
+        return ansiMode;
+    }
+
     private <S, T> Map<S, T> newHashMap() {
         return new HashMap<>();
     }

@@ -289,7 +289,7 @@ public class CommandLineFormatterTest {
 
         CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
 
-        String help = clp.printHelp();
+        String help = stripAnsi(clp.printHelp());
         assertTrue(help.contains("--foo=<foo>"));
         assertTrue(help.contains("--bar=<bar>"));
         assertTrue(help.contains("Foo option"));
@@ -1136,11 +1136,12 @@ public class CommandLineFormatterTest {
         return s.replaceAll("\u001B\\[[;\\d]*m", "");
     }
 
-    /** Extract the "Usage: ..." line from help output regardless of position. */
+    /** Extract the "Usage: ..." line from help output regardless of position, stripping ANSI. */
     private static String extractSynopsisLine(String help) {
         for (String line : help.split("\\r?\\n")) {
-            if (line.startsWith("Usage:"))
-                return line;
+            String stripped = stripAnsi(line);
+            if (stripped.startsWith("Usage:"))
+                return stripped;
         }
         return "";
     }

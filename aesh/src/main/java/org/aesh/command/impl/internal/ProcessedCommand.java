@@ -877,8 +877,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         //first line — description
         sb.append(descriptionResolver.resolveCommandDescription(description())).append(Config.getLineSeparator());
         //second line — detailed synopsis with wrapping
+        boolean ansi = !visibleOpts.isEmpty() && visibleOpts.get(0).isAnsiMode();
         String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;
-        String prefix = "Usage: " + cmdDisplay;
+        String prefix = ansi
+                ? "Usage: " + ANSI.BOLD + cmdDisplay + ANSI.BOLD_OFF
+                : "Usage: " + cmdDisplay;
         String synopsisOpts = buildDetailedSynopsis(visibleOpts);
         List<ProcessedOption> positionalOptions = getPositionalOptionsInDisplayOrder();
         StringBuilder positionalSuffix = new StringBuilder();
@@ -955,25 +958,29 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * to align with the first option (after "Usage: commandname ").
      */
     private static String wrapSynopsis(String prefix, String options, int width) {
+        // Calculate visual length excluding ANSI escape sequences
+        int visualPrefixLen = prefix.replaceAll("\u001B\\[[;\\d]*m", "").length();
         String full = prefix + options;
-        if (full.length() <= width)
+        String visualFull = full.replaceAll("\u001B\\[[;\\d]*m", "");
+        if (visualFull.length() <= width)
             return full;
 
-        int indent = prefix.length() + 1;
+        int indent = visualPrefixLen + 1;
         String pad = String.format("%" + indent + "s", "");
         StringBuilder result = new StringBuilder();
         result.append(prefix);
 
-        int currentLineLen = prefix.length();
+        int currentLineLen = visualPrefixLen;
         // Split on spaces but keep the tokens (option groups like "[--foo]")
         String[] tokens = options.trim().split("\\s+");
         for (String token : tokens) {
-            if (currentLineLen + 1 + token.length() > width && currentLineLen > indent) {
+            int visualTokenLen = token.replaceAll("\u001B\\[[;\\d]*m", "").length();
+            if (currentLineLen + 1 + visualTokenLen > width && currentLineLen > indent) {
                 result.append(Config.getLineSeparator()).append(pad);
                 currentLineLen = indent;
             }
             result.append(" ").append(token);
-            currentLineLen += 1 + token.length();
+            currentLineLen += 1 + visualTokenLen;
         }
         return result.toString();
     }
@@ -987,6 +994,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private String buildDetailedSynopsis(List<ProcessedOption> visibleOpts) {
         if (visibleOpts.isEmpty())
             return "";
+
+        // Determine ansiMode from the first option
+        boolean ansi = visibleOpts.get(0).isAnsiMode();
 
         // Collect mutually exclusive groups to avoid showing them individually
         java.util.Set<String> exclusiveHandled = new java.util.HashSet<>();
@@ -1005,7 +1015,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
         // Emit grouped short flags: [-hVx]
         if (shortFlags.length() > 0) {
-            synopsis.append(" [-").append(shortFlags).append("]");
+            if (ansi)
+                synopsis.append(" ").append(ANSI.YELLOW_TEXT).append("[-").append(shortFlags).append("]").append(ANSI.RESET);
+            else
+                synopsis.append(" [-").append(shortFlags).append("]");
         }
 
         // 2. Emit remaining options
@@ -1024,16 +1037,19 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             } else {
                 optName = o.shortName() != null ? "-" + o.shortName() : "--" + o.name();
             }
+            // Apply yellow styling to option name
+            String styledOptName = ansi ? ANSI.YELLOW_TEXT + optName + ANSI.RESET : optName;
 
             // Handle mutually exclusive options
             if (!o.getExclusiveWith().isEmpty() && !exclusiveHandled.contains(o.name())) {
                 StringBuilder exclusive = new StringBuilder();
-                exclusive.append(optName);
+                exclusive.append(styledOptName);
                 for (String exName : o.getExclusiveWith()) {
                     ProcessedOption exOpt = findLongOptionNoActivatorCheck(exName);
                     if (exOpt != null) {
                         String exOptName = exOpt.shortName() != null ? "-" + exOpt.shortName() : "--" + exOpt.name();
-                        exclusive.append(" | ").append(exOptName);
+                        String styledEx = ansi ? ANSI.YELLOW_TEXT + exOptName + ANSI.RESET : exOptName;
+                        exclusive.append(" | ").append(styledEx);
                         exclusiveHandled.add(exOpt.name());
                     }
                 }
@@ -1049,16 +1065,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 continue;
 
             // Regular option
-            String rendered = optName;
+            String rendered = styledOptName;
             if (o.getOptionType() == OptionType.GROUP) {
-                rendered = optName + "<key>=<value>";
+                String placeholder = ansi ? ANSI.CYAN_TEXT + "<key>=<value>" + ANSI.RESET : "<key>=<value>";
+                rendered = styledOptName + placeholder;
             } else if (o.hasValue() && o.getOptionType() != OptionType.BOOLEAN
                     && (o.type() != Boolean.class && o.type() != boolean.class)
                     && !o.isOptionalValue() && !o.hasFallbackValue()) {
                 String placeholder = o.getArgument() != null && !o.getArgument().isEmpty()
                         ? o.getArgument()
                         : o.name();
-                rendered = optName + "=<" + placeholder + ">";
+                String styledPlaceholder = ansi
+                        ? ANSI.CYAN_TEXT + "=<" + placeholder + ">" + ANSI.RESET
+                        : "=<" + placeholder + ">";
+                rendered = styledOptName + styledPlaceholder;
             }
 
             if (o.isRequired()) {
