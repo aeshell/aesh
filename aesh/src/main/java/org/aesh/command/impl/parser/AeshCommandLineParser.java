@@ -306,26 +306,33 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (hasChildren || hasAdditional) {
             String helpText = processedCommand.printHelp(helpNames(), false, showAll);
             // Append [COMMAND] to the synopsis line for group commands.
-            // Synopsis is now the second line (after description).
-            // Find the "Usage:" line and append [COMMAND] to it.
             int usageIdx = helpText.indexOf("Usage:");
             if (usageIdx >= 0 && hasChildren) {
                 int usageEnd = helpText.indexOf(Config.getLineSeparator(), usageIdx);
                 if (usageEnd > 0) {
-                    sb.append(helpText, 0, usageEnd).append(" [COMMAND]")
-                            .append(helpText.substring(usageEnd));
+                    helpText = helpText.substring(0, usageEnd) + " [COMMAND]"
+                            + helpText.substring(usageEnd);
+                }
+            }
+
+            // Inject header between synopsis and options section
+            String headerContent = (provider != null && provider.getHeader() != null)
+                    ? resolveDescriptionVariables(provider.getHeader(), null)
+                    : null;
+            if (headerContent != null) {
+                String sep = Config.getLineSeparator();
+                String doubleSep = sep + sep;
+                int splitPoint = helpText.indexOf(doubleSep);
+                if (splitPoint >= 0) {
+                    sb.append(helpText, 0, splitPoint + doubleSep.length());
+                    sb.append(headerContent).append(sep);
+                    sb.append(helpText.substring(splitPoint + doubleSep.length()));
                 } else {
                     sb.append(helpText);
+                    sb.append(sep).append(headerContent).append(sep);
                 }
             } else {
                 sb.append(helpText);
-            }
-
-            // Header from HelpSectionProvider — shown after synopsis/description
-            if (provider != null && provider.getHeader() != null) {
-                sb.append(Config.getLineSeparator())
-                        .append(resolveDescriptionVariables(provider.getHeader(), null))
-                        .append(Config.getLineSeparator());
             }
 
             int maxLength = 0;
@@ -384,13 +391,24 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     sb.append(line).append(Config.getLineSeparator());
             }
         } else {
-            sb.append(processedCommand.printHelp(helpNames(), false, showAll));
-
-            // Header from HelpSectionProvider — shown after synopsis/description
-            if (provider != null && provider.getHeader() != null) {
-                sb.append(Config.getLineSeparator())
-                        .append(resolveDescriptionVariables(provider.getHeader(), null))
-                        .append(Config.getLineSeparator());
+            String helpText = processedCommand.printHelp(helpNames(), false, showAll);
+            String headerContent = (provider != null && provider.getHeader() != null)
+                    ? resolveDescriptionVariables(provider.getHeader(), null)
+                    : null;
+            if (headerContent != null) {
+                String sep = Config.getLineSeparator();
+                String doubleSep = sep + sep;
+                int splitPoint = helpText.indexOf(doubleSep);
+                if (splitPoint >= 0) {
+                    sb.append(helpText, 0, splitPoint + doubleSep.length());
+                    sb.append(headerContent).append(sep);
+                    sb.append(helpText.substring(splitPoint + doubleSep.length()));
+                } else {
+                    sb.append(helpText);
+                    sb.append(sep).append(headerContent).append(sep);
+                }
+            } else {
+                sb.append(helpText);
             }
         }
 
