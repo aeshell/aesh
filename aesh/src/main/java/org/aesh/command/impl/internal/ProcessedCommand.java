@@ -916,13 +916,17 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                             .append(Config.getLineSeparator());
             }
         }
-        for (ProcessedOption positional : positionalOptions) {
-            sb.append(Config.getLineSeparator())
-                    .append(positional.getOptionType() == OptionType.ARGUMENTS ? "Arguments:" : "Argument:")
-                    .append(Config.getLineSeparator());
-            sb.append(positional.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
-                    descriptionResolver.resolveOptionDescription(positional)))
-                    .append(Config.getLineSeparator());
+        // Render positional arguments inline after the options section
+        if (!positionalOptions.isEmpty()) {
+            // If no options were rendered, start the Options section for positionals
+            if (visibleOpts.isEmpty()) {
+                sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
+            }
+            for (ProcessedOption positional : positionalOptions) {
+                sb.append(positional.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
+                        descriptionResolver.resolveOptionDescription(positional)))
+                        .append(Config.getLineSeparator());
+            }
         }
         // Append documentation link if helpUrl is set
         if (helpUrl != null && helpUrl.length() > 0) {

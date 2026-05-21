@@ -459,10 +459,15 @@ public class ProcessedOptionBuilder {
 
         if ((name == null || name.length() < 1) &&
                 optionType != OptionType.ARGUMENTS && optionType != OptionType.ARGUMENT) {
-            if (fieldName == null || fieldName.length() < 1)
+            // For GROUP options with shortName only, don't auto-derive a long name
+            if (optionType == OptionType.GROUP && shortName != Character.MIN_VALUE) {
+                if (name == null)
+                    name = "";
+            } else if (fieldName == null || fieldName.length() < 1) {
                 throw new OptionParserException("Name must be defined to build an Option");
-            else
+            } else {
                 name = fieldName;
+            }
         }
         //by default fieldName will be given the same name as the option name
         if (fieldName == null)

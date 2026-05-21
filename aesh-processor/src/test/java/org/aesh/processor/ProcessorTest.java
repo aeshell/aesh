@@ -771,9 +771,9 @@ public class ProcessorTest {
         assertEquals("modules should be FULL",
                 org.aesh.command.option.OptionVisibility.FULL,
                 generatedPC.findLongOptionNoActivatorCheck("modules").getVisibility());
-        assertEquals("props should be HIDDEN",
+        assertEquals("props (shortName D) should be HIDDEN",
                 org.aesh.command.option.OptionVisibility.HIDDEN,
-                generatedPC.findLongOptionNoActivatorCheck("props").getVisibility());
+                generatedPC.findOptionNoActivatorCheck("D").getVisibility());
     }
 
     // --- Test: Advanced option properties (optionalValue, overrideRequired, askIfNotSet) ---
@@ -1267,9 +1267,11 @@ public class ProcessorTest {
 
         for (int i = 0; i < reflectionOpts.size(); i++) {
             ProcessedOption rOpt = reflectionOpts.get(i);
-            // Find matching option by name in generated (order may differ)
-            ProcessedOption gOpt = findOptionByName(generatedOpts, rOpt.name());
-            assertNotNull("Generated should have option: " + rOpt.name(), gOpt);
+            // Find matching option by name or shortName in generated (order may differ)
+            ProcessedOption gOpt = (rOpt.name() != null && !rOpt.name().isEmpty())
+                    ? findOptionByName(generatedOpts, rOpt.name())
+                    : findOptionByShortName(generatedOpts, rOpt.shortName());
+            assertNotNull("Generated should have option: " + rOpt.name() + "/" + rOpt.shortName(), gOpt);
 
             assertEquals("Option name", rOpt.name(), gOpt.name());
             assertEquals("Option shortName for " + rOpt.name(), rOpt.shortName(), gOpt.shortName());
@@ -1388,6 +1390,14 @@ public class ProcessorTest {
     private ProcessedOption findOptionByName(List<ProcessedOption> options, String name) {
         for (ProcessedOption opt : options) {
             if (opt.name().equals(name))
+                return opt;
+        }
+        return null;
+    }
+
+    private ProcessedOption findOptionByShortName(List<ProcessedOption> options, String shortName) {
+        for (ProcessedOption opt : options) {
+            if (shortName != null && shortName.equals(opt.shortName()))
                 return opt;
         }
         return null;

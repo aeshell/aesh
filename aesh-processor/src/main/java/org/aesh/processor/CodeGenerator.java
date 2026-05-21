@@ -543,7 +543,9 @@ final class CodeGenerator {
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
         String valueType = getGenericTypeArgument(field.asType(), 1, typeUtils);
-        String optionName = og.name().length() < 1 ? fieldName : og.name();
+        String optionName = og.name().length() < 1
+                ? (og.shortName() != '\u0000' ? "" : fieldName)
+                : og.name();
 
         int accIdx = accessorInfos.size();
         accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),

@@ -349,7 +349,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
             processedCommand.addOption(ProcessedOptionBuilder.builder()
                     .shortName(og.shortName())
-                    .name(og.name().length() < 1 ? field.getName() : og.name())
+                    .name(og.name().length() < 1
+                            ? (og.shortName() != '\u0000' ? "" : field.getName())
+                            : og.name())
                     .description(og.description())
                     .required(og.required())
                     .valueSeparator(',')
