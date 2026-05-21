@@ -48,6 +48,7 @@ import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.terminal.utils.ANSI;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
@@ -79,7 +80,7 @@ public class CommandLineFormatterTest {
 
         CommandLineParser clp = new AeshCommandLineParser<>(pb.create());
 
-        String help = clp.printHelp();
+        String help = stripAnsi(clp.printHelp());
         assertTrue(help.contains("--debug=<debug>"));
         assertTrue(help.contains("--default=<default>"));
         assertTrue(help.contains("emit debugging messages"));
@@ -120,7 +121,7 @@ public class CommandLineFormatterTest {
 
         CommandLineParser clp = new AeshCommandLineParser<>(pb.create());
 
-        String help = clp.printHelp();
+        String help = stripAnsi(clp.printHelp());
         assertTrue(help.contains("--debug=<debug>"));
         assertTrue(help.contains("--default=<default>"));
         assertTrue(help.contains("--file=<filename>"));
@@ -1130,6 +1131,11 @@ public class CommandLineFormatterTest {
         }
     }
 
+    /** Strip ANSI escape sequences from a string for content assertions. */
+    private static String stripAnsi(String s) {
+        return s.replaceAll("\u001B\\[[;\\d]*m", "");
+    }
+
     /** Extract the "Usage: ..." line from help output regardless of position. */
     private static String extractSynopsisLine(String help) {
         for (String line : help.split("\\r?\\n")) {
@@ -1304,6 +1310,132 @@ public class CommandLineFormatterTest {
 
         assertTrue("Version option should appear in help", help.contains("--version"));
         assertTrue("Version description should appear", help.contains("version"));
+    }
+
+    // --- ANSI styling tests ---
+
+    @Test
+    public void testAnsi_OptionNamesYellow() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("styled").description("Styled help");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("output").type(String.class).description("Output file").build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        // Option names should be wrapped in yellow ANSI
+        assertTrue("Option name should have yellow ANSI",
+                help.contains(ANSI.YELLOW_TEXT + "--output"));
+        assertTrue("Option name should be reset after",
+                help.contains("--output" + ANSI.RESET));
+    }
+
+    @Test
+    public void testAnsi_ValuePlaceholderCyan() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("styled").description("Styled help");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("config").type(String.class).description("Config file").build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        // Value placeholder should be wrapped in cyan ANSI
+        assertTrue("Value placeholder should have cyan ANSI",
+                help.contains(ANSI.CYAN_TEXT + "=<config>"));
+        assertTrue("Value placeholder should be reset after",
+                help.contains("=<config>" + ANSI.RESET));
+    }
+
+    @Test
+    public void testAnsi_BooleanNoPlaceholderStyling() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("styled").description("Styled help");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false).description("Verbose").build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        // Boolean option should have yellow name but no cyan placeholder
+        assertTrue("Boolean option should have yellow ANSI",
+                help.contains(ANSI.YELLOW_TEXT + "--verbose"));
+        assertFalse("Boolean option should NOT have cyan placeholder",
+                help.contains(ANSI.CYAN_TEXT));
+    }
+
+    @Test
+    public void testAnsi_RequiredOptionBold() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("styled").description("Styled help");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("target").type(String.class).required(true).description("Target").build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        // Required option should have bold + yellow
+        assertTrue("Required option should have bold",
+                help.contains(ANSI.BOLD));
+        assertTrue("Required option should have yellow",
+                help.contains(ANSI.YELLOW_TEXT));
+    }
+
+    @Test
+    public void testAnsi_ArgumentLabelCyan() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("styled").description("Styled help");
+        pb.argument(ProcessedOptionBuilder.builder()
+                .name("").type(String.class).fieldName("file")
+                .paramLabel("file").description("Input file")
+                .optionType(org.aesh.command.impl.internal.OptionType.ARGUMENT).build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+
+        // Argument label should have cyan styling
+        assertTrue("Argument label should have cyan ANSI",
+                help.contains(ANSI.CYAN_TEXT));
+        String stripped = stripAnsi(help);
+        assertTrue("Stripped help should contain <file>", stripped.contains("<file>"));
+    }
+
+    @Test
+    public void testAnsi_DisabledWithAnsiModeFalse() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("plain").description("Plain help");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("output").type(String.class).description("Output").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false).description("Verbose").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // No ANSI escape sequences should be present
+        assertFalse("No ANSI escapes when ansiMode=false",
+                help.contains("\u001B["));
+        // Content should still be present
+        assertTrue(help.contains("--output=<output>"));
+        assertTrue(help.contains("--verbose"));
+        assertTrue(help.contains("Output"));
+    }
+
+    @Test
+    public void testAnsi_SubcommandStyling() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> parent = ProcessedCommandBuilder.builder()
+                .name("app").description("App");
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> child = ProcessedCommandBuilder.builder()
+                .name("run").description("Run something");
+
+        CommandLineParser<CommandInvocation> parentParser = new AeshCommandLineParser<>(parent.create());
+        parentParser.addChildParser(new AeshCommandLineParser<>(child.create()));
+
+        String help = parentParser.printHelp();
+
+        // Subcommand name should have styling (blue text via ANSIBuilder)
+        String stripped = stripAnsi(help);
+        assertTrue("Stripped help should contain subcommand 'run'", stripped.contains("run"));
+        // The raw help should contain ANSI codes (from ANSIBuilder.blueText)
+        assertTrue("Help should contain ANSI escape codes",
+                help.contains("\u001B["));
     }
 
 }

@@ -1016,6 +1016,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public void updateAnsiMode(boolean mode) {
         this.ansiMode = mode;
+        for (ProcessedOption opt : processedCommand.getOptions()) {
+            opt.updateAnsiMode(mode);
+        }
     }
 
     @Override

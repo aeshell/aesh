@@ -1015,16 +1015,22 @@ public final class ProcessedOption {
     public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks,
             String resolvedDescription) {
         StringBuilder sb = new StringBuilder();
-        if (required && ansiMode)
+        if (ansiMode && required)
             sb.append(ANSI.BOLD);
         if (offset > 0)
             sb.append(String.format("%" + offset + "s", ""));
+        // Start option name styling
+        if (ansiMode)
+            sb.append(ANSI.YELLOW_TEXT);
         // For positional arguments (ARGUMENT/ARGUMENTS), show <label> instead of --name
         if ((optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
                 && (name == null || name.isEmpty())) {
             String label = getDisplayLabel();
-            if (label != null && !label.isEmpty())
+            if (label != null && !label.isEmpty()) {
+                if (ansiMode)
+                    sb.append(ANSI.CYAN_TEXT);
                 sb.append("<").append(label).append(">");
+            }
         } else if (shortName != null)
             sb.append("-").append(shortName);
         if (name != null && name.length() > 0) {
@@ -1039,11 +1045,18 @@ public final class ProcessedOption {
                 sb.append(", --").append(negationPrefix).append(name);
             }
         }
+        // End option name styling
+        if (ansiMode)
+            sb.append(ANSI.RESET);
         String placeholder = getValuePlaceholder();
         if (placeholder != null) {
+            if (ansiMode)
+                sb.append(ANSI.CYAN_TEXT);
             sb.append("=<").append(placeholder).append(">");
+            if (ansiMode)
+                sb.append(ANSI.RESET);
         }
-        if (required && ansiMode)
+        if (ansiMode && required)
             sb.append(ANSI.BOLD_OFF);
         if (resolvedDescription != null && resolvedDescription.length() > 0) {
             //int descOffset = descriptionStart - sb.length();
