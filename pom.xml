@@ -31,7 +31,7 @@
     <scm>
         <connection>scm:git:git://github.com/aeshell/aesh.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/aeshell/aesh.git</developerConnection>
-        <url>https://github.com/aeshell/aesh-readline/tree/master</url>
+        <url>https://github.com/aeshell/aesh/tree/master</url>
     </scm>
 
     <modules>
@@ -53,7 +53,7 @@
     <properties>
       <!-- maven-compiler-plugin -->
       <maven.compiler.release>8</maven.compiler.release>
-      <readline.version>3.7</readline.version>
+      <readline.version>3.8</readline.version>
       <tamboui.version>0.3.0</tamboui.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
