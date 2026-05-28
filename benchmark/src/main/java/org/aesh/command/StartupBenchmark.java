@@ -1437,19 +1437,47 @@ public class StartupBenchmark {
 
     public static void main(String[] args) throws Exception {
         StartupBenchmark benchmark = new StartupBenchmark();
-        benchmark.runFlatBenchmark();
-        System.out.println();
-        benchmark.runMixinBenchmark();
-        System.out.println();
-        benchmark.runGroupBenchmark();
-        System.out.println();
-        benchmark.runNestedGroupBenchmark();
-        System.out.println();
-        benchmark.runOptionVarietyBenchmark();
-        System.out.println();
-        benchmark.runParsingBenchmark();
-        System.out.println();
-        benchmark.runCompletionBenchmark();
+        java.util.Set<String> filter = args.length > 0
+                ? new java.util.HashSet<>(java.util.Arrays.asList(args))
+                : java.util.Collections.emptySet();
+        boolean all = filter.isEmpty();
+
+        if (all || filter.contains("flat")) {
+            benchmark.runFlatBenchmark();
+            System.out.println();
+        }
+        if (all || filter.contains("mixin")) {
+            benchmark.runMixinBenchmark();
+            System.out.println();
+        }
+        if (all || filter.contains("group")) {
+            benchmark.runGroupBenchmark();
+            System.out.println();
+        }
+        if (all || filter.contains("nested")) {
+            benchmark.runNestedGroupBenchmark();
+            System.out.println();
+        }
+        if (all || filter.contains("variety")) {
+            benchmark.runOptionVarietyBenchmark();
+            System.out.println();
+        }
+        if (all || filter.contains("jbang")) {
+            benchmark.runJBangLikeBenchmark();
+            System.out.println();
+        }
+        if (all || filter.contains("jbang-parse")) {
+            benchmark.runJBangLikeParseExecuteBenchmark();
+            System.out.println();
+        }
+        if (all || filter.contains("parsing")) {
+            benchmark.runParsingBenchmark();
+            System.out.println();
+        }
+        if (all || filter.contains("completion")) {
+            benchmark.runCompletionBenchmark();
+            System.out.println();
+        }
     }
 
     public void runFlatBenchmark() throws Exception {
@@ -2553,6 +2581,103 @@ public class StartupBenchmark {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    // ---- JBang-like realistic CLI benchmark ----
+
+    public void runJBangLikeBenchmark() throws Exception {
+        System.out.println("=== JBang-like CLI Benchmark (command creation) ===");
+        System.out.println("11 subcommands, 5 mixins, 3-level inheritance, ~30 options on run path");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+
+        // Generated path (MetadataProviderRegistry picks up generated providers)
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            containerBuilder.create(org.aesh.command.jbang.JBangCommand.class);
+        }
+        long genNs = timeIterations(() -> containerBuilder.create(org.aesh.command.jbang.JBangCommand.class));
+        double genUs = (genNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+        // Reflection path (bypass MetadataProviderRegistry)
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            REFLECTION_CREATE.invoke(containerBuilder, new org.aesh.command.jbang.JBangCommand());
+        }
+        long reflNs = timeIterations(
+                () -> REFLECTION_CREATE.invoke(containerBuilder, new org.aesh.command.jbang.JBangCommand()));
+        double reflUs = (reflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+        double speedup = reflUs / genUs;
+
+        System.out.printf("%14s | %14s | Speedup%n", "Generated (us)", "Reflection (us)");
+        System.out.println("-".repeat(14) + "-|-" + "-".repeat(14) + "-|--------");
+        System.out.printf("%14.1f | %14.1f | %5.2fx%n", genUs, reflUs, speedup);
+    }
+
+    public void runJBangLikeParseExecuteBenchmark() throws Exception {
+        System.out.println("=== JBang-like CLI Benchmark (full parse+execute) ===");
+        System.out.println("Build runtime + parse + execute across different subcommands and options");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        // Exercise different subcommands and option combinations
+        String[] commands = {
+                "jbang run test.java", // run: lazy child, stopAtFirstPositional
+                "jbang run --debug test.java -- --arg1 --arg2", // run: fallbackValue + passthrough args
+                "jbang run --no-cds -R -ea test.java", // run: negatable + runtime options
+                "jbang build test.java", // build: different BaseBuildCommand child
+                "jbang build --java 21 --enable-preview test.java", // build: mixin options + own option
+                "jbang init --template cli hello.java", // init: BaseCommand child + DependencyInfoMixin
+                "jbang edit --open idea --live test.java", // edit: BaseBuildCommand child + own options
+                "jbang alias --list", // alias: simple BaseCommand child
+                "jbang config --set key", // config: BaseCommand child + argument
+                "jbang export --format native test.java", // export: BaseBuildCommand child + own options
+                "jbang info --tools test.java", // info: BaseCommand + ScriptMixin + DepMixin
+                "jbang --verbose run test.java", // inherited option before subcommand
+        };
+
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+
+        // Generated path
+        ThrowingRunnable genRun = () -> {
+            for (String cmd : commands) {
+                MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+                registry.addCommand(containerBuilder.create(org.aesh.command.jbang.JBangCommand.class));
+                CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                        .commandRegistry(registry).build();
+                runtime.executeCommand(cmd);
+            }
+        };
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            genRun.run();
+        }
+        long genNs = timeIterations(genRun);
+        double genUs = (genNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+        // Reflection path
+        ThrowingRunnable reflRun = () -> {
+            for (String cmd : commands) {
+                MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+                registry.addCommand((CommandContainer<CommandInvocation>) REFLECTION_CREATE.invoke(containerBuilder,
+                        new org.aesh.command.jbang.JBangCommand()));
+                CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                        .commandRegistry(registry).build();
+                runtime.executeCommand(cmd);
+            }
+        };
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            reflRun.run();
+        }
+        long reflNs = timeIterations(reflRun);
+        double reflUs = (reflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+
+        double speedup = reflUs / genUs;
+
+        System.out.printf("  %d commands per iteration, %d iterations%n", commands.length, MEASURED_ITERATIONS);
+        System.out.printf("%14s | %14s | Speedup%n", "Generated (us)", "Reflection (us)");
+        System.out.println("-".repeat(14) + "-|-" + "-".repeat(14) + "-|--------");
+        System.out.printf("%14.1f | %14.1f | %5.2fx%n", genUs, reflUs, speedup);
     }
 
     // ---- Parsing benchmark ----
