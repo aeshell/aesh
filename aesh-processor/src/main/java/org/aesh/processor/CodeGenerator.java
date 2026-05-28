@@ -741,15 +741,10 @@ final class CodeGenerator {
 
     private static void generateAccessorClass(StringBuilder sb, String commandSimpleName,
             List<FieldAccessorInfo> infos, FieldAccessorInfo parentInfo) {
-        if (infos.isEmpty() && parentInfo == null)
-            return;
-
         sb.append("    static final class Accessor implements org.aesh.command.impl.internal.FieldAccessor,\n");
         sb.append("            java.util.function.BiConsumer<Object, Object> {\n");
 
-        if (parentInfo != null) {
-            sb.append("        static final Accessor PARENT_INJECTOR = new Accessor(-1);\n\n");
-        }
+        sb.append("        static final Accessor PARENT_INJECTOR = new Accessor(-1);\n\n");
 
         // Synthetic fields for generated help/version options — state held in the Accessor instance
         for (FieldAccessorInfo info : infos) {
@@ -1024,12 +1019,10 @@ final class CodeGenerator {
 
     private static void generateParentCommandInjector(StringBuilder sb, String simpleName,
             List<VariableElement> fields) {
-        for (VariableElement field : fields) {
-            if (field.getAnnotation(ParentCommand.class) != null) {
-                sb.append("        processedCommand.setParentCommandInjector(Accessor.PARENT_INJECTOR);\n\n");
-                return;
-            }
-        }
+        // Always set the injector — when there's no @ParentCommand field,
+        // the Accessor's accept() is a no-op, which prevents the reflection
+        // fallback in Executions.injectParentCommand() from scanning getDeclaredFields()
+        sb.append("        processedCommand.setParentCommandInjector(Accessor.PARENT_INJECTOR);\n\n");
     }
 
     private static boolean isPrivateField(VariableElement field) {
