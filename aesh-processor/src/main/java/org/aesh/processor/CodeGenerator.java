@@ -154,8 +154,8 @@ final class CodeGenerator {
         sb.append("    @Override\n");
         sb.append("    public ProcessedCommand buildProcessedCommand(").append(simpleName).append(" instance)");
         sb.append(" throws CommandLineParserException {\n");
-        generateBuildProcessedCommand(sb, simpleName, commandElement, fields, isGroup, elementUtils, typeUtils,
-                accessorInfos);
+        generateBuildProcessedCommand(sb, simpleName, commandElement,
+                fields, isGroup, elementUtils, typeUtils, accessorInfos);
         sb.append("    }\n\n");
 
         // Generate the single Accessor inner class
@@ -234,7 +234,8 @@ final class CodeGenerator {
         }
     }
 
-    private static void generateBuildProcessedCommand(StringBuilder sb, String simpleName, TypeElement commandElement,
+    private static void generateBuildProcessedCommand(StringBuilder sb, String simpleName,
+            TypeElement commandElement,
             List<VariableElement> fields, boolean isGroup,
             Elements elementUtils, Types typeUtils,
             List<FieldAccessorInfo> accessorInfos) {

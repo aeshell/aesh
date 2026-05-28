@@ -82,6 +82,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private CompleteStatus completeStatus;
     private java.util.function.BiConsumer<Object, Object> parentCommandInjector;
     private int optionDeclarationCounter;
+    private List<ProcessedOption> cachedPositionalOrder;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator<C, CI> validator,
@@ -287,6 +288,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public void setArguments(ProcessedOption arguments) {
         this.arguments = arguments;
         this.arguments.setParent(this);
+        cachedPositionalOrder = null;
         if (command != null)
             arguments.captureInitialValue(command);
     }
@@ -302,6 +304,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (argument == null)
             argument = arg;
         arg.setParent(this);
+        cachedPositionalOrder = null;
         if (command != null)
             arg.captureInitialValue(command);
     }
@@ -1330,8 +1333,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public List<ProcessedOption> getPositionalOptionsInDisplayOrder() {
-        if (argumentOptions.isEmpty() && arguments == null)
-            return Collections.emptyList();
+        if (cachedPositionalOrder != null)
+            return cachedPositionalOrder;
+        if (argumentOptions.isEmpty() && arguments == null) {
+            cachedPositionalOrder = Collections.emptyList();
+            return cachedPositionalOrder;
+        }
 
         List<ProcessedOption> positional = new ArrayList<>(argumentOptions.size() + 1);
         positional.addAll(argumentOptions);
@@ -1345,6 +1352,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     : (right.getOptionType() == OptionType.ARGUMENT ? 0 : 1);
             return Integer.compare(leftMin, rightMin);
         });
+        cachedPositionalOrder = positional;
         return positional;
     }
 
