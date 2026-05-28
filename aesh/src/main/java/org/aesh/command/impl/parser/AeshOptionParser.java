@@ -34,6 +34,7 @@ import org.aesh.terminal.utils.Parser;
 public class AeshOptionParser implements OptionParser {
 
     private static final String EQUALS = "=";
+    private static final char DASH = '-';
     private Status status;
 
     @Override
@@ -86,7 +87,9 @@ public class AeshOptionParser implements OptionParser {
         if (word.indexOf(" ") < word.indexOf("="))
             word = Parser.switchSpacesToEscapedSpacesInWord(word);
         if (option.isLongNameUsed()) {
-            String optionPart = word.startsWith("--") ? word.substring(2) : word;
+            String optionPart = (word.length() > 1 && word.charAt(0) == DASH && word.charAt(1) == DASH)
+                    ? word.substring(2)
+                    : word;
             // Determine which name was actually used: primary, alias, or negated
             String nameToMatch;
             if (option.isNegatedByUser() && option.getNegatedName() != null) {

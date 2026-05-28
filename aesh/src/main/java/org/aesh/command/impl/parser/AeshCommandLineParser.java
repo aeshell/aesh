@@ -75,6 +75,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private ProcessedOption lastParsedOption;
     private boolean parsedCommand = false;
     private LineParser lineParser;
+    private static final char DASH = '-';
     private CompleteStatus completeStatus;
     private AeshCommandLineParser<CI> parent;
     private boolean ansiMode = true;
@@ -550,8 +551,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                 // In this case we shouldn't validate the option and pass it down to
                                 // the populator for Map injection.
                                 boolean unknown = false;
-                                if (!processedCommand.stopAtFirstPositional() && word.word().startsWith("-")) {
-                                    if (word.word().startsWith("--") || word.word().length() == 2) {
+                                if (!processedCommand.stopAtFirstPositional()
+                                        && word.word().length() > 0 && word.word().charAt(0) == DASH) {
+                                    if ((word.word().length() > 1 && word.word().charAt(1) == DASH)
+                                            || word.word().length() == 2) {
                                         // invalid short names and long names should be rejected.
                                         if (!(processedCommand.getCommand() instanceof MapCommand)) {
                                             processedCommand.addParserException(
@@ -719,11 +722,12 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                             iter.pollParsedWord();
                         }
                         //got a partial option
-                        else if (word.word().startsWith("--")) {
+                        else if (word.word().length() > 1 && word.word().charAt(0) == DASH
+                                && word.word().charAt(1) == DASH) {
                             processedCommand.setCompleteStatus(
                                     new CompleteStatus(CompleteStatus.Status.LONG_OPTION, word.word().substring(2)));
                             iter.pollParsedWord();
-                        } else if (word.word().startsWith("-")) {
+                        } else if (word.word().length() > 0 && word.word().charAt(0) == DASH) {
                             processedCommand.setCompleteStatus(
                                     new CompleteStatus(CompleteStatus.Status.SHORT_OPTION, word.word().substring(1)));
                             iter.pollParsedWord();

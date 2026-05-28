@@ -52,6 +52,8 @@ import org.aesh.terminal.utils.Parser;
 public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocation> {
 
     private static final Pattern DESCRIPTION_VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+    private static final char DASH = '-';
+    private static final char EQUALS = '=';
 
     private final String name;
     private final String description;
@@ -444,37 +446,45 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return matching option
      */
     public ProcessedOption searchAllOptions(String input) {
-        if (input.startsWith("--")) {
-            String optionName = input.substring(2);
-            ProcessedOption currentOption = findLongOptionNoActivatorCheck(optionName);
-            if (currentOption == null && input.contains("="))
-                currentOption = startWithLongOptionNoActivatorCheck(optionName);
-            // Check for negated options (e.g., --no-verbose)
-            if (currentOption == null) {
-                currentOption = findNegatedOptionNoActivatorCheck(optionName);
+        int len = input.length();
+        if (len > 1 && input.charAt(0) == DASH) {
+            if (input.charAt(1) == DASH) {
+                // Long option: --name or --name=value
+                String optionName = input.substring(2);
+                ProcessedOption currentOption = findLongOptionNoActivatorCheck(optionName);
+                if (currentOption == null && optionName.indexOf(EQUALS) >= 0)
+                    currentOption = startWithLongOptionNoActivatorCheck(optionName);
+                // Check for negated options (e.g., --no-verbose)
+                if (currentOption == null) {
+                    currentOption = findNegatedOptionNoActivatorCheck(optionName);
+                }
+                if (currentOption != null)
+                    currentOption.setLongNameUsed(true);
+                //need to handle spaces in option names
+                else if (Parser.containsNonEscapedSpace(input)) {
+                    return searchAllOptions(Parser.switchSpacesToEscapedSpacesInWord(input));
+                }
+
+                return currentOption;
+            } else {
+                // Short option: -x or -xvalue
+                String shortName = input.substring(1);
+                ProcessedOption currentOption = findOption(shortName);
+                if (currentOption == null)
+                    currentOption = startWithOption(shortName);
+
+                if (currentOption != null)
+                    currentOption.setLongNameUsed(false);
+
+                return currentOption;
             }
-            if (currentOption != null)
-                currentOption.setLongNameUsed(true);
-            //need to handle spaces in option names
-            else if (Parser.containsNonEscapedSpace(input)) {
-                return searchAllOptions(Parser.switchSpacesToEscapedSpacesInWord(input));
-            }
-
-            return currentOption;
-        } else if (input.startsWith("-")) {
-            ProcessedOption currentOption = findOption(input.substring(1));
-            if (currentOption == null)
-                currentOption = startWithOption(input.substring(1));
-
-            if (currentOption != null)
-                currentOption.setLongNameUsed(false);
-
-            return currentOption;
         } else {
             // Check for bare long names
             ProcessedOption currentOption = findBareLongOption(input);
-            if (currentOption == null && input.contains("=")) {
-                currentOption = findBareLongOption(input.substring(0, input.indexOf("=")));
+            if (currentOption == null) {
+                int eqIdx = input.indexOf(EQUALS);
+                if (eqIdx >= 0)
+                    currentOption = findBareLongOption(input.substring(0, eqIdx));
             }
             if (currentOption != null) {
                 currentOption.setLongNameUsed(true);
