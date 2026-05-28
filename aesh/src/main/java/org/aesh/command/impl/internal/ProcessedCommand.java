@@ -63,7 +63,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean sortOptions;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
-    private final boolean generateHelp;
+    private boolean generateHelp;
     private String version;
     private String helpUrl;
     private String helpGroup = "";
@@ -316,6 +316,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return generateHelp;
     }
 
+    /**
+     * Set the generateHelp flag. Used by generated (annotation-processor) code
+     * to restore the flag after the processor handles help option creation directly.
+     */
+    public void setGenerateHelp(boolean generateHelp) {
+        this.generateHelp = generateHelp;
+    }
+
     public boolean disableParsing() {
         return disableParsing;
     }
@@ -342,6 +350,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public String version() {
         return version;
+    }
+
+    /**
+     * Set the version string. Used by generated (annotation-processor) code
+     * to restore the version after the processor handles version option creation directly.
+     */
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public String helpUrl() {

@@ -214,15 +214,23 @@ final class CodeGenerator {
         final String mixinFieldName;
         final boolean isPrivate;
         final String commandSimpleName;
+        /** True for synthetic fields (help/version) that store state in the Accessor itself. */
+        final boolean synthetic;
 
         FieldAccessorInfo(int index, String fieldName, String fieldType, String mixinFieldName,
                 boolean isPrivate, String commandSimpleName) {
+            this(index, fieldName, fieldType, mixinFieldName, isPrivate, commandSimpleName, false);
+        }
+
+        FieldAccessorInfo(int index, String fieldName, String fieldType, String mixinFieldName,
+                boolean isPrivate, String commandSimpleName, boolean synthetic) {
             this.index = index;
             this.fieldName = fieldName;
             this.fieldType = fieldType;
             this.mixinFieldName = mixinFieldName;
             this.isPrivate = isPrivate;
             this.commandSimpleName = commandSimpleName;
+            this.synthetic = synthetic;
         }
     }
 
@@ -234,23 +242,30 @@ final class CodeGenerator {
         sb.append(
                 "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
 
+        boolean generateHelp;
+        String version;
         if (isGroup) {
             GroupCommandDefinition gcd = commandElement.getAnnotation(GroupCommandDefinition.class);
+            generateHelp = gcd.generateHelp();
+            version = gcd.version();
             sb.append("                .name(").append(stringLiteral(gcd.name())).append(")\n");
             generateCommandActivator(sb, commandElement, isGroup, elementUtils);
             sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(gcd.aliases())).append("))\n");
             sb.append("                .description(").append(stringLiteral(gcd.description())).append(")\n");
             generateCommandValidator(sb, commandElement, isGroup, elementUtils);
             sb.append("                .command(instance)\n");
-            sb.append("                .generateHelp(").append(gcd.generateHelp()).append(")\n");
+            // Processor handles help/version directly — tell builder not to
+            sb.append("                .generateHelp(false)\n");
             sb.append("                .stopAtFirstPositional(").append(gcd.stopAtFirstPositional()).append(")\n");
             sb.append("                .sortOptions(").append(gcd.sortOptions()).append(")\n");
             generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .version(").append(stringLiteral(gcd.version())).append(")\n");
+            sb.append("                .version(\"\")\n");
             generateResultHandler(sb, commandElement, isGroup, elementUtils);
             sb.append("                .helpUrl(").append(stringLiteral(gcd.helpUrl())).append(")\n");
         } else {
             CommandDefinition cd = commandElement.getAnnotation(CommandDefinition.class);
+            generateHelp = cd.generateHelp();
+            version = cd.version();
             sb.append("                .name(").append(stringLiteral(cd.name())).append(")\n");
             generateCommandActivator(sb, commandElement, isGroup, elementUtils);
             sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(cd.aliases())).append("))\n");
@@ -258,12 +273,13 @@ final class CodeGenerator {
             generateCommandValidator(sb, commandElement, isGroup, elementUtils);
             sb.append("                .command(instance)\n");
             generateResultHandler(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .generateHelp(").append(cd.generateHelp()).append(")\n");
+            // Processor handles help/version directly — tell builder not to
+            sb.append("                .generateHelp(false)\n");
             sb.append("                .disableParsing(").append(cd.disableParsing()).append(")\n");
             sb.append("                .stopAtFirstPositional(").append(cd.stopAtFirstPositional()).append(")\n");
             sb.append("                .sortOptions(").append(cd.sortOptions()).append(")\n");
             generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .version(").append(stringLiteral(cd.version())).append(")\n");
+            sb.append("                .version(\"\")\n");
             sb.append("                .helpUrl(").append(stringLiteral(cd.helpUrl())).append(")\n");
         }
 
@@ -287,7 +303,40 @@ final class CodeGenerator {
                     .append(providerClass).append("());\n\n");
         }
 
-        // Process fields
+        // Generate help/version options first to match reflection path declaration order
+        // (reflection: constructor calls doGenerateHelp/doGenerateVersion before processCommand adds user options)
+        if (generateHelp) {
+            int helpIdx = accessorInfos.size();
+            accessorInfos.add(new FieldAccessorInfo(helpIdx, "generatedHelp", "boolean",
+                    null, false, simpleName, true));
+            sb.append("        {\n");
+            sb.append("            ProcessedOption helpOpt = ProcessedOption.createDirect(\n");
+            sb.append("                    \"h\", \"help\", \"Display this help and exit\",\n");
+            sb.append("                    Boolean.class, \"generatedHelp\", OptionType.BOOLEAN,\n");
+            sb.append("                    CONVERTER_java_lang_Boolean, new Accessor(").append(helpIdx).append("));\n");
+            sb.append("            helpOpt.setOverrideRequired(true);\n");
+            sb.append("            processedCommand.addOptionDirect(helpOpt);\n");
+            sb.append("        }\n");
+            // Restore the generateHelp flag so Executions.execute() can check it
+            sb.append("        processedCommand.setGenerateHelp(true);\n\n");
+        }
+        if (version != null && !version.isEmpty()) {
+            int versionIdx = accessorInfos.size();
+            accessorInfos.add(new FieldAccessorInfo(versionIdx, "generatedVersion", "boolean",
+                    null, false, simpleName, true));
+            sb.append("        {\n");
+            sb.append("            ProcessedOption versionOpt = ProcessedOption.createDirect(\n");
+            sb.append("                    \"v\", \"version\", \"Displays version information of the command\",\n");
+            sb.append("                    Boolean.class, \"generatedVersion\", OptionType.BOOLEAN,\n");
+            sb.append("                    CONVERTER_java_lang_Boolean, new Accessor(").append(versionIdx).append("));\n");
+            sb.append("            versionOpt.setOverrideRequired(true);\n");
+            sb.append("            processedCommand.addOptionDirect(versionOpt);\n");
+            sb.append("        }\n");
+            // Restore the version string so Executions.execute() can use it
+            sb.append("        processedCommand.setVersion(").append(stringLiteral(version)).append(");\n\n");
+        }
+
+        // Process user fields
         for (VariableElement field : fields) {
             generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils, accessorInfos);
         }
@@ -692,6 +741,13 @@ final class CodeGenerator {
             sb.append("        static final Accessor PARENT_INJECTOR = new Accessor(-1);\n\n");
         }
 
+        // Synthetic fields for generated help/version options — state held in the Accessor instance
+        for (FieldAccessorInfo info : infos) {
+            if (info.synthetic) {
+                sb.append("        private boolean ").append(info.fieldName).append(";\n");
+            }
+        }
+
         sb.append("        private final int idx;\n");
         sb.append("        Accessor(int idx) { this.idx = idx; }\n\n");
 
@@ -700,7 +756,10 @@ final class CodeGenerator {
         sb.append("            switch (idx) {\n");
         for (FieldAccessorInfo info : infos) {
             sb.append("                case ").append(info.index).append(": ");
-            if (info.mixinFieldName != null) {
+            if (info.synthetic) {
+                sb.append("this.").append(info.fieldName)
+                        .append(" = val != null && (Boolean) val;");
+            } else if (info.mixinFieldName != null) {
                 if (info.isPrivate) {
                     sb.append("try { Object m = ").append(fieldConstantName(info.mixinFieldName))
                             .append(".get(inst); if (m != null) ")
@@ -732,7 +791,9 @@ final class CodeGenerator {
         sb.append("            switch (idx) {\n");
         for (FieldAccessorInfo info : infos) {
             sb.append("                case ").append(info.index).append(": ");
-            if (info.mixinFieldName != null) {
+            if (info.synthetic) {
+                sb.append("return this.").append(info.fieldName).append(";");
+            } else if (info.mixinFieldName != null) {
                 if (info.isPrivate) {
                     sb.append("try { Object m = ").append(fieldConstantName(info.mixinFieldName))
                             .append(".get(inst); return m != null ? ")
@@ -1041,6 +1102,8 @@ final class CodeGenerator {
             List<VariableElement> fields, Elements elementUtils, Types typeUtils) {
         // Collect distinct default converter types (types that use CLConverterManager, not custom converters)
         java.util.LinkedHashSet<String> converterTypes = new java.util.LinkedHashSet<>();
+        // Always include Boolean — needed for generated help/version options
+        converterTypes.add("java.lang.Boolean");
         boolean needsBooleanCompleter = false;
 
         for (VariableElement field : fields) {

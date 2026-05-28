@@ -1218,6 +1218,206 @@ public class ProcessorTest {
                 result.diagnostics.toString().contains("must not be abstract"));
     }
 
+    // --- Tests for generated help/version options ---
+
+    private static final String HELP_VERSION_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"hvcmd\", description = \"Help and version test\",\n" +
+            "        generateHelp = true, version = \"2.5\")\n" +
+            "public class HelpVersionCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Name\")\n" +
+            "    private String name;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testGeneratedHelpOptionHasFieldAccessor() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.HelpVersionCommand", HELP_VERSION_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.HelpVersionCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.HelpVersionCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // Verify generateHelp flag is restored to true
+        assertTrue("generateHelp should be true", generatedPC.generateHelp());
+
+        // Verify version is restored
+        assertEquals("version should be 2.5", "2.5", generatedPC.version());
+
+        // Verify --help option exists and has a FieldAccessor
+        ProcessedOption helpOpt = generatedPC.findLongOptionNoActivatorCheck("help");
+        assertNotNull("--help option should exist", helpOpt);
+        assertEquals("help", helpOpt.name());
+        assertEquals("h", helpOpt.shortName());
+        assertTrue("help should have overrideRequired", helpOpt.doOverrideRequired());
+        assertNotNull("help option should have FieldAccessor", helpOpt.getFieldAccessor());
+
+        // Verify --version option exists and has a FieldAccessor
+        ProcessedOption versionOpt = generatedPC.findLongOptionNoActivatorCheck("version");
+        assertNotNull("--version option should exist", versionOpt);
+        assertEquals("version", versionOpt.name());
+        assertEquals("v", versionOpt.shortName());
+        assertTrue("version should have overrideRequired", versionOpt.doOverrideRequired());
+        assertNotNull("version option should have FieldAccessor", versionOpt.getFieldAccessor());
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
+    @Test
+    public void testGeneratedHelpAccessorSetGet() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.HelpVersionCommand", HELP_VERSION_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.HelpVersionCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.HelpVersionCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        ProcessedOption helpOpt = generatedPC.findLongOptionNoActivatorCheck("help");
+        assertNotNull("help option should exist", helpOpt);
+
+        // Test accessor get — initial value should be false
+        Object initialValue = helpOpt.getFieldAccessor().get(instance);
+        assertEquals("initial help value should be false", false, initialValue);
+
+        // Test accessor set
+        helpOpt.getFieldAccessor().set(instance, true);
+        Object setValue = helpOpt.getFieldAccessor().get(instance);
+        assertEquals("after set(true), help value should be true", true, setValue);
+
+        // Test accessor set back to false
+        helpOpt.getFieldAccessor().set(instance, false);
+        Object resetValue = helpOpt.getFieldAccessor().get(instance);
+        assertEquals("after set(false), help value should be false", false, resetValue);
+
+        // Same test for version accessor
+        ProcessedOption versionOpt = generatedPC.findLongOptionNoActivatorCheck("version");
+        assertNotNull("version option should exist", versionOpt);
+
+        Object initialVersionValue = versionOpt.getFieldAccessor().get(instance);
+        assertEquals("initial version value should be false", false, initialVersionValue);
+
+        versionOpt.getFieldAccessor().set(instance, true);
+        assertEquals("after set(true), version value should be true", true, versionOpt.getFieldAccessor().get(instance));
+    }
+
+    private static final String NO_HELP_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"nohelp\", description = \"No help command\",\n" +
+            "        generateHelp = false)\n" +
+            "public class NoHelpCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Name\")\n" +
+            "    private String name;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testNoHelpWhenGenerateHelpFalse() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.NoHelpCommand", NO_HELP_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.NoHelpCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.NoHelpCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // generateHelp=false, so no --help option should be present
+        ProcessedOption helpOpt = generatedPC.findLongOptionNoActivatorCheck("help");
+        assertTrue("--help option should NOT exist when generateHelp=false",
+                helpOpt == null);
+        assertEquals("generateHelp should be false", false, generatedPC.generateHelp());
+
+        // No --version either since version is not set
+        ProcessedOption versionOpt = generatedPC.findLongOptionNoActivatorCheck("version");
+        assertTrue("--version option should NOT exist when version is not set",
+                versionOpt == null);
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
+    private static final String GROUP_HELP_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.GroupCommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@GroupCommandDefinition(name = \"grphelp\", description = \"Group help test\",\n" +
+            "        groupCommands = {}, generateHelp = true, version = \"3.0\")\n" +
+            "public class GroupHelpCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Flag\", hasValue = false)\n" +
+            "    private boolean flag;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testGroupCommandGeneratedHelpAndVersion() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.GroupHelpCommand", GROUP_HELP_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.GroupHelpCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.GroupHelpCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // Verify generateHelp and version are restored for group commands
+        assertTrue("generateHelp should be true for group command", generatedPC.generateHelp());
+        assertEquals("version should be 3.0 for group command", "3.0", generatedPC.version());
+
+        // Verify --help and --version exist with FieldAccessors
+        ProcessedOption helpOpt = generatedPC.findLongOptionNoActivatorCheck("help");
+        assertNotNull("--help should exist for group command", helpOpt);
+        assertNotNull("--help should have FieldAccessor for group command", helpOpt.getFieldAccessor());
+
+        ProcessedOption versionOpt = generatedPC.findLongOptionNoActivatorCheck("version");
+        assertNotNull("--version should exist for group command", versionOpt);
+        assertNotNull("--version should have FieldAccessor for group command", versionOpt.getFieldAccessor());
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
