@@ -57,7 +57,7 @@ import org.aesh.util.PropertiesLookup;
 /**
  * @author Aesh team
  */
-public final class ProcessedOption {
+public class ProcessedOption {
 
     private String shortName;
     private String name;
@@ -90,7 +90,7 @@ public final class ProcessedOption {
     private boolean cursorValue = false;
     private boolean askIfNotSet = false;
     private boolean acceptNameWithoutDashes = false;
-    private final SelectorType selectorType;
+    private SelectorType selectorType;
     private boolean negatable = false;
     private String negationPrefix = "no-";
     private boolean negatedByUser = false;
@@ -109,9 +109,9 @@ public final class ProcessedOption {
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
     private java.util.function.Function<Object, Object> fieldGetter;
-    private FieldAccessor fieldAccessor;
-    private Object initialValue;
-    private boolean initialValueCaptured;
+    protected FieldAccessor fieldAccessor;
+    protected Object initialValue;
+    protected boolean initialValueCaptured;
     private String mixinFieldName;
     private Field cachedField;
     private Class<?> cachedFieldClass;
@@ -200,12 +200,19 @@ public final class ProcessedOption {
      * Direct factory for generated (annotation-processor) code. Bypasses
      * ProcessedOptionBuilder, PropertiesLookup regex, URL type inference,
      * and all validation — those are resolved at compile time.
+     *
+     * Returns a {@link GeneratedProcessedOption} when a non-null fieldAccessor
+     * is provided, which overrides field access methods with reflection-free
+     * fast paths. When fieldAccessor is null (e.g. for synthetic help/version
+     * options on the reflection path), returns a base ProcessedOption.
      */
     public static ProcessedOption createDirect(
             String shortName, String name, String description,
             Class<?> type, String fieldName, OptionType optionType,
             Converter converter, FieldAccessor fieldAccessor) {
-        ProcessedOption opt = new ProcessedOption();
+        ProcessedOption opt = fieldAccessor != null
+                ? new GeneratedProcessedOption()
+                : new ProcessedOption();
         opt.shortName = shortName;
         opt.name = name;
         opt.description = description;
@@ -217,8 +224,8 @@ public final class ProcessedOption {
         return opt;
     }
 
-    /** No-arg constructor for createDirect(). Sets only immutable defaults. */
-    private ProcessedOption() {
+    /** No-arg constructor for createDirect() and subclasses. Sets only immutable defaults. */
+    protected ProcessedOption() {
         this.selectorType = SelectorType.NO_OP;
         this.valueSeparator = ' ';
         this.properties = Collections.emptyMap();
@@ -530,7 +537,7 @@ public final class ProcessedOption {
         }
     }
 
-    private Object typeDefault() {
+    protected Object typeDefault() {
         if (type == null || !type.isPrimitive())
             return null;
         if (type == boolean.class)
@@ -553,7 +560,7 @@ public final class ProcessedOption {
     }
 
     @SuppressWarnings("unchecked")
-    private void restoreInitialValue(Object instance) {
+    protected void restoreInitialValue(Object instance) {
         if (fieldAccessor != null || fieldSetter != null) {
             Object val = initialValue;
             if (initialValue instanceof Collection) {
@@ -716,6 +723,11 @@ public final class ProcessedOption {
         this.arity = arity;
     }
 
+    public void setArity(String aritySpec) {
+        if (aritySpec != null && !aritySpec.isEmpty())
+            this.arity = org.aesh.command.option.Arity.parse(aritySpec);
+    }
+
     public org.aesh.command.option.Arity getArity() {
         return arity;
     }
@@ -817,6 +829,10 @@ public final class ProcessedOption {
 
     public SelectorType selectorType() {
         return selectorType;
+    }
+
+    public void setSelectorType(SelectorType selectorType) {
+        this.selectorType = selectorType != null ? selectorType : SelectorType.NO_OP;
     }
 
     public boolean isNegatable() {
@@ -1118,7 +1134,7 @@ public final class ProcessedOption {
             fieldSetter.accept(instance, value);
     }
 
-    private void injectValueWithSetter(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
+    protected void injectValueWithSetter(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
             boolean doValidation) throws OptionValidatorException {
         if (optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
             if (negatedByUser && optionType == OptionType.BOOLEAN) {

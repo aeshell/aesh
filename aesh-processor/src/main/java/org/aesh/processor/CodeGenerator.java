@@ -640,39 +640,49 @@ final class CodeGenerator {
         String fieldName = field.getSimpleName().toString();
         String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
 
-        sb.append("        processedCommand.setArguments(\n");
-        sb.append("                ProcessedOptionBuilder.builder()\n");
-        sb.append("                        .name(\"\")\n");
-        if (!a.description().isEmpty())
-            sb.append("                        .description(").append(stringLiteral(a.description())).append(")\n");
+        int accIdx = accessorInfos.size();
+        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
+                mixinFieldName, isPrivateField(field), simpleName));
+
+        String var = "argsOpt_" + accIdx;
+        sb.append("        {\n");
+        sb.append("            ProcessedOption ").append(var).append(" = ProcessedOption.createDirect(\n");
+        sb.append("                    null, \"\", ").append(stringLiteral(a.description())).append(",\n");
+        sb.append("                    ").append(elementType).append(".class, ")
+                .append(stringLiteral(fieldName)).append(", OptionType.ARGUMENTS,\n");
+        sb.append("                    ");
+        emitConverterExpression(sb, field, "converter", elementUtils, elementType);
+        sb.append(", new Accessor(").append(accIdx).append("));\n");
         if (a.required())
-            sb.append("                        .required(true)\n");
+            sb.append("            ").append(var).append(".setRequired(true);\n");
         if (a.valueSeparator() != ' ')
-            sb.append("                        .valueSeparator(").append(charLiteral(a.valueSeparator())).append(")\n");
+            sb.append("            ").append(var).append(".setValueSeparator(").append(charLiteral(a.valueSeparator()))
+                    .append(");\n");
         if (a.selector() != org.aesh.selector.SelectorType.NO_OP)
-            sb.append("                        .selector(").append(selectorLiteral(a.selector())).append(")\n");
+            sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(a.selector()))
+                    .append(");\n");
         if (a.askIfNotSet())
-            sb.append("                        .askIfNotSet(true)\n");
+            sb.append("            ").append(var).append(".setAskIfNotSet(true);\n");
         if (a.defaultValue().length > 0)
-            sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(a.defaultValue()))
-                    .append(")\n");
-        sb.append("                        .type(").append(elementType).append(".class)\n");
-        sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
+            sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
+                    .append(stringArrayLiteral(a.defaultValue())).append("));\n");
         if (!a.paramLabel().isEmpty())
-            sb.append("                        .paramLabel(").append(stringLiteral(a.paramLabel())).append(")\n");
+            sb.append("            ").append(var).append(".setParamLabel(").append(stringLiteral(a.paramLabel()))
+                    .append(");\n");
         if (!a.arity().isEmpty())
-            sb.append("                        .arity(").append(stringLiteral(a.arity())).append(")\n");
-        sb.append("                        .index(").append(stringLiteral(a.index())).append(")\n");
-        sb.append("                        .optionType(OptionType.ARGUMENTS)\n");
-        generateOptionConverter(sb, field, "converter", elementUtils);
-        generateOptionCompleter(sb, field, "completer", false, false, elementUtils);
-        generateOptionValidator(sb, field, "validator", elementUtils);
-        generateOptionActivator(sb, field, "activator", elementUtils);
-        generateOptionParser(sb, field, "parser", elementUtils);
+            sb.append("            ").append(var).append(".setArity(").append(stringLiteral(a.arity())).append(");\n");
+        sb.append("            ").append(var).append(".setIndex(").append(stringLiteral(a.index())).append(");\n");
+        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         if (a.url())
-            sb.append("                        .url(true)\n");
-        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
-        sb.append("                        .build());\n\n");
+            sb.append("            ").append(var).append(".setIsUrl(true);\n");
+        if (mixinFieldName != null)
+            sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
+                    .append(");\n");
+        sb.append("            processedCommand.setArguments(").append(var).append(");\n");
+        sb.append("        }\n\n");
     }
 
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
@@ -680,53 +690,52 @@ final class CodeGenerator {
         String fieldName = field.getSimpleName().toString();
         String fieldType = getBoxedTypeName(field.asType(), typeUtils);
 
-        sb.append("        processedCommand.addArgument(\n");
-        sb.append("                ProcessedOptionBuilder.builder()\n");
-        sb.append("                        .name(\"\")\n");
-        if (!arg.description().isEmpty())
-            sb.append("                        .description(").append(stringLiteral(arg.description())).append(")\n");
-        if (arg.required())
-            sb.append("                        .required(true)\n");
-        if (arg.askIfNotSet())
-            sb.append("                        .askIfNotSet(true)\n");
-        if (arg.selector() != org.aesh.selector.SelectorType.NO_OP)
-            sb.append("                        .selector(").append(selectorLiteral(arg.selector())).append(")\n");
-        if (arg.defaultValue().length > 0)
-            sb.append("                        .addAllDefaultValues(").append(stringArrayLiteralAsNew(arg.defaultValue()))
-                    .append(")\n");
-        sb.append("                        .type(").append(fieldType).append(".class)\n");
-        sb.append("                        .fieldName(").append(stringLiteral(fieldName)).append(")\n");
-        if (!arg.paramLabel().isEmpty())
-            sb.append("                        .paramLabel(").append(stringLiteral(arg.paramLabel())).append(")\n");
-        if (!arg.arity().isEmpty())
-            sb.append("                        .arity(").append(stringLiteral(arg.arity())).append(")\n");
-        sb.append("                        .index(").append(stringLiteral(arg.index())).append(")\n");
-        sb.append("                        .optionType(OptionType.ARGUMENT)\n");
-        generateOptionConverter(sb, field, "converter", elementUtils);
-        generateOptionCompleter(sb, field, "completer", false, isFileOrResourceType(field.asType(), typeUtils), elementUtils);
-        generateOptionValidator(sb, field, "validator", elementUtils);
-        generateOptionActivator(sb, field, "activator", elementUtils);
-        generateOptionRenderer(sb, field, "renderer", elementUtils);
-        generateOptionParser(sb, field, "parser", elementUtils);
-        if (arg.overrideRequired())
-            sb.append("                        .overrideRequired(true)\n");
-        if (arg.inherited())
-            sb.append("                        .inherited(true)\n");
-        if (arg.url())
-            sb.append("                        .url(true)\n");
-        generateFieldAccessors(sb, simpleName, field, mixinFieldName, typeUtils, accessorInfos);
-        sb.append("                        .build());\n\n");
-    }
+        int accIdx = accessorInfos.size();
+        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
+                mixinFieldName, isPrivateField(field), simpleName));
 
-    private static void generateFieldAccessors(StringBuilder sb, String simpleName, VariableElement field,
-            String mixinFieldName, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
-        if (mixinFieldName != null) {
-            sb.append("                        .mixinFieldName(").append(stringLiteral(mixinFieldName)).append(")\n");
-        }
-        int index = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(index, field.getSimpleName().toString(),
-                field.asType().toString(), mixinFieldName, isPrivateField(field), simpleName));
-        sb.append("                        .fieldAccessor(new Accessor(").append(index).append("))\n");
+        String var = "argOpt_" + accIdx;
+        sb.append("        {\n");
+        sb.append("            ProcessedOption ").append(var).append(" = ProcessedOption.createDirect(\n");
+        sb.append("                    null, \"\", ").append(stringLiteral(arg.description())).append(",\n");
+        sb.append("                    ").append(fieldType).append(".class, ")
+                .append(stringLiteral(fieldName)).append(", OptionType.ARGUMENT,\n");
+        sb.append("                    ");
+        emitConverterExpression(sb, field, "converter", elementUtils, fieldType);
+        sb.append(", new Accessor(").append(accIdx).append("));\n");
+        if (arg.required())
+            sb.append("            ").append(var).append(".setRequired(true);\n");
+        if (arg.askIfNotSet())
+            sb.append("            ").append(var).append(".setAskIfNotSet(true);\n");
+        if (arg.selector() != org.aesh.selector.SelectorType.NO_OP)
+            sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(arg.selector()))
+                    .append(");\n");
+        if (arg.defaultValue().length > 0)
+            sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
+                    .append(stringArrayLiteral(arg.defaultValue())).append("));\n");
+        if (!arg.paramLabel().isEmpty())
+            sb.append("            ").append(var).append(".setParamLabel(").append(stringLiteral(arg.paramLabel()))
+                    .append(");\n");
+        if (!arg.arity().isEmpty())
+            sb.append("            ").append(var).append(".setArity(").append(stringLiteral(arg.arity())).append(");\n");
+        sb.append("            ").append(var).append(".setIndex(").append(stringLiteral(arg.index())).append(");\n");
+        emitCompleterSetter(sb, var, field, "completer", false, isFileOrResourceType(field.asType(), typeUtils),
+                elementUtils);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
+        if (arg.overrideRequired())
+            sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
+        if (arg.inherited())
+            sb.append("            ").append(var).append(".setInherited(true);\n");
+        if (arg.url())
+            sb.append("            ").append(var).append(".setIsUrl(true);\n");
+        if (mixinFieldName != null)
+            sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
+                    .append(");\n");
+        sb.append("            processedCommand.addArgument(").append(var).append(");\n");
+        sb.append("        }\n\n");
     }
 
     private static void generateAccessorClass(StringBuilder sb, String commandSimpleName,

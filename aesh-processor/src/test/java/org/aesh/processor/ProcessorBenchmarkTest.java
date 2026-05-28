@@ -284,6 +284,221 @@ public class ProcessorBenchmarkTest {
                 new AeshCommandLineParser<>(pc));
     }
 
+    // --- Benchmark: Full parse+execute cycle (mirrors ProfileStartup) ---
+
+    private static final String GROUP_PARENT_SOURCE = "package bench;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.GroupCommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@GroupCommandDefinition(name = \"jbang\", description = \"JBang CLI\",\n" +
+            "        groupCommands = { bench.RunCommand.class, bench.BuildCommand.class, bench.InitCommand.class },\n" +
+            "        generateHelp = true)\n" +
+            "public class JBangCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(hasValue = false, description = \"Verbose\", inherited = true)\n" +
+            "    boolean verbose;\n" +
+            "\n" +
+            "    @Option(description = \"Config file\", inherited = true)\n" +
+            "    String config;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String RUN_COMMAND_SOURCE = "package bench;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "import java.util.Map;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Arguments;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.OptionGroup;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"run\", description = \"Run a script\", stopAtFirstPositional = true)\n" +
+            "public class RunCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(shortName = 'd', name = \"debug\", fallbackValue = \"4004\")\n" +
+            "    String debug;\n" +
+            "\n" +
+            "    @Option(hasValue = false, negatable = true, description = \"Enable CDS\")\n" +
+            "    boolean cds;\n" +
+            "\n" +
+            "    @Option(description = \"Runtime options\")\n" +
+            "    String runtimeOption;\n" +
+            "\n" +
+            "    @Option(hasValue = false, description = \"Enable assertions\")\n" +
+            "    boolean enableassertions;\n" +
+            "\n" +
+            "    @OptionGroup(shortName = 'D', description = \"System properties\")\n" +
+            "    Map<String, String> properties;\n" +
+            "\n" +
+            "    @OptionList(description = \"Dependencies\")\n" +
+            "    List<String> deps;\n" +
+            "\n" +
+            "    @Argument(description = \"Script file\", paramLabel = \"scriptOrFile\")\n" +
+            "    String script;\n" +
+            "\n" +
+            "    @Arguments(description = \"User params\", index = \"1..*\")\n" +
+            "    List<String> userParams;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String BUILD_COMMAND_SOURCE = "package bench;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"build\", description = \"Build a script\")\n" +
+            "public class BuildCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Output jar\")\n" +
+            "    String output;\n" +
+            "\n" +
+            "    @Argument(description = \"Script file\")\n" +
+            "    String script;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String INIT_COMMAND_SOURCE = "package bench;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"init\", description = \"Initialize a script\")\n" +
+            "public class InitCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Template\")\n" +
+            "    String template;\n" +
+            "\n" +
+            "    @Argument(description = \"Script file\")\n" +
+            "    String script;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void benchmarkGroupCommandParseExecute() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("bench.JBangCommand", GROUP_PARENT_SOURCE),
+                new InMemorySource("bench.RunCommand", RUN_COMMAND_SOURCE),
+                new InMemorySource("bench.BuildCommand", BUILD_COMMAND_SOURCE),
+                new InMemorySource("bench.InitCommand", INIT_COMMAND_SOURCE));
+
+        if (!result.success) {
+            System.out.println("Compilation failed: " + result.diagnostics);
+            return;
+        }
+
+        Class<?> groupClass = result.classLoader.loadClass("bench.JBangCommand");
+        Class<?> runClass = result.classLoader.loadClass("bench.RunCommand");
+        Class<?> buildClass = result.classLoader.loadClass("bench.BuildCommand");
+        Class<?> initClass = result.classLoader.loadClass("bench.InitCommand");
+
+        // Load generated providers
+        CommandMetadataProvider groupProvider = (CommandMetadataProvider) result.classLoader
+                .loadClass("bench.JBangCommand_AeshMetadata").newInstance();
+        CommandMetadataProvider runProvider = (CommandMetadataProvider) result.classLoader
+                .loadClass("bench.RunCommand_AeshMetadata").newInstance();
+        CommandMetadataProvider buildProvider = (CommandMetadataProvider) result.classLoader
+                .loadClass("bench.BuildCommand_AeshMetadata").newInstance();
+        CommandMetadataProvider initProvider = (CommandMetadataProvider) result.classLoader
+                .loadClass("bench.InitCommand_AeshMetadata").newInstance();
+
+        System.out.println();
+        System.out.println("=== Group command parse+execute: jbang run test.java ===");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        // Reflection path: build runtime + parse + execute
+        AeshCommandContainerBuilder containerBuilder = new AeshCommandContainerBuilder();
+
+        ThrowingRunnable reflectionRun = () -> {
+            CommandContainer groupContainer = containerBuilder.create((Command) groupClass.newInstance());
+            MutableCommandRegistryImpl registry = new MutableCommandRegistryImpl<>();
+            registry.addCommand(groupContainer);
+            CommandRuntime runtime = AeshCommandRuntimeBuilder.builder()
+                    .commandRegistry(registry)
+                    .build();
+            runtime.executeCommand("jbang run test.java");
+        };
+
+        // Generated path: build runtime via providers + parse + execute
+        ThrowingRunnable generatedRun = () -> {
+            Command groupInstance = (Command) groupClass.newInstance();
+            ProcessedCommand groupPC = groupProvider.buildProcessedCommand(groupInstance);
+            AeshCommandContainer groupContainer = new AeshCommandContainer(
+                    new AeshCommandLineParser<>(groupPC));
+            // Add child commands via their providers
+            for (Class<? extends Command> childClass : groupProvider.groupCommandClasses()) {
+                CommandMetadataProvider childProvider;
+                if (childClass == runClass)
+                    childProvider = runProvider;
+                else if (childClass == buildClass)
+                    childProvider = buildProvider;
+                else if (childClass == initClass)
+                    childProvider = initProvider;
+                else
+                    continue;
+                // Use lazy child registration by name, just like AeshCommandContainerBuilder does
+                String childName = childProvider.commandName();
+                groupContainer.addLazyChild(childName, childClass);
+            }
+            MutableCommandRegistryImpl registry = new MutableCommandRegistryImpl<>();
+            registry.addCommand(groupContainer);
+            CommandRuntime runtime = AeshCommandRuntimeBuilder.builder()
+                    .commandRegistry(registry)
+                    .build();
+            runtime.executeCommand("jbang run test.java");
+        };
+
+        // Warmup + measure reflection
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            reflectionRun.run();
+        }
+        long reflectionNs = timeIterations(reflectionRun);
+
+        // Warmup + measure generated
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            generatedRun.run();
+        }
+        long generatedNs = timeIterations(generatedRun);
+
+        double reflAvgUs = (reflectionNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        double genAvgUs = (generatedNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        double speedup = reflAvgUs / genAvgUs;
+
+        System.out.printf("  Reflection:  %,.1f us/op  (total: %,d ms)%n", reflAvgUs, reflectionNs / 1_000_000);
+        System.out.printf("  Generated:   %,.1f us/op  (total: %,d ms)%n", genAvgUs, generatedNs / 1_000_000);
+        System.out.printf("  Speedup:     %.2fx%n", speedup);
+    }
+
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;

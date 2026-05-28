@@ -1010,7 +1010,14 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     if (childOpt.getValues() != null && !childOpt.getValues().isEmpty())
                         continue;
                     childOpt.setFieldValue(childCmd, value);
+                } else if (parentOpt.getFieldAccessor() != null) {
+                    // Generated path: use the parent's accessor on the child instance.
+                    // Only works when the child extends the parent (field is in the superclass).
+                    if (getCommand().getClass().isAssignableFrom(childCmd.getClass())) {
+                        parentOpt.getFieldAccessor().set(childCmd, value);
+                    }
                 } else {
+                    // Reflection fallback: walk class hierarchy looking for the field
                     try {
                         Field childField = findField(childCmd.getClass(), parentOpt.getFieldName());
                         if (childField == null)

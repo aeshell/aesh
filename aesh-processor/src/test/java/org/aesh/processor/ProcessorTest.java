@@ -43,6 +43,7 @@ import javax.tools.ToolProvider;
 
 import org.aesh.command.Command;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.GeneratedProcessedOption;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.metadata.CommandMetadataProvider;
@@ -1418,6 +1419,174 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Tests for GeneratedProcessedOption type and argument createDirect ---
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testOptionsAreGeneratedProcessedOption() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.HelpVersionCommand", HELP_VERSION_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.HelpVersionCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.HelpVersionCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // All options created via createDirect with a non-null fieldAccessor should be GeneratedProcessedOption
+        for (ProcessedOption opt : (List<ProcessedOption>) generatedPC.getOptions()) {
+            if (opt.getFieldAccessor() != null) {
+                assertTrue(
+                        "Option --" + opt.name() + " should be GeneratedProcessedOption, was " + opt.getClass().getSimpleName(),
+                        opt instanceof GeneratedProcessedOption);
+            }
+        }
+    }
+
+    private static final String ARGUMENT_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Arguments;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"argcmd\", description = \"Argument test command\")\n" +
+            "public class ArgumentCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Verbose\", hasValue = false)\n" +
+            "    boolean verbose;\n" +
+            "\n" +
+            "    @Argument(description = \"Source file\", paramLabel = \"source\")\n" +
+            "    String src;\n" +
+            "\n" +
+            "    @Arguments(description = \"Extra files\", paramLabel = \"extras\", index = \"1..*\")\n" +
+            "    List<String> extras;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testArgumentsAreGeneratedProcessedOption() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ArgumentCommand", ARGUMENT_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.ArgumentCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.ArgumentCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // @Argument should be GeneratedProcessedOption
+        ProcessedOption argOpt = generatedPC.getArgument();
+        assertNotNull("Should have @Argument", argOpt);
+        assertTrue("@Argument should be GeneratedProcessedOption, was " + argOpt.getClass().getSimpleName(),
+                argOpt instanceof GeneratedProcessedOption);
+        assertNotNull("@Argument should have FieldAccessor", argOpt.getFieldAccessor());
+        assertEquals("paramLabel", "source", argOpt.getParamLabel());
+
+        // @Arguments should be GeneratedProcessedOption
+        ProcessedOption argsOpt = generatedPC.getArguments();
+        assertNotNull("Should have @Arguments", argsOpt);
+        assertTrue("@Arguments should be GeneratedProcessedOption, was " + argsOpt.getClass().getSimpleName(),
+                argsOpt instanceof GeneratedProcessedOption);
+        assertNotNull("@Arguments should have FieldAccessor", argsOpt.getFieldAccessor());
+        assertEquals("paramLabel", "extras", argsOpt.getParamLabel());
+        assertNotNull("@Arguments should have indexRange", argsOpt.getIndexRange());
+        assertEquals("indexRange min", 1, argsOpt.getIndexRange().getMin());
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
+    // --- Test: Inherited option propagation on generated path ---
+
+    private static final String INHERITED_PARENT_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.GroupCommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@GroupCommandDefinition(name = \"parent\", description = \"Parent\",\n" +
+            "        groupCommands = { test.InheritedChildCommand.class })\n" +
+            "public class InheritedParentCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(hasValue = false, description = \"Verbose\", inherited = true)\n" +
+            "    boolean verbose;\n" +
+            "\n" +
+            "    @Option(description = \"Config\", inherited = true)\n" +
+            "    String config;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String INHERITED_CHILD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"child\", description = \"Child\")\n" +
+            "public class InheritedChildCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Name\")\n" +
+            "    String name;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testInheritedOptionOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.InheritedParentCommand", INHERITED_PARENT_SOURCE),
+                new InMemorySource("test.InheritedChildCommand", INHERITED_CHILD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> parentClass = result.classLoader.loadClass("test.InheritedParentCommand");
+        Class<?> childClass = result.classLoader.loadClass("test.InheritedChildCommand");
+        Class<?> parentMetaClass = result.classLoader.loadClass("test.InheritedParentCommand_AeshMetadata");
+
+        // Verify parent's inherited options have FieldAccessor
+        CommandMetadataProvider parentProvider = (CommandMetadataProvider) parentMetaClass.newInstance();
+        Command parentInstance = (Command) parentClass.newInstance();
+        ProcessedCommand parentPC = parentProvider.buildProcessedCommand(parentInstance);
+
+        ProcessedOption verboseOpt = parentPC.findLongOptionNoActivatorCheck("verbose");
+        assertNotNull("Parent should have --verbose", verboseOpt);
+        assertTrue("--verbose should be inherited", verboseOpt.isInherited());
+        assertTrue("--verbose should be GeneratedProcessedOption",
+                verboseOpt instanceof GeneratedProcessedOption);
+        assertNotNull("--verbose should have FieldAccessor", verboseOpt.getFieldAccessor());
+
+        ProcessedOption configOpt = parentPC.findLongOptionNoActivatorCheck("config");
+        assertNotNull("Parent should have --config", configOpt);
+        assertTrue("--config should be inherited", configOpt.isInherited());
+
+        // Verify parity with reflection path for both parent and child
+        assertEquivalence(parentClass, parentMetaClass);
+        assertEquivalence(childClass,
+                result.classLoader.loadClass("test.InheritedChildCommand_AeshMetadata"));
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -1516,54 +1685,13 @@ public class ProcessorTest {
         // Compare argument
         if (reflectionPC.getArgument() != null) {
             assertNotNull("Generated should have argument", generatedPC.getArgument());
-            ProcessedOption rArg = reflectionPC.getArgument();
-            ProcessedOption gArg = generatedPC.getArgument();
-            assertEquals("Argument description", rArg.description(), gArg.description());
-            assertEquals("Argument type", rArg.type(), gArg.type());
-            assertEquals("Argument fieldName", rArg.getFieldName(), gArg.getFieldName());
-            assertEquals("Argument optionType", rArg.getOptionType(), gArg.getOptionType());
-            assertEquals("Argument required", rArg.isRequired(), gArg.isRequired());
-            assertEquals("Argument indexRange",
-                    rArg.getIndexRange() != null ? rArg.getIndexRange().getMin() : -1,
-                    gArg.getIndexRange() != null ? gArg.getIndexRange().getMin() : -1);
-            assertEquals("Argument indexRange max",
-                    rArg.getIndexRange() != null ? rArg.getIndexRange().getMax() : -1,
-                    gArg.getIndexRange() != null ? gArg.getIndexRange().getMax() : -1);
-            assertEquals("Argument paramLabel",
-                    rArg.getParamLabel() != null ? rArg.getParamLabel() : "",
-                    gArg.getParamLabel() != null ? gArg.getParamLabel() : "");
-            assertEquals("Argument arity min",
-                    rArg.getArity() != null ? rArg.getArity().getMin() : -1,
-                    gArg.getArity() != null ? gArg.getArity().getMin() : -1);
-            assertEquals("Argument arity max",
-                    rArg.getArity() != null ? rArg.getArity().getMax() : -1,
-                    gArg.getArity() != null ? gArg.getArity().getMax() : -1);
+            assertPositionalEquivalence("Argument", reflectionPC.getArgument(), generatedPC.getArgument());
         }
 
         // Compare arguments (plural)
         if (reflectionPC.getArguments() != null) {
             assertNotNull("Generated should have arguments", generatedPC.getArguments());
-            ProcessedOption rArgs = reflectionPC.getArguments();
-            ProcessedOption gArgs = generatedPC.getArguments();
-            assertEquals("Arguments description", rArgs.description(), gArgs.description());
-            assertEquals("Arguments type", rArgs.type(), gArgs.type());
-            assertEquals("Arguments fieldName", rArgs.getFieldName(), gArgs.getFieldName());
-            assertEquals("Arguments optionType", rArgs.getOptionType(), gArgs.getOptionType());
-            assertEquals("Arguments indexRange",
-                    rArgs.getIndexRange() != null ? rArgs.getIndexRange().getMin() : -1,
-                    gArgs.getIndexRange() != null ? gArgs.getIndexRange().getMin() : -1);
-            assertEquals("Arguments indexRange max",
-                    rArgs.getIndexRange() != null ? rArgs.getIndexRange().getMax() : -1,
-                    gArgs.getIndexRange() != null ? gArgs.getIndexRange().getMax() : -1);
-            assertEquals("Arguments paramLabel",
-                    rArgs.getParamLabel() != null ? rArgs.getParamLabel() : "",
-                    gArgs.getParamLabel() != null ? gArgs.getParamLabel() : "");
-            assertEquals("Arguments arity min",
-                    rArgs.getArity() != null ? rArgs.getArity().getMin() : -1,
-                    gArgs.getArity() != null ? gArgs.getArity().getMin() : -1);
-            assertEquals("Arguments arity max",
-                    rArgs.getArity() != null ? rArgs.getArity().getMax() : -1,
-                    gArgs.getArity() != null ? gArgs.getArity().getMax() : -1);
+            assertPositionalEquivalence("Arguments", reflectionPC.getArguments(), generatedPC.getArguments());
         }
 
         // Compare rendered help output — catches rendering divergence even when metadata matches
@@ -1601,6 +1729,40 @@ public class ProcessorTest {
                 return opt;
         }
         return null;
+    }
+
+    private void assertPositionalEquivalence(String label, ProcessedOption rOpt, ProcessedOption gOpt) {
+        assertEquals(label + " description", rOpt.description(), gOpt.description());
+        assertEquals(label + " type", rOpt.type(), gOpt.type());
+        assertEquals(label + " fieldName", rOpt.getFieldName(), gOpt.getFieldName());
+        assertEquals(label + " optionType", rOpt.getOptionType(), gOpt.getOptionType());
+        assertEquals(label + " required", rOpt.isRequired(), gOpt.isRequired());
+        assertEquals(label + " defaultValues", rOpt.getDefaultValues(), gOpt.getDefaultValues());
+        assertEquals(label + " indexRange min",
+                rOpt.getIndexRange() != null ? rOpt.getIndexRange().getMin() : -1,
+                gOpt.getIndexRange() != null ? gOpt.getIndexRange().getMin() : -1);
+        assertEquals(label + " indexRange max",
+                rOpt.getIndexRange() != null ? rOpt.getIndexRange().getMax() : -1,
+                gOpt.getIndexRange() != null ? gOpt.getIndexRange().getMax() : -1);
+        assertEquals(label + " paramLabel",
+                rOpt.getParamLabel() != null ? rOpt.getParamLabel() : "",
+                gOpt.getParamLabel() != null ? gOpt.getParamLabel() : "");
+        assertEquals(label + " arity min",
+                rOpt.getArity() != null ? rOpt.getArity().getMin() : -1,
+                gOpt.getArity() != null ? gOpt.getArity().getMin() : -1);
+        assertEquals(label + " arity max",
+                rOpt.getArity() != null ? rOpt.getArity().getMax() : -1,
+                gOpt.getArity() != null ? gOpt.getArity().getMax() : -1);
+        assertEquals(label + " valueSeparator", rOpt.getValueSeparator(), gOpt.getValueSeparator());
+        assertEquals(label + " overrideRequired", rOpt.doOverrideRequired(), gOpt.doOverrideRequired());
+        assertEquals(label + " inherited", rOpt.isInherited(), gOpt.isInherited());
+        assertEquals(label + " isUrl", rOpt.isUrl(), gOpt.isUrl());
+        assertEquals(label + " askIfNotSet", rOpt.askIfNotSet(), gOpt.askIfNotSet());
+        assertEquals(label + " mixinFieldName", rOpt.getMixinFieldName(), gOpt.getMixinFieldName());
+        assertCallbackEquivalence("converter", label, rOpt.converter(), gOpt.converter());
+        assertCallbackEquivalence("completer", label, rOpt.completer(), gOpt.completer());
+        assertCallbackEquivalence("validator", label, rOpt.validator(), gOpt.validator());
+        assertCallbackEquivalence("activator", label, rOpt.activator(), gOpt.activator());
     }
 
     // --- In-memory compilation infrastructure ---
