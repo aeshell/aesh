@@ -623,26 +623,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private void doGenerateHelp() {
         //only generate a help option if there is no other option already called help
         if (findOption("help") == null) {
-            try {
-                ProcessedOption helpOption = ProcessedOptionBuilder
-                        .builder()
-                        .name("help")
-                        .shortName('h')
-                        .description("Display this help and exit")
-                        .required(false)
-                        .optionType(OptionType.BOOLEAN)
-                        .type(Boolean.class)
-                        .hasValue(false)
-                        .overrideRequired(true)
-                        .fieldName("generatedHelp")
-                        .build();
-
-                helpOption.setDeclarationOrder(optionDeclarationCounter++);
-                options.add(helpOption);
-                helpOption.setParent(this);
-            } catch (OptionParserException e) {
-                throw new RuntimeException("Failed to generate help option", e);
-            }
+            ProcessedOption helpOption = ProcessedOption.createDirect(
+                    "h", "help", "Display this help and exit",
+                    Boolean.class, "generatedHelp", OptionType.BOOLEAN,
+                    org.aesh.converter.CLConverterManager.getInstance().getConverter(Boolean.class), null);
+            helpOption.setOverrideRequired(true);
+            helpOption.setDeclarationOrder(optionDeclarationCounter++);
+            options.add(helpOption);
+            helpOption.setParent(this);
         }
     }
 
@@ -666,26 +654,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private void doGenerateVersion() {
         //only generate a version option if there is no other option already called version
         if (findOption("version") == null) {
-            try {
-                ProcessedOption versionOption = ProcessedOptionBuilder
-                        .builder()
-                        .name("version")
-                        .shortName('v')
-                        .description("Displays version information of the command")
-                        .hasValue(false)
-                        .required(false)
-                        .optionType(OptionType.BOOLEAN)
-                        .type(Boolean.class)
-                        .overrideRequired(true)
-                        .fieldName("generatedVersion")
-                        .build();
-
-                versionOption.setDeclarationOrder(optionDeclarationCounter++);
-                options.add(versionOption);
-                versionOption.setParent(this);
-            } catch (OptionParserException e) {
-                throw new RuntimeException("Failed to generate version option", e);
-            }
+            ProcessedOption versionOption = ProcessedOption.createDirect(
+                    "v", "version", "Displays version information of the command",
+                    Boolean.class, "generatedVersion", OptionType.BOOLEAN,
+                    org.aesh.converter.CLConverterManager.getInstance().getConverter(Boolean.class), null);
+            versionOption.setOverrideRequired(true);
+            versionOption.setDeclarationOrder(optionDeclarationCounter++);
+            options.add(versionOption);
+            versionOption.setParent(this);
         }
     }
 
