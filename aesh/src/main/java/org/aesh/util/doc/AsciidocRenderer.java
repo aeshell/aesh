@@ -49,25 +49,29 @@ class AsciidocRenderer implements DocRenderer {
 
     @Override
     public String renderCommand(CommandLineParser<?> parser, String fullName, String parentName,
-            DocumentationGenerator.HelpSectionContent helpContent) {
+            DocumentationGenerator.HelpSectionContent helpContent,
+            DocumentationGenerator.NameContext nameCtx) {
         ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
         StringBuilder sb = new StringBuilder();
+
+        // Resolve command description
+        String description = resolveDescription(cmd, cmd.description(), nameCtx);
 
         // Title
         sb.append("= ").append(fullName.toUpperCase()).append("\n\n");
 
         // Name section
         sb.append("== NAME\n\n");
-        sb.append(fullName.replace('-', ' ')).append(" -- ").append(cmd.description()).append("\n\n");
+        sb.append(fullName.replace('-', ' ')).append(" -- ").append(description).append("\n\n");
 
         // Synopsis section
         sb.append("== SYNOPSIS\n\n");
         sb.append(buildSynopsis(parser, fullName)).append("\n\n");
 
         // Description section
-        if (cmd.description() != null && !cmd.description().isEmpty()) {
+        if (description != null && !description.isEmpty()) {
             sb.append("== DESCRIPTION\n\n");
-            sb.append(cmd.description()).append("\n\n");
+            sb.append(description).append("\n\n");
         }
 
         // Header from HelpSectionProvider (typically usage examples)
@@ -89,7 +93,7 @@ class AsciidocRenderer implements DocRenderer {
             for (ProcessedOption opt : options) {
                 if (opt.getVisibility() == OptionVisibility.HIDDEN)
                     continue;
-                renderOption(sb, opt);
+                renderOption(sb, opt, cmd, nameCtx);
             }
         }
 
@@ -151,7 +155,8 @@ class AsciidocRenderer implements DocRenderer {
         return sb.toString();
     }
 
-    private void renderOption(StringBuilder sb, ProcessedOption opt) {
+    private void renderOption(StringBuilder sb, ProcessedOption opt,
+            ProcessedCommand<?, ?> cmd, DocumentationGenerator.NameContext nameCtx) {
         // Option name line
         sb.append("*");
 
@@ -189,9 +194,10 @@ class AsciidocRenderer implements DocRenderer {
 
         sb.append("::\n");
 
-        // Description
-        if (opt.description() != null && !opt.description().isEmpty()) {
-            sb.append(opt.description()).append("\n");
+        // Description (with variable resolution)
+        String optDesc = resolveDescription(cmd, opt.description(), nameCtx);
+        if (optDesc != null && !optDesc.isEmpty()) {
+            sb.append(optDesc).append("\n");
         }
 
         // Aliases
@@ -344,6 +350,18 @@ class AsciidocRenderer implements DocRenderer {
         try (FileWriter writer = new FileWriter(navFile)) {
             writer.write(sb.toString());
         }
+    }
+
+    private String resolveDescription(ProcessedCommand<?, ?> cmd, String raw,
+            DocumentationGenerator.NameContext ctx) {
+        if (raw == null || raw.isEmpty() || ctx == null)
+            return raw;
+        return cmd.resolveCommandDescription(raw,
+                ctx.commandName,
+                ctx.fullName != null ? ctx.fullName.replace('-', ' ') : ctx.commandName,
+                ctx.rootName,
+                ctx.parentName,
+                ctx.parentName != null ? ctx.parentName.replace('-', ' ') : null);
     }
 
     @SuppressWarnings("unchecked")

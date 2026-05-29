@@ -84,7 +84,8 @@ public class DocumentationGenerator {
     public String generateSingle() {
         DocRenderer renderer = createRenderer();
         HelpSectionContent helpContent = resolveHelpContent(parser, programName, null);
-        return renderer.renderCommand(parser, programName, null, helpContent);
+        NameContext nameCtx = buildNameContext(parser, programName, null);
+        return renderer.renderCommand(parser, programName, null, helpContent, nameCtx);
     }
 
     /**
@@ -111,7 +112,8 @@ public class DocumentationGenerator {
     private void generateRecursive(CommandLineParser<?> parser, String fullName,
             String parentName, DocRenderer renderer, List<NavEntry> navEntries) throws IOException {
         HelpSectionContent helpContent = resolveHelpContent(parser, fullName, parentName);
-        String content = renderer.renderCommand(parser, fullName, parentName, helpContent);
+        NameContext nameCtx = buildNameContext(parser, fullName, parentName);
+        String content = renderer.renderCommand(parser, fullName, parentName, helpContent, nameCtx);
         String fileName = fullName.replace(' ', '-') + "." + format.extension();
         File outFile = new File(outputDir, fileName);
 
@@ -173,6 +175,15 @@ public class DocumentationGenerator {
         return new HelpSectionContent(header, footer, sections);
     }
 
+    private NameContext buildNameContext(CommandLineParser<?> parser, String fullName, String parentName) {
+        String commandName = parser.getProcessedCommand().name();
+        String rootName = programName;
+        int dashIdx = rootName.indexOf('-');
+        if (dashIdx > 0)
+            rootName = rootName.substring(0, dashIdx);
+        return new NameContext(commandName, fullName, rootName, parentName);
+    }
+
     private String resolveVariables(String text, String commandName, String fullName, String parentName) {
         if (text == null || text.isEmpty())
             return text;
@@ -188,6 +199,23 @@ public class DocumentationGenerator {
                 rootName,
                 parentName,
                 parentName != null ? parentName.replace('-', ' ') : null);
+    }
+
+    /**
+     * Name context for variable resolution in descriptions.
+     */
+    static class NameContext {
+        final String commandName;
+        final String fullName;
+        final String rootName;
+        final String parentName;
+
+        NameContext(String commandName, String fullName, String rootName, String parentName) {
+            this.commandName = commandName;
+            this.fullName = fullName;
+            this.rootName = rootName;
+            this.parentName = parentName;
+        }
     }
 
     /**

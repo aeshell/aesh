@@ -409,6 +409,35 @@ public class DocumentationGeneratorTest {
         assertTrue("Should contain resolved command name", doc.contains("varcmd is a tool for varcmd"));
     }
 
+    @CommandDefinition(name = "completion", description = "Generate completion script for ${ROOT-COMMAND-NAME}")
+    public static class DescriptionVarCommand implements Command<CommandInvocation> {
+        @Option(name = "shell", description = "Shell type for ${COMMAND-NAME}")
+        String shell;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testVariableResolutionInCommandAndOptionDescription() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(DescriptionVarCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        // ${ROOT-COMMAND-NAME} in command description should be resolved
+        assertFalse("Should not contain raw ${ROOT-COMMAND-NAME}", doc.contains("${ROOT-COMMAND-NAME}"));
+        assertTrue("Should contain resolved command name in description",
+                doc.contains("Generate completion script for completion"));
+
+        // ${COMMAND-NAME} in option description should be resolved
+        assertFalse("Should not contain raw ${COMMAND-NAME} in option", doc.contains("${COMMAND-NAME}"));
+        assertTrue("Should contain resolved command name in option description",
+                doc.contains("Shell type for completion"));
+    }
+
     // --- Nav file depth tests ---
 
     @CommandDefinition(name = "leaf", description = "Leaf command")

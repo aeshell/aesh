@@ -39,7 +39,8 @@ interface DocRenderer {
      * @return the rendered documentation as a string
      */
     String renderCommand(CommandLineParser<?> parser, String fullName, String parentName,
-            DocumentationGenerator.HelpSectionContent helpContent);
+            DocumentationGenerator.HelpSectionContent helpContent,
+            DocumentationGenerator.NameContext nameContext);
 
     /**
      * Write a navigation file listing all generated pages.

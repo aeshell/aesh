@@ -46,16 +46,20 @@ class MarkdownRenderer implements DocRenderer {
 
     @Override
     public String renderCommand(CommandLineParser<?> parser, String fullName, String parentName,
-            DocumentationGenerator.HelpSectionContent helpContent) {
+            DocumentationGenerator.HelpSectionContent helpContent,
+            DocumentationGenerator.NameContext nameCtx) {
         ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
         StringBuilder sb = new StringBuilder();
+
+        // Resolve command description
+        String description = resolveDescription(cmd, cmd.description(), nameCtx);
 
         // Title
         sb.append("# ").append(fullName.toUpperCase()).append("\n\n");
 
         // Name
         sb.append("## NAME\n\n");
-        sb.append(fullName.replace('-', ' ')).append(" -- ").append(cmd.description()).append("\n\n");
+        sb.append(fullName.replace('-', ' ')).append(" -- ").append(description).append("\n\n");
 
         // Synopsis
         sb.append("## SYNOPSIS\n\n");
@@ -64,9 +68,9 @@ class MarkdownRenderer implements DocRenderer {
         sb.append("\n```\n\n");
 
         // Description
-        if (cmd.description() != null && !cmd.description().isEmpty()) {
+        if (description != null && !description.isEmpty()) {
             sb.append("## DESCRIPTION\n\n");
-            sb.append(cmd.description()).append("\n\n");
+            sb.append(description).append("\n\n");
         }
 
         // Header from HelpSectionProvider
@@ -88,7 +92,7 @@ class MarkdownRenderer implements DocRenderer {
             for (ProcessedOption opt : options) {
                 if (opt.getVisibility() == OptionVisibility.HIDDEN)
                     continue;
-                renderOption(sb, opt);
+                renderOption(sb, opt, cmd, nameCtx);
             }
         }
 
@@ -146,7 +150,8 @@ class MarkdownRenderer implements DocRenderer {
         return sb.toString();
     }
 
-    private void renderOption(StringBuilder sb, ProcessedOption opt) {
+    private void renderOption(StringBuilder sb, ProcessedOption opt,
+            ProcessedCommand<?, ?> cmd, DocumentationGenerator.NameContext nameCtx) {
         sb.append("### `");
 
         if (opt.shortName() != null) {
@@ -179,8 +184,9 @@ class MarkdownRenderer implements DocRenderer {
 
         sb.append("`\n\n");
 
-        if (opt.description() != null && !opt.description().isEmpty()) {
-            sb.append(opt.description()).append("\n\n");
+        String optDesc = resolveDescription(cmd, opt.description(), nameCtx);
+        if (optDesc != null && !optDesc.isEmpty()) {
+            sb.append(optDesc).append("\n\n");
         }
 
         if (!opt.getAliases().isEmpty()) {
@@ -204,6 +210,18 @@ class MarkdownRenderer implements DocRenderer {
         if (pos.description() != null && !pos.description().isEmpty()) {
             sb.append(pos.description()).append("\n\n");
         }
+    }
+
+    private String resolveDescription(ProcessedCommand<?, ?> cmd, String raw,
+            DocumentationGenerator.NameContext ctx) {
+        if (raw == null || raw.isEmpty() || ctx == null)
+            return raw;
+        return cmd.resolveCommandDescription(raw,
+                ctx.commandName,
+                ctx.fullName != null ? ctx.fullName.replace('-', ' ') : ctx.commandName,
+                ctx.rootName,
+                ctx.parentName,
+                ctx.parentName != null ? ctx.parentName.replace('-', ' ') : null);
     }
 
     private String buildSynopsis(CommandLineParser<?> parser, String fullName) {
