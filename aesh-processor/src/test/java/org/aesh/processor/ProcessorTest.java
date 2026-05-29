@@ -18,6 +18,7 @@
 package org.aesh.processor;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -1850,6 +1851,37 @@ public class ProcessorTest {
 
         // Verify parity with reflection path
         assertEquivalence(commandClass, metadataClass);
+
+        // Verify reset between parses on the generated path
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // Build a parser and populate with --debug=9999
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        org.aesh.command.invocation.InvocationProviders invProviders = new org.aesh.command.impl.invocation.AeshInvocationProviders();
+        parser.populateObject("optadv --debug=9999", invProviders, null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+
+        // Read the debug field via reflection
+        java.lang.reflect.Field debugField = commandClass.getDeclaredField("debug");
+        debugField.setAccessible(true);
+        Object debugVal = debugField.get(instance);
+        assertNotNull("debug should not be null after first parse", debugVal);
+        assertTrue("debug should be Optional", debugVal instanceof java.util.Optional);
+        assertTrue("debug should be present", ((java.util.Optional<?>) debugVal).isPresent());
+        assertEquals("9999", ((java.util.Optional<?>) debugVal).get());
+
+        // Second parse without --debug — should reset to Optional.empty()
+        parser.parse("optadv");
+        parser.getCommandPopulator().populateObject(generatedPC, invProviders, null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+
+        debugVal = debugField.get(instance);
+        assertNotNull("debug should not be null after reset", debugVal);
+        assertTrue("debug should be Optional after reset", debugVal instanceof java.util.Optional);
+        assertFalse("debug should be empty after reset", ((java.util.Optional<?>) debugVal).isPresent());
     }
 
     // --- Equivalence assertion ---
