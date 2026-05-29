@@ -23,12 +23,17 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.aesh.command.Command;
+import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.parser.CommandLineParserException;
 
 /**
@@ -78,7 +83,8 @@ public class DocumentationGenerator {
      */
     public String generateSingle() {
         DocRenderer renderer = createRenderer();
-        return renderer.renderCommand(parser, programName, null);
+        HelpSectionContent helpContent = resolveHelpContent(parser);
+        return renderer.renderCommand(parser, programName, null, helpContent);
     }
 
     /**
@@ -104,7 +110,8 @@ public class DocumentationGenerator {
 
     private void generateRecursive(CommandLineParser<?> parser, String fullName,
             String parentName, DocRenderer renderer, List<NavEntry> navEntries) throws IOException {
-        String content = renderer.renderCommand(parser, fullName, parentName);
+        HelpSectionContent helpContent = resolveHelpContent(parser);
+        String content = renderer.renderCommand(parser, fullName, parentName, helpContent);
         String fileName = fullName.replace(' ', '-') + "." + format.extension();
         File outFile = new File(outputDir, fileName);
 
@@ -119,6 +126,47 @@ public class DocumentationGenerator {
                 String childFullName = fullName + "-" + child.getProcessedCommand().name();
                 generateRecursive(child, childFullName, fullName, renderer, navEntries);
             }
+        }
+    }
+
+    /**
+     * Resolves HelpSectionProvider content from a parser.
+     */
+    private HelpSectionContent resolveHelpContent(CommandLineParser<?> parser) {
+        HelpSectionProvider provider = parser.getProcessedCommand().getHelpSectionProvider();
+        if (provider == null) {
+            Class<? extends HelpSectionProvider> providerClass = parser.getProcessedCommand().getHelpSectionProviderClass();
+            if (providerClass != null && providerClass != NullHelpSectionProvider.class) {
+                try {
+                    provider = providerClass.getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    // fall through
+                }
+            }
+        }
+        if (provider == null) {
+            return HelpSectionContent.EMPTY;
+        }
+        return new HelpSectionContent(
+                provider.getHeader(),
+                provider.getFooter(),
+                provider.getAdditionalSections());
+    }
+
+    /**
+     * Resolved content from a HelpSectionProvider.
+     */
+    static class HelpSectionContent {
+        static final HelpSectionContent EMPTY = new HelpSectionContent(null, null, Collections.emptyMap());
+
+        final String header;
+        final String footer;
+        final Map<String, List<HelpEntry>> additionalSections;
+
+        HelpSectionContent(String header, String footer, Map<String, List<HelpEntry>> additionalSections) {
+            this.header = header;
+            this.footer = footer;
+            this.additionalSections = additionalSections != null ? additionalSections : Collections.emptyMap();
         }
     }
 

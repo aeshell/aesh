@@ -1097,9 +1097,11 @@ public class ProcessedOption {
             if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
                 sb.append(ANSI.hyperlink(descriptionUrl, resolvedDescription));
             } else if (resolvedDescription.indexOf('\n') >= 0) {
-                // Multi-line description: indent continuation lines to align with description column
+                // Multi-line description: strip common leading whitespace (text block support)
+                // and indent continuation lines to align with description column
+                String stripped = stripIndent(resolvedDescription);
                 String pad = String.format("%" + descriptionStart + "s", "");
-                String[] lines = resolvedDescription.split("\n", -1);
+                String[] lines = stripped.split("\n", -1);
                 for (int i = 0; i < lines.length; i++) {
                     if (i > 0) {
                         sb.append(System.lineSeparator()).append(pad);
@@ -1369,5 +1371,42 @@ public class ProcessedOption {
                 ", valueSeparator=" + valueSeparator +
                 ", properties=" + properties +
                 '}';
+    }
+
+    /**
+     * Strip common leading whitespace from a multi-line string.
+     * Similar to Java 15's String.stripIndent() but compatible with Java 8+.
+     * Removes the minimum number of leading spaces found across all non-blank lines.
+     */
+    static String stripIndent(String text) {
+        String[] lines = text.split("\n", -1);
+        // Find minimum indentation across non-blank lines
+        int minIndent = Integer.MAX_VALUE;
+        for (String line : lines) {
+            if (line.trim().isEmpty())
+                continue;
+            int indent = 0;
+            while (indent < line.length() && line.charAt(indent) == ' ') {
+                indent++;
+            }
+            if (indent < minIndent) {
+                minIndent = indent;
+            }
+        }
+        if (minIndent == 0 || minIndent == Integer.MAX_VALUE) {
+            return text;
+        }
+        // Strip common indent
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < lines.length; i++) {
+            if (i > 0)
+                sb.append('\n');
+            if (lines[i].length() > minIndent) {
+                sb.append(lines[i].substring(minIndent));
+            } else {
+                sb.append(lines[i].trim());
+            }
+        }
+        return sb.toString();
     }
 }

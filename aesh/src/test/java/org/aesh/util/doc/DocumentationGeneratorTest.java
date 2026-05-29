@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +32,8 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
@@ -297,5 +301,69 @@ public class DocumentationGeneratorTest {
             Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
                     .map(Path::toFile).forEach(File::delete);
         }
+    }
+
+    // --- HelpSectionProvider tests ---
+
+    public static class TestHelpProvider implements HelpSectionProvider {
+        @Override
+        public String getHeader() {
+            return "This is a powerful CLI tool for deployment.";
+        }
+
+        @Override
+        public String getFooter() {
+            return "Report bugs to https://github.com/example/deploy/issues";
+        }
+
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();
+            sections.put("Examples", Arrays.asList(
+                    new HelpEntry("deploy --env prod myapp", "Deploy to production"),
+                    new HelpEntry("deploy --force myapp", "Force redeploy")));
+            return sections;
+        }
+    }
+
+    @CommandDefinition(name = "helpcmd", description = "Command with help sections", helpSectionProvider = TestHelpProvider.class)
+    public static class HelpProviderCommand implements Command<CommandInvocation> {
+        @Option(name = "env", description = "Environment")
+        String env;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testAsciidocWithHelpSectionProvider() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(HelpProviderCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        // Header content should appear
+        assertTrue("Should contain header", doc.contains("powerful CLI tool"));
+        // Footer content should appear
+        assertTrue("Should contain footer", doc.contains("Report bugs"));
+        // Additional sections should appear
+        assertTrue("Should contain EXAMPLES section", doc.contains("EXAMPLES"));
+        assertTrue("Should contain example entry", doc.contains("deploy --env prod myapp"));
+        assertTrue("Should contain example description", doc.contains("Deploy to production"));
+    }
+
+    @Test
+    public void testMarkdownWithHelpSectionProvider() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(HelpProviderCommand.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+
+        assertTrue("Should contain header", doc.contains("powerful CLI tool"));
+        assertTrue("Should contain footer", doc.contains("Report bugs"));
+        assertTrue("Should contain EXAMPLES section", doc.contains("## EXAMPLES"));
+        assertTrue("Should contain example entry", doc.contains("deploy --env prod myapp"));
     }
 }

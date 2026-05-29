@@ -1810,4 +1810,47 @@ public class CommandLineFormatterTest {
         }
     }
 
+    @Test
+    public void testHelp_TextBlockIndentationStripped() throws CommandLineParserException {
+        // Simulate a text block with common leading whitespace:
+        // """
+        //     Target environment.
+        //     Must be one of: dev, staging, prod.
+        //     Defaults to $APP_ENV."""
+        String textBlockDesc = "    Target environment.\n    Must be one of: dev, staging, prod.\n    Defaults to $APP_ENV.";
+
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run a script");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('e').name("env").type(String.class)
+                .description(textBlockDesc)
+                .build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+        String[] lines = help.split(System.lineSeparator());
+
+        // Find the env option line
+        int envLine = -1;
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].contains("Target environment")) {
+                envLine = i;
+                break;
+            }
+        }
+        assertTrue("Should find 'Target environment' in help", envLine >= 0);
+
+        // The leading indentation should be stripped — "Target environment" should
+        // appear right after the option column, not with extra leading spaces
+        assertFalse("Should not have extra leading spaces before 'Target'",
+                lines[envLine].contains("    Target"));
+
+        // Continuation lines should be aligned with the first line
+        assertTrue("Should have continuation line", envLine + 1 < lines.length);
+        int descStart = lines[envLine].indexOf("Target");
+        int contStart = lines[envLine + 1].indexOf("Must be");
+        assertEquals("Continuation should align", descStart, contStart);
+    }
+
 }

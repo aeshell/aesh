@@ -23,7 +23,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
+import org.aesh.command.HelpEntry;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -43,7 +45,8 @@ class MarkdownRenderer implements DocRenderer {
     }
 
     @Override
-    public String renderCommand(CommandLineParser<?> parser, String fullName, String parentName) {
+    public String renderCommand(CommandLineParser<?> parser, String fullName, String parentName,
+            DocumentationGenerator.HelpSectionContent helpContent) {
         ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
         StringBuilder sb = new StringBuilder();
 
@@ -64,6 +67,11 @@ class MarkdownRenderer implements DocRenderer {
         if (cmd.description() != null && !cmd.description().isEmpty()) {
             sb.append("## DESCRIPTION\n\n");
             sb.append(cmd.description()).append("\n\n");
+        }
+
+        // Header from HelpSectionProvider
+        if (helpContent.header != null && !helpContent.header.isEmpty()) {
+            sb.append(helpContent.header).append("\n\n");
         }
 
         // Options
@@ -114,6 +122,25 @@ class MarkdownRenderer implements DocRenderer {
                 }
                 sb.append("\n");
             }
+        }
+
+        // Additional sections from HelpSectionProvider
+        if (!helpContent.additionalSections.isEmpty()) {
+            for (Map.Entry<String, List<HelpEntry>> section : helpContent.additionalSections.entrySet()) {
+                sb.append("## ").append(section.getKey().toUpperCase()).append("\n\n");
+                for (HelpEntry entry : section.getValue()) {
+                    sb.append("**").append(entry.name()).append("**");
+                    if (entry.description() != null && !entry.description().isEmpty()) {
+                        sb.append(": ").append(entry.description());
+                    }
+                    sb.append("\n\n");
+                }
+            }
+        }
+
+        // Footer from HelpSectionProvider
+        if (helpContent.footer != null && !helpContent.footer.isEmpty()) {
+            sb.append("---\n\n").append(helpContent.footer).append("\n");
         }
 
         return sb.toString();
