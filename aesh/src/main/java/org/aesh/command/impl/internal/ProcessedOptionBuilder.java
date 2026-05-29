@@ -31,6 +31,7 @@ import org.aesh.command.impl.completer.BooleanOptionCompleter;
 import org.aesh.command.impl.completer.DefaultValueOptionCompleter;
 import org.aesh.command.impl.completer.NullOptionCompleter;
 import org.aesh.command.impl.converter.NullConverter;
+import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.renderer.NullOptionRenderer;
 import org.aesh.command.impl.validator.NullValidator;
 import org.aesh.command.parser.OptionParser;
@@ -326,10 +327,11 @@ public class ProcessedOptionBuilder {
     }
 
     private OptionParser initParser(Class<? extends OptionParser> parser) {
-        if (parser != null)
+        if (parser != null && !parser.equals(AeshOptionParser.class))
             return ReflectionUtil.newInstance(parser);
-        else
-            return null;
+        // AeshOptionParser is the default — skip reflective instantiation.
+        // ProcessedOption.parser() lazy-creates it with new AeshOptionParser().
+        return null;
     }
 
     /**
