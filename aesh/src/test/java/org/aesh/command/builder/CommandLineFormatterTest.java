@@ -193,8 +193,7 @@ public class CommandLineFormatterTest {
 
         connection.read("base git rebase --help" + getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(10);
-        String rebaseHelp = connection.getOutputBuffer();
+        String rebaseHelp = connection.waitForOutputContaining("--force", 3000);
         assertTrue(rebaseHelp.contains("--force"));
         assertTrue(rebaseHelp.contains("force your commits"));
         assertTrue(rebaseHelp.contains("--help"));
@@ -213,8 +212,7 @@ public class CommandLineFormatterTest {
 
         connection.read("base git checkout --help" + getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(10);
-        String checkoutHelp = connection.getOutputBuffer();
+        String checkoutHelp = connection.waitForOutputContaining("--quiet", 3000);
         assertTrue(checkoutHelp.contains("--quiet"));
         assertTrue(checkoutHelp.contains("Suppress feedback messages"));
         assertTrue(checkoutHelp.contains("--force"));

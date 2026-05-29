@@ -93,6 +93,21 @@ public class TestConnection implements Connection {
         return bufferBuilder.toString();
     }
 
+    /**
+     * Poll the output buffer until it contains the expected text or the timeout expires.
+     * Returns the buffer contents when the text is found, or the last buffer snapshot on timeout.
+     */
+    public String waitForOutputContaining(String expected, long timeoutMs) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            String buf = bufferBuilder.toString();
+            if (buf.contains(expected))
+                return buf;
+            Thread.sleep(10);
+        }
+        return bufferBuilder.toString();
+    }
+
     public String getLine() {
         return out;
     }
