@@ -34,7 +34,6 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.DefaultValueProvider;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
@@ -696,7 +695,7 @@ public class CommandLineParserTest {
         private String bar;
     }
 
-    @GroupCommandDefinition(name = "group", description = "", groupCommands = { ChildTest1.class, ChildTest2.class })
+    @CommandDefinition(name = "group", description = "", groupCommands = { ChildTest1.class, ChildTest2.class })
     public class GroupCommandTest<CI extends CommandInvocation> extends TestingCommand<CI> {
 
         @Option(hasValue = false)
@@ -704,7 +703,7 @@ public class CommandLineParserTest {
 
     }
 
-    @GroupCommandDefinition(name = "super", description = "", groupCommands = { SubSuperGroupCommandTest.class })
+    @CommandDefinition(name = "super", description = "", groupCommands = { SubSuperGroupCommandTest.class })
     public class SuperGroupCommandTest<CI extends CommandInvocation> extends TestingCommand<CI> {
 
         @Option(hasValue = false)
@@ -712,7 +711,7 @@ public class CommandLineParserTest {
 
     }
 
-    @GroupCommandDefinition(name = "sub", description = "", groupCommands = { ChildTest1.class, ChildTest2.class })
+    @CommandDefinition(name = "sub", description = "", groupCommands = { ChildTest1.class, ChildTest2.class })
     public class SubSuperGroupCommandTest extends TestingCommand<CommandInvocation> {
 
         @Option(hasValue = false)
@@ -771,7 +770,7 @@ public class CommandLineParserTest {
 
     }
 
-    @GroupCommandDefinition(name = "cli", description = "", groupCommands = { ChildTest1.class, ChildTest2.class })
+    @CommandDefinition(name = "cli", description = "", groupCommands = { ChildTest1.class, ChildTest2.class })
     public class GroupWithOptionsCommand<CI extends CommandInvocation> extends TestingCommand<CI> {
 
         @Option(shortName = 'c')
@@ -782,7 +781,7 @@ public class CommandLineParserTest {
 
     }
 
-    @GroupCommandDefinition(name = "groupfail", description = "", groupCommands = { ChildTest1.class })
+    @CommandDefinition(name = "groupfail", description = "", groupCommands = { ChildTest1.class })
     public class GroupFailCommand<CI extends CommandInvocation> implements Command<CI> {
 
         @Option
@@ -1255,7 +1254,7 @@ public class CommandLineParserTest {
         assertEquals("hello", child2.name);
     }
 
-    @GroupCommandDefinition(name = "mygroup", description = "", groupCommands = { InheritedChildCommand.class })
+    @CommandDefinition(name = "mygroup", description = "", groupCommands = { InheritedChildCommand.class })
     public class InheritedGroupCommand<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(inherited = true, hasValue = false)
@@ -1286,7 +1285,7 @@ public class CommandLineParserTest {
         }
     }
 
-    @GroupCommandDefinition(name = "mygroup2", description = "", groupCommands = { InheritedChildNoFieldCommand.class })
+    @CommandDefinition(name = "mygroup2", description = "", groupCommands = { InheritedChildNoFieldCommand.class })
     public class InheritedGroupCommand2<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(inherited = true, hasValue = false)

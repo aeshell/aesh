@@ -69,6 +69,7 @@ public class ProcessorBenchmarkTest {
             "import java.util.Map;\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Argument;\n" +
@@ -131,6 +132,7 @@ public class ProcessorBenchmarkTest {
     private static final String SIMPLE_COMMAND_SOURCE = "package bench;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -289,12 +291,12 @@ public class ProcessorBenchmarkTest {
     private static final String GROUP_PARENT_SOURCE = "package bench;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
-            "import org.aesh.command.GroupCommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@GroupCommandDefinition(name = \"jbang\", description = \"JBang CLI\",\n" +
+            "@CommandDefinition(name = \"jbang\", description = \"JBang CLI\",\n" +
             "        groupCommands = { bench.RunCommand.class, bench.BuildCommand.class, bench.InitCommand.class },\n" +
             "        generateHelp = true)\n" +
             "public class JBangCommand implements Command<CommandInvocation> {\n" +
@@ -315,6 +317,7 @@ public class ProcessorBenchmarkTest {
             "import java.util.List;\n" +
             "import java.util.Map;\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -360,6 +363,7 @@ public class ProcessorBenchmarkTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Argument;\n" +
@@ -382,6 +386,7 @@ public class ProcessorBenchmarkTest {
     private static final String INIT_COMMAND_SOURCE = "package bench;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +

@@ -25,7 +25,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
@@ -262,7 +261,7 @@ public class ParentCommandTest {
 
     // ========== Test Command Classes ==========
 
-    @GroupCommandDefinition(name = "module", description = "Module management", groupCommands = { TagCommand.class })
+    @CommandDefinition(name = "module", description = "Module management", groupCommands = { TagCommand.class })
     public static class ModuleGroupCommand<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(name = "verbose", shortName = 'v', hasValue = false, description = "Verbose mode")
@@ -300,7 +299,7 @@ public class ParentCommandTest {
         }
     }
 
-    @GroupCommandDefinition(name = "project", description = "Project management", groupCommands = {})
+    @CommandDefinition(name = "project", description = "Project management", groupCommands = {})
     public static class ProjectGroupCommand<CI extends CommandInvocation> implements Command<CI> {
 
         @Option(name = "name", shortName = 'n', description = "Project name")
@@ -314,7 +313,7 @@ public class ParentCommandTest {
 
     // ========== Inherited Options Test Commands ==========
 
-    @GroupCommandDefinition(name = "inherited", description = "Test inherited options", groupCommands = {
+    @CommandDefinition(name = "inherited", description = "Test inherited options", groupCommands = {
             InheritedSubCommand.class })
     public static class InheritedGroupCommand<CI extends CommandInvocation> implements Command<CI> {
 

@@ -31,7 +31,6 @@ import java.util.Map;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
@@ -93,7 +92,7 @@ public class DocumentationGeneratorTest {
         }
     }
 
-    @GroupCommandDefinition(name = "app", description = "Application CLI", groupCommands = { Sub1Command.class,
+    @CommandDefinition(name = "app", description = "Application CLI", groupCommands = { Sub1Command.class,
             Sub2Command.class })
     public static class AppCommand implements Command<CommandInvocation> {
         @Option(name = "verbose", hasValue = false, description = "Verbose output")
@@ -420,7 +419,7 @@ public class DocumentationGeneratorTest {
         }
     }
 
-    @GroupCommandDefinition(name = "mid", description = "Mid group", groupCommands = { LeafCommand.class })
+    @CommandDefinition(name = "mid", description = "Mid group", groupCommands = { LeafCommand.class })
     public static class MidGroup implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {
@@ -428,7 +427,7 @@ public class DocumentationGeneratorTest {
         }
     }
 
-    @GroupCommandDefinition(name = "top", description = "Top group", groupCommands = { MidGroup.class })
+    @CommandDefinition(name = "top", description = "Top group", groupCommands = { MidGroup.class })
     public static class TopGroup implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {

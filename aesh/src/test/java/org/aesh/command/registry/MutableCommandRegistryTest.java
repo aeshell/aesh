@@ -26,7 +26,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
@@ -106,7 +105,7 @@ public class MutableCommandRegistryTest {
         }
     }
 
-    @GroupCommandDefinition(name = "group", description = "", groupCommands = { Command3.class })
+    @CommandDefinition(name = "group", description = "", groupCommands = { Command3.class })
     public class GroupCommand1 implements Command {
 
         @Option

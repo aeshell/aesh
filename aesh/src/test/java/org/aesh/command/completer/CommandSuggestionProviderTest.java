@@ -7,7 +7,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.completer.CommandSuggestionProvider;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -190,7 +189,7 @@ public class CommandSuggestionProviderTest {
         }
     }
 
-    @GroupCommandDefinition(name = "git", description = "Git operations", groupCommands = { GitCommit.class, GitRebase.class })
+    @CommandDefinition(name = "git", description = "Git operations", groupCommands = { GitCommit.class, GitRebase.class })
     public static class GitCommand implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation invocation) throws CommandException, InterruptedException {

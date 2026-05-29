@@ -61,6 +61,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -104,6 +105,7 @@ public class ProcessorTest {
             "import java.util.Map;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -150,6 +152,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -185,6 +188,7 @@ public class ProcessorTest {
     private static final String DEFAULT_VALUES_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -222,6 +226,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -255,6 +260,7 @@ public class ProcessorTest {
     private static final String BASE_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -301,6 +307,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -320,6 +327,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "\n" +
@@ -334,12 +342,12 @@ public class ProcessorTest {
     private static final String GROUP_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
-            "import org.aesh.command.GroupCommandDefinition;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@GroupCommandDefinition(name = \"group\", description = \"Group command\",\n" +
+            "@CommandDefinition(name = \"group\", description = \"Group command\",\n" +
             "        groupCommands = {SubCommand1.class, SubCommand2.class})\n" +
             "public class GroupTestCommand implements Command<CommandInvocation> {\n" +
             "    @Option(description = \"Shared option\")\n" +
@@ -376,6 +384,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -391,6 +400,7 @@ public class ProcessorTest {
     private static final String UNIFIED_GROUP_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -452,6 +462,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Mixin;\n" +
@@ -494,6 +505,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -531,6 +543,7 @@ public class ProcessorTest {
             "import java.util.List;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -595,6 +608,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "\n" +
@@ -630,7 +644,7 @@ public class ProcessorTest {
         assertEquals("helpGroup should match reflection path", reflectionPC.helpGroup(), generatedPC.helpGroup());
     }
 
-    // --- Test: @GroupCommandDefinition with helpSectionProvider (#416) ---
+    // --- Test: @CommandDefinition with helpSectionProvider (#416) ---
 
     private static final String HELP_PROVIDER_SOURCE = "package test;\n" +
             "\n" +
@@ -655,11 +669,11 @@ public class ProcessorTest {
     private static final String HELP_PROVIDER_CMD_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
-            "import org.aesh.command.GroupCommandDefinition;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "\n" +
-            "@GroupCommandDefinition(name = \"app\", description = \"App with provider\",\n" +
+            "@CommandDefinition(name = \"app\", description = \"App with provider\",\n" +
             "        groupCommands = {},\n" +
             "        helpSectionProvider = TestProvider.class)\n" +
             "public class HelpProviderCommand implements Command<CommandInvocation> {\n" +
@@ -710,6 +724,7 @@ public class ProcessorTest {
     private static final String EXCLUSIVE_WITH_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -776,6 +791,7 @@ public class ProcessorTest {
             "import java.util.Map;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -849,6 +865,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -886,6 +903,7 @@ public class ProcessorTest {
             "import java.util.Map;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -926,6 +944,7 @@ public class ProcessorTest {
     private static final String ORDERING_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -1001,6 +1020,7 @@ public class ProcessorTest {
     private static final String CUSTOM_CMD_VALIDATOR_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.validator.CommandValidator;\n" +
             "import org.aesh.command.validator.CommandValidatorException;\n" +
@@ -1061,6 +1081,7 @@ public class ProcessorTest {
     private static final String FULL_CALLBACKS_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -1161,6 +1182,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -1190,6 +1212,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "\n" +
@@ -1202,12 +1225,12 @@ public class ProcessorTest {
     private static final String PARENT_CMD_GROUP_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
-            "import org.aesh.command.GroupCommandDefinition;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@GroupCommandDefinition(name = \"parent\", description = \"Parent\",\n" +
+            "@CommandDefinition(name = \"parent\", description = \"Parent\",\n" +
             "        groupCommands = {ParentChildCommand.class})\n" +
             "public class ParentGroupCommand implements Command<CommandInvocation> {\n" +
             "    @Option(description = \"Verbose\", hasValue = false)\n" +
@@ -1222,6 +1245,7 @@ public class ProcessorTest {
     private static final String PARENT_CHILD_CMD_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -1288,6 +1312,7 @@ public class ProcessorTest {
     private static final String HELP_VERSION_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -1389,6 +1414,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
@@ -1436,12 +1462,12 @@ public class ProcessorTest {
     private static final String GROUP_HELP_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
-            "import org.aesh.command.GroupCommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@GroupCommandDefinition(name = \"grphelp\", description = \"Group help test\",\n" +
+            "@CommandDefinition(name = \"grphelp\", description = \"Group help test\",\n" +
             "        groupCommands = {}, generateHelp = true, version = \"3.0\")\n" +
             "public class GroupHelpCommand implements Command<CommandInvocation> {\n" +
             "    @Option(description = \"Flag\", hasValue = false)\n" +
@@ -1514,6 +1540,7 @@ public class ProcessorTest {
             "import java.util.List;\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Argument;\n" +
@@ -1578,12 +1605,12 @@ public class ProcessorTest {
     private static final String INHERITED_PARENT_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
-            "import org.aesh.command.GroupCommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@GroupCommandDefinition(name = \"parent\", description = \"Parent\",\n" +
+            "@CommandDefinition(name = \"parent\", description = \"Parent\",\n" +
             "        groupCommands = { test.InheritedChildCommand.class })\n" +
             "public class InheritedParentCommand implements Command<CommandInvocation> {\n" +
             "    @Option(hasValue = false, description = \"Verbose\", inherited = true)\n" +
@@ -1601,6 +1628,7 @@ public class ProcessorTest {
     private static final String INHERITED_CHILD_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
@@ -1679,6 +1707,7 @@ public class ProcessorTest {
             "\n" +
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Mixin;\n" +
@@ -1750,6 +1779,7 @@ public class ProcessorTest {
     private static final String NESTED_MIXIN_CMD_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +

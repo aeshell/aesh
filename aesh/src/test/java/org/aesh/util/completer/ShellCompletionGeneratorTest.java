@@ -23,7 +23,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
@@ -337,7 +336,7 @@ public class ShellCompletionGeneratorTest {
         }
     }
 
-    @GroupCommandDefinition(name = "mygit", groupCommands = { CommitCmd.class, PushCmd.class }, description = "A git-like tool")
+    @CommandDefinition(name = "mygit", groupCommands = { CommitCmd.class, PushCmd.class }, description = "A git-like tool")
     public static class GroupCmd implements Command {
         @Option(shortName = 'h', hasValue = false, description = "Show help")
         private boolean help;

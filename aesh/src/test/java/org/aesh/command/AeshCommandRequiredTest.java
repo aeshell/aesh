@@ -136,7 +136,7 @@ public class AeshCommandRequiredTest {
         }
     }
 
-    @GroupCommandDefinition(name = "group", description = "", groupCommands = { ReqCommand2.class })
+    @CommandDefinition(name = "group", description = "", groupCommands = { ReqCommand2.class })
     public static class GroupReqCommand implements Command {
 
         @Override

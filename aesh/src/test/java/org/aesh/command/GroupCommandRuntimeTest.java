@@ -102,7 +102,7 @@ public class GroupCommandRuntimeTest {
         }
     }
 
-    @GroupCommandDefinition(name = "igroup", description = "", groupCommands = { InheritSub.class })
+    @CommandDefinition(name = "igroup", description = "", groupCommands = { InheritSub.class })
     public static class InheritGroup implements Command<CommandInvocation> {
         @Option(hasValue = false, inherited = true)
         boolean verbose;
@@ -140,7 +140,7 @@ public class GroupCommandRuntimeTest {
         }
     }
 
-    @GroupCommandDefinition(name = "cli", description = "", groupCommands = { VersionCommand.class, ChildCommand.class })
+    @CommandDefinition(name = "cli", description = "", groupCommands = { VersionCommand.class, ChildCommand.class })
     public static class CliGroupCommand implements Command<CommandInvocation> {
         @Option(shortName = 'c')
         private String connect;

@@ -29,7 +29,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.impl.internal.ParsedCommand;
@@ -1189,7 +1188,7 @@ public class AeshCommandCompletionTest {
         }
     }
 
-    @GroupCommandDefinition(name = "super", description = "", groupCommands = { GitCommand.class })
+    @CommandDefinition(name = "super", description = "", groupCommands = { GitCommand.class })
     public static class SuperGitCommand implements Command {
 
         @Option(hasValue = false)
@@ -1201,7 +1200,7 @@ public class AeshCommandCompletionTest {
         }
     }
 
-    @GroupCommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class })
+    @CommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class })
     public static class GitCommand implements Command<CommandInvocation> {
 
         @Option(hasValue = false)
@@ -1253,7 +1252,7 @@ public class AeshCommandCompletionTest {
         }
     }
 
-    @GroupCommandDefinition(name = "group-arg", description = "", groupCommands = { Arg2Command.class })
+    @CommandDefinition(name = "group-arg", description = "", groupCommands = { Arg2Command.class })
     public static class GroupArgCommand implements Command {
 
         @Override

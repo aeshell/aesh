@@ -36,7 +36,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
@@ -466,7 +465,7 @@ public class CommandLineFormatterTest {
                 help.indexOf("compile") > help.indexOf("Build:"));
     }
 
-    @GroupCommandDefinition(name = "tool", description = "Tool suite", groupCommands = { GitSubCmd.class, SvnSubCmd.class,
+    @CommandDefinition(name = "tool", description = "Tool suite", groupCommands = { GitSubCmd.class, SvnSubCmd.class,
             CompileSubCmd.class })
     public static class ToolGroupCommand implements Command<CommandInvocation> {
         @Override
@@ -630,7 +629,7 @@ public class CommandLineFormatterTest {
         }
     }
 
-    @GroupCommandDefinition(name = "app", description = "App with plugins", groupCommands = {
+    @CommandDefinition(name = "app", description = "App with plugins", groupCommands = {
             PluginRunSubCmd.class }, helpSectionProvider = TestHelpSectionProvider.class)
     public static class AppWithPluginsCommand implements Command<CommandInvocation> {
         @Override
@@ -647,7 +646,7 @@ public class CommandLineFormatterTest {
         }
     }
 
-    @GroupCommandDefinition(name = "base", description = "", groupCommands = { GitCommand.class })
+    @CommandDefinition(name = "base", description = "", groupCommands = { GitCommand.class })
     public static class BaseCommand implements Command {
 
         @Option(hasValue = false)
@@ -659,7 +658,7 @@ public class CommandLineFormatterTest {
         }
     }
 
-    @GroupCommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class,
+    @CommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class,
             GitCheckout.class })
     public static class GitCommand implements Command {
 
@@ -1083,7 +1082,7 @@ public class CommandLineFormatterTest {
         assertTrue("init before info", initIdx < infoIdx);
     }
 
-    @GroupCommandDefinition(name = "app", description = "App with ordered subcommands", groupCommands = { SubRun.class,
+    @CommandDefinition(name = "app", description = "App with ordered subcommands", groupCommands = { SubRun.class,
             SubBuild.class, SubEdit.class, SubInit.class, SubInfo.class })
     public static class OrderedGroupCommand implements Command<CommandInvocation> {
         @Override

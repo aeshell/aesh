@@ -210,7 +210,7 @@ public class SubCommandModeConsoleTest {
 
     // --- Test commands ---
 
-    @GroupCommandDefinition(name = "app", description = "Application manager", groupCommands = { BuildSubCommand.class,
+    @CommandDefinition(name = "app", description = "Application manager", groupCommands = { BuildSubCommand.class,
             DeploySubCommand.class })
     public static class AppGroupCommand implements Command<CommandInvocation> {
         @Override
@@ -343,7 +343,7 @@ public class SubCommandModeConsoleTest {
 
     // --- Nested command definitions ---
 
-    @GroupCommandDefinition(name = "top", description = "Top level", groupCommands = { MidGroupCommand.class })
+    @CommandDefinition(name = "top", description = "Top level", groupCommands = { MidGroupCommand.class })
     public static class TopGroupCommand implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation invocation) throws CommandException, InterruptedException {
@@ -352,7 +352,7 @@ public class SubCommandModeConsoleTest {
         }
     }
 
-    @GroupCommandDefinition(name = "mid", description = "Mid level", groupCommands = { NestedLeafCmd.class })
+    @CommandDefinition(name = "mid", description = "Mid level", groupCommands = { NestedLeafCmd.class })
     public static class MidGroupCommand implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation invocation) throws CommandException, InterruptedException {

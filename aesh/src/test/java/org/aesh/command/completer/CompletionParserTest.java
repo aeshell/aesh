@@ -31,7 +31,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ParsedCommand;
@@ -502,7 +501,7 @@ public class CompletionParserTest {
         }
     }
 
-    @GroupCommandDefinition(name = "group", description = "groups", groupCommands = { ParseCompleteGroupChild1.class,
+    @CommandDefinition(name = "group", description = "groups", groupCommands = { ParseCompleteGroupChild1.class,
             ParseCompleteGroupChild2.class })
     public class ParseCompleteGroupTest<CI extends CommandInvocation> extends TestCommand<CI> {
 
@@ -1073,7 +1072,7 @@ public class CompletionParserTest {
         assertTrue(co.getCompletionCandidates().get(0).getCharacters().contains("help"));
     }
 
-    @GroupCommandDefinition(name = "app", description = "Application manager", groupCommands = { SubCmdBuild.class,
+    @CommandDefinition(name = "app", description = "Application manager", groupCommands = { SubCmdBuild.class,
             SubCmdDeploy.class, SubCmdStatus.class })
     public class SubCmdParent<CI extends CommandInvocation> extends TestCommand<CI> {
     }

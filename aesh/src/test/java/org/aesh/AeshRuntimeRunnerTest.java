@@ -32,7 +32,6 @@ import java.util.List;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.invocation.CommandInvocation;
@@ -669,7 +668,7 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
-    @GroupCommandDefinition(name = "root", description = "root", groupCommands = {
+    @CommandDefinition(name = "root", description = "root", groupCommands = {
             ArgumentOnlyCommand.class,
             ArgumentAndArgumentsCommand.class,
             MultipleIndexedArgumentsCommand.class
@@ -898,7 +897,7 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
-    @GroupCommandDefinition(name = "grp", description = "group", groupCommands = { SubCmd.class }, generateHelp = true)
+    @CommandDefinition(name = "grp", description = "group", groupCommands = { SubCmd.class }, generateHelp = true)
     public static class GroupCmd implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation invocation) {
@@ -1168,7 +1167,7 @@ public class AeshRuntimeRunnerTest {
 
     // --- Issue #448: group command completion with duplicate child names ---
 
-    @GroupCommandDefinition(name = "app", description = "App", groupCommands = {
+    @CommandDefinition(name = "app", description = "App", groupCommands = {
             AliasGroup.class, CatalogGroup.class })
     public static class DuplicateChildApp implements Command<CommandInvocation> {
         @Override
@@ -1177,7 +1176,7 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
-    @GroupCommandDefinition(name = "alias", description = "Manage aliases", groupCommands = {
+    @CommandDefinition(name = "alias", description = "Manage aliases", groupCommands = {
             AliasAdd.class, AliasList.class })
     public static class AliasGroup implements Command<CommandInvocation> {
         @Override
@@ -1186,7 +1185,7 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
-    @GroupCommandDefinition(name = "catalog", description = "Manage catalogs", groupCommands = {
+    @CommandDefinition(name = "catalog", description = "Manage catalogs", groupCommands = {
             CatalogAdd.class, CatalogList.class })
     public static class CatalogGroup implements Command<CommandInvocation> {
         @Override
@@ -1303,7 +1302,7 @@ public class AeshRuntimeRunnerTest {
     }
 
     // Nested 3-level group for grandchild completion test
-    @GroupCommandDefinition(name = "top", description = "Top level", groupCommands = { MidGroup.class })
+    @CommandDefinition(name = "top", description = "Top level", groupCommands = { MidGroup.class })
     public static class TopGroup implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {
@@ -1311,7 +1310,7 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
-    @GroupCommandDefinition(name = "mid", description = "Mid level", groupCommands = { LeafCmd.class })
+    @CommandDefinition(name = "mid", description = "Mid level", groupCommands = { LeafCmd.class })
     public static class MidGroup implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {
@@ -1331,7 +1330,7 @@ public class AeshRuntimeRunnerTest {
     }
 
     // Group with inherited options
-    @GroupCommandDefinition(name = "proj", description = "Project management", groupCommands = { ProjBuild.class })
+    @CommandDefinition(name = "proj", description = "Project management", groupCommands = { ProjBuild.class })
     public static class ProjGroup implements Command<CommandInvocation> {
         @Option(hasValue = false, inherited = true, description = "Verbose output")
         private boolean verbose;
@@ -1483,7 +1482,7 @@ public class AeshRuntimeRunnerTest {
 
     // --- Pre-release: registry DefaultValueProvider with group commands ---
 
-    @GroupCommandDefinition(name = "grp", description = "Group with child", groupCommands = { GrpChildCmd.class })
+    @CommandDefinition(name = "grp", description = "Group with child", groupCommands = { GrpChildCmd.class })
     public static class GrpParentCmd implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {

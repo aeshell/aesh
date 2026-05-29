@@ -492,7 +492,7 @@ public class AeshCommandRuntimeTest {
         assertEquals("prod", child.target);
     }
 
-    @GroupCommandDefinition(name = "parent", description = "", groupCommands = { ChildCmd.class }, generateHelp = true)
+    @CommandDefinition(name = "parent", description = "", groupCommands = { ChildCmd.class }, generateHelp = true)
     public static class ParentGroupCmd implements Command<CommandInvocation> {
         @Option(name = "verbose", shortName = 'v', hasValue = false, inherited = true)
         boolean verbose;
@@ -537,7 +537,7 @@ public class AeshCommandRuntimeTest {
         assertTrue("child afterParse() should have been called", ChildLifecycleCmd.afterParseCalled);
     }
 
-    @GroupCommandDefinition(name = "plc", description = "", groupCommands = { ChildLifecycleCmd.class }, generateHelp = true)
+    @CommandDefinition(name = "plc", description = "", groupCommands = { ChildLifecycleCmd.class }, generateHelp = true)
     public static class ParentLifecycleCmd implements Command<CommandInvocation>, CommandLifecycle {
         static boolean afterParseCalled;
         static boolean stacktraceValue;

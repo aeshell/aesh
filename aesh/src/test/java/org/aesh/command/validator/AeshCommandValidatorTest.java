@@ -27,7 +27,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
@@ -124,7 +123,7 @@ public class AeshCommandValidatorTest {
         }
     }
 
-    @GroupCommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class })
+    @CommandDefinition(name = "git", description = "", groupCommands = { GitCommit.class, GitRebase.class })
     public static class GitCommand implements Command {
 
         @Option(hasValue = false)
