@@ -35,6 +35,7 @@
     </scm>
 
     <modules>
+        <module>bom</module>
         <module>aesh</module>
         <module>aesh-processor</module>
     </modules>
