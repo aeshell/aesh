@@ -22,41 +22,16 @@
 
    <modelVersion>4.0.0</modelVersion>
 
-   <groupId>org.aesh</groupId>
+   <parent>
+       <groupId>org.aesh</groupId>
+       <artifactId>aesh-all</artifactId>
+       <version>3.9-dev</version>
+   </parent>
+
    <artifactId>aesh-bom</artifactId>
    <packaging>pom</packaging>
-   <version>3.9-dev</version>
    <name>Aesh: BOM</name>
    <description>Centralized dependencyManagement for the Aesh Project</description>
-   <url>https://aeshell.github.io</url>
-
-   <licenses>
-       <license>
-           <name>Apache License, Version 2.0</name>
-           <url>http://www.apache.org/licenses/LICENSE-2.0</url>
-       </license>
-   </licenses>
-
-   <scm>
-       <connection>scm:git:git://github.com/aeshell/aesh.git</connection>
-       <developerConnection>scm:git:ssh://git@github.com/aeshell/aesh.git</developerConnection>
-       <url>https://github.com/aeshell/aesh/tree/master</url>
-   </scm>
-
-   <developers>
-       <developer>
-           <name>Jean-Francois Denise</name>
-           <email>jdenise@redhat.com</email>
-           <organization>Red Hat</organization>
-           <organizationUrl>https://www.redhat.com</organizationUrl>
-       </developer>
-       <developer>
-           <name>Stale Pedersen</name>
-           <email>spederse@redhat.com</email>
-           <organization>Red Hat</organization>
-           <organizationUrl>https://www.redhat.com</organizationUrl>
-       </developer>
-   </developers>
 
    <dependencyManagement>
        <dependencies>
