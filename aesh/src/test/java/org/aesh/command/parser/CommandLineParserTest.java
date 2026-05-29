@@ -2594,4 +2594,190 @@ public class CommandLineParserTest {
         assertEquals("name from command should be set", "test", cmd.name);
     }
 
+    // --- Optional<T> support tests (#472) ---
+
+    @CommandDefinition(name = "opt-test", description = "Test Optional support")
+    public static class OptionalCommand implements Command<CommandInvocation> {
+        @Option(name = "name", description = "Name")
+        java.util.Optional<String> name;
+
+        @Option(name = "count", description = "Count")
+        java.util.Optional<Integer> count;
+
+        @Option(name = "verbose", hasValue = false, description = "Verbose")
+        boolean verbose;
+
+        @Argument(description = "Source file")
+        java.util.Optional<String> source;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testOptionalOption_WithValue() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalCommand()).getParser();
+
+        parser.populateObject("opt-test --name hello --count 42",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalCommand cmd = (OptionalCommand) parser.getCommand();
+
+        assertTrue("name should be present", cmd.name.isPresent());
+        assertEquals("hello", cmd.name.get());
+        assertTrue("count should be present", cmd.count.isPresent());
+        assertEquals(Integer.valueOf(42), cmd.count.get());
+    }
+
+    @Test
+    public void testOptionalOption_WithoutValue() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalCommand()).getParser();
+
+        parser.populateObject("opt-test --verbose",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalCommand cmd = (OptionalCommand) parser.getCommand();
+
+        // Optional fields not provided should be Optional.empty(), not null
+        assertNotNull("name should not be null", cmd.name);
+        assertFalse("name should be empty", cmd.name.isPresent());
+        assertNotNull("count should not be null", cmd.count);
+        assertFalse("count should be empty", cmd.count.isPresent());
+    }
+
+    @Test
+    public void testOptionalArgument() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalCommand()).getParser();
+
+        parser.populateObject("opt-test myfile.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalCommand cmd = (OptionalCommand) parser.getCommand();
+
+        assertTrue("source should be present", cmd.source.isPresent());
+        assertEquals("myfile.java", cmd.source.get());
+    }
+
+    @Test
+    public void testOptionalArgument_NotProvided() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalCommand()).getParser();
+
+        parser.populateObject("opt-test --verbose",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalCommand cmd = (OptionalCommand) parser.getCommand();
+
+        assertNotNull("source should not be null", cmd.source);
+        assertFalse("source should be empty", cmd.source.isPresent());
+    }
+
+    @CommandDefinition(name = "opt-list-test", description = "Test Optional list")
+    public static class OptionalListCommand implements Command<CommandInvocation> {
+        @OptionList(name = "items", description = "Items")
+        java.util.Optional<java.util.List<String>> items;
+
+        @OptionGroup(shortName = 'D', description = "Properties")
+        java.util.Optional<java.util.Map<String, String>> props;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testOptionalList_WithValues() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalListCommand()).getParser();
+
+        parser.populateObject("opt-list-test --items a,b,c",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalListCommand cmd = (OptionalListCommand) parser.getCommand();
+
+        assertTrue("items should be present", cmd.items.isPresent());
+        assertEquals(3, cmd.items.get().size());
+        assertEquals("a", cmd.items.get().get(0));
+    }
+
+    @Test
+    public void testOptionalGroup_WithValues() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalListCommand()).getParser();
+
+        parser.populateObject("opt-list-test -Dkey=value",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalListCommand cmd = (OptionalListCommand) parser.getCommand();
+
+        assertTrue("props should be present", cmd.props.isPresent());
+        assertEquals("value", cmd.props.get().get("key"));
+    }
+
+    @CommandDefinition(name = "opt-args-test", description = "Test Optional arguments")
+    public static class OptionalArgumentsCommand implements Command<CommandInvocation> {
+        @Option(name = "verbose", hasValue = false)
+        boolean verbose;
+
+        @org.aesh.command.option.Arguments(description = "Input files")
+        java.util.Optional<java.util.List<String>> files;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testOptionalArguments_WithValues() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalArgumentsCommand()).getParser();
+
+        parser.populateObject("opt-args-test file1.java file2.java",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalArgumentsCommand cmd = (OptionalArgumentsCommand) parser.getCommand();
+
+        assertTrue("files should be present", cmd.files.isPresent());
+        assertEquals(2, cmd.files.get().size());
+        assertEquals("file1.java", cmd.files.get().get(0));
+        assertEquals("file2.java", cmd.files.get().get(1));
+    }
+
+    @Test
+    public void testOptionalArguments_NotProvided() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalArgumentsCommand()).getParser();
+
+        parser.populateObject("opt-args-test --verbose",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalArgumentsCommand cmd = (OptionalArgumentsCommand) parser.getCommand();
+
+        assertNotNull("files should not be null", cmd.files);
+        assertFalse("files should be empty", cmd.files.isPresent());
+    }
+
+    @Test
+    public void testOptionalList_NotProvided() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalListCommand()).getParser();
+
+        parser.populateObject("opt-list-test",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalListCommand cmd = (OptionalListCommand) parser.getCommand();
+
+        assertNotNull("items should not be null", cmd.items);
+        assertFalse("items should be empty", cmd.items.isPresent());
+        assertNotNull("props should not be null", cmd.props);
+        assertFalse("props should be empty", cmd.props.isPresent());
+    }
+
 }

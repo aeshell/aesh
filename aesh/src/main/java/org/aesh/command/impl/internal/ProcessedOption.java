@@ -95,6 +95,7 @@ public class ProcessedOption {
     private String negationPrefix = "no-";
     private boolean negatedByUser = false;
     private boolean optionalValue = false;
+    private boolean optionalWrapped = false;
     private String fallbackValue;
     private boolean inherited = false;
     private String descriptionUrl;
@@ -277,6 +278,19 @@ public class ProcessedOption {
 
     public void setOptionalValue(boolean optionalValue) {
         this.optionalValue = optionalValue;
+    }
+
+    /**
+     * Set whether this option's field is wrapped in {@link java.util.Optional}.
+     * When true, injected values are wrapped with Optional.of() and reset
+     * uses Optional.empty() instead of null.
+     */
+    public void setOptionalWrapped(boolean optionalWrapped) {
+        this.optionalWrapped = optionalWrapped;
+    }
+
+    public boolean isOptionalWrapped() {
+        return optionalWrapped;
     }
 
     public void setFallbackValue(String fallbackValue) {
@@ -539,13 +553,15 @@ public class ProcessedOption {
                 else if (double.class.isAssignableFrom(field.getType()))
                     field.set(target, 0.0d);
             } else
-                field.set(target, null);
+                field.set(target, optionalWrapped ? java.util.Optional.empty() : null);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             // Field reset failed, continue
         }
     }
 
     protected Object typeDefault() {
+        if (optionalWrapped)
+            return java.util.Optional.empty();
         if (type == null || !type.isPrimitive())
             return null;
         if (type == boolean.class)
@@ -1158,12 +1174,15 @@ public class ProcessedOption {
             boolean doValidation) throws OptionValidatorException {
         if (optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
             if (negatedByUser && optionType == OptionType.BOOLEAN) {
-                setField(instance, doConvert("false", invocationProviders, instance, aeshContext, doValidation));
+                setField(instance,
+                        wrapIfOptional(doConvert("false", invocationProviders, instance, aeshContext, doValidation)));
             } else if (getValue() != null)
-                setField(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
+                setField(instance,
+                        wrapIfOptional(doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation)));
             else if (defaultValues.size() > 0) {
                 setField(instance,
-                        doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation));
+                        wrapIfOptional(
+                                doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation)));
             }
         } else if (optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
             Collection<Object> tmpSet;
@@ -1178,14 +1197,23 @@ public class ProcessedOption {
                 for (String in : defaultValues)
                     tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
             }
-            setField(instance, tmpSet);
+            setField(instance, wrapIfOptional(tmpSet));
         } else if (optionType == OptionType.GROUP) {
             Map<String, Object> tmpMap = newHashMap();
             for (String propertyKey : properties.keySet())
                 tmpMap.put(propertyKey, doConvert(properties.get(propertyKey), invocationProviders, instance,
                         aeshContext, doValidation));
-            setField(instance, tmpMap);
+            setField(instance, wrapIfOptional(tmpMap));
         }
+    }
+
+    /**
+     * Wraps a value in Optional.of() if this option's field is Optional-typed.
+     */
+    private Object wrapIfOptional(Object value) {
+        if (optionalWrapped && value != null)
+            return java.util.Optional.of(value);
+        return value;
     }
 
     private void injectValueWithReflection(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
@@ -1206,12 +1234,15 @@ public class ProcessedOption {
             if (optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
                 // Handle negatable options - when used in negated form (e.g., --no-verbose), inject false
                 if (negatedByUser && optionType == OptionType.BOOLEAN) {
-                    field.set(instance, doConvert("false", invocationProviders, instance, aeshContext, doValidation));
+                    field.set(instance,
+                            wrapIfOptional(doConvert("false", invocationProviders, instance, aeshContext, doValidation)));
                 } else if (getValue() != null)
-                    field.set(instance, doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation));
+                    field.set(instance,
+                            wrapIfOptional(doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation)));
                 else if (defaultValues.size() > 0) {
                     field.set(instance,
-                            doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation));
+                            wrapIfOptional(
+                                    doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation)));
                 }
             } else if (optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
                 Collection<Object> tmpSet = initializeCollection(field);
@@ -1223,14 +1254,15 @@ public class ProcessedOption {
                         tmpSet.add(doConvert(in, invocationProviders, instance, aeshContext, doValidation));
                 }
 
-                field.set(instance, tmpSet);
+                field.set(instance, wrapIfOptional(tmpSet));
             } else if (optionType == OptionType.GROUP) {
-                if (field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
+                if (optionalWrapped || field.getType().isInterface()
+                        || Modifier.isAbstract(field.getType().getModifiers())) {
                     Map<String, Object> tmpMap = newHashMap();
                     for (String propertyKey : properties.keySet())
                         tmpMap.put(propertyKey, doConvert(properties.get(propertyKey), invocationProviders, instance,
                                 aeshContext, doValidation));
-                    field.set(instance, tmpMap);
+                    field.set(instance, wrapIfOptional(tmpMap));
                 } else {
                     Map<String, Object> tmpMap = (Map<String, Object>) field.getType().newInstance();
                     for (String propertyKey : properties.keySet())
@@ -1246,6 +1278,12 @@ public class ProcessedOption {
 
     @SuppressWarnings("unchecked")
     private Collection<Object> initializeCollection(Field field) throws IllegalAccessException, InstantiationException {
+        // For Optional-wrapped collections, always use ArrayList
+        if (optionalWrapped) {
+            if (Set.class.isAssignableFrom(type))
+                return new HashSet<>();
+            return new ArrayList<>();
+        }
         if (field.getType().isInterface() || Modifier.isAbstract(field.getType().getModifiers())) {
             if (Set.class.isAssignableFrom(field.getType()))
                 return new HashSet<>();

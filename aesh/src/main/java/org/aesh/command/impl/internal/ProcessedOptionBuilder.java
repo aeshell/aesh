@@ -75,6 +75,7 @@ public class ProcessedOptionBuilder {
     private boolean acceptNameWithoutDashes = false;
     private SelectorType selectorType;
     private boolean optionalValue = false;
+    private boolean optionalWrapped = false;
     private String fallbackValue;
     private boolean negatable = false;
     private String negationPrefix = "no-";
@@ -340,6 +341,11 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
+    public ProcessedOptionBuilder optionalWrapped(boolean optionalWrapped) {
+        this.optionalWrapped = optionalWrapped;
+        return this;
+    }
+
     public ProcessedOptionBuilder fallbackValue(String fallbackValue) {
         this.fallbackValue = fallbackValue;
         return this;
@@ -543,6 +549,8 @@ public class ProcessedOptionBuilder {
             option.setOrder(order);
         if (fallbackValue != null)
             option.setFallbackValue(fallbackValue);
+        if (optionalWrapped)
+            option.setOptionalWrapped(true);
         if (paramLabel != null && !paramLabel.isEmpty())
             option.setParamLabel(paramLabel);
         if (arity != null && !arity.isEmpty())

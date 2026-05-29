@@ -22,10 +22,12 @@ package org.aesh.command.impl.container;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -265,6 +267,13 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             else
                 optionType = OptionType.BOOLEAN;
 
+            // Detect Optional<T> and unwrap
+            Class<?> fieldType = field.getType();
+            boolean isOptionalWrapped = Optional.class.isAssignableFrom(fieldType);
+            if (isOptionalWrapped) {
+                fieldType = unwrapOptionalType(field);
+            }
+
             processedCommand.addOption(
                     ProcessedOptionBuilder.builder()
                             .shortName(o.shortName())
@@ -276,8 +285,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .acceptNameWithoutDashes(o.acceptNameWithoutDashes())
                             .selector(o.selector())
                             .addAllDefaultValues(o.defaultValue())
-                            .type(field.getType())
+                            .type(fieldType)
                             .fieldName(field.getName())
+                            .optionalWrapped(isOptionalWrapped)
                             .optionType(optionType)
                             .converter(o.converter())
                             .completer(o.completer())
@@ -302,11 +312,24 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .mixinFieldName(mixinFieldName)
                             .build());
         } else if ((ol = field.getAnnotation(OptionList.class)) != null) {
-            if (!Collection.class.isAssignableFrom(field.getType()))
+            // Support Optional<List<T>> by unwrapping Optional
+            Class<?> rawFieldType = field.getType();
+            Type genericType = field.getGenericType();
+            boolean isOptionalWrapped = Optional.class.isAssignableFrom(rawFieldType);
+            if (isOptionalWrapped && genericType instanceof ParameterizedType) {
+                Type innerType = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+                if (innerType instanceof ParameterizedType) {
+                    rawFieldType = (Class<?>) ((ParameterizedType) innerType).getRawType();
+                    genericType = innerType;
+                } else if (innerType instanceof Class) {
+                    rawFieldType = (Class<?>) innerType;
+                }
+            }
+            if (!Collection.class.isAssignableFrom(rawFieldType))
                 throw new CommandLineParserException("OptionList field must be instance of Collection");
             Class type = Object.class;
-            if (field.getGenericType() != null) {
-                ParameterizedType listType = (ParameterizedType) field.getGenericType();
+            if (genericType instanceof ParameterizedType) {
+                ParameterizedType listType = (ParameterizedType) genericType;
                 type = (Class) listType.getActualTypeArguments()[0];
             }
 
@@ -322,6 +345,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .addAllDefaultValues(ol.defaultValue())
                             .type(type)
                             .fieldName(field.getName())
+                            .optionalWrapped(isOptionalWrapped)
                             .optionType(OptionType.LIST)
                             .converter(ol.converter())
                             .completer(ol.completer())
@@ -339,11 +363,24 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .build());
 
         } else if ((og = field.getAnnotation(OptionGroup.class)) != null) {
-            if (!Map.class.isAssignableFrom(field.getType()))
+            // Support Optional<Map<K,V>> by unwrapping Optional
+            Class<?> ogRawType = field.getType();
+            Type ogGenericType = field.getGenericType();
+            boolean ogOptionalWrapped = Optional.class.isAssignableFrom(ogRawType);
+            if (ogOptionalWrapped && ogGenericType instanceof ParameterizedType) {
+                Type innerType = ((ParameterizedType) ogGenericType).getActualTypeArguments()[0];
+                if (innerType instanceof ParameterizedType) {
+                    ogRawType = (Class<?>) ((ParameterizedType) innerType).getRawType();
+                    ogGenericType = innerType;
+                } else if (innerType instanceof Class) {
+                    ogRawType = (Class<?>) innerType;
+                }
+            }
+            if (!Map.class.isAssignableFrom(ogRawType))
                 throw new CommandLineParserException("OptionGroup field must be instance of Map");
             Class type = Object.class;
-            if (field.getGenericType() != null) {
-                ParameterizedType listType = (ParameterizedType) field.getGenericType();
+            if (ogGenericType instanceof ParameterizedType) {
+                ParameterizedType listType = (ParameterizedType) ogGenericType;
                 type = (Class) listType.getActualTypeArguments()[1];
             }
 
@@ -352,6 +389,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .name(og.name().length() < 1
                             ? (og.shortName() != '\u0000' ? "" : field.getName())
                             : og.name())
+                    .optionalWrapped(ogOptionalWrapped)
                     .description(og.description())
                     .required(og.required())
                     .valueSeparator(',')
@@ -373,11 +411,24 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         }
 
         else if ((a = field.getAnnotation(Arguments.class)) != null) {
-            if (!Collection.class.isAssignableFrom(field.getType()))
+            // Support Optional<List<T>> by unwrapping Optional
+            Class<?> argsRawType = field.getType();
+            Type argsGenericType = field.getGenericType();
+            boolean argsOptionalWrapped = Optional.class.isAssignableFrom(argsRawType);
+            if (argsOptionalWrapped && argsGenericType instanceof ParameterizedType) {
+                Type innerType = ((ParameterizedType) argsGenericType).getActualTypeArguments()[0];
+                if (innerType instanceof ParameterizedType) {
+                    argsRawType = (Class<?>) ((ParameterizedType) innerType).getRawType();
+                    argsGenericType = innerType;
+                } else if (innerType instanceof Class) {
+                    argsRawType = (Class<?>) innerType;
+                }
+            }
+            if (!Collection.class.isAssignableFrom(argsRawType))
                 throw new CommandLineParserException("Arguments field must be instance of Collection");
             Class type = Object.class;
-            if (field.getGenericType() != null) {
-                ParameterizedType listType = (ParameterizedType) field.getGenericType();
+            if (argsGenericType instanceof ParameterizedType) {
+                ParameterizedType listType = (ParameterizedType) argsGenericType;
                 type = (Class) listType.getActualTypeArguments()[0];
             }
             processedCommand.setArguments(ProcessedOptionBuilder.builder()
@@ -391,6 +442,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .addAllDefaultValues(a.defaultValue())
                     .type(type)
                     .fieldName(field.getName())
+                    .optionalWrapped(argsOptionalWrapped)
                     .paramLabel(a.paramLabel())
                     .arity(a.arity())
                     .index(a.index())
@@ -404,7 +456,12 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .mixinFieldName(mixinFieldName)
                     .build());
         } else if ((arg = field.getAnnotation(Argument.class)) != null) {
-            if (Collection.class.isAssignableFrom(field.getType()))
+            Class<?> argFieldType = field.getType();
+            boolean argOptionalWrapped = Optional.class.isAssignableFrom(argFieldType);
+            if (argOptionalWrapped) {
+                argFieldType = unwrapOptionalType(field);
+            }
+            if (Collection.class.isAssignableFrom(argFieldType))
                 throw new CommandLineParserException("Argument field can not be an instance of Collection");
             OptionType optionType = OptionType.ARGUMENT;
             processedCommand.addArgument(
@@ -417,8 +474,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .askIfNotSet(arg.askIfNotSet())
                             .selector(arg.selector())
                             .addAllDefaultValues(arg.defaultValue())
-                            .type(field.getType())
+                            .type(argFieldType)
                             .fieldName(field.getName())
+                            .optionalWrapped(argOptionalWrapped)
                             .paramLabel(arg.paramLabel())
                             .arity(arg.arity())
                             .index(arg.index())
@@ -471,6 +529,22 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         if (gcd != null)
             return gcd.name();
         return null;
+    }
+
+    /**
+     * Unwrap Optional&lt;T&gt; to get T from a field's generic type.
+     */
+    private static Class<?> unwrapOptionalType(Field field) {
+        Type genericType = field.getGenericType();
+        if (genericType instanceof ParameterizedType) {
+            Type innerType = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            if (innerType instanceof Class) {
+                return (Class<?>) innerType;
+            } else if (innerType instanceof ParameterizedType) {
+                return (Class<?>) ((ParameterizedType) innerType).getRawType();
+            }
+        }
+        return Object.class;
     }
 
     public static void parseAndPopulate(Command<CommandInvocation> instance, String input)
