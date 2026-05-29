@@ -416,6 +416,64 @@ public class AeshRuntimeRunnerTest {
         assertTrue("Should accept uppercase shell type", output.contains("complete"));
     }
 
+    // -- Built-in --aesh-doc flag tests --
+
+    @Test
+    public void testAeshDocFlagAsciidoc() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-doc", "asciidoc")
+                .execute());
+
+        assertTrue("Should contain AsciiDoc title", output.contains("= CAPTURE"));
+        assertTrue("Should contain NAME section", output.contains("== NAME"));
+        assertTrue("Should contain OPTIONS section", output.contains("== OPTIONS"));
+    }
+
+    @Test
+    public void testAeshDocFlagMarkdown() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-doc", "markdown")
+                .execute());
+
+        assertTrue("Should contain Markdown title", output.contains("# CAPTURE"));
+        assertTrue("Should contain NAME section", output.contains("## NAME"));
+    }
+
+    @Test
+    public void testAeshDocFlagDefault() {
+        // Default is asciidoc
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-doc")
+                .execute());
+
+        assertTrue("Should default to AsciiDoc", output.contains("= CAPTURE"));
+    }
+
+    @Test
+    public void testAeshDocFlagDoesNotExecuteCommand() {
+        CaptureCommand.reset();
+        AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-doc")
+                .execute();
+
+        assertEquals("Command should not execute", null, CaptureCommand.lastCode);
+    }
+
+    @Test
+    public void testAeshDocFlagNotInCompletionCandidates() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ColorCommand.class)
+                .args("--aesh-complete", "--", "--")
+                .execute());
+
+        assertFalse("--aesh-doc should not appear in candidates",
+                output.contains("--aesh-doc"));
+    }
+
     @Test
     public void testAeshCompletionFlagsNotInCompletionCandidates() {
         // --aesh-completion, --aesh-complete, --aesh-completion-install must NOT

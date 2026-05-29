@@ -139,6 +139,8 @@ public class AeshRuntimeRunner {
                 return handleBuiltinCompletion(commandRegistry);
             if ("--aesh-completion-install".equals(args[0]))
                 return handleBuiltinCompletionInstall(commandRegistry);
+            if ("--aesh-doc".equals(args[0]))
+                return handleBuiltinDoc(commandRegistry);
         }
 
         // Builder API paths (for programmatic use)
@@ -465,6 +467,49 @@ public class AeshRuntimeRunner {
             return CommandResult.SUCCESS;
         } catch (Exception e) {
             System.err.println("Failed to install completion: " + e.getMessage());
+            return CommandResult.FAILURE;
+        }
+    }
+
+    /**
+     * Handles --aesh-doc [asciidoc|markdown]: generates documentation to stdout.
+     * <p>
+     * Examples:
+     * <ul>
+     * <li>{@code --aesh-doc} — AsciiDoc to stdout (default)</li>
+     * <li>{@code --aesh-doc asciidoc} — AsciiDoc to stdout</li>
+     * <li>{@code --aesh-doc markdown} — Markdown to stdout</li>
+     * </ul>
+     */
+    @SuppressWarnings("unchecked")
+    private CommandResult handleBuiltinDoc(CommandRegistry commandRegistry) {
+        org.aesh.util.doc.DocFormat format = org.aesh.util.doc.DocFormat.ASCIIDOC;
+
+        for (int i = 1; i < args.length; i++) {
+            try {
+                format = org.aesh.util.doc.DocFormat.valueOf(args[i].toUpperCase());
+            } catch (IllegalArgumentException e) {
+                System.err.println("Unknown doc format: " + args[i]
+                        + ". Supported: asciidoc, markdown");
+                return CommandResult.FAILURE;
+            }
+        }
+
+        try {
+            String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) commandRegistry
+                    .getCommand(commandName, "");
+
+            String programName = completionProgramName != null ? completionProgramName : commandName;
+            String doc = org.aesh.util.doc.DocumentationGenerator.builder()
+                    .parser(container.getParser())
+                    .programName(programName)
+                    .format(format)
+                    .generateSingle();
+            System.out.print(doc);
+            return CommandResult.SUCCESS;
+        } catch (Exception e) {
+            System.err.println("Documentation generation failed: " + e.getMessage());
             return CommandResult.FAILURE;
         }
     }

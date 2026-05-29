@@ -1,0 +1,301 @@
+/*
+ * JBoss, Home of Professional Open Source
+ * Copyright 2014 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.aesh.util.doc;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandResult;
+import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Argument;
+import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionGroup;
+import org.aesh.command.option.OptionList;
+import org.aesh.command.option.OptionVisibility;
+import org.aesh.command.parser.CommandLineParserException;
+import org.junit.Test;
+
+public class DocumentationGeneratorTest {
+
+    @CommandDefinition(name = "deploy", description = "Deploy an application")
+    public static class DeployCommand implements Command<CommandInvocation> {
+        @Option(shortName = 'e', name = "environment", defaultValue = "dev", description = "Target environment")
+        String environment;
+
+        @Option(shortName = 'f', name = "force", hasValue = false, description = "Force deployment")
+        boolean force;
+
+        @Option(name = "timeout", defaultValue = "30", description = "Timeout in seconds")
+        int timeout;
+
+        @Option(name = "secret", hasValue = false, visibility = OptionVisibility.HIDDEN)
+        boolean secret;
+
+        @OptionList(shortName = 't', name = "tags", description = "Deployment tags")
+        List<String> tags;
+
+        @OptionGroup(shortName = 'D', description = "Properties")
+        Map<String, String> properties;
+
+        @Argument(description = "Application name", required = true)
+        String application;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub1", description = "First subcommand")
+    public static class Sub1Command implements Command<CommandInvocation> {
+        @Option(name = "value", description = "A value")
+        String value;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub2", description = "Second subcommand")
+    public static class Sub2Command implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "app", description = "Application CLI", groupCommands = { Sub1Command.class,
+            Sub2Command.class })
+    public static class AppCommand implements Command<CommandInvocation> {
+        @Option(name = "verbose", hasValue = false, description = "Verbose output")
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "negtest", description = "Negatable test")
+    public static class NegatableCommand implements Command<CommandInvocation> {
+        @Option(name = "cds", hasValue = false, negatable = true, description = "Enable CDS")
+        boolean cds;
+
+        @Option(name = "opt", aliases = { "o", "option" }, description = "An option")
+        String opt;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- AsciiDoc tests ---
+
+    @Test
+    public void testAsciidocSimpleCommand() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(DeployCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        assertNotNull(doc);
+        assertTrue("Should contain title", doc.contains("= DEPLOY"));
+        assertTrue("Should contain NAME section", doc.contains("== NAME"));
+        assertTrue("Should contain SYNOPSIS section", doc.contains("== SYNOPSIS"));
+        assertTrue("Should contain DESCRIPTION section", doc.contains("== DESCRIPTION"));
+        assertTrue("Should contain OPTIONS section", doc.contains("== OPTIONS"));
+        assertTrue("Should contain ARGUMENTS section", doc.contains("== ARGUMENTS"));
+
+        // Options should be rendered
+        assertTrue("Should contain --environment", doc.contains("--environment"));
+        assertTrue("Should contain -e short name", doc.contains("-e"));
+        assertTrue("Should contain --force", doc.contains("--force"));
+        assertTrue("Should contain --timeout", doc.contains("--timeout"));
+        assertTrue("Should contain --tags", doc.contains("--tags"));
+        assertTrue("Should contain description", doc.contains("Target environment"));
+
+        // Default values
+        assertTrue("Should contain default value", doc.contains("Default: `dev`"));
+
+        // Hidden options should NOT appear
+        assertFalse("Should not contain hidden --secret", doc.contains("--secret"));
+
+        // Arguments
+        assertTrue("Should contain application argument", doc.contains("<application>"));
+    }
+
+    @Test
+    public void testAsciidocGroupCommand() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(AppCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        assertTrue("Should contain COMMANDS section", doc.contains("== COMMANDS"));
+        assertTrue("Should contain sub1 link", doc.contains("sub1"));
+        assertTrue("Should contain sub2 link", doc.contains("sub2"));
+        assertTrue("Should contain subcommand description", doc.contains("First subcommand"));
+        assertTrue("Should contain [COMMAND] in synopsis", doc.contains("[COMMAND]"));
+    }
+
+    @Test
+    public void testAsciidocCrossRefPrefix() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(AppCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .crossRefPrefix("myapp:cli:")
+                .generateSingle();
+
+        assertTrue("Should contain Antora xref", doc.contains("xref:myapp:cli:app-sub1.adoc"));
+    }
+
+    @Test
+    public void testAsciidocNegatableAndAliases() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(NegatableCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        assertTrue("Should show negatable format", doc.contains("--[no-]cds"));
+        assertTrue("Should show aliases", doc.contains("`--o`"));
+        assertTrue("Should show aliases", doc.contains("`--option`"));
+    }
+
+    @Test
+    public void testAsciidocOptionGroup() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(DeployCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        assertTrue("Should contain -D option", doc.contains("-D"));
+        assertTrue("Should contain key=value placeholder", doc.contains("<key>=<value>"));
+    }
+
+    // --- Markdown tests ---
+
+    @Test
+    public void testMarkdownSimpleCommand() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(DeployCommand.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+
+        assertNotNull(doc);
+        assertTrue("Should contain title", doc.contains("# DEPLOY"));
+        assertTrue("Should contain NAME section", doc.contains("## NAME"));
+        assertTrue("Should contain SYNOPSIS section", doc.contains("## SYNOPSIS"));
+        assertTrue("Should contain OPTIONS section", doc.contains("## OPTIONS"));
+        assertTrue("Should contain code block", doc.contains("```"));
+        assertTrue("Should contain --environment", doc.contains("--environment"));
+        assertFalse("Should not contain hidden --secret", doc.contains("--secret"));
+    }
+
+    @Test
+    public void testMarkdownGroupCommand() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(AppCommand.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+
+        assertTrue("Should contain COMMANDS section", doc.contains("## COMMANDS"));
+        assertTrue("Should contain markdown link", doc.contains("[**sub1**](app-sub1.md)"));
+    }
+
+    // --- File generation tests ---
+
+    @Test
+    public void testFileGeneration() throws CommandLineParserException, IOException {
+        Path tempDir = Files.createTempDirectory("aesh-doc-test");
+        try {
+            DocumentationGenerator.builder()
+                    .commandClass(AppCommand.class)
+                    .format(DocFormat.ASCIIDOC)
+                    .outputDir(tempDir.toFile())
+                    .generate();
+
+            // Should generate files for parent and children
+            assertTrue("Should create app.adoc", new File(tempDir.toFile(), "app.adoc").exists());
+            assertTrue("Should create app-sub1.adoc", new File(tempDir.toFile(), "app-sub1.adoc").exists());
+            assertTrue("Should create app-sub2.adoc", new File(tempDir.toFile(), "app-sub2.adoc").exists());
+
+            // Verify content
+            String appContent = new String(Files.readAllBytes(tempDir.resolve("app.adoc")));
+            assertTrue("Parent doc should link to sub1", appContent.contains("app-sub1.adoc"));
+        } finally {
+            // Cleanup
+            Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
+                    .map(Path::toFile).forEach(File::delete);
+        }
+    }
+
+    @Test
+    public void testNavFileGeneration() throws CommandLineParserException, IOException {
+        Path tempDir = Files.createTempDirectory("aesh-doc-nav-test");
+        try {
+            File navFile = new File(tempDir.toFile(), "nav.adoc");
+            DocumentationGenerator.builder()
+                    .commandClass(AppCommand.class)
+                    .format(DocFormat.ASCIIDOC)
+                    .outputDir(tempDir.toFile())
+                    .navFile(navFile)
+                    .generate();
+
+            assertTrue("Nav file should exist", navFile.exists());
+            String nav = new String(Files.readAllBytes(navFile.toPath()));
+            assertTrue("Nav should contain app", nav.contains("app.adoc"));
+            assertTrue("Nav should contain sub1", nav.contains("app-sub1.adoc"));
+            assertTrue("Nav should contain sub2", nav.contains("app-sub2.adoc"));
+        } finally {
+            Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
+                    .map(Path::toFile).forEach(File::delete);
+        }
+    }
+
+    @Test
+    public void testNavFileWithCrossRefPrefix() throws CommandLineParserException, IOException {
+        Path tempDir = Files.createTempDirectory("aesh-doc-xref-test");
+        try {
+            File navFile = new File(tempDir.toFile(), "nav.adoc");
+            DocumentationGenerator.builder()
+                    .commandClass(AppCommand.class)
+                    .format(DocFormat.ASCIIDOC)
+                    .crossRefPrefix("jbang:cli:")
+                    .outputDir(tempDir.toFile())
+                    .navFile(navFile)
+                    .generate();
+
+            String nav = new String(Files.readAllBytes(navFile.toPath()));
+            assertTrue("Nav should use xref prefix", nav.contains("xref:jbang:cli:"));
+        } finally {
+            Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
+                    .map(Path::toFile).forEach(File::delete);
+        }
+    }
+}
