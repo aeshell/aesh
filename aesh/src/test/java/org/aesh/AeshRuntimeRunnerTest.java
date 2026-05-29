@@ -372,6 +372,51 @@ public class AeshRuntimeRunnerTest {
     }
 
     @Test
+    public void testAeshCompletionFlagStaticZsh() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "--static", "zsh")
+                .execute());
+
+        assertTrue("Should contain zsh compdef", output.contains("#compdef capture"));
+        // Static scripts should not contain --aesh-complete callback
+        assertFalse("Static script should not have callback", output.contains("--aesh-complete"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagStaticFish() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "--static", "fish")
+                .execute());
+
+        assertTrue("Should contain fish complete command", output.contains("complete -c capture"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagWithProgramName() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .completionProgramName("myapp")
+                .args("--aesh-completion", "bash")
+                .execute());
+
+        assertTrue("Should use custom program name", output.contains("myapp"));
+        assertTrue("Should contain complete command", output.contains("complete"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagCaseInsensitive() {
+        // Shell type should be case-insensitive
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "BASH")
+                .execute());
+
+        assertTrue("Should accept uppercase shell type", output.contains("complete"));
+    }
+
+    @Test
     public void testDynamicCompleteOptions() {
         String output = captureStdout(() -> AeshRuntimeRunner.builder()
                 .command(ColorCommand.class)
