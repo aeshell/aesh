@@ -1696,4 +1696,118 @@ public class CommandLineFormatterTest {
         assertTrue("Should have Options section", help.contains("Options:"));
     }
 
+    @Test
+    public void testHelp_MultiLineOptionDescription() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("deploy").description("Deploy application");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('e').name("env").type(String.class)
+                .description("Target environment\nMust be one of: dev, staging, prod")
+                .build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('f').name("force").type(boolean.class).hasValue(false)
+                .description("Force deployment").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+        String[] lines = help.split(System.lineSeparator());
+
+        // Find the line with "Target environment"
+        int envLine = -1;
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].contains("Target environment")) {
+                envLine = i;
+                break;
+            }
+        }
+        assertTrue("Should find 'Target environment' in help", envLine >= 0);
+
+        // The continuation line should be indented to align with the description
+        assertTrue("Should have continuation line", envLine + 1 < lines.length);
+        String continuation = lines[envLine + 1];
+        assertTrue("Continuation should contain 'Must be one of'",
+                continuation.contains("Must be one of"));
+
+        // The indentation of the continuation should match the description start
+        int descStart = lines[envLine].indexOf("Target environment");
+        int contStart = continuation.indexOf("Must be");
+        assertEquals("Continuation should align with description start", descStart, contStart);
+    }
+
+    @Test
+    public void testHelp_MultiLineOptionDescription_ThreeLines() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run a script");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('d').name("debug").type(String.class)
+                .description("Enable debug mode\nDefault port: 4004\nUse host:port format")
+                .build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+        String[] lines = help.split(System.lineSeparator());
+
+        // Find the three description lines
+        int firstLine = -1;
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].contains("Enable debug mode")) {
+                firstLine = i;
+                break;
+            }
+        }
+        assertTrue("Should find first description line", firstLine >= 0);
+        assertTrue("Should have second line", lines[firstLine + 1].contains("Default port: 4004"));
+        assertTrue("Should have third line", lines[firstLine + 2].contains("Use host:port format"));
+
+        // All three should be aligned
+        int col1 = lines[firstLine].indexOf("Enable debug");
+        int col2 = lines[firstLine + 1].indexOf("Default port");
+        int col3 = lines[firstLine + 2].indexOf("Use host:port");
+        assertEquals("Line 2 should align with line 1", col1, col2);
+        assertEquals("Line 3 should align with line 1", col1, col3);
+    }
+
+    @Test
+    public void testHelp_MultiLineCommandDescription() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("deploy").description("Deploy application\n\nUse with caution in production");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('v').name("verbose").type(boolean.class).hasValue(false)
+                .description("Verbose").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        assertTrue("Should contain first line", help.contains("Deploy application"));
+        assertTrue("Should contain third line", help.contains("Use with caution in production"));
+    }
+
+    @Test
+    public void testHelp_SingleLineDescriptionUnchanged() throws CommandLineParserException {
+        // Verify single-line descriptions still work without any extra overhead
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("test").description("Test command");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('v').name("verbose").type(boolean.class).hasValue(false)
+                .description("Enable verbose output").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        assertTrue("Should contain description", help.contains("Enable verbose output"));
+        // Single-line description should be on one line with the option
+        String[] lines = help.split(System.lineSeparator());
+        for (String line : lines) {
+            if (line.contains("--verbose")) {
+                assertTrue("Description should be on same line as option",
+                        line.contains("Enable verbose output"));
+                break;
+            }
+        }
+    }
+
 }

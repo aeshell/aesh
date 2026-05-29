@@ -1096,6 +1096,16 @@ public class ProcessedOption {
 
             if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
                 sb.append(ANSI.hyperlink(descriptionUrl, resolvedDescription));
+            } else if (resolvedDescription.indexOf('\n') >= 0) {
+                // Multi-line description: indent continuation lines to align with description column
+                String pad = String.format("%" + descriptionStart + "s", "");
+                String[] lines = resolvedDescription.split("\n", -1);
+                for (int i = 0; i < lines.length; i++) {
+                    if (i > 0) {
+                        sb.append(System.lineSeparator()).append(pad);
+                    }
+                    sb.append(lines[i]);
+                }
             } else {
                 sb.append(resolvedDescription);
             }
