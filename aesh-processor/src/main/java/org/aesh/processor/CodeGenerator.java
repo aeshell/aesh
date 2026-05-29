@@ -128,11 +128,9 @@ final class CodeGenerator {
         }
         sb.append("    }\n\n");
 
-        // commandName()
-        CommandDefinition cdForName = commandElement.getAnnotation(CommandDefinition.class);
-        String cmdName = cdForName != null
-                ? cdForName.name()
-                : commandElement.getAnnotation(GroupCommandDefinition.class).name();
+        // commandName() — read name via annotation mirror to avoid MirroredTypesException
+        // (which can occur when @CommandDefinition has Class[] attributes like groupCommands)
+        String cmdName = getAnnotationValue(commandElement, "name", elementUtils);
         sb.append("    @Override\n");
         sb.append("    public String commandName() {\n");
         sb.append("        return ").append(stringLiteral(cmdName)).append(";\n");
@@ -247,57 +245,52 @@ final class CodeGenerator {
 
         boolean generateHelp;
         String version;
-        // Read annotation values — prefer @CommandDefinition, fall back to @GroupCommandDefinition
-        CommandDefinition cd = commandElement.getAnnotation(CommandDefinition.class);
-        if (cd != null) {
-            generateHelp = cd.generateHelp();
-            version = cd.version();
-            sb.append("                .name(").append(stringLiteral(cd.name())).append(")\n");
-            generateCommandActivator(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(cd.aliases())).append("))\n");
-            sb.append("                .description(").append(stringLiteral(cd.description())).append(")\n");
-            generateCommandValidator(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .command(instance)\n");
-            generateResultHandler(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .generateHelp(false)\n");
-            sb.append("                .disableParsing(").append(!isGroup && cd.disableParsing()).append(")\n");
-            sb.append("                .stopAtFirstPositional(").append(cd.stopAtFirstPositional()).append(")\n");
-            sb.append("                .sortOptions(").append(cd.sortOptions()).append(")\n");
-            generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .version(\"\")\n");
-            sb.append("                .helpUrl(").append(stringLiteral(cd.helpUrl())).append(")\n");
-        } else {
-            GroupCommandDefinition gcd = commandElement.getAnnotation(GroupCommandDefinition.class);
-            generateHelp = gcd.generateHelp();
-            version = gcd.version();
-            sb.append("                .name(").append(stringLiteral(gcd.name())).append(")\n");
-            generateCommandActivator(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(gcd.aliases())).append("))\n");
-            sb.append("                .description(").append(stringLiteral(gcd.description())).append(")\n");
-            generateCommandValidator(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .command(instance)\n");
-            sb.append("                .generateHelp(false)\n");
-            sb.append("                .stopAtFirstPositional(").append(gcd.stopAtFirstPositional()).append(")\n");
-            sb.append("                .sortOptions(").append(gcd.sortOptions()).append(")\n");
-            generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .version(\"\")\n");
-            generateResultHandler(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .helpUrl(").append(stringLiteral(gcd.helpUrl())).append(")\n");
-        }
+        // Read all annotation values via annotation mirrors to avoid MirroredTypesException
+        // (which occurs when annotations have Class[] attributes like groupCommands)
+        // Determine annotation type via mirrors (safe from MirroredTypesException)
+        String annotationName = hasAnnotationType(commandElement, CommandDefinition.class.getCanonicalName())
+                ? CommandDefinition.class.getCanonicalName()
+                : GroupCommandDefinition.class.getCanonicalName();
+        generateHelp = "true".equals(getAnnotationValue(commandElement, "generateHelp", elementUtils));
+        version = getAnnotationValue(commandElement, "version", elementUtils);
+        if (version == null)
+            version = "";
+
+        sb.append("                .name(").append(stringLiteral(
+                getAnnotationValue(commandElement, "name", elementUtils))).append(")\n");
+        generateCommandActivator(sb, commandElement, isGroup, elementUtils);
+        String[] aliases = getAnnotationStringArrayValue(commandElement, "aliases", elementUtils);
+        sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(aliases)).append("))\n");
+        sb.append("                .description(").append(stringLiteral(
+                getAnnotationValue(commandElement, "description", elementUtils))).append(")\n");
+        generateCommandValidator(sb, commandElement, isGroup, elementUtils);
+        sb.append("                .command(instance)\n");
+        generateResultHandler(sb, commandElement, isGroup, elementUtils);
+        sb.append("                .generateHelp(false)\n");
+        boolean disableParsing = !isGroup && "true".equals(
+                getAnnotationValue(commandElement, "disableParsing", elementUtils));
+        sb.append("                .disableParsing(").append(disableParsing).append(")\n");
+        sb.append("                .stopAtFirstPositional(").append(
+                "true".equals(getAnnotationValue(commandElement, "stopAtFirstPositional", elementUtils)))
+                .append(")\n");
+        sb.append("                .sortOptions(").append(
+                "true".equals(getAnnotationValue(commandElement, "sortOptions", elementUtils)))
+                .append(")\n");
+        generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
+        sb.append("                .version(\"\")\n");
+        String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);
+        sb.append("                .helpUrl(").append(stringLiteral(helpUrl != null ? helpUrl : "")).append(")\n");
 
         sb.append("                .create();\n\n");
 
         // Set command-level helpGroup if present
-        String cmdHelpGroup = cd != null ? cd.helpGroup()
-                : commandElement.getAnnotation(GroupCommandDefinition.class).helpGroup();
-        if (!cmdHelpGroup.isEmpty()) {
+        String cmdHelpGroup = getAnnotationValue(commandElement, "helpGroup", elementUtils);
+        if (cmdHelpGroup != null && !cmdHelpGroup.isEmpty()) {
             sb.append("        processedCommand.setHelpGroup(")
                     .append(stringLiteral(cmdHelpGroup)).append(");\n\n");
         }
 
         // Set helpSectionProvider if not NullHelpSectionProvider
-        String annotationName = cd != null ? CommandDefinition.class.getCanonicalName()
-                : GroupCommandDefinition.class.getCanonicalName();
         String providerClass = getAnnotationClassValue(commandElement, annotationName,
                 "helpSectionProvider", elementUtils);
         if (providerClass != null && !providerClass.equals(NULL_HELP_SECTION_PROVIDER)) {
@@ -1274,6 +1267,64 @@ final class CodeGenerator {
             }
         }
         return null;
+    }
+
+    private static boolean hasAnnotationType(TypeElement element, String annotationType) {
+        for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+            String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
+                    .getQualifiedName().toString();
+            if (mirrorType.equals(annotationType))
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Read a string or boolean annotation value via annotation mirrors.
+     * Safe from MirroredTypesException.
+     */
+    private static String getAnnotationValue(TypeElement element, String attributeName, Elements elementUtils) {
+        for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+            String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
+                    .getQualifiedName().toString();
+            if (mirrorType.equals(CommandDefinition.class.getCanonicalName())
+                    || mirrorType.equals(GroupCommandDefinition.class.getCanonicalName())) {
+                for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
+                        .getElementValues().entrySet()) {
+                    if (entry.getKey().getSimpleName().toString().equals(attributeName)) {
+                        return String.valueOf(entry.getValue().getValue());
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Read a String[] annotation value via annotation mirrors.
+     */
+    @SuppressWarnings("unchecked")
+    private static String[] getAnnotationStringArrayValue(TypeElement element, String attributeName,
+            Elements elementUtils) {
+        for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+            String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
+                    .getQualifiedName().toString();
+            if (mirrorType.equals(CommandDefinition.class.getCanonicalName())
+                    || mirrorType.equals(GroupCommandDefinition.class.getCanonicalName())) {
+                for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
+                        .getElementValues().entrySet()) {
+                    if (entry.getKey().getSimpleName().toString().equals(attributeName)) {
+                        List<? extends AnnotationValue> values = (List<? extends AnnotationValue>) entry.getValue().getValue();
+                        String[] result = new String[values.size()];
+                        for (int i = 0; i < values.size(); i++) {
+                            result[i] = String.valueOf(values.get(i).getValue());
+                        }
+                        return result;
+                    }
+                }
+            }
+        }
+        return new String[0];
     }
 
     // --- Type utility methods ---
