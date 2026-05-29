@@ -1884,6 +1884,222 @@ public class ProcessorTest {
         assertFalse("debug should be empty after reset", ((java.util.Optional<?>) debugVal).isPresent());
     }
 
+    // --- Test: Multi-line descriptions parity ---
+
+    private static final String MULTILINE_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"mlcmd\", description = \"First line\\nSecond line\")\n" +
+            "public class MultiLineCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"env\", description = \"Target environment\\nMust be one of: dev, staging, prod\")\n" +
+            "    String env;\n" +
+            "    @Option(name = \"indent\", description = \"    Indented first line\\n    Indented second line\")\n" +
+            "    String indent;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMultiLineDescriptionParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.MultiLineCommand", MULTILINE_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.MultiLineCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.MultiLineCommand_AeshMetadata");
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+
+        // Verify help output renders multi-line descriptions correctly
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        // Multi-line command description should render
+        assertTrue("Help should contain first line of command description",
+                help.contains("First line"));
+        assertTrue("Help should contain second line of command description",
+                help.contains("Second line"));
+
+        // Multi-line option description should render with proper indentation
+        assertTrue("Help should contain option first line",
+                help.contains("Target environment"));
+        assertTrue("Help should contain option continuation",
+                help.contains("Must be one of"));
+
+        // Text block indentation stripping: leading spaces should be stripped
+        String[] helpLines = help.split(System.lineSeparator());
+        for (String line : helpLines) {
+            if (line.contains("Indented first line")) {
+                assertFalse("Leading indent should be stripped",
+                        line.contains("    Indented first"));
+                break;
+            }
+        }
+    }
+
+    // --- Test: Shell completion with generated commands ---
+
+    private static final String COMPLETION_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"compcmd\", description = \"Completion test\", generateHelp = true)\n" +
+            "public class CompletionCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(shortName = 'v', name = \"verbose\", hasValue = false, description = \"Verbose\")\n" +
+            "    boolean verbose;\n" +
+            "    @Option(name = \"output\", description = \"Output file\")\n" +
+            "    String output;\n" +
+            "    @Option(name = \"format\", defaultValue = {\"json\", \"xml\", \"text\"}, description = \"Format\")\n" +
+            "    String format;\n" +
+            "    @Argument(description = \"Input file\")\n" +
+            "    String input;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    private static final String COMPLETION_GROUP_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"compgrp\", description = \"Completion group\",\n" +
+            "        groupCommands = { test.CompletionCommand.class }, generateHelp = true)\n" +
+            "public class CompletionGroupCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"config\", description = \"Config file\")\n" +
+            "    String config;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testCompletionScriptWithGeneratedCommand() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CompletionCommand", COMPLETION_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.CompletionCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.CompletionCommand_AeshMetadata");
+
+        // Build parser from generated metadata
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+
+        // Generate bash completion script
+        String bashScript = org.aesh.util.completer.ShellCompletionGenerator
+                .forShell(org.aesh.util.completer.ShellCompletionGenerator.ShellType.BASH)
+                .generate(parser, "compcmd");
+
+        assertNotNull("Bash script should not be null", bashScript);
+        assertTrue("Should contain command name", bashScript.contains("compcmd"));
+        assertTrue("Should contain --verbose", bashScript.contains("--verbose"));
+        assertTrue("Should contain --output", bashScript.contains("--output"));
+        assertTrue("Should contain --format", bashScript.contains("--format"));
+        assertTrue("Should contain --help", bashScript.contains("--help"));
+
+        // Generate zsh completion script
+        String zshScript = org.aesh.util.completer.ShellCompletionGenerator
+                .forShell(org.aesh.util.completer.ShellCompletionGenerator.ShellType.ZSH)
+                .generate(parser, "compcmd");
+
+        assertTrue("Zsh should contain compdef", zshScript.contains("#compdef compcmd"));
+        assertTrue("Zsh should contain --verbose", zshScript.contains("--verbose"));
+
+        // Generate fish completion script
+        String fishScript = org.aesh.util.completer.ShellCompletionGenerator
+                .forShell(org.aesh.util.completer.ShellCompletionGenerator.ShellType.FISH)
+                .generate(parser, "compcmd");
+
+        assertTrue("Fish should contain complete -c", fishScript.contains("complete -c compcmd"));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testCompletionScriptWithGeneratedGroupCommand() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CompletionCommand", COMPLETION_CMD_SOURCE),
+                new InMemorySource("test.CompletionGroupCommand", COMPLETION_GROUP_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> groupClass = result.classLoader.loadClass("test.CompletionGroupCommand");
+        Class<?> groupMetaClass = result.classLoader.loadClass("test.CompletionGroupCommand_AeshMetadata");
+
+        // Build group parser from generated metadata
+        CommandMetadataProvider provider = (CommandMetadataProvider) groupMetaClass.newInstance();
+        Command instance = (Command) groupClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+
+        // Add child via provider
+        Class<?> childClass = result.classLoader.loadClass("test.CompletionCommand");
+        CommandMetadataProvider childProvider = (CommandMetadataProvider) result.classLoader
+                .loadClass("test.CompletionCommand_AeshMetadata").newInstance();
+        org.aesh.command.impl.container.AeshCommandContainer container = new org.aesh.command.impl.container.AeshCommandContainer(
+                parser);
+        container.addLazyChild(childProvider.commandName(), childClass);
+
+        // Generate bash completion for group command
+        String bashScript = org.aesh.util.completer.ShellCompletionGenerator
+                .forShell(org.aesh.util.completer.ShellCompletionGenerator.ShellType.BASH)
+                .generate(parser, "compgrp");
+
+        assertTrue("Should contain group command name", bashScript.contains("compgrp"));
+        assertTrue("Should contain --config", bashScript.contains("--config"));
+        assertTrue("Should contain subcommand name", bashScript.contains("compcmd"));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testDynamicCompletionWithGeneratedCommand() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CompletionCommand", COMPLETION_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.CompletionCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.CompletionCommand_AeshMetadata");
+
+        // Build dynamic script
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+
+        String dynamicScript = org.aesh.util.completer.ShellCompletionGenerator
+                .forShell(org.aesh.util.completer.ShellCompletionGenerator.ShellType.BASH)
+                .generateDynamic(parser, "compcmd");
+
+        assertTrue("Dynamic script should contain --aesh-complete callback",
+                dynamicScript.contains("--aesh-complete"));
+        assertTrue("Dynamic script should contain compcmd",
+                dynamicScript.contains("compcmd"));
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
