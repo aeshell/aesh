@@ -292,6 +292,85 @@ public class AeshRuntimeRunnerTest {
         assertTrue(output.contains("complete -o default -F _complete_myapp myapp"));
     }
 
+    // -- Built-in --aesh-completion flag tests --
+
+    @Test
+    public void testAeshCompletionFlagBash() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "bash")
+                .execute());
+
+        // Should generate a dynamic bash completion script
+        assertTrue("Should contain bash completion function", output.contains("--aesh-complete"));
+        assertTrue("Should contain complete command", output.contains("complete"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagStaticBash() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "--static", "bash")
+                .execute());
+
+        // Should generate a static bash completion script (no --aesh-complete callback)
+        assertTrue("Should contain complete command", output.contains("complete"));
+        assertTrue("Should contain compgen", output.contains("compgen"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagZsh() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "zsh")
+                .execute());
+
+        assertTrue("Should contain zsh compdef", output.contains("#compdef capture"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagFish() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "fish")
+                .execute());
+
+        assertTrue("Should contain fish complete command", output.contains("complete -c capture"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagDoesNotExecuteCommand() {
+        CaptureCommand.reset();
+        AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "bash")
+                .execute();
+
+        assertEquals("Command should not execute", null, CaptureCommand.lastCode);
+    }
+
+    @Test
+    public void testAeshCompletionFlagUnknownShell() {
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "powershell")
+                .execute());
+
+        assertTrue("Should report unknown shell", stderr.contains("Unknown shell type"));
+    }
+
+    @Test
+    public void testAeshCompleteFlagViaArgs() {
+        // --aesh-complete should work via args (not just static helper)
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ColorCommand.class)
+                .args("--aesh-complete", "--", "--")
+                .execute());
+
+        // Should produce completion candidates
+        assertNotNull(output);
+    }
+
     @Test
     public void testDynamicCompleteOptions() {
         String output = captureStdout(() -> AeshRuntimeRunner.builder()

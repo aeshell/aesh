@@ -131,6 +131,17 @@ public class AeshRuntimeRunner {
         if (commandRegistry.getAllCommandNames().isEmpty())
             throw new RuntimeException("Command needs to be added");
 
+        // Intercept built-in completion flags from args
+        if (args != null && args.length > 0) {
+            if ("--aesh-complete".equals(args[0]))
+                return handleBuiltinComplete(commandRegistry);
+            if ("--aesh-completion".equals(args[0]))
+                return handleBuiltinCompletion(commandRegistry);
+            if ("--aesh-completion-install".equals(args[0]))
+                return handleBuiltinCompletionInstall(commandRegistry);
+        }
+
+        // Builder API paths (for programmatic use)
         if (completionShellType != null)
             return generateCompletionScript(commandRegistry);
         if (dynamicCompletionShellType != null)
@@ -318,6 +329,148 @@ public class AeshRuntimeRunner {
         }
     }
 
+    // --- Built-in flag handlers (intercepted from args in execute()) ---
+
+    /**
+     * Handles --aesh-complete: runtime callback from shell during tab completion.
+     * Extracts partial args after the -- separator and runs the completion engine.
+     */
+    private CommandResult handleBuiltinComplete(CommandRegistry commandRegistry) {
+        // Extract args after the -- separator
+        int separatorIndex = -1;
+        for (int i = 1; i < args.length; i++) {
+            if ("--".equals(args[i])) {
+                separatorIndex = i;
+                break;
+            }
+        }
+        String[] partialArgs = separatorIndex >= 0 && separatorIndex < args.length - 1
+                ? Arrays.copyOfRange(args, separatorIndex + 1, args.length)
+                : new String[0];
+
+        this.args = partialArgs;
+        this.dynamicComplete = true;
+        return performDynamicCompletion(commandRegistry);
+    }
+
+    /**
+     * Handles --aesh-completion [shell] [--static]: generates a completion script to stdout.
+     * <p>
+     * Defaults to dynamic completion. Use --static for static scripts.
+     * Shell type is auto-detected from $SHELL if not specified.
+     * <p>
+     * Examples:
+     * <ul>
+     * <li>{@code --aesh-completion} — dynamic script, auto-detect shell</li>
+     * <li>{@code --aesh-completion bash} — dynamic script for bash</li>
+     * <li>{@code --aesh-completion --static} — static script, auto-detect shell</li>
+     * <li>{@code --aesh-completion --static zsh} — static script for zsh</li>
+     * </ul>
+     */
+    @SuppressWarnings("unchecked")
+    private CommandResult handleBuiltinCompletion(CommandRegistry commandRegistry) {
+        boolean staticMode = false;
+        ShellType shellType = null;
+
+        // Parse remaining args after --aesh-completion
+        for (int i = 1; i < args.length; i++) {
+            if ("--static".equals(args[i])) {
+                staticMode = true;
+            } else {
+                try {
+                    shellType = ShellType.valueOf(args[i].toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    System.err.println("Unknown shell type: " + args[i]
+                            + ". Supported: bash, zsh, fish");
+                    return CommandResult.FAILURE;
+                }
+            }
+        }
+
+        // Auto-detect shell if not specified
+        if (shellType == null) {
+            shellType = detectShell();
+            if (shellType == null) {
+                System.err.println("Could not detect shell type. Specify explicitly: "
+                        + "--aesh-completion bash|zsh|fish");
+                return CommandResult.FAILURE;
+            }
+        }
+
+        if (staticMode) {
+            this.completionShellType = shellType;
+            return generateCompletionScript(commandRegistry);
+        } else {
+            this.dynamicCompletionShellType = shellType;
+            return generateDynamicCompletionScript(commandRegistry);
+        }
+    }
+
+    /**
+     * Handles --aesh-completion-install: auto-detect shell, generate dynamic script,
+     * and install to the standard completion directory.
+     */
+    @SuppressWarnings("unchecked")
+    private CommandResult handleBuiltinCompletionInstall(CommandRegistry commandRegistry) {
+        try {
+            String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();
+            String name = completionProgramName != null ? completionProgramName : commandName;
+
+            ShellType shellType = detectShell();
+            if (shellType == null) {
+                System.err.println("Could not detect shell type. Use --aesh-completion bash|zsh|fish instead.");
+                return CommandResult.FAILURE;
+            }
+
+            java.io.File installPath = getCompletionInstallPath(shellType, name);
+            if (installPath == null) {
+                System.err.println("Could not determine completion install path for " + shellType + ".");
+                return CommandResult.FAILURE;
+            }
+
+            // Generate the script
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) commandRegistry
+                    .getCommand(commandName, "");
+            String script = ShellCompletionGenerator.forShell(shellType)
+                    .generateDynamic(container.getParser(), name);
+
+            // Confirm with user
+            String action = installPath.exists() ? "Overwrite" : "Write";
+            System.out.println(action + " completion script to: " + installPath.getAbsolutePath());
+            System.out.print("Proceed? [y/N] ");
+            System.out.flush();
+
+            java.io.Console console = System.console();
+            String response;
+            if (console != null) {
+                response = console.readLine();
+            } else {
+                response = new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+            }
+
+            if (response != null && (response.equalsIgnoreCase("y") || response.equalsIgnoreCase("yes"))) {
+                java.io.File parentDir = installPath.getParentFile();
+                if (parentDir != null && !parentDir.exists()) {
+                    parentDir.mkdirs();
+                }
+                try (java.io.FileWriter writer = new java.io.FileWriter(installPath)) {
+                    writer.write(script);
+                }
+                System.out.println("Completion script installed to " + installPath.getAbsolutePath());
+                System.out.println("Note: '" + name + "' must be on your $PATH for completions to work.");
+                System.out.println("Restart your shell or source the file to activate completions.");
+            } else {
+                System.out.println("Installation cancelled.");
+            }
+            return CommandResult.SUCCESS;
+        } catch (Exception e) {
+            System.err.println("Failed to install completion: " + e.getMessage());
+            return CommandResult.FAILURE;
+        }
+    }
+
+    // --- Static helper methods (for backwards compatibility) ---
+
     public static boolean handleDynamicCompletion(String[] args, Class<? extends Command> commandClass) {
         if (args == null || args.length == 0 || !"--aesh-complete".equals(args[0]))
             return false;
@@ -378,7 +531,7 @@ public class AeshRuntimeRunner {
 
             ShellType shellType = detectShell();
             if (shellType == null) {
-                System.err.println("Could not detect shell type. Set $SHELL or use --generate-completion instead.");
+                System.err.println("Could not detect shell type. Use --aesh-completion bash|zsh|fish instead.");
                 return true;
             }
 
