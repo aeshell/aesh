@@ -411,13 +411,16 @@ final class CodeGenerator {
         } else if (arg != null) {
             generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils, accessorInfos);
         } else if (field.getAnnotation(Mixin.class) != null) {
-            generateMixin(sb, simpleName, field, elementUtils, typeUtils, accessorInfos);
+            // Chain mixinFieldName for nested mixins: "outer" + "inner" -> "outer.inner"
+            String nestedMixinName = mixinFieldName != null
+                    ? mixinFieldName + "." + field.getSimpleName().toString()
+                    : field.getSimpleName().toString();
+            generateMixin(sb, simpleName, field, nestedMixinName, elementUtils, typeUtils, accessorInfos);
         }
     }
 
     private static void generateMixin(StringBuilder sb, String simpleName, VariableElement mixinField,
-            Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
-        String mixinFieldName = mixinField.getSimpleName().toString();
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         TypeMirror mixinType = mixinField.asType();
         if (!(mixinType instanceof DeclaredType))
             return;
@@ -1030,11 +1033,11 @@ final class CodeGenerator {
     }
 
     private static String fieldConstantName(String fieldName) {
-        return "FIELD_" + fieldName;
+        return "FIELD_" + fieldName.replace('.', '_');
     }
 
     private static String fieldConstantName(String mixinFieldName, String fieldName) {
-        return "FIELD_" + mixinFieldName + "_" + fieldName;
+        return "FIELD_" + mixinFieldName.replace('.', '_') + "_" + fieldName;
     }
 
     private static boolean hasAnnotation(VariableElement field) {

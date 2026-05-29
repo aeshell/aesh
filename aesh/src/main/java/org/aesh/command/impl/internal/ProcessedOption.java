@@ -427,18 +427,26 @@ public class ProcessedOption {
         if (mixinFieldName == null)
             return commandInstance;
         try {
-            Field mixinField = getField(commandInstance.getClass(), mixinFieldName);
-            if (mixinField == null)
-                throw new NoSuchFieldException(
-                        "Mixin field '" + mixinFieldName + "' not found on " + commandInstance.getClass().getName());
-            if (!Modifier.isPublic(mixinField.getModifiers()))
-                mixinField.setAccessible(true);
-            Object mixinInstance = mixinField.get(commandInstance);
-            if (mixinInstance == null) {
-                mixinInstance = mixinField.getType().getDeclaredConstructor().newInstance();
-                mixinField.set(commandInstance, mixinInstance);
+            // Support chained mixin paths (e.g., "outer.inner" for nested mixins)
+            Object current = commandInstance;
+            String[] parts = mixinFieldName.indexOf('.') >= 0
+                    ? mixinFieldName.split("\\.")
+                    : new String[] { mixinFieldName };
+            for (String part : parts) {
+                Field mixinField = getField(current.getClass(), part);
+                if (mixinField == null)
+                    throw new NoSuchFieldException(
+                            "Mixin field '" + part + "' not found on " + current.getClass().getName());
+                if (!Modifier.isPublic(mixinField.getModifiers()))
+                    mixinField.setAccessible(true);
+                Object next = mixinField.get(current);
+                if (next == null) {
+                    next = mixinField.getType().getDeclaredConstructor().newInstance();
+                    mixinField.set(current, next);
+                }
+                current = next;
             }
-            return mixinInstance;
+            return current;
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(
                     "Failed to resolve mixin field '" + mixinFieldName + "' on " + commandInstance.getClass().getName(), e);

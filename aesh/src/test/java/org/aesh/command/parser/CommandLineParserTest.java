@@ -2468,4 +2468,130 @@ public class CommandLineParserTest {
         assertEquals("turbo", cmd.mode);
     }
 
+    // --- Mixin inheritance tests (#471) ---
+
+    public static class BaseMixin {
+        @Option(name = "verbose", hasValue = false, description = "Verbose output")
+        boolean verbose;
+
+        @Option(name = "config", description = "Config file")
+        String config;
+    }
+
+    public static class ExtendedMixin extends BaseMixin {
+        @Option(name = "debug", hasValue = false, description = "Debug mode")
+        boolean debug;
+
+        @Option(name = "log-level", description = "Log level")
+        String logLevel;
+    }
+
+    @CommandDefinition(name = "inherit-test", description = "Test mixin inheritance")
+    public static class MixinInheritanceCommand implements Command<CommandInvocation> {
+        @Mixin
+        ExtendedMixin options;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testMixinInheritance() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinInheritanceCommand()).getParser();
+
+        // All four options should be available (2 from BaseMixin + 2 from ExtendedMixin)
+        parser.populateObject("inherit-test --verbose --debug --config myconfig --log-level INFO",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        MixinInheritanceCommand cmd = (MixinInheritanceCommand) parser.getCommand();
+
+        assertNotNull("Mixin should be initialized", cmd.options);
+        assertTrue("verbose from BaseMixin should be set", cmd.options.verbose);
+        assertTrue("debug from ExtendedMixin should be set", cmd.options.debug);
+        assertEquals("config from BaseMixin should be set", "myconfig", cmd.options.config);
+        assertEquals("logLevel from ExtendedMixin should be set", "INFO", cmd.options.logLevel);
+    }
+
+    @Test
+    public void testMixinInheritance_HelpShowsAllOptions() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new MixinInheritanceCommand()).getParser();
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        assertTrue("Help should show --verbose", help.contains("--verbose"));
+        assertTrue("Help should show --debug", help.contains("--debug"));
+        assertTrue("Help should show --config", help.contains("--config"));
+        assertTrue("Help should show --log-level", help.contains("--log-level"));
+    }
+
+    // --- Nested mixin tests (#469) ---
+
+    public static class InnerMixin {
+        @Option(name = "trace", hasValue = false, description = "Trace mode")
+        boolean trace;
+
+        @Option(name = "output", description = "Output file")
+        String output;
+    }
+
+    public static class OuterMixin {
+        @Mixin
+        InnerMixin inner;
+
+        @Option(name = "quiet", hasValue = false, description = "Quiet mode")
+        boolean quiet;
+    }
+
+    @CommandDefinition(name = "nested-test", description = "Test nested mixins")
+    public static class NestedMixinCommand implements Command<CommandInvocation> {
+        @Mixin
+        OuterMixin outer;
+
+        @Option(name = "name", description = "Name")
+        String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testNestedMixin_OptionsDiscovered() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new NestedMixinCommand()).getParser();
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        // All options from outer mixin, inner mixin, and command should appear
+        assertTrue("Help should show --quiet (outer mixin)", help.contains("--quiet"));
+        assertTrue("Help should show --trace (inner mixin)", help.contains("--trace"));
+        assertTrue("Help should show --output (inner mixin)", help.contains("--output"));
+        assertTrue("Help should show --name (command)", help.contains("--name"));
+    }
+
+    @Test
+    public void testNestedMixin_ParseAndPopulate() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new NestedMixinCommand()).getParser();
+
+        parser.populateObject("nested-test --quiet --trace --output result.txt --name test",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        NestedMixinCommand cmd = (NestedMixinCommand) parser.getCommand();
+
+        assertNotNull("Outer mixin should be initialized", cmd.outer);
+        assertTrue("quiet from OuterMixin should be set", cmd.outer.quiet);
+        assertNotNull("Inner mixin should be initialized", cmd.outer.inner);
+        assertTrue("trace from InnerMixin should be set", cmd.outer.inner.trace);
+        assertEquals("output from InnerMixin should be set", "result.txt", cmd.outer.inner.output);
+        assertEquals("name from command should be set", "test", cmd.name);
+    }
+
 }

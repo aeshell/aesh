@@ -435,7 +435,11 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .mixinFieldName(mixinFieldName)
                             .build());
         } else if (field.getAnnotation(Mixin.class) != null) {
-            processMixinField(processedCommand, field);
+            // Chain mixinFieldName for nested mixins: "outer" + "inner" -> "outer.inner"
+            String nestedMixinName = mixinFieldName != null
+                    ? mixinFieldName + "." + field.getName()
+                    : field.getName();
+            processMixinClass(processedCommand, field.getType(), nestedMixinName);
         }
     }
 

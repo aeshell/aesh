@@ -1587,6 +1587,137 @@ public class ProcessorTest {
                 result.classLoader.loadClass("test.InheritedChildCommand_AeshMetadata"));
     }
 
+    // --- Test: Mixin inheritance (#471) ---
+
+    private static final String BASE_MIXIN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class BaseMixin {\n" +
+            "    @Option(name = \"verbose\", hasValue = false, description = \"Verbose output\")\n" +
+            "    boolean verbose;\n" +
+            "    @Option(name = \"config\", description = \"Config file\")\n" +
+            "    String config;\n" +
+            "}\n";
+
+    private static final String EXTENDED_MIXIN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class ExtendedMixin extends BaseMixin {\n" +
+            "    @Option(name = \"debug\", hasValue = false, description = \"Debug mode\")\n" +
+            "    boolean debug;\n" +
+            "    @Option(name = \"log-level\", description = \"Log level\")\n" +
+            "    String logLevel;\n" +
+            "}\n";
+
+    private static final String MIXIN_INHERIT_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Mixin;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"inherit\", description = \"Mixin inheritance test\")\n" +
+            "public class MixinInheritCommand implements Command<CommandInvocation> {\n" +
+            "    @Mixin\n" +
+            "    ExtendedMixin options;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMixinInheritanceParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.BaseMixin", BASE_MIXIN_SOURCE),
+                new InMemorySource("test.ExtendedMixin", EXTENDED_MIXIN_SOURCE),
+                new InMemorySource("test.MixinInheritCommand", MIXIN_INHERIT_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.MixinInheritCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.MixinInheritCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // Should have all 4 options: verbose + config from BaseMixin, debug + logLevel from ExtendedMixin
+        assertEquals("Should have 4 options", 4, generatedPC.getOptions().size());
+        assertNotNull("Should have --verbose from BaseMixin",
+                generatedPC.findLongOptionNoActivatorCheck("verbose"));
+        assertNotNull("Should have --config from BaseMixin",
+                generatedPC.findLongOptionNoActivatorCheck("config"));
+        assertNotNull("Should have --debug from ExtendedMixin",
+                generatedPC.findLongOptionNoActivatorCheck("debug"));
+        assertNotNull("Should have --log-level from ExtendedMixin",
+                generatedPC.findLongOptionNoActivatorCheck("log-level"));
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
+    // --- Test: Nested mixins (#469) ---
+
+    private static final String INNER_MIXIN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class InnerMixin {\n" +
+            "    @Option(name = \"trace\", hasValue = false, description = \"Trace mode\")\n" +
+            "    boolean trace;\n" +
+            "    @Option(name = \"output\", description = \"Output file\")\n" +
+            "    String output;\n" +
+            "}\n";
+
+    private static final String OUTER_MIXIN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.option.Mixin;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class OuterMixin {\n" +
+            "    @Mixin\n" +
+            "    InnerMixin inner;\n" +
+            "    @Option(name = \"quiet\", hasValue = false, description = \"Quiet mode\")\n" +
+            "    boolean quiet;\n" +
+            "}\n";
+
+    private static final String NESTED_MIXIN_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Mixin;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"nested\", description = \"Nested mixin test\")\n" +
+            "public class NestedMixinCommand implements Command<CommandInvocation> {\n" +
+            "    @Mixin\n" +
+            "    OuterMixin outer;\n" +
+            "    @Option(name = \"name\", description = \"Name\")\n" +
+            "    String name;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testNestedMixinParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.InnerMixin", INNER_MIXIN_SOURCE),
+                new InMemorySource("test.OuterMixin", OUTER_MIXIN_SOURCE),
+                new InMemorySource("test.NestedMixinCommand", NESTED_MIXIN_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.NestedMixinCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.NestedMixinCommand_AeshMetadata");
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
