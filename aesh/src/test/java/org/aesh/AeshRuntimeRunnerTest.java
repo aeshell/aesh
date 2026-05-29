@@ -417,6 +417,37 @@ public class AeshRuntimeRunnerTest {
     }
 
     @Test
+    public void testAeshCompletionFlagsNotInCompletionCandidates() {
+        // --aesh-completion, --aesh-complete, --aesh-completion-install must NOT
+        // appear as completion candidates for user commands
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(ColorCommand.class)
+                .args("--aesh-complete", "--", "--")
+                .execute());
+
+        assertFalse("--aesh-completion should not appear in candidates",
+                output.contains("--aesh-completion"));
+        assertFalse("--aesh-complete should not appear in candidates",
+                output.contains("--aesh-complete"));
+        assertFalse("--aesh-completion-install should not appear in candidates",
+                output.contains("--aesh-completion-install"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagsNotInHelpOutput() {
+        // --aesh-completion flags must NOT appear in --help output
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--help")
+                .execute());
+
+        assertFalse("--aesh-completion should not appear in help",
+                output.contains("--aesh-completion"));
+        assertFalse("--aesh-complete should not appear in help",
+                output.contains("--aesh-complete"));
+    }
+
+    @Test
     public void testDynamicCompleteOptions() {
         String output = captureStdout(() -> AeshRuntimeRunner.builder()
                 .command(ColorCommand.class)
