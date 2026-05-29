@@ -1089,19 +1089,7 @@ public class ProcessedOption {
             if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
                 sb.append(ANSI.hyperlink(descriptionUrl, resolvedDescription));
             } else {
-                // Support multi-line descriptions: indent continuation lines
-                if (resolvedDescription.indexOf('\n') >= 0) {
-                    String pad = String.format("%" + descriptionStart + "s", "");
-                    String[] lines = resolvedDescription.split("\n");
-                    for (int i = 0; i < lines.length; i++) {
-                        if (i > 0) {
-                            sb.append(System.lineSeparator()).append(pad);
-                        }
-                        sb.append(lines[i]);
-                    }
-                } else {
-                    sb.append(resolvedDescription);
-                }
+                sb.append(resolvedDescription);
             }
         }
 
