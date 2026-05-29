@@ -36,8 +36,15 @@ import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
 
 /**
+ * Defines a group command with subcommands.
+ * <p>
+ * <b>Deprecated:</b> Use {@link CommandDefinition} with {@code groupCommands} instead.
+ * This annotation is retained for backward compatibility.
+ *
  * @author Aesh team
+ * @deprecated Use {@link CommandDefinition#groupCommands()} instead
  */
+@Deprecated
 @Retention(RUNTIME)
 @Target(TYPE)
 public @interface GroupCommandDefinition {

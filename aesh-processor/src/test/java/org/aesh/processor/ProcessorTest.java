@@ -370,6 +370,70 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: Unified @CommandDefinition with groupCommands (#474) ---
+
+    private static final String UNIFIED_SUB_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"usub\", description = \"Unified sub\")\n" +
+            "public class UnifiedSubCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Value\")\n" +
+            "    private String value;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    private static final String UNIFIED_GROUP_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"ugroup\", description = \"Unified group\",\n" +
+            "        groupCommands = { test.UnifiedSubCommand.class },\n" +
+            "        generateHelp = true)\n" +
+            "public class UnifiedGroupCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"verbose\", hasValue = false, description = \"Verbose\")\n" +
+            "    boolean verbose;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testUnifiedCommandDefinitionWithGroupCommands() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.UnifiedSubCommand", UNIFIED_SUB_SOURCE),
+                new InMemorySource("test.UnifiedGroupCommand", UNIFIED_GROUP_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.UnifiedGroupCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.UnifiedGroupCommand_AeshMetadata");
+
+        // Verify group command metadata
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        assertTrue("Should be a group command", provider.isGroupCommand());
+        assertEquals("Should have 1 subcommand", 1, provider.groupCommandClasses().length);
+        assertEquals("ugroup", provider.commandName());
+
+        // Verify it has --help (generateHelp=true)
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+        assertTrue("generateHelp should be true", generatedPC.generateHelp());
+        assertNotNull("Should have --help option",
+                generatedPC.findLongOptionNoActivatorCheck("help"));
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Test: @Mixin support ---
 
     private static final String LOGGING_MIXIN_SOURCE = "package test;\n" +

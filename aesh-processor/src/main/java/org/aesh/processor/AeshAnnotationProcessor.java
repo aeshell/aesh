@@ -34,8 +34,11 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -229,6 +232,11 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         String fullMetadataName = packageName.isEmpty() ? metadataClassName : packageName + "." + metadataClassName;
 
         boolean isGroup = commandElement.getAnnotation(GroupCommandDefinition.class) != null;
+        if (!isGroup) {
+            // Check if @CommandDefinition has groupCommands via annotation mirror
+            // (direct access triggers MirroredTypesException at compile time)
+            isGroup = hasGroupCommands(commandElement);
+        }
 
         List<VariableElement> fields = collectFields(commandElement);
 
@@ -242,6 +250,24 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         }
 
         generatedProviders.add(fullMetadataName);
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean hasGroupCommands(TypeElement element) {
+        for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+            String annotationType = ((TypeElement) mirror.getAnnotationType().asElement())
+                    .getQualifiedName().toString();
+            if (annotationType.equals(CommandDefinition.class.getCanonicalName())) {
+                for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
+                        .getElementValues().entrySet()) {
+                    if (entry.getKey().getSimpleName().toString().equals("groupCommands")) {
+                        List<? extends AnnotationValue> values = (List<? extends AnnotationValue>) entry.getValue().getValue();
+                        return !values.isEmpty();
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private void writeServiceFile() {

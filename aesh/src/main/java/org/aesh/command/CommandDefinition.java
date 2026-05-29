@@ -164,4 +164,15 @@ public @interface CommandDefinition {
      * per-option {@code order} overrides.
      */
     boolean sortOptions() default false;
+
+    /**
+     * Specify subcommands for this command, making it a group command.
+     * When non-empty, the command acts as a group command container
+     * (equivalent to using {@link GroupCommandDefinition}).
+     * <p>
+     * Note: {@code disableParsing} is ignored when {@code groupCommands} is non-empty.
+     *
+     * @return subcommand classes
+     */
+    Class<? extends Command>[] groupCommands() default {};
 }

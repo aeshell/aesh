@@ -122,6 +122,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         Class<Command<CI>> clazz = (Class<Command<CI>>) commandObject.getClass();
         CommandDefinition command = clazz.getAnnotation(CommandDefinition.class);
         if (command != null) {
+            boolean isGroup = command.groupCommands().length > 0;
             ProcessedCommand<Command<CI>, CI> processedCommand = ProcessedCommandBuilder.<Command<CI>, CI> builder()
                     .name(command.name())
                     .activator(command.activator())
@@ -131,7 +132,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .command(commandObject)
                     .resultHandler(command.resultHandler())
                     .generateHelp(command.generateHelp())
-                    .disableParsing(command.disableParsing())
+                    .disableParsing(!isGroup && command.disableParsing())
                     .stopAtFirstPositional(command.stopAtFirstPositional())
                     .sortOptions(command.sortOptions())
                     .defaultValueProvider(command.defaultValueProvider())
@@ -145,6 +146,38 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 processedCommand.setHelpGroup(command.helpGroup());
             if (command.helpSectionProvider() != NullHelpSectionProvider.class)
                 processedCommand.setHelpSectionProviderClass(command.helpSectionProvider());
+
+            if (isGroup) {
+                // Handle as group command
+                AeshCommandContainer<CI> groupContainer = new AeshCommandContainer<>(
+                        new AeshCommandLineParser<>(processedCommand));
+
+                if (commandObject instanceof GroupCommand) {
+                    List<Command<CI>> commands = ((GroupCommand<CI>) commandObject).getCommands();
+                    if (commands != null) {
+                        for (Command<CI> sub : commands) {
+                            groupContainer.addChild(doGenerateCommandLineParser(sub));
+                        }
+                    }
+                    List<CommandContainer<CI>> parsedCommands = ((GroupCommand<CI>) commandObject).getParsedCommands();
+                    if (parsedCommands != null) {
+                        for (CommandContainer<CI> sub : parsedCommands) {
+                            groupContainer.addChild(sub);
+                        }
+                    }
+                } else {
+                    for (Class<? extends Command> groupClazz : command.groupCommands()) {
+                        String childName = getCommandName(groupClazz);
+                        if (childName != null) {
+                            groupContainer.addLazyChild(childName, groupClazz);
+                        } else {
+                            Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
+                            groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
+                        }
+                    }
+                }
+                return groupContainer;
+            }
 
             return new AeshCommandContainer<>(
                     new AeshCommandLineParser<>(processedCommand));

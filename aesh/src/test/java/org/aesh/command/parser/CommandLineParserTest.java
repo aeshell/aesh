@@ -2780,4 +2780,74 @@ public class CommandLineParserTest {
         assertFalse("props should be empty", cmd.props.isPresent());
     }
 
+    // --- Unified @CommandDefinition with groupCommands (#474) ---
+
+    @CommandDefinition(name = "sub-a", description = "Sub A")
+    public static class UnifiedSubA implements Command<CommandInvocation> {
+        @Option(name = "value", description = "A value")
+        String value;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub-b", description = "Sub B")
+    public static class UnifiedSubB implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "unified-group", description = "Unified group command", groupCommands = { UnifiedSubA.class,
+            UnifiedSubB.class }, generateHelp = true)
+    public static class UnifiedGroupCommand implements Command<CommandInvocation> {
+        @Option(name = "verbose", hasValue = false, description = "Verbose")
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testUnifiedCommandDefinitionWithGroupCommands() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new UnifiedGroupCommand()).getParser();
+
+        // Should be detected as a group command
+        assertTrue("Should be a group command", parser.isGroupCommand());
+
+        // Child parsers should be available
+        assertNotNull("Should find sub-a", parser.getChildParser("sub-a"));
+        assertNotNull("Should find sub-b", parser.getChildParser("sub-b"));
+
+        // Parse subcommand
+        parser.populateObject("unified-group sub-a --value hello",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        CommandLineParser<CommandInvocation> parsedChild = parser.parsedCommand();
+        assertNotNull("Should have parsed child", parsedChild);
+        assertEquals("sub-a", parsedChild.getProcessedCommand().name());
+
+        UnifiedSubA subA = (UnifiedSubA) parsedChild.getCommand();
+        assertEquals("hello", subA.value);
+    }
+
+    @Test
+    public void testUnifiedCommandDefinition_HelpShowsSubcommands() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new UnifiedGroupCommand()).getParser();
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        assertTrue("Help should show sub-a", help.contains("sub-a"));
+        assertTrue("Help should show sub-b", help.contains("sub-b"));
+        assertTrue("Help should show --verbose", help.contains("--verbose"));
+        assertTrue("Help should show --help", help.contains("--help"));
+    }
+
 }

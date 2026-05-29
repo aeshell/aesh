@@ -129,9 +129,10 @@ final class CodeGenerator {
         sb.append("    }\n\n");
 
         // commandName()
-        String cmdName = isGroup
-                ? commandElement.getAnnotation(GroupCommandDefinition.class).name()
-                : commandElement.getAnnotation(CommandDefinition.class).name();
+        CommandDefinition cdForName = commandElement.getAnnotation(CommandDefinition.class);
+        String cmdName = cdForName != null
+                ? cdForName.name()
+                : commandElement.getAnnotation(GroupCommandDefinition.class).name();
         sb.append("    @Override\n");
         sb.append("    public String commandName() {\n");
         sb.append("        return ").append(stringLiteral(cmdName)).append(";\n");
@@ -191,7 +192,8 @@ final class CodeGenerator {
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
             String annotationType = ((TypeElement) mirror.getAnnotationType().asElement())
                     .getQualifiedName().toString();
-            if (annotationType.equals(GroupCommandDefinition.class.getCanonicalName())) {
+            if (annotationType.equals(GroupCommandDefinition.class.getCanonicalName())
+                    || annotationType.equals(CommandDefinition.class.getCanonicalName())) {
                 for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
                         .getElementValues().entrySet()) {
                     if (entry.getKey().getSimpleName().toString().equals("groupCommands")) {
@@ -245,26 +247,9 @@ final class CodeGenerator {
 
         boolean generateHelp;
         String version;
-        if (isGroup) {
-            GroupCommandDefinition gcd = commandElement.getAnnotation(GroupCommandDefinition.class);
-            generateHelp = gcd.generateHelp();
-            version = gcd.version();
-            sb.append("                .name(").append(stringLiteral(gcd.name())).append(")\n");
-            generateCommandActivator(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(gcd.aliases())).append("))\n");
-            sb.append("                .description(").append(stringLiteral(gcd.description())).append(")\n");
-            generateCommandValidator(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .command(instance)\n");
-            // Processor handles help/version directly — tell builder not to
-            sb.append("                .generateHelp(false)\n");
-            sb.append("                .stopAtFirstPositional(").append(gcd.stopAtFirstPositional()).append(")\n");
-            sb.append("                .sortOptions(").append(gcd.sortOptions()).append(")\n");
-            generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .version(\"\")\n");
-            generateResultHandler(sb, commandElement, isGroup, elementUtils);
-            sb.append("                .helpUrl(").append(stringLiteral(gcd.helpUrl())).append(")\n");
-        } else {
-            CommandDefinition cd = commandElement.getAnnotation(CommandDefinition.class);
+        // Read annotation values — prefer @CommandDefinition, fall back to @GroupCommandDefinition
+        CommandDefinition cd = commandElement.getAnnotation(CommandDefinition.class);
+        if (cd != null) {
             generateHelp = cd.generateHelp();
             version = cd.version();
             sb.append("                .name(").append(stringLiteral(cd.name())).append(")\n");
@@ -274,30 +259,46 @@ final class CodeGenerator {
             generateCommandValidator(sb, commandElement, isGroup, elementUtils);
             sb.append("                .command(instance)\n");
             generateResultHandler(sb, commandElement, isGroup, elementUtils);
-            // Processor handles help/version directly — tell builder not to
             sb.append("                .generateHelp(false)\n");
-            sb.append("                .disableParsing(").append(cd.disableParsing()).append(")\n");
+            sb.append("                .disableParsing(").append(!isGroup && cd.disableParsing()).append(")\n");
             sb.append("                .stopAtFirstPositional(").append(cd.stopAtFirstPositional()).append(")\n");
             sb.append("                .sortOptions(").append(cd.sortOptions()).append(")\n");
             generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
             sb.append("                .version(\"\")\n");
             sb.append("                .helpUrl(").append(stringLiteral(cd.helpUrl())).append(")\n");
+        } else {
+            GroupCommandDefinition gcd = commandElement.getAnnotation(GroupCommandDefinition.class);
+            generateHelp = gcd.generateHelp();
+            version = gcd.version();
+            sb.append("                .name(").append(stringLiteral(gcd.name())).append(")\n");
+            generateCommandActivator(sb, commandElement, isGroup, elementUtils);
+            sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(gcd.aliases())).append("))\n");
+            sb.append("                .description(").append(stringLiteral(gcd.description())).append(")\n");
+            generateCommandValidator(sb, commandElement, isGroup, elementUtils);
+            sb.append("                .command(instance)\n");
+            sb.append("                .generateHelp(false)\n");
+            sb.append("                .stopAtFirstPositional(").append(gcd.stopAtFirstPositional()).append(")\n");
+            sb.append("                .sortOptions(").append(gcd.sortOptions()).append(")\n");
+            generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
+            sb.append("                .version(\"\")\n");
+            generateResultHandler(sb, commandElement, isGroup, elementUtils);
+            sb.append("                .helpUrl(").append(stringLiteral(gcd.helpUrl())).append(")\n");
         }
 
         sb.append("                .create();\n\n");
 
         // Set command-level helpGroup if present
-        String cmdHelpGroup = isGroup
-                ? commandElement.getAnnotation(GroupCommandDefinition.class).helpGroup()
-                : commandElement.getAnnotation(CommandDefinition.class).helpGroup();
+        String cmdHelpGroup = cd != null ? cd.helpGroup()
+                : commandElement.getAnnotation(GroupCommandDefinition.class).helpGroup();
         if (!cmdHelpGroup.isEmpty()) {
             sb.append("        processedCommand.setHelpGroup(")
                     .append(stringLiteral(cmdHelpGroup)).append(");\n\n");
         }
 
         // Set helpSectionProvider if not NullHelpSectionProvider
-        String providerClass = getAnnotationClassValue(commandElement,
-                isGroup ? GroupCommandDefinition.class.getCanonicalName() : CommandDefinition.class.getCanonicalName(),
+        String annotationName = cd != null ? CommandDefinition.class.getCanonicalName()
+                : GroupCommandDefinition.class.getCanonicalName();
+        String providerClass = getAnnotationClassValue(commandElement, annotationName,
                 "helpSectionProvider", elementUtils);
         if (providerClass != null && !providerClass.equals(NULL_HELP_SECTION_PROVIDER)) {
             sb.append("        processedCommand.setHelpSectionProvider(new ")
