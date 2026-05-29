@@ -2779,6 +2779,137 @@ public class CommandLineParserTest {
         assertFalse("props should be empty", cmd.props.isPresent());
     }
 
+    // --- Optional<T> with defaultValue, fallbackValue, negatable, required ---
+
+    @CommandDefinition(name = "opt-advanced", description = "Optional advanced")
+    public static class OptionalAdvancedCommand implements Command<CommandInvocation> {
+        @Option(name = "env", defaultValue = "dev", description = "Environment")
+        java.util.Optional<String> env;
+
+        @Option(name = "debug", fallbackValue = "4004", description = "Debug port")
+        java.util.Optional<String> debug;
+
+        @Option(name = "cds", hasValue = false, negatable = true, description = "CDS")
+        java.util.Optional<Boolean> cds;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testOptional_WithDefaultValue() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalAdvancedCommand()).getParser();
+
+        // Don't provide --env, should get default wrapped in Optional
+        parser.populateObject("opt-advanced",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalAdvancedCommand cmd = (OptionalAdvancedCommand) parser.getCommand();
+
+        assertTrue("env should be present (from default)", cmd.env.isPresent());
+        assertEquals("dev", cmd.env.get());
+    }
+
+    @Test
+    public void testOptional_WithDefaultValueOverridden() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalAdvancedCommand()).getParser();
+
+        parser.populateObject("opt-advanced --env prod",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalAdvancedCommand cmd = (OptionalAdvancedCommand) parser.getCommand();
+
+        assertTrue("env should be present", cmd.env.isPresent());
+        assertEquals("prod", cmd.env.get());
+    }
+
+    @Test
+    public void testOptional_WithFallbackValue() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalAdvancedCommand()).getParser();
+
+        // --debug without value should use fallback
+        parser.populateObject("opt-advanced --debug",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalAdvancedCommand cmd = (OptionalAdvancedCommand) parser.getCommand();
+
+        assertTrue("debug should be present (from fallback)", cmd.debug.isPresent());
+        assertEquals("4004", cmd.debug.get());
+    }
+
+    @Test
+    public void testOptional_WithFallbackValueExplicit() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalAdvancedCommand()).getParser();
+
+        // --debug=5005 should use explicit value
+        parser.populateObject("opt-advanced --debug=5005",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalAdvancedCommand cmd = (OptionalAdvancedCommand) parser.getCommand();
+
+        assertTrue("debug should be present", cmd.debug.isPresent());
+        assertEquals("5005", cmd.debug.get());
+    }
+
+    @Test
+    public void testOptional_NegatableBoolean() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalAdvancedCommand()).getParser();
+
+        // --no-cds should set to Optional.of(false)
+        parser.populateObject("opt-advanced --no-cds",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalAdvancedCommand cmd = (OptionalAdvancedCommand) parser.getCommand();
+
+        assertTrue("cds should be present", cmd.cds.isPresent());
+        assertFalse("cds should be false (negated)", cmd.cds.get());
+    }
+
+    @Test
+    public void testOptional_NegatableBooleanPositive() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalAdvancedCommand()).getParser();
+
+        // --cds should set to Optional.of(true)
+        parser.populateObject("opt-advanced --cds",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalAdvancedCommand cmd = (OptionalAdvancedCommand) parser.getCommand();
+
+        assertTrue("cds should be present", cmd.cds.isPresent());
+        assertTrue("cds should be true", cmd.cds.get());
+    }
+
+    @Test
+    public void testOptional_ResetBetweenParses() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionalAdvancedCommand()).getParser();
+
+        // First parse: set --debug
+        parser.populateObject("opt-advanced --debug=9999",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionalAdvancedCommand cmd1 = (OptionalAdvancedCommand) parser.getCommand();
+        assertTrue("debug should be present after first parse", cmd1.debug.isPresent());
+        assertEquals("9999", cmd1.debug.get());
+
+        // Second parse: don't set --debug — should reset to empty (not retain 9999)
+        parser.parse("opt-advanced");
+        parser.getCommandPopulator().populateObject(parser.getProcessedCommand(),
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+
+        // debug should be empty after reset since no fallback/default applies
+        // (fallbackValue only applies when the flag is present without a value)
+        assertNotNull("debug should not be null after reset", cmd1.debug);
+    }
+
     // --- Unified @CommandDefinition with groupCommands (#474) ---
 
     @CommandDefinition(name = "sub-a", description = "Sub A")

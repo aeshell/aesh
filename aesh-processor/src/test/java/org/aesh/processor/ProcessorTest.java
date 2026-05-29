@@ -1812,6 +1812,46 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: Optional<T> with defaultValue, fallbackValue, negatable (#472) ---
+
+    private static final String OPTIONAL_ADVANCED_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.Optional;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"optadv\", description = \"Optional advanced\")\n" +
+            "public class OptionalAdvancedCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"env\", defaultValue = \"dev\", description = \"Environment\")\n" +
+            "    Optional<String> env;\n" +
+            "\n" +
+            "    @Option(name = \"debug\", fallbackValue = \"4004\", description = \"Debug port\")\n" +
+            "    Optional<String> debug;\n" +
+            "\n" +
+            "    @Option(name = \"cds\", hasValue = false, negatable = true, description = \"CDS\")\n" +
+            "    Optional<Boolean> cds;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testOptionalWithDefaultAndFallbackParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.OptionalAdvancedCommand", OPTIONAL_ADVANCED_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.OptionalAdvancedCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.OptionalAdvancedCommand_AeshMetadata");
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -460,8 +460,13 @@ final class CodeGenerator {
     private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
-        String fieldType = getBoxedTypeName(field.asType(), typeUtils);
-        boolean isBooleanType = isBooleanType(field.asType(), typeUtils);
+        TypeMirror effectiveType = field.asType();
+        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        if (isOptionalWrapped) {
+            effectiveType = unwrapOptionalTypeMirror(effectiveType);
+        }
+        String fieldType = getBoxedTypeName(effectiveType, typeUtils);
+        boolean isBooleanType = isBooleanType(effectiveType, typeUtils);
         String optionName = o.name().length() < 1 ? fieldName : o.name();
         String optionType = o.hasValue() ? "OptionType.NORMAL" : "OptionType.BOOLEAN";
 
@@ -484,6 +489,8 @@ final class CodeGenerator {
         emitConverterExpression(sb, field, "converter", elementUtils, fieldType);
         sb.append(", new Accessor(").append(accIdx).append("));\n");
         // Non-default setters
+        if (isOptionalWrapped)
+            sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (o.required())
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (o.askIfNotSet())
@@ -493,7 +500,7 @@ final class CodeGenerator {
         if (o.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(o.defaultValue())).append("));\n");
-        emitCompleterSetter(sb, var, field, "completer", isBooleanType, isFileOrResourceType(field.asType(), typeUtils),
+        emitCompleterSetter(sb, var, field, "completer", isBooleanType, isFileOrResourceType(effectiveType, typeUtils),
                 elementUtils);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
@@ -539,7 +546,12 @@ final class CodeGenerator {
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
-        String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
+        TypeMirror effectiveType = field.asType();
+        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        if (isOptionalWrapped) {
+            effectiveType = unwrapOptionalTypeMirror(effectiveType);
+        }
+        String elementType = getGenericTypeArgument(effectiveType, 0, typeUtils);
         String optionName = ol.name().length() < 1 ? fieldName : ol.name();
 
         int accIdx = accessorInfos.size();
@@ -560,6 +572,8 @@ final class CodeGenerator {
         sb.append(", new Accessor(").append(accIdx).append("));\n");
         sb.append("            ").append(var).append(".setValueSeparator(").append(charLiteral(ol.valueSeparator()))
                 .append(");\n");
+        if (isOptionalWrapped)
+            sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (ol.required())
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (ol.askIfNotSet())
@@ -589,7 +603,12 @@ final class CodeGenerator {
     private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
-        String valueType = getGenericTypeArgument(field.asType(), 1, typeUtils);
+        TypeMirror effectiveType = field.asType();
+        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        if (isOptionalWrapped) {
+            effectiveType = unwrapOptionalTypeMirror(effectiveType);
+        }
+        String valueType = getGenericTypeArgument(effectiveType, 1, typeUtils);
         String optionName = og.name().length() < 1
                 ? (og.shortName() != '\u0000' ? "" : fieldName)
                 : og.name();
@@ -611,6 +630,8 @@ final class CodeGenerator {
         emitConverterExpression(sb, field, "converter", elementUtils, valueType);
         sb.append(", new Accessor(").append(accIdx).append("));\n");
         sb.append("            ").append(var).append(".setValueSeparator(',');\n");
+        if (isOptionalWrapped)
+            sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (og.required())
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (og.askIfNotSet())
@@ -636,7 +657,12 @@ final class CodeGenerator {
     private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
-        String elementType = getGenericTypeArgument(field.asType(), 0, typeUtils);
+        TypeMirror effectiveType = field.asType();
+        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        if (isOptionalWrapped) {
+            effectiveType = unwrapOptionalTypeMirror(effectiveType);
+        }
+        String elementType = getGenericTypeArgument(effectiveType, 0, typeUtils);
 
         int accIdx = accessorInfos.size();
         accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
@@ -651,6 +677,8 @@ final class CodeGenerator {
         sb.append("                    ");
         emitConverterExpression(sb, field, "converter", elementUtils, elementType);
         sb.append(", new Accessor(").append(accIdx).append("));\n");
+        if (isOptionalWrapped)
+            sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (a.required())
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (a.valueSeparator() != ' ')
@@ -686,7 +714,12 @@ final class CodeGenerator {
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
         String fieldName = field.getSimpleName().toString();
-        String fieldType = getBoxedTypeName(field.asType(), typeUtils);
+        TypeMirror effectiveType = field.asType();
+        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        if (isOptionalWrapped) {
+            effectiveType = unwrapOptionalTypeMirror(effectiveType);
+        }
+        String fieldType = getBoxedTypeName(effectiveType, typeUtils);
 
         int accIdx = accessorInfos.size();
         accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
@@ -701,6 +734,8 @@ final class CodeGenerator {
         sb.append("                    ");
         emitConverterExpression(sb, field, "converter", elementUtils, fieldType);
         sb.append(", new Accessor(").append(accIdx).append("));\n");
+        if (isOptionalWrapped)
+            sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (arg.required())
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (arg.askIfNotSet())
@@ -1121,13 +1156,22 @@ final class CodeGenerator {
             if (customConverter != null && !customConverter.equals(NULL_CONVERTER))
                 continue; // custom converter, not shared
             if (field.getAnnotation(Option.class) != null || field.getAnnotation(Argument.class) != null) {
-                converterTypes.add(getBoxedTypeName(field.asType(), typeUtils));
-                if (isBooleanType(field.asType(), typeUtils))
+                TypeMirror effectiveType = field.asType();
+                if (isOptionalType(effectiveType))
+                    effectiveType = unwrapOptionalTypeMirror(effectiveType);
+                converterTypes.add(getBoxedTypeName(effectiveType, typeUtils));
+                if (isBooleanType(effectiveType, typeUtils))
                     needsBooleanCompleter = true;
             } else if (field.getAnnotation(OptionList.class) != null || field.getAnnotation(Arguments.class) != null) {
-                converterTypes.add(getGenericTypeArgument(field.asType(), 0, typeUtils));
+                TypeMirror effectiveType = field.asType();
+                if (isOptionalType(effectiveType))
+                    effectiveType = unwrapOptionalTypeMirror(effectiveType);
+                converterTypes.add(getGenericTypeArgument(effectiveType, 0, typeUtils));
             } else if (field.getAnnotation(OptionGroup.class) != null) {
-                converterTypes.add(getGenericTypeArgument(field.asType(), 1, typeUtils));
+                TypeMirror effectiveType = field.asType();
+                if (isOptionalType(effectiveType))
+                    effectiveType = unwrapOptionalTypeMirror(effectiveType);
+                converterTypes.add(getGenericTypeArgument(effectiveType, 1, typeUtils));
             }
         }
 
@@ -1328,6 +1372,24 @@ final class CodeGenerator {
     }
 
     // --- Type utility methods ---
+
+    private static boolean isOptionalType(TypeMirror type) {
+        return type.toString().startsWith("java.util.Optional");
+    }
+
+    /**
+     * Unwrap Optional&lt;T&gt; to get T from a field's type mirror.
+     */
+    private static TypeMirror unwrapOptionalTypeMirror(TypeMirror type) {
+        if (type instanceof DeclaredType) {
+            DeclaredType declaredType = (DeclaredType) type;
+            List<? extends TypeMirror> typeArgs = declaredType.getTypeArguments();
+            if (!typeArgs.isEmpty()) {
+                return typeArgs.get(0);
+            }
+        }
+        return type;
+    }
 
     private static boolean isBooleanType(TypeMirror type, Types typeUtils) {
         if (type.getKind() == TypeKind.BOOLEAN)
