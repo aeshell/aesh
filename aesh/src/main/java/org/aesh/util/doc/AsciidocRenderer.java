@@ -303,15 +303,19 @@ class AsciidocRenderer implements DocRenderer {
     public void writeNavFile(File navFile, List<DocumentationGenerator.NavEntry> entries) throws IOException {
         StringBuilder sb = new StringBuilder();
         for (DocumentationGenerator.NavEntry entry : entries) {
-            // Determine nesting depth from parent chain
+            // Determine nesting depth by walking up the parent chain
             int depth = 0;
             String parent = entry.parentName;
-            for (DocumentationGenerator.NavEntry e : entries) {
-                if (e.fullName.equals(parent)) {
-                    depth++;
-                    parent = e.parentName;
-                    break;
+            while (parent != null) {
+                depth++;
+                String nextParent = null;
+                for (DocumentationGenerator.NavEntry e : entries) {
+                    if (e.fullName.equals(parent)) {
+                        nextParent = e.parentName;
+                        break;
+                    }
                 }
+                parent = nextParent;
             }
 
             // Antora nav format: * for top level, ** for children, etc.

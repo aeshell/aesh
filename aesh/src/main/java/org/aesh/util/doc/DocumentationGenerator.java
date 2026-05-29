@@ -83,7 +83,7 @@ public class DocumentationGenerator {
      */
     public String generateSingle() {
         DocRenderer renderer = createRenderer();
-        HelpSectionContent helpContent = resolveHelpContent(parser);
+        HelpSectionContent helpContent = resolveHelpContent(parser, programName, null);
         return renderer.renderCommand(parser, programName, null, helpContent);
     }
 
@@ -110,7 +110,7 @@ public class DocumentationGenerator {
 
     private void generateRecursive(CommandLineParser<?> parser, String fullName,
             String parentName, DocRenderer renderer, List<NavEntry> navEntries) throws IOException {
-        HelpSectionContent helpContent = resolveHelpContent(parser);
+        HelpSectionContent helpContent = resolveHelpContent(parser, fullName, parentName);
         String content = renderer.renderCommand(parser, fullName, parentName, helpContent);
         String fileName = fullName.replace(' ', '-') + "." + format.extension();
         File outFile = new File(outputDir, fileName);
@@ -130,9 +130,10 @@ public class DocumentationGenerator {
     }
 
     /**
-     * Resolves HelpSectionProvider content from a parser.
+     * Resolves HelpSectionProvider content from a parser, with variable interpolation.
      */
-    private HelpSectionContent resolveHelpContent(CommandLineParser<?> parser) {
+    private HelpSectionContent resolveHelpContent(CommandLineParser<?> parser,
+            String fullName, String parentName) {
         HelpSectionProvider provider = parser.getProcessedCommand().getHelpSectionProvider();
         if (provider == null) {
             Class<? extends HelpSectionProvider> providerClass = parser.getProcessedCommand().getHelpSectionProviderClass();
@@ -147,10 +148,46 @@ public class DocumentationGenerator {
         if (provider == null) {
             return HelpSectionContent.EMPTY;
         }
-        return new HelpSectionContent(
-                provider.getHeader(),
-                provider.getFooter(),
-                provider.getAdditionalSections());
+
+        // Resolve ${COMMAND-NAME}, ${ROOT-COMMAND-NAME} etc. in provider content
+        String commandName = parser.getProcessedCommand().name();
+        String header = resolveVariables(provider.getHeader(), commandName, fullName, parentName);
+        String footer = resolveVariables(provider.getFooter(), commandName, fullName, parentName);
+
+        // Resolve variables in additional section entries
+        Map<String, List<HelpEntry>> sections = provider.getAdditionalSections();
+        if (sections != null && !sections.isEmpty()) {
+            Map<String, List<HelpEntry>> resolved = new java.util.LinkedHashMap<>();
+            for (Map.Entry<String, List<HelpEntry>> entry : sections.entrySet()) {
+                List<HelpEntry> resolvedEntries = new ArrayList<>();
+                for (HelpEntry he : entry.getValue()) {
+                    resolvedEntries.add(new HelpEntry(
+                            resolveVariables(he.name(), commandName, fullName, parentName),
+                            resolveVariables(he.description(), commandName, fullName, parentName)));
+                }
+                resolved.put(entry.getKey(), resolvedEntries);
+            }
+            sections = resolved;
+        }
+
+        return new HelpSectionContent(header, footer, sections);
+    }
+
+    private String resolveVariables(String text, String commandName, String fullName, String parentName) {
+        if (text == null || text.isEmpty())
+            return text;
+        // Derive root command name from fullName (first segment)
+        String rootName = programName;
+        int dashIdx = rootName.indexOf('-');
+        if (dashIdx > 0)
+            rootName = rootName.substring(0, dashIdx);
+
+        return parser.getProcessedCommand().resolveCommandDescription(text,
+                commandName,
+                fullName != null ? fullName.replace('-', ' ') : commandName,
+                rootName,
+                parentName,
+                parentName != null ? parentName.replace('-', ' ') : null);
     }
 
     /**

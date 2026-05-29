@@ -366,4 +366,99 @@ public class DocumentationGeneratorTest {
         assertTrue("Should contain EXAMPLES section", doc.contains("## EXAMPLES"));
         assertTrue("Should contain example entry", doc.contains("deploy --env prod myapp"));
     }
+
+    // --- Variable resolution tests ---
+
+    public static class VariableHelpProvider implements HelpSectionProvider {
+        @Override
+        public String getHeader() {
+            return "${COMMAND-NAME} is a tool for ${ROOT-COMMAND-NAME}";
+        }
+
+        @Override
+        public String getFooter() {
+            return "Run ${COMMAND-FULL-NAME} --help for more info";
+        }
+
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return java.util.Collections.emptyMap();
+        }
+    }
+
+    @CommandDefinition(name = "varcmd", description = "Variable test", helpSectionProvider = VariableHelpProvider.class)
+    public static class VariableCommand implements Command<CommandInvocation> {
+        @Option(name = "opt")
+        String opt;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testVariableResolutionInHelpSectionProvider() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(VariableCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        // Variables should be resolved, not appear as literal ${...}
+        assertFalse("Should not contain raw ${COMMAND-NAME}", doc.contains("${COMMAND-NAME}"));
+        assertFalse("Should not contain raw ${ROOT-COMMAND-NAME}", doc.contains("${ROOT-COMMAND-NAME}"));
+        assertTrue("Should contain resolved command name", doc.contains("varcmd is a tool for varcmd"));
+    }
+
+    // --- Nav file depth tests ---
+
+    @CommandDefinition(name = "leaf", description = "Leaf command")
+    public static class LeafCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "mid", description = "Mid group", groupCommands = { LeafCommand.class })
+    public static class MidGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "top", description = "Top group", groupCommands = { MidGroup.class })
+    public static class TopGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testNavFileGrandchildDepth() throws CommandLineParserException, IOException {
+        Path tempDir = Files.createTempDirectory("aesh-doc-depth-test");
+        try {
+            File navFile = new File(tempDir.toFile(), "nav.adoc");
+            DocumentationGenerator.builder()
+                    .commandClass(TopGroup.class)
+                    .format(DocFormat.ASCIIDOC)
+                    .outputDir(tempDir.toFile())
+                    .navFile(navFile)
+                    .generate();
+
+            String nav = new String(Files.readAllBytes(navFile.toPath()));
+
+            // Top level should be *
+            assertTrue("Top should be single *", nav.contains("* "));
+            // Mid should be **
+            assertTrue("Mid should be **", nav.contains("** "));
+            // Leaf (grandchild) should be ***
+            assertTrue("Leaf should be ***", nav.contains("*** "));
+        } finally {
+            Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
+                    .map(Path::toFile).forEach(File::delete);
+        }
+    }
 }
