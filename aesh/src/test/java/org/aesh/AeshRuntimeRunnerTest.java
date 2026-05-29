@@ -463,6 +463,16 @@ public class AeshRuntimeRunnerTest {
     }
 
     @Test
+    public void testAeshDocFlagUnknownFormat() {
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-doc", "docbook")
+                .execute());
+
+        assertTrue("Should report unknown format", stderr.contains("Unknown doc format"));
+    }
+
+    @Test
     public void testAeshDocFlagNotInCompletionCandidates() {
         String output = captureStdout(() -> AeshRuntimeRunner.builder()
                 .command(ColorCommand.class)
