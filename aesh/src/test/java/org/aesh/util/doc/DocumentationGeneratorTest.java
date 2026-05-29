@@ -438,6 +438,39 @@ public class DocumentationGeneratorTest {
                 doc.contains("Shell type for completion"));
     }
 
+    // --- Test: ${ROOT-COMMAND-NAME} in child command description listed in parent ---
+
+    @CommandDefinition(name = "rootvar-child", description = "Generate completion for ${ROOT-COMMAND-NAME}")
+    public static class RootVarChildCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "rootvar", description = "Root command", groupCommands = { RootVarChildCommand.class })
+    public static class RootVarGroupCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testRootCommandNameResolvedInChildDescriptionListing() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(RootVarGroupCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        // The COMMANDS section lists children with their descriptions.
+        // ${ROOT-COMMAND-NAME} in child description should resolve to "rootvar"
+        assertFalse("Should not contain raw ${ROOT-COMMAND-NAME}",
+                doc.contains("${ROOT-COMMAND-NAME}"));
+        assertTrue("Should contain resolved root name in child listing",
+                doc.contains("Generate completion for rootvar"));
+    }
+
     // --- Nav file depth tests ---
 
     @CommandDefinition(name = "leaf", description = "Leaf command")

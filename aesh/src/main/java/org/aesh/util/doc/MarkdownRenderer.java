@@ -115,7 +115,10 @@ class MarkdownRenderer implements DocRenderer {
                 for (CommandLineParser<?> child : children) {
                     String childName = child.getProcessedCommand().name();
                     String childFullName = fullName + "-" + childName;
-                    String childDesc = child.getProcessedCommand().description();
+                    String childDesc = resolveDescription(child.getProcessedCommand(),
+                            child.getProcessedCommand().description(),
+                            new DocumentationGenerator.NameContext(childName, childFullName,
+                                    nameCtx.rootName, fullName));
                     String fileName = childFullName + ".md";
 
                     sb.append("- [**").append(childName).append("**](").append(fileName).append(")");

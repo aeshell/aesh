@@ -114,7 +114,11 @@ class AsciidocRenderer implements DocRenderer {
                 for (CommandLineParser<?> child : children) {
                     String childName = child.getProcessedCommand().name();
                     String childFullName = fullName + "-" + childName;
-                    String childDesc = child.getProcessedCommand().description();
+                    // Resolve variables in child description using the child's context
+                    String childDesc = resolveDescription(child.getProcessedCommand(),
+                            child.getProcessedCommand().description(),
+                            new DocumentationGenerator.NameContext(childName, childFullName,
+                                    nameCtx.rootName, fullName));
                     String fileName = childFullName + ".adoc";
 
                     if (!crossRefPrefix.isEmpty()) {
