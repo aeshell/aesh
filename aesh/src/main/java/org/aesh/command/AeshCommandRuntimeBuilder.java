@@ -189,7 +189,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
             commandInvocationBuilder = (CommandInvocationBuilder) new DefaultCommandInvocationBuilder(shell);
 
         if (ctx == null) {
-            ctx = new DefaultAeshContext();
+            ctx = DefaultAeshContext.getDefault();
         }
 
         if (operators == null) {

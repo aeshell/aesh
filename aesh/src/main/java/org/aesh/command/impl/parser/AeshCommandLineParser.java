@@ -999,6 +999,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      * from this (parent) command into parsed child commands that have matching fields.
      */
     private void propagateInheritedOptions() {
+        if (!processedCommand.hasInheritedOptions())
+            return;
         for (ProcessedOption parentOpt : processedCommand.getOptions()) {
             if (!parentOpt.isInherited())
                 continue;
@@ -1037,13 +1039,27 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         }
     }
 
+    /** Cache for findField() results to avoid repeated getDeclaredFields() walks. */
+    private java.util.Map<String, Field> fieldCache;
+
     private Field findField(Class<?> clazz, String fieldName) {
-        while (clazz != null) {
-            for (Field f : clazz.getDeclaredFields()) {
-                if (f.getName().equals(fieldName))
+        String key = clazz.getName() + "." + fieldName;
+        if (fieldCache != null) {
+            Field cached = fieldCache.get(key);
+            if (cached != null)
+                return cached;
+        }
+        Class<?> c = clazz;
+        while (c != null) {
+            for (Field f : c.getDeclaredFields()) {
+                if (f.getName().equals(fieldName)) {
+                    if (fieldCache == null)
+                        fieldCache = new java.util.HashMap<>();
+                    fieldCache.put(key, f);
                     return f;
+                }
             }
-            clazz = clazz.getSuperclass();
+            c = c.getSuperclass();
         }
         return null;
     }

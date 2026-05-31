@@ -35,8 +35,11 @@ public class DefaultAeshContext implements AeshContext {
     private Resource cwd;
     private final ExportManager exportManager;
 
+    /** Cached default context for the user's working directory. */
+    private static volatile DefaultAeshContext defaultInstance;
+
     public DefaultAeshContext() {
-        this(new FileResource("").newInstance(Config.getUserDir()), null);
+        this(new FileResource(Config.getUserDir()), null);
     }
 
     public DefaultAeshContext(Resource cwd) {
@@ -44,7 +47,7 @@ public class DefaultAeshContext implements AeshContext {
     }
 
     public DefaultAeshContext(Resource cwd, ExportManager exportManager) {
-        if (cwd != null && (!cwd.isLeaf() && cwd.exists()))
+        if (cwd != null && cwd.isDirectory())
             this.cwd = cwd;
         else
             throw new IllegalArgumentException("Current working directory must be a directory");
@@ -53,7 +56,25 @@ public class DefaultAeshContext implements AeshContext {
     }
 
     public DefaultAeshContext(ExportManager exportManager) {
-        this(new FileResource("").newInstance(Config.getUserDir()), exportManager);
+        this(new FileResource(Config.getUserDir()), exportManager);
+    }
+
+    /**
+     * Returns a cached default context for the user's working directory.
+     * Thread-safe with double-checked locking.
+     */
+    public static DefaultAeshContext getDefault() {
+        DefaultAeshContext instance = defaultInstance;
+        if (instance == null) {
+            synchronized (DefaultAeshContext.class) {
+                instance = defaultInstance;
+                if (instance == null) {
+                    instance = new DefaultAeshContext();
+                    defaultInstance = instance;
+                }
+            }
+        }
+        return instance;
     }
 
     @Override
@@ -63,7 +84,7 @@ public class DefaultAeshContext implements AeshContext {
 
     @Override
     public void setCurrentWorkingDirectory(Resource cwd) {
-        if (!cwd.isLeaf())
+        if (cwd.isDirectory())
             this.cwd = cwd;
         else
             throw new IllegalArgumentException("Current working directory must be a directory");

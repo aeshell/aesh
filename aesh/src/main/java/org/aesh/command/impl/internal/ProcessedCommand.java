@@ -83,6 +83,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private java.util.function.BiConsumer<Object, Object> parentCommandInjector;
     private int optionDeclarationCounter;
     private List<ProcessedOption> cachedPositionalOrder;
+    private boolean hasInheritedOptions;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator<C, CI> validator,
@@ -215,6 +216,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         opt.setDeclarationOrder(optionDeclarationCounter++);
         this.options.add(opt);
         opt.setParent(this);
+        if (opt.isInherited())
+            this.hasInheritedOptions = true;
         if (command != null)
             opt.captureInitialValue(command);
     }
@@ -229,6 +232,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         opt.setDeclarationOrder(optionDeclarationCounter++);
         this.options.add(opt);
         opt.setParent(this);
+        if (opt.isInherited())
+            this.hasInheritedOptions = true;
         if (command != null)
             opt.captureInitialValue(command);
     }
@@ -339,6 +344,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean sortOptions() {
         return sortOptions;
+    }
+
+    public boolean hasInheritedOptions() {
+        return hasInheritedOptions;
     }
 
     public DefaultValueProvider getDefaultValueProvider() {
