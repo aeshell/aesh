@@ -21,6 +21,7 @@ package org.aesh.command.impl.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,6 +85,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private int optionDeclarationCounter;
     private List<ProcessedOption> cachedPositionalOrder;
     private boolean hasInheritedOptions;
+
+    // Lazy-built lookup maps for O(1) option search (built on first lookup, invalidated on add)
+    private Map<String, ProcessedOption> longNameMap;
+    private Map<String, ProcessedOption> shortNameMap;
+    private Map<String, ProcessedOption> negatedNameMap;
+    private Map<String, ProcessedOption> bareNameMap;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator<C, CI> validator,
@@ -218,6 +225,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         opt.setParent(this);
         if (opt.isInherited())
             this.hasInheritedOptions = true;
+        if (longNameMap != null)
+            invalidateLookupMaps();
         if (command != null)
             opt.captureInitialValue(command);
     }
@@ -234,6 +243,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         opt.setParent(this);
         if (opt.isInherited())
             this.hasInheritedOptions = true;
+        if (longNameMap != null)
+            invalidateLookupMaps();
         if (command != null)
             opt.captureInitialValue(command);
     }
@@ -350,6 +361,45 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return hasInheritedOptions;
     }
 
+    private void buildLookupMaps() {
+        List<ProcessedOption> opts = getOptions();
+        Map<String, ProcessedOption> lm = new HashMap<>(opts.size() * 2);
+        Map<String, ProcessedOption> sm = new HashMap<>(opts.size());
+        Map<String, ProcessedOption> nm = new HashMap<>();
+        Map<String, ProcessedOption> bm = new HashMap<>();
+        for (ProcessedOption opt : opts) {
+            if (opt.name() != null && !opt.name().isEmpty()) {
+                lm.put(opt.name(), opt);
+                for (String alias : opt.getAliases()) {
+                    lm.put(alias, opt);
+                }
+            }
+            if (opt.shortName() != null && !opt.shortName().isEmpty()) {
+                sm.put(opt.shortName(), opt);
+            }
+            if (opt.isNegatable() && opt.getNegatedName() != null) {
+                nm.put(opt.getNegatedName(), opt);
+            }
+            if (opt.acceptNameWithoutDashes() && opt.name() != null) {
+                bm.put(opt.name(), opt);
+                for (String alias : opt.getAliases()) {
+                    bm.put(alias, opt);
+                }
+            }
+        }
+        longNameMap = lm;
+        shortNameMap = sm;
+        negatedNameMap = nm;
+        bareNameMap = bm;
+    }
+
+    private void invalidateLookupMaps() {
+        longNameMap = null;
+        shortNameMap = null;
+        negatedNameMap = null;
+        bareNameMap = null;
+    }
+
     public DefaultValueProvider getDefaultValueProvider() {
         return defaultValueProvider;
     }
@@ -418,11 +468,26 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     private char verifyThatNamesAreUnique(char name, String longName) throws OptionParserException {
-        if (longName != null && longName.length() > 0 && findLongOption(longName) != null) {
-            throw new OptionParserException("Option --" + longName + " is already added to Param: " + this.toString());
+        // Use direct linear scan to avoid building lookup maps during construction.
+        // This method is only called from addOption() (reflection path);
+        // the generated path uses addOptionDirect() which skips verification.
+        if (longName != null && longName.length() > 0) {
+            for (ProcessedOption opt : getOptions()) {
+                if (opt.name() != null &&
+                        (opt.name().equals(longName) || opt.hasAlias(longName)) &&
+                        opt.isActivated(new ParsedCommand(this))) {
+                    throw new OptionParserException("Option --" + longName + " is already added to Param: " + this.toString());
+                }
+            }
         }
-        if (name != '\u0000' && findOption(String.valueOf(name)) != null) {
-            throw new OptionParserException("Option -" + name + " is already added to Param: " + this.toString());
+        if (name != '\u0000') {
+            String nameStr = String.valueOf(name);
+            for (ProcessedOption opt : getOptions()) {
+                if (opt.shortName() != null && opt.shortName().equals(nameStr) &&
+                        opt.isActivated(new ParsedCommand(this))) {
+                    throw new OptionParserException("Option -" + name + " is already added to Param: " + this.toString());
+                }
+            }
         }
 
         //if name is null, use one based on name
@@ -433,22 +498,18 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public ProcessedOption findOption(String name) {
-        for (ProcessedOption option : getOptions())
-            if (option.shortName() != null &&
-                    option.shortName().equals(name) &&
-                    option.isActivated(new ParsedCommand(this)))
-                return option;
-
+        if (shortNameMap == null)
+            buildLookupMaps();
+        ProcessedOption opt = shortNameMap.get(name);
+        if (opt != null && opt.isActivated(new ParsedCommand(this)))
+            return opt;
         return null;
     }
 
     public ProcessedOption findOptionNoActivatorCheck(String name) {
-        for (ProcessedOption option : getOptions())
-            if (option.shortName() != null &&
-                    option.shortName().equals(name))
-                return option;
-
-        return null;
+        if (shortNameMap == null)
+            buildLookupMaps();
+        return shortNameMap.get(name);
     }
 
     /**
@@ -506,21 +567,18 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public ProcessedOption findLongOption(String name) {
-        for (ProcessedOption option : getOptions())
-            if (option.name() != null &&
-                    (option.name().equals(name) || option.hasAlias(name)) &&
-                    option.isActivated(new ParsedCommand(this)))
-                return option;
-
+        if (longNameMap == null)
+            buildLookupMaps();
+        ProcessedOption opt = longNameMap.get(name);
+        if (opt != null && opt.isActivated(new ParsedCommand(this)))
+            return opt;
         return null;
     }
 
     public ProcessedOption findLongOptionNoActivatorCheck(String name) {
-        for (ProcessedOption option : getOptions())
-            if (option.name() != null && (option.name().equals(name) || option.hasAlias(name)))
-                return option;
-
-        return null;
+        if (longNameMap == null)
+            buildLookupMaps();
+        return longNameMap.get(name);
     }
 
     /**
@@ -531,13 +589,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return the matching option, or null if not found
      */
     public ProcessedOption findNegatedOption(String name) {
-        for (ProcessedOption option : getOptions()) {
-            if (option.isNegatable() && option.getNegatedName() != null &&
-                    option.getNegatedName().equals(name) &&
-                    option.isActivated(new ParsedCommand(this))) {
-                option.setNegatedByUser(true);
-                return option;
-            }
+        if (negatedNameMap == null)
+            buildLookupMaps();
+        ProcessedOption opt = negatedNameMap.get(name);
+        if (opt != null && opt.isActivated(new ParsedCommand(this))) {
+            opt.setNegatedByUser(true);
+            return opt;
         }
         return null;
     }
@@ -549,23 +606,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return the matching option, or null if not found
      */
     public ProcessedOption findNegatedOptionNoActivatorCheck(String name) {
-        for (ProcessedOption option : getOptions()) {
-            if (option.isNegatable() && option.getNegatedName() != null &&
-                    option.getNegatedName().equals(name)) {
-                option.setNegatedByUser(true);
-                return option;
-            }
+        if (negatedNameMap == null)
+            buildLookupMaps();
+        ProcessedOption opt = negatedNameMap.get(name);
+        if (opt != null) {
+            opt.setNegatedByUser(true);
+            return opt;
         }
         return null;
     }
 
     public ProcessedOption findBareLongOption(String name) {
-        for (ProcessedOption option : getOptions())
-            if (option.name() != null && (option.name().equals(name) || option.hasAlias(name))
-                    && option.acceptNameWithoutDashes())
-                return option;
-
-        return null;
+        if (bareNameMap == null)
+            buildLookupMaps();
+        return bareNameMap.get(name);
     }
 
     public List<TerminalString> findPossibleBareLongNamesWithDash(String name) {
