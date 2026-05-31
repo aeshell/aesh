@@ -2101,6 +2101,113 @@ public class ProcessorTest {
                 dynamicScript.contains("compcmd"));
     }
 
+    // --- Tests: Native image config generation (#481) ---
+
+    @Test
+    public void testReflectConfigForPrivateFields() throws Exception {
+        // SimpleCommand has private fields — should generate reflect-config.json
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SimpleCommand", SIMPLE_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Path reflectConfig = result.outputDir.resolve(
+                "META-INF/native-image/org.aesh/aesh-generated/reflect-config.json");
+        assertTrue("reflect-config.json should exist for commands with private fields",
+                Files.exists(reflectConfig));
+
+        String json = new String(Files.readAllBytes(reflectConfig), StandardCharsets.UTF_8);
+        assertTrue("Should contain SimpleCommand class", json.contains("test.SimpleCommand"));
+        assertTrue("Should contain verbose field", json.contains("\"name\": \"verbose\""));
+        assertTrue("Should contain outputFile field", json.contains("\"name\": \"outputFile\""));
+        assertTrue("Should contain source field", json.contains("\"name\": \"source\""));
+        assertTrue("Should contain allowWrite", json.contains("\"allowWrite\": true"));
+    }
+
+    @Test
+    public void testNoReflectConfigForPublicFields() throws Exception {
+        // ExclusiveCommand has all public fields — should NOT generate reflect-config.json
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ExclusiveCommand", EXCLUSIVE_WITH_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Path reflectConfig = result.outputDir.resolve(
+                "META-INF/native-image/org.aesh/aesh-generated/reflect-config.json");
+        assertFalse("reflect-config.json should NOT exist when all fields are public",
+                Files.exists(reflectConfig));
+    }
+
+    @Test
+    public void testResourceConfigAlwaysGenerated() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ExclusiveCommand", EXCLUSIVE_WITH_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Path resourceConfig = result.outputDir.resolve(
+                "META-INF/native-image/org.aesh/aesh-generated/resource-config.json");
+        assertTrue("resource-config.json should always exist", Files.exists(resourceConfig));
+
+        String json = new String(Files.readAllBytes(resourceConfig), StandardCharsets.UTF_8);
+        assertTrue("Should reference MetadataRegistry service file",
+                json.contains("org.aesh.command.metadata.MetadataRegistry"));
+    }
+
+    @Test
+    public void testReflectConfigForMixinPrivateFields() throws Exception {
+        // MixinCommand has a mixin (LoggingMixin) with package-private fields,
+        // but the mixin itself is package-private in the command. The command's own
+        // fields are private. Let's use a command with a private mixin field.
+        String privateMixinCmd = "package test;\n" +
+                "\n" +
+                "import org.aesh.command.Command;\n" +
+                "import org.aesh.command.CommandDefinition;\n" +
+                "import org.aesh.command.CommandResult;\n" +
+                "import org.aesh.command.invocation.CommandInvocation;\n" +
+                "import org.aesh.command.option.Mixin;\n" +
+                "import org.aesh.command.option.Option;\n" +
+                "\n" +
+                "@CommandDefinition(name = \"privmixin\", description = \"Private mixin\")\n" +
+                "public class PrivateMixinCommand implements Command<CommandInvocation> {\n" +
+                "    @Mixin\n" +
+                "    private LoggingMixin logging;\n" +
+                "\n" +
+                "    @Option(description = \"Name\")\n" +
+                "    private String name;\n" +
+                "\n" +
+                "    @Override\n" +
+                "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+                "}\n";
+
+        String loggingMixin = "package test;\n" +
+                "\n" +
+                "import org.aesh.command.option.Option;\n" +
+                "\n" +
+                "public class LoggingMixinPrivate {\n" +
+                "    @Option(description = \"Verbose\", hasValue = false)\n" +
+                "    private boolean verbose;\n" +
+                "}\n";
+
+        // Adjust the mixin reference
+        privateMixinCmd = privateMixinCmd.replace("LoggingMixin", "LoggingMixinPrivate");
+
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.LoggingMixinPrivate", loggingMixin),
+                new InMemorySource("test.PrivateMixinCommand", privateMixinCmd));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Path reflectConfig = result.outputDir.resolve(
+                "META-INF/native-image/org.aesh/aesh-generated/reflect-config.json");
+        assertTrue("reflect-config.json should exist", Files.exists(reflectConfig));
+
+        String json = new String(Files.readAllBytes(reflectConfig), StandardCharsets.UTF_8);
+        // Command class should have entries for private mixin field and private name field
+        assertTrue("Should contain PrivateMixinCommand", json.contains("test.PrivateMixinCommand"));
+        assertTrue("Should contain logging field (private mixin)", json.contains("\"name\": \"logging\""));
+        assertTrue("Should contain name field", json.contains("\"name\": \"name\""));
+        // Mixin class should have entry for its private verbose field
+        assertTrue("Should contain LoggingMixinPrivate", json.contains("test.LoggingMixinPrivate"));
+        assertTrue("Should contain verbose field", json.contains("\"name\": \"verbose\""));
+    }
+
     // --- Test: Generated _AeshMetadataRegistry ---
 
     @Test

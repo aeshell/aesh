@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedOptions;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
@@ -64,8 +66,17 @@ import org.aesh.command.GroupCommandDefinition;
         "org.aesh.command.CommandDefinition",
         "org.aesh.command.GroupCommandDefinition"
 })
+@SupportedOptions({
+        AeshAnnotationProcessor.OPT_PROJECT,
+        AeshAnnotationProcessor.OPT_DISABLE_NATIVE_IMAGE
+})
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class AeshAnnotationProcessor extends AbstractProcessor {
+
+    /** Processor option: subdirectory name for native-image config output. */
+    static final String OPT_PROJECT = "aeshNativeImageProject";
+    /** Processor option: set to "true" to skip native-image config generation. */
+    static final String OPT_DISABLE_NATIVE_IMAGE = "aeshNativeImageDisable";
 
     private Filer filer;
     private Messager messager;
@@ -75,6 +86,8 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     /** Pairs of (binaryClassName, metadataSimpleName) for the registry switch. */
     private final List<String[]> registryEntries = new ArrayList<>();
     private String registryPackage;
+    /** Private fields needing reflection config, grouped by declaring class name. */
+    private final Map<String, Set<String>> reflectConfigEntries = new LinkedHashMap<>();
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -91,6 +104,7 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
             if (!registryEntries.isEmpty()) {
                 generateRegistryClass();
                 writeServiceFile();
+                writeNativeImageConfigs();
             }
             return false;
         }
@@ -263,6 +277,9 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         if (registryPackage == null) {
             registryPackage = packageName;
         }
+
+        // Collect private fields for native-image reflect-config.json
+        collectPrivateFieldsForReflectConfig(fields);
     }
 
     @SuppressWarnings("unchecked")
@@ -281,6 +298,77 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
             }
         }
         return false;
+    }
+
+    private void collectPrivateFieldsForReflectConfig(List<VariableElement> fields) {
+        for (VariableElement field : fields) {
+            if (field.getModifiers().contains(Modifier.PRIVATE) && hasAeshAnnotation(field)) {
+                String declaringClass = ((TypeElement) field.getEnclosingElement()).getQualifiedName().toString();
+                reflectConfigEntries.computeIfAbsent(declaringClass, k -> new LinkedHashSet<>())
+                        .add(field.getSimpleName().toString());
+            }
+            if (field.getAnnotation(org.aesh.command.option.Mixin.class) != null) {
+                // Private mixin field itself
+                if (field.getModifiers().contains(Modifier.PRIVATE)) {
+                    String declaringClass = ((TypeElement) field.getEnclosingElement()).getQualifiedName().toString();
+                    reflectConfigEntries.computeIfAbsent(declaringClass, k -> new LinkedHashSet<>())
+                            .add(field.getSimpleName().toString());
+                }
+                // Private fields inside the mixin class
+                TypeMirror mixinType = field.asType();
+                if (mixinType instanceof javax.lang.model.type.DeclaredType) {
+                    TypeElement mixinElement = (TypeElement) ((javax.lang.model.type.DeclaredType) mixinType).asElement();
+                    collectMixinPrivateFieldsForReflectConfig(mixinElement);
+                }
+            }
+            if (field.getAnnotation(org.aesh.command.option.ParentCommand.class) != null
+                    && field.getModifiers().contains(Modifier.PRIVATE)) {
+                String declaringClass = ((TypeElement) field.getEnclosingElement()).getQualifiedName().toString();
+                reflectConfigEntries.computeIfAbsent(declaringClass, k -> new LinkedHashSet<>())
+                        .add(field.getSimpleName().toString());
+            }
+        }
+    }
+
+    private void collectMixinPrivateFieldsForReflectConfig(TypeElement mixinElement) {
+        for (Element enclosed : mixinElement.getEnclosedElements()) {
+            if (enclosed.getKind() == ElementKind.FIELD) {
+                VariableElement f = (VariableElement) enclosed;
+                if (f.getModifiers().contains(Modifier.PRIVATE) && hasAeshAnnotation(f)) {
+                    String declaringClass = mixinElement.getQualifiedName().toString();
+                    reflectConfigEntries.computeIfAbsent(declaringClass, k -> new LinkedHashSet<>())
+                            .add(f.getSimpleName().toString());
+                }
+                if (f.getAnnotation(org.aesh.command.option.Mixin.class) != null) {
+                    if (f.getModifiers().contains(Modifier.PRIVATE)) {
+                        reflectConfigEntries
+                                .computeIfAbsent(mixinElement.getQualifiedName().toString(), k -> new LinkedHashSet<>())
+                                .add(f.getSimpleName().toString());
+                    }
+                    TypeMirror nestedType = f.asType();
+                    if (nestedType instanceof javax.lang.model.type.DeclaredType) {
+                        collectMixinPrivateFieldsForReflectConfig(
+                                (TypeElement) ((javax.lang.model.type.DeclaredType) nestedType).asElement());
+                    }
+                }
+            }
+        }
+        // Walk superclass
+        TypeMirror superclass = mixinElement.getSuperclass();
+        if (superclass.getKind() != TypeKind.NONE && !superclass.toString().equals("java.lang.Object")) {
+            if (superclass instanceof javax.lang.model.type.DeclaredType) {
+                collectMixinPrivateFieldsForReflectConfig(
+                        (TypeElement) ((javax.lang.model.type.DeclaredType) superclass).asElement());
+            }
+        }
+    }
+
+    private boolean hasAeshAnnotation(VariableElement field) {
+        return field.getAnnotation(org.aesh.command.option.Option.class) != null
+                || field.getAnnotation(org.aesh.command.option.OptionList.class) != null
+                || field.getAnnotation(org.aesh.command.option.OptionGroup.class) != null
+                || field.getAnnotation(org.aesh.command.option.Argument.class) != null
+                || field.getAnnotation(org.aesh.command.option.Arguments.class) != null;
     }
 
     private void generateRegistryClass() {
@@ -314,6 +402,78 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         } catch (IOException e) {
             messager.printMessage(Diagnostic.Kind.ERROR,
                     "Failed to write ServiceLoader file: " + e.getMessage());
+        }
+    }
+
+    private void writeNativeImageConfigs() {
+        String disableOpt = processingEnv.getOptions().get(OPT_DISABLE_NATIVE_IMAGE);
+        if ("true".equalsIgnoreCase(disableOpt))
+            return;
+
+        String project = processingEnv.getOptions().get(OPT_PROJECT);
+        if (project == null || project.isEmpty())
+            project = "aesh-generated";
+        String configDir = "META-INF/native-image/org.aesh/" + project;
+
+        // Always write resource-config.json (ServiceLoader descriptor must be included)
+        writeResourceConfig(configDir);
+
+        // Only write reflect-config.json if there are private fields
+        if (!reflectConfigEntries.isEmpty()) {
+            writeReflectConfig(configDir);
+        }
+    }
+
+    private void writeReflectConfig(String configDir) {
+        try {
+            javax.tools.FileObject file = filer.createResource(
+                    javax.tools.StandardLocation.CLASS_OUTPUT, "",
+                    configDir + "/reflect-config.json");
+            try (Writer writer = file.openWriter()) {
+                writer.write("[\n");
+                int classIdx = 0;
+                for (Map.Entry<String, Set<String>> entry : reflectConfigEntries.entrySet()) {
+                    if (classIdx > 0)
+                        writer.write(",\n");
+                    writer.write("  {\n");
+                    writer.write("    \"name\": \"" + entry.getKey() + "\",\n");
+                    writer.write("    \"fields\": [\n");
+                    int fieldIdx = 0;
+                    for (String fieldName : entry.getValue()) {
+                        if (fieldIdx > 0)
+                            writer.write(",\n");
+                        writer.write("      {\"name\": \"" + fieldName + "\", \"allowWrite\": true}");
+                        fieldIdx++;
+                    }
+                    writer.write("\n    ]\n");
+                    writer.write("  }");
+                    classIdx++;
+                }
+                writer.write("\n]\n");
+            }
+        } catch (IOException e) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "Failed to write reflect-config.json: " + e.getMessage());
+        }
+    }
+
+    private void writeResourceConfig(String configDir) {
+        try {
+            javax.tools.FileObject file = filer.createResource(
+                    javax.tools.StandardLocation.CLASS_OUTPUT, "",
+                    configDir + "/resource-config.json");
+            try (Writer writer = file.openWriter()) {
+                writer.write("{\n");
+                writer.write("  \"resources\": {\n");
+                writer.write("    \"includes\": [\n");
+                writer.write("      {\"pattern\": \"META-INF/services/org.aesh.command.metadata.MetadataRegistry\"}\n");
+                writer.write("    ]\n");
+                writer.write("  }\n");
+                writer.write("}\n");
+            }
+        } catch (IOException e) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "Failed to write resource-config.json: " + e.getMessage());
         }
     }
 }
