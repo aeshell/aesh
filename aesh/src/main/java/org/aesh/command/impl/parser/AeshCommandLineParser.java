@@ -312,13 +312,16 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
         if (hasChildren || hasAdditional) {
             String helpText = processedCommand.printHelp(helpNames(), false, showAll);
-            // Append [COMMAND] to the synopsis line for group commands.
+            // Append [COMMAND] at the end of the synopsis block for group commands.
+            // The synopsis may wrap across multiple lines; the block ends at
+            // the first blank line (double line separator) after "Usage:".
             int usageIdx = helpText.indexOf("Usage:");
             if (usageIdx >= 0 && hasChildren) {
-                int usageEnd = helpText.indexOf(Config.getLineSeparator(), usageIdx);
-                if (usageEnd > 0) {
-                    helpText = helpText.substring(0, usageEnd) + " [COMMAND]"
-                            + helpText.substring(usageEnd);
+                String sep = Config.getLineSeparator();
+                int synopsisEnd = helpText.indexOf(sep + sep, usageIdx);
+                if (synopsisEnd > 0) {
+                    helpText = helpText.substring(0, synopsisEnd) + " [COMMAND]"
+                            + helpText.substring(synopsisEnd);
                 }
             }
 

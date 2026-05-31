@@ -185,6 +185,41 @@ public class CommandLineFormatterTest {
     }
 
     @Test
+    public void testCommandAppearsAfterAllOptions() throws CommandLineParserException {
+        // Create a group command with many options to trigger synopsis wrapping (#479)
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> cmd = ProcessedCommandBuilder.builder()
+                .name("acp").description("acp tool");
+        for (String optName : new String[] { "agent", "agent-binary", "agent-args", "prompt",
+                "model", "provider", "request-timeout", "prompt-timeout", "permission-mode",
+                "backup", "workspace-path", "skill-path", "log-level" }) {
+            cmd.addOption(ProcessedOptionBuilder.builder()
+                    .name(optName).description("Option " + optName).type(String.class).build());
+        }
+
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> sub = ProcessedCommandBuilder.builder()
+                .name("registry").description("Registry sub");
+
+        CommandLineParser<CommandInvocation> clpCmd = new AeshCommandLineParser<>(cmd.create());
+        CommandLineParser<CommandInvocation> clpSub = new AeshCommandLineParser<>(sub.create());
+        clpCmd.updateAnsiMode(false);
+        clpSub.updateAnsiMode(false);
+        clpCmd.addChildParser(clpSub);
+
+        String help = clpCmd.printHelp();
+        // [COMMAND] should appear AFTER the last option in the synopsis, not in the middle
+        int commandIdx = help.indexOf("[COMMAND]");
+        int lastOptionInSynopsis = help.lastIndexOf("]", commandIdx);
+        assertTrue("[COMMAND] should exist in help", commandIdx > 0);
+        // Find where the synopsis block ends (blank line)
+        String sep = System.lineSeparator();
+        int synopsisEnd = help.indexOf(sep + sep);
+        assertTrue("[COMMAND] should be within the synopsis block", commandIdx < synopsisEnd);
+        // [COMMAND] should be after the last option bracket in the synopsis
+        assertTrue("[COMMAND] at " + commandIdx + " should appear after last option ] at " + lastOptionInSynopsis,
+                commandIdx > lastOptionInSynopsis);
+    }
+
+    @Test
     public void testChildFormatter() throws InterruptedException {
         TestConnection connection = new TestConnection();
 
