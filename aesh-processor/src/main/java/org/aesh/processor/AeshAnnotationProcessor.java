@@ -72,6 +72,9 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Types typeUtils;
     private final List<String> generatedProviders = new ArrayList<>();
+    /** Pairs of (binaryClassName, metadataSimpleName) for the registry switch. */
+    private final List<String[]> registryEntries = new ArrayList<>();
+    private String registryPackage;
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -85,7 +88,8 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver()) {
-            if (!generatedProviders.isEmpty()) {
+            if (!registryEntries.isEmpty()) {
+                generateRegistryClass();
                 writeServiceFile();
             }
             return false;
@@ -250,6 +254,15 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         }
 
         generatedProviders.add(fullMetadataName);
+
+        // Collect registry entry: binary name (with $ for inner classes) -> fully-qualified metadata class name
+        String binaryName = elementUtils.getBinaryName(commandElement).toString();
+        registryEntries.add(new String[] { binaryName, fullMetadataName });
+
+        // Use the first package we see as the registry package
+        if (registryPackage == null) {
+            registryPackage = packageName;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -270,16 +283,33 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         return false;
     }
 
+    private void generateRegistryClass() {
+        String pkg = registryPackage != null ? registryPackage : "";
+        String registryCode = CodeGenerator.generateRegistry(pkg, registryEntries);
+        String fullRegistryName = pkg.isEmpty() ? "_AeshMetadataRegistry" : pkg + "._AeshMetadataRegistry";
+
+        try {
+            JavaFileObject sourceFile = filer.createSourceFile(fullRegistryName);
+            try (Writer writer = sourceFile.openWriter()) {
+                writer.write(registryCode);
+            }
+        } catch (IOException e) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "Failed to generate metadata registry: " + e.getMessage());
+        }
+    }
+
     private void writeServiceFile() {
+        String pkg = registryPackage != null ? registryPackage : "";
+        String fullRegistryName = pkg.isEmpty() ? "_AeshMetadataRegistry" : pkg + "._AeshMetadataRegistry";
+
         try {
             javax.tools.FileObject serviceFile = filer.createResource(
                     javax.tools.StandardLocation.CLASS_OUTPUT, "",
-                    "META-INF/services/org.aesh.command.metadata.CommandMetadataProvider");
+                    "META-INF/services/org.aesh.command.metadata.MetadataRegistry");
             try (Writer writer = serviceFile.openWriter()) {
-                for (String provider : generatedProviders) {
-                    writer.write(provider);
-                    writer.write("\n");
-                }
+                writer.write(fullRegistryName);
+                writer.write("\n");
             }
         } catch (IOException e) {
             messager.printMessage(Diagnostic.Kind.ERROR,

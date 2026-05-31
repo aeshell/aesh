@@ -48,6 +48,7 @@ import org.aesh.command.impl.internal.GeneratedProcessedOption;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.metadata.CommandMetadataProvider;
+import org.aesh.command.metadata.MetadataRegistry;
 import org.junit.Test;
 
 /**
@@ -2098,6 +2099,125 @@ public class ProcessorTest {
                 dynamicScript.contains("--aesh-complete"));
         assertTrue("Dynamic script should contain compcmd",
                 dynamicScript.contains("compcmd"));
+    }
+
+    // --- Test: Generated _AeshMetadataRegistry ---
+
+    @Test
+    public void testRegistryGenerated() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SimpleCommand", SIMPLE_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        // The processor should generate _AeshMetadataRegistry
+        Class<?> registryClass = result.classLoader.loadClass("test._AeshMetadataRegistry");
+        assertNotNull("Registry class should be generated", registryClass);
+
+        // It should implement MetadataRegistry
+        assertTrue("Registry should implement MetadataRegistry",
+                MetadataRegistry.class.isAssignableFrom(registryClass));
+
+        // Instantiate and look up by binary class name
+        MetadataRegistry registry = (MetadataRegistry) registryClass.newInstance();
+        CommandMetadataProvider<?> provider = registry.get("test.SimpleCommand");
+        assertNotNull("Registry should return provider for test.SimpleCommand", provider);
+        assertEquals("simple", provider.commandName());
+
+        // Unknown class should return null
+        CommandMetadataProvider<?> missing = registry.get("test.NonExistent");
+        assertTrue("Registry should return null for unknown class", missing == null);
+    }
+
+    @Test
+    public void testRegistryWithMultipleCommands() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SubCommand1", SUB_COMMAND1_SOURCE),
+                new InMemorySource("test.SubCommand2", SUB_COMMAND2_SOURCE),
+                new InMemorySource("test.GroupTestCommand", GROUP_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> registryClass = result.classLoader.loadClass("test._AeshMetadataRegistry");
+        MetadataRegistry registry = (MetadataRegistry) registryClass.newInstance();
+
+        // All three commands should be in the registry
+        assertNotNull("Should find SubCommand1", registry.get("test.SubCommand1"));
+        assertNotNull("Should find SubCommand2", registry.get("test.SubCommand2"));
+        assertNotNull("Should find GroupTestCommand", registry.get("test.GroupTestCommand"));
+
+        assertEquals("sub1", registry.get("test.SubCommand1").commandName());
+        assertEquals("sub2", registry.get("test.SubCommand2").commandName());
+        assertEquals("group", registry.get("test.GroupTestCommand").commandName());
+    }
+
+    @Test
+    public void testRegistryServiceFile() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SimpleCommand", SIMPLE_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        // Verify the service file lists MetadataRegistry, not CommandMetadataProvider
+        Path serviceFile = result.outputDir.resolve(
+                "META-INF/services/org.aesh.command.metadata.MetadataRegistry");
+        assertTrue("MetadataRegistry service file should exist", Files.exists(serviceFile));
+        String content = new String(Files.readAllBytes(serviceFile), StandardCharsets.UTF_8).trim();
+        assertEquals("Service file should list the registry",
+                "test._AeshMetadataRegistry", content);
+
+        // Old service file should NOT exist
+        Path oldServiceFile = result.outputDir.resolve(
+                "META-INF/services/org.aesh.command.metadata.CommandMetadataProvider");
+        assertFalse("Old CommandMetadataProvider service file should NOT exist",
+                Files.exists(oldServiceFile));
+    }
+
+    // --- Test: Inner class command uses binary name in registry ---
+
+    private static final String INNER_CLASS_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class Outer {\n" +
+            "    @CommandDefinition(name = \"inner\", description = \"Inner class command\")\n" +
+            "    public static class InnerCommand implements Command<CommandInvocation> {\n" +
+            "        @Option(description = \"Name\")\n" +
+            "        public String name;\n" +
+            "\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation ci) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testInnerClassCommandInRegistry() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.Outer", INNER_CLASS_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        // The metadata class should be Outer_InnerCommand_AeshMetadata (top-level)
+        Class<?> metadataClass = result.classLoader.loadClass("test.Outer_InnerCommand_AeshMetadata");
+        assertNotNull("Metadata class should exist for inner class command", metadataClass);
+
+        // The registry should use the binary name (with $) as the key
+        Class<?> registryClass = result.classLoader.loadClass("test._AeshMetadataRegistry");
+        MetadataRegistry registry = (MetadataRegistry) registryClass.newInstance();
+
+        // Binary name uses $ for inner classes
+        CommandMetadataProvider<?> provider = registry.get("test.Outer$InnerCommand");
+        assertNotNull("Registry should find inner class by binary name (with $)", provider);
+        assertEquals("inner", provider.commandName());
+
+        // Canonical name (with .) should NOT match
+        CommandMetadataProvider<?> wrongLookup = registry.get("test.Outer.InnerCommand");
+        assertTrue("Registry should NOT find inner class by canonical name (with .)", wrongLookup == null);
+
+        // Verify the provider works
+        assertEquivalence(result.classLoader.loadClass("test.Outer$InnerCommand"), metadataClass);
     }
 
     // --- Equivalence assertion ---

@@ -17,27 +17,40 @@
  */
 package org.aesh.command.metadata;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.aesh.command.Command;
 
 /**
- * Registry that discovers and caches {@link CommandMetadataProvider} implementations
- * via {@link ServiceLoader}. Thread-safe with lazy initialization.
+ * Registry that discovers {@link MetadataRegistry} implementations via
+ * {@link ServiceLoader} and lazily looks up {@link CommandMetadataProvider}
+ * instances on demand. Only the requested command's metadata class is loaded
+ * and instantiated — other commands remain untouched.
+ * <p>
+ * Thread-safe with lazy initialization and per-command caching.
  *
  * @author Aesh team
  */
 public final class MetadataProviderRegistry {
 
-    private static volatile Map<Class<?>, CommandMetadataProvider<?>> providers;
+    private static volatile List<MetadataRegistry> registries;
+    private static final ConcurrentHashMap<Class<?>, CommandMetadataProvider<?>> cache = new ConcurrentHashMap<>();
+
+    /** Sentinel value cached when no provider exists for a command class. */
+    private static final CommandMetadataProvider<?> ABSENT = null;
 
     private MetadataProviderRegistry() {
     }
 
     /**
      * Look up a provider for the given command class.
+     * <p>
+     * On first call for a given class, queries all discovered
+     * {@link MetadataRegistry} instances. The result is cached for
+     * subsequent lookups.
      *
      * @param commandClass the command class to look up
      * @param <C> the command type
@@ -45,31 +58,43 @@ public final class MetadataProviderRegistry {
      */
     @SuppressWarnings("unchecked")
     public static <C extends Command> CommandMetadataProvider<C> getProvider(Class<C> commandClass) {
-        return (CommandMetadataProvider<C>) getProviders().get(commandClass);
+        CommandMetadataProvider<?> cached = cache.get(commandClass);
+        if (cached != null) {
+            return (CommandMetadataProvider<C>) cached;
+        }
+
+        String className = commandClass.getName();
+        for (MetadataRegistry registry : getRegistries()) {
+            CommandMetadataProvider<?> provider = registry.get(className);
+            if (provider != null) {
+                cache.put(commandClass, provider);
+                return (CommandMetadataProvider<C>) provider;
+            }
+        }
+        return null;
     }
 
-    private static Map<Class<?>, CommandMetadataProvider<?>> getProviders() {
-        Map<Class<?>, CommandMetadataProvider<?>> result = providers;
+    private static List<MetadataRegistry> getRegistries() {
+        List<MetadataRegistry> result = registries;
         if (result == null) {
             synchronized (MetadataProviderRegistry.class) {
-                result = providers;
+                result = registries;
                 if (result == null) {
-                    result = loadProviders();
-                    providers = result;
+                    result = loadRegistries();
+                    registries = result;
                 }
             }
         }
         return result;
     }
 
-    @SuppressWarnings("rawtypes")
-    private static Map<Class<?>, CommandMetadataProvider<?>> loadProviders() {
-        Map<Class<?>, CommandMetadataProvider<?>> map = new ConcurrentHashMap<>();
-        ServiceLoader<CommandMetadataProvider> loader = ServiceLoader.load(CommandMetadataProvider.class);
-        for (CommandMetadataProvider provider : loader) {
-            map.put(provider.commandType(), provider);
+    private static List<MetadataRegistry> loadRegistries() {
+        List<MetadataRegistry> list = new ArrayList<>();
+        ServiceLoader<MetadataRegistry> loader = ServiceLoader.load(MetadataRegistry.class);
+        for (MetadataRegistry registry : loader) {
+            list.add(registry);
         }
-        return map;
+        return list;
     }
 
     /**
@@ -78,7 +103,8 @@ public final class MetadataProviderRegistry {
      */
     static void reset() {
         synchronized (MetadataProviderRegistry.class) {
-            providers = null;
+            registries = null;
         }
+        cache.clear();
     }
 }
