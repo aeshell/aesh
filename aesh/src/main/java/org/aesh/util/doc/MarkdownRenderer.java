@@ -67,8 +67,9 @@ class MarkdownRenderer implements DocRenderer {
         sb.append(buildSynopsis(parser, fullName));
         sb.append("\n```\n\n");
 
-        // Description
-        if (description != null && !description.isEmpty()) {
+        // Description — only rendered if the description contains
+        // multi-line content beyond the one-liner already shown in the NAME section.
+        if (description != null && !description.isEmpty() && description.contains("\n")) {
             sb.append("## DESCRIPTION\n\n");
             sb.append(description).append("\n\n");
         }

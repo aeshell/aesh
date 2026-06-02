@@ -68,8 +68,9 @@ class AsciidocRenderer implements DocRenderer {
         sb.append("== SYNOPSIS\n\n");
         sb.append(buildSynopsis(parser, fullName)).append("\n\n");
 
-        // Description section
-        if (description != null && !description.isEmpty()) {
+        // Description section — only rendered if the description contains
+        // multi-line content beyond the one-liner already shown in the NAME section.
+        if (description != null && !description.isEmpty() && description.contains("\n")) {
             sb.append("== DESCRIPTION\n\n");
             sb.append(description).append("\n\n");
         }

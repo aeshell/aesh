@@ -131,7 +131,9 @@ public class DocumentationGeneratorTest {
         assertTrue("Should contain title", doc.contains("= DEPLOY"));
         assertTrue("Should contain NAME section", doc.contains("== NAME"));
         assertTrue("Should contain SYNOPSIS section", doc.contains("== SYNOPSIS"));
-        assertTrue("Should contain DESCRIPTION section", doc.contains("== DESCRIPTION"));
+        // DESCRIPTION section is omitted when it would just repeat the one-liner from NAME
+        assertFalse("Single-line description should NOT have separate DESCRIPTION section",
+                doc.contains("== DESCRIPTION"));
         assertTrue("Should contain OPTIONS section", doc.contains("== OPTIONS"));
         assertTrue("Should contain ARGUMENTS section", doc.contains("== ARGUMENTS"));
 
@@ -165,6 +167,12 @@ public class DocumentationGeneratorTest {
         assertTrue("Should contain sub2 link", doc.contains("sub2"));
         assertTrue("Should contain subcommand description", doc.contains("First subcommand"));
         assertTrue("Should contain [COMMAND] in synopsis", doc.contains("[COMMAND]"));
+
+        // Subcommand documentation should be included inline (#483)
+        assertTrue("Should contain sub1 title", doc.contains("= APP-SUB1"));
+        assertTrue("Should contain sub2 title", doc.contains("= APP-SUB2"));
+        assertTrue("Should contain sub1 NAME section", doc.contains("app sub1 -- First subcommand"));
+        assertTrue("Should contain sub2 NAME section", doc.contains("app sub2 -- Second subcommand"));
     }
 
     @Test

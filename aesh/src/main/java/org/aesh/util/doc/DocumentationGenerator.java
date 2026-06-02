@@ -79,13 +79,29 @@ public class DocumentationGenerator {
 
     /**
      * Generate documentation for a single command (and its subcommands) to a string.
+     * For group commands, subcommand documentation is appended after the parent.
      * Useful for stdout output or testing.
      */
     public String generateSingle() {
         DocRenderer renderer = createRenderer();
-        HelpSectionContent helpContent = resolveHelpContent(parser, programName, null);
-        NameContext nameCtx = buildNameContext(parser, programName, null);
-        return renderer.renderCommand(parser, programName, null, helpContent, nameCtx);
+        StringBuilder sb = new StringBuilder();
+        generateSingleRecursive(parser, programName, null, renderer, sb);
+        return sb.toString();
+    }
+
+    private void generateSingleRecursive(CommandLineParser<?> parser, String fullName,
+            String parentName, DocRenderer renderer, StringBuilder sb) {
+        HelpSectionContent helpContent = resolveHelpContent(parser, fullName, parentName);
+        NameContext nameCtx = buildNameContext(parser, fullName, parentName);
+        sb.append(renderer.renderCommand(parser, fullName, parentName, helpContent, nameCtx));
+
+        if (parser.isGroupCommand()) {
+            for (CommandLineParser<?> child : parser.getAllChildParsers()) {
+                String childFullName = fullName + "-" + child.getProcessedCommand().name();
+                sb.append("\n");
+                generateSingleRecursive(child, childFullName, fullName, renderer, sb);
+            }
+        }
     }
 
     /**
