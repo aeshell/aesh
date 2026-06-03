@@ -17,14 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.aesh.util.doc;
+package org.aesh.command;
 
 /**
  * Output format for documentation generation.
+ * Also used by {@link HelpSectionProvider} to provide format-specific content.
  */
 public enum DocFormat {
     ASCIIDOC("adoc"),
-    MARKDOWN("md");
+    MARKDOWN("md"),
+    /** Structured Markdown with YAML front matter, optimized for AI agent consumption. */
+    SKILL("md");
 
     private final String extension;
 

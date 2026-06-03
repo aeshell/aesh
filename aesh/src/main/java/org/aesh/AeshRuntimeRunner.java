@@ -483,11 +483,11 @@ public class AeshRuntimeRunner {
      */
     @SuppressWarnings("unchecked")
     private CommandResult handleBuiltinDoc(CommandRegistry commandRegistry) {
-        org.aesh.util.doc.DocFormat format = org.aesh.util.doc.DocFormat.ASCIIDOC;
+        org.aesh.command.DocFormat format = org.aesh.command.DocFormat.ASCIIDOC;
 
         for (int i = 1; i < args.length; i++) {
             try {
-                format = org.aesh.util.doc.DocFormat.valueOf(args[i].toUpperCase());
+                format = org.aesh.command.DocFormat.valueOf(args[i].toUpperCase());
             } catch (IllegalArgumentException e) {
                 System.err.println("Unknown doc format: " + args[i]
                         + ". Supported: asciidoc, markdown");

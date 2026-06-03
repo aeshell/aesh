@@ -31,6 +31,12 @@ import java.util.Map;
  * <p>
  * Only invoked at help-render time — no startup cost.
  * </p>
+ * <p>
+ * Format-aware overloads allow providing different content for different
+ * output formats (e.g., AI skill documentation vs human-readable help).
+ * The default implementations delegate to the parameterless methods,
+ * so existing implementations are fully backward compatible.
+ * </p>
  *
  * @author Aesh team
  */
@@ -69,6 +75,71 @@ public interface HelpSectionProvider {
      * @return footer text, or null if no footer should be shown
      */
     default String getFooter() {
+        return null;
+    }
+
+    // --- Format-aware overloads ---
+
+    /**
+     * Returns format-specific additional sections.
+     * Override this to provide different sections for different output formats
+     * (e.g., AI-specific examples for {@link DocFormat#SKILL}).
+     *
+     * @param format the documentation output format
+     * @return map of section name to help entries, never null
+     */
+    default Map<String, List<HelpEntry>> getAdditionalSections(DocFormat format) {
+        return getAdditionalSections();
+    }
+
+    /**
+     * Returns format-specific header text.
+     *
+     * @param format the documentation output format
+     * @return header text, or null if no header should be shown
+     */
+    default String getHeader(DocFormat format) {
+        return getHeader();
+    }
+
+    /**
+     * Returns format-specific footer text.
+     *
+     * @param format the documentation output format
+     * @return footer text, or null if no footer should be shown
+     */
+    default String getFooter(DocFormat format) {
+        return getFooter();
+    }
+
+    /**
+     * Returns a format-specific description override for the command.
+     * When non-null, this replaces the {@code @CommandDefinition(description=...)}
+     * value in the generated documentation.
+     * <p>
+     * This is useful for AI skill documentation where the description
+     * should explain both what the command does and when to use it,
+     * which differs from the terse description shown in {@code --help}.
+     *
+     * @param format the documentation output format
+     * @return description override, or null to use the annotation description
+     */
+    default String getDescription(DocFormat format) {
+        return null;
+    }
+
+    /**
+     * Returns additional YAML front matter key-value pairs for formats
+     * that support it (e.g., {@link DocFormat#SKILL}).
+     * <p>
+     * Standard fields like {@code name} and {@code description} are
+     * generated automatically. Use this for optional fields like
+     * {@code license}, {@code compatibility}, or {@code metadata}.
+     *
+     * @param format the documentation output format
+     * @return map of front matter keys to values, or null
+     */
+    default Map<String, String> getFrontMatter(DocFormat format) {
         return null;
     }
 }

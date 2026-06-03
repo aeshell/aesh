@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.aesh.command.Command;
+import org.aesh.command.DocFormat;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.container.CommandContainer;
@@ -149,6 +150,7 @@ public class DocumentationGenerator {
 
     /**
      * Resolves HelpSectionProvider content from a parser, with variable interpolation.
+     * Uses format-aware provider methods when available.
      */
     private HelpSectionContent resolveHelpContent(CommandLineParser<?> parser,
             String fullName, String parentName) {
@@ -168,12 +170,18 @@ public class DocumentationGenerator {
         }
 
         // Resolve ${COMMAND-NAME}, ${ROOT-COMMAND-NAME} etc. in provider content
+        // Use format-aware methods so providers can return format-specific content
         String commandName = parser.getProcessedCommand().name();
-        String header = resolveVariables(provider.getHeader(), commandName, fullName, parentName);
-        String footer = resolveVariables(provider.getFooter(), commandName, fullName, parentName);
+        String header = resolveVariables(provider.getHeader(format), commandName, fullName, parentName);
+        String footer = resolveVariables(provider.getFooter(format), commandName, fullName, parentName);
+        String descriptionOverride = provider.getDescription(format);
+        if (descriptionOverride != null) {
+            descriptionOverride = resolveVariables(descriptionOverride, commandName, fullName, parentName);
+        }
+        Map<String, String> frontMatter = provider.getFrontMatter(format);
 
         // Resolve variables in additional section entries
-        Map<String, List<HelpEntry>> sections = provider.getAdditionalSections();
+        Map<String, List<HelpEntry>> sections = provider.getAdditionalSections(format);
         if (sections != null && !sections.isEmpty()) {
             Map<String, List<HelpEntry>> resolved = new java.util.LinkedHashMap<>();
             for (Map.Entry<String, List<HelpEntry>> entry : sections.entrySet()) {
@@ -188,7 +196,7 @@ public class DocumentationGenerator {
             sections = resolved;
         }
 
-        return new HelpSectionContent(header, footer, sections);
+        return new HelpSectionContent(header, footer, sections, descriptionOverride, frontMatter);
     }
 
     private NameContext buildNameContext(CommandLineParser<?> parser, String fullName, String parentName) {
@@ -238,16 +246,27 @@ public class DocumentationGenerator {
      * Resolved content from a HelpSectionProvider.
      */
     static class HelpSectionContent {
-        static final HelpSectionContent EMPTY = new HelpSectionContent(null, null, Collections.emptyMap());
+        static final HelpSectionContent EMPTY = new HelpSectionContent(null, null, Collections.emptyMap(), null, null);
 
         final String header;
         final String footer;
         final Map<String, List<HelpEntry>> additionalSections;
+        /** Format-specific description override, or null to use annotation description. */
+        final String descriptionOverride;
+        /** Additional YAML front matter key-value pairs, or null. */
+        final Map<String, String> frontMatter;
 
         HelpSectionContent(String header, String footer, Map<String, List<HelpEntry>> additionalSections) {
+            this(header, footer, additionalSections, null, null);
+        }
+
+        HelpSectionContent(String header, String footer, Map<String, List<HelpEntry>> additionalSections,
+                String descriptionOverride, Map<String, String> frontMatter) {
             this.header = header;
             this.footer = footer;
             this.additionalSections = additionalSections != null ? additionalSections : Collections.emptyMap();
+            this.descriptionOverride = descriptionOverride;
+            this.frontMatter = frontMatter;
         }
     }
 
@@ -257,6 +276,8 @@ public class DocumentationGenerator {
                 return new AsciidocRenderer(crossRefPrefix);
             case MARKDOWN:
                 return new MarkdownRenderer(crossRefPrefix);
+            case SKILL:
+                return new SkillRenderer();
             default:
                 throw new IllegalArgumentException("Unknown format: " + format);
         }

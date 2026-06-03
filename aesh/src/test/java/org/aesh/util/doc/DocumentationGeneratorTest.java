@@ -31,6 +31,7 @@ import java.util.Map;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.DocFormat;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
@@ -528,6 +529,177 @@ public class DocumentationGeneratorTest {
         } finally {
             Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
                     .map(Path::toFile).forEach(File::delete);
+        }
+    }
+
+    // --- Tests for SKILL format (#486) ---
+
+    @Test
+    public void testSkillFormatSimpleCommand() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(DeployCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        assertNotNull(doc);
+        // YAML front matter
+        assertTrue("Should start with YAML front matter", doc.startsWith("---\n"));
+        assertTrue("Should contain name field", doc.contains("name: deploy"));
+        assertTrue("Should contain description field", doc.contains("description:"));
+        assertTrue("Should close YAML front matter", doc.contains("\n---\n"));
+
+        // Structured options table
+        assertTrue("Should contain Options table header",
+                doc.contains("| Option | Type | Required | Default | Description |"));
+        assertTrue("Should contain --environment option", doc.contains("--environment"));
+        assertTrue("Should contain --force option", doc.contains("--force"));
+
+        // Arguments table
+        assertTrue("Should contain Arguments table header",
+                doc.contains("| Argument | Type | Required | Description |"));
+        assertTrue("Should contain application argument", doc.contains("<application>"));
+
+        // Synopsis
+        assertTrue("Should contain Usage section", doc.contains("## Usage"));
+    }
+
+    @Test
+    public void testSkillFormatGroupCommand() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(AppCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        // YAML front matter
+        assertTrue("Should have YAML front matter", doc.startsWith("---\n"));
+        assertTrue("Should have name: app", doc.contains("name: app"));
+
+        // Commands table
+        assertTrue("Should contain Commands table header",
+                doc.contains("| Command | Description |"));
+        assertTrue("Should contain sub1 in commands table", doc.contains("| `sub1`"));
+        assertTrue("Should contain sub2 in commands table", doc.contains("| `sub2`"));
+
+        // Subcommand docs should be inline (generateSingle renders recursively)
+        assertTrue("Should contain sub1 YAML front matter", doc.contains("name: sub1"));
+        assertTrue("Should contain sub2 YAML front matter", doc.contains("name: sub2"));
+    }
+
+    // --- Test: Format-aware HelpSectionProvider ---
+
+    public static class SkillAwareProvider implements HelpSectionProvider {
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();
+            sections.put("Plugins", Arrays.asList(
+                    new HelpEntry("maven", "Maven integration")));
+            return sections;
+        }
+
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections(DocFormat format) {
+            if (format == DocFormat.SKILL) {
+                Map<String, List<HelpEntry>> sections = new LinkedHashMap<>();
+                sections.put("Examples", Arrays.asList(
+                        new HelpEntry("deploy --env prod myapp", "Deploy to production"),
+                        new HelpEntry("deploy --force myapp", "Force redeploy")));
+                return sections;
+            }
+            return getAdditionalSections();
+        }
+
+        @Override
+        public String getDescription(DocFormat format) {
+            if (format == DocFormat.SKILL) {
+                return "Deploy applications to cloud environments. Use when the user wants to ship code to production or staging.";
+            }
+            return null;
+        }
+
+        @Override
+        public Map<String, String> getFrontMatter(DocFormat format) {
+            if (format == DocFormat.SKILL) {
+                Map<String, String> fm = new LinkedHashMap<>();
+                fm.put("license", "Apache-2.0");
+                fm.put("compatibility", "Requires Java 17+");
+                return fm;
+            }
+            return null;
+        }
+    }
+
+    @CommandDefinition(name = "skillcmd", description = "A command with skill support", helpSectionProvider = SkillAwareProvider.class)
+    public static class SkillAwareCommand implements Command<CommandInvocation> {
+        @Option(description = "Target environment")
+        String env;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testSkillFormatUsesFormatAwareProvider() throws CommandLineParserException {
+        String skillDoc = DocumentationGenerator.builder()
+                .commandClass(SkillAwareCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        // Should use skill-specific description
+        assertTrue("Should contain skill description",
+                skillDoc.contains("Deploy applications to cloud environments"));
+
+        // Should use skill-specific sections (Examples, not Plugins)
+        assertTrue("Should contain Examples section", skillDoc.contains("## Examples"));
+        assertTrue("Should contain example entry", skillDoc.contains("deploy --env prod myapp"));
+        assertFalse("Should NOT contain Plugins section in skill format",
+                skillDoc.contains("## Plugins"));
+
+        // Should contain additional front matter
+        assertTrue("Should contain license front matter", skillDoc.contains("license: Apache-2.0"));
+        assertTrue("Should contain compatibility front matter", skillDoc.contains("compatibility: Requires Java 17+"));
+
+        // Now test the regular markdown format uses default provider
+        String mdDoc = DocumentationGenerator.builder()
+                .commandClass(SkillAwareCommand.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+
+        // Should use default sections (Plugins, not Examples)
+        assertTrue("Markdown should contain Plugins section", mdDoc.contains("## PLUGINS"));
+        assertFalse("Markdown should NOT contain Examples section from skill provider",
+                mdDoc.contains("## EXAMPLES"));
+
+        // Should NOT have YAML front matter
+        assertFalse("Markdown should NOT start with YAML front matter", mdDoc.startsWith("---\n"));
+    }
+
+    @Test
+    public void testSkillFormatHiddenOptionsIncluded() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(VisibilityCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        // HIDDEN options should be included in skill format
+        assertTrue("Skill format should include HIDDEN option 'secret'", doc.contains("--secret"));
+        assertTrue("Skill format should include FULL option 'advanced'", doc.contains("--advanced"));
+        assertTrue("Skill format should include BRIEF option 'name'", doc.contains("--name"));
+    }
+
+    @CommandDefinition(name = "viscmd", description = "Visibility test")
+    public static class VisibilityCommand implements Command<CommandInvocation> {
+        @Option(description = "Always shown")
+        String name;
+        @Option(description = "Advanced", visibility = OptionVisibility.FULL)
+        String advanced;
+        @Option(description = "Secret", visibility = OptionVisibility.HIDDEN)
+        String secret;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
         }
     }
 }
