@@ -195,10 +195,15 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
                 "    if string match -qr '\\s$' -- (commandline -cp)" + NL +
                 "        set tokens $tokens ''" + NL +
                 "    end" + NL +
-                "    " + programName + " --aesh-complete -- $tokens[2..]" + NL +
+                "    set -l results (" + programName + " --aesh-complete -- $tokens[2..])" + NL +
+                "    if test (count $results) -gt 0" + NL +
+                "        printf '%s\\n' $results" + NL +
+                "    end" + NL +
                 "end" + NL +
                 NL +
-                "complete -c " + programName + " -f -a '(__" + programName + "_complete)'" + NL;
+                "# Do not use -f: when __" + programName + "_complete returns empty," + NL +
+                "# fish falls back to default file completion (e.g. for positional args)." + NL +
+                "complete -c " + programName + " -a '(__" + programName + "_complete)'" + NL;
     }
 
     private static String escapeFish(String s) {

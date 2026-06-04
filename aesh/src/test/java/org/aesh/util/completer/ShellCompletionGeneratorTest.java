@@ -15,6 +15,8 @@
  */
 package org.aesh.util.completer;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -278,6 +280,31 @@ public class ShellCompletionGeneratorTest {
         // Should handle trailing space for subcommand context
         assertTrue("Should detect trailing space", out.contains("string match"));
         assertTrue("Should append empty token for trailing space", out.contains("set tokens $tokens ''"));
+    }
+
+    @Test
+    public void testFishDynamicCompletionNoSuppressFileCompletion() {
+        // #487: dynamic fish completion must NOT use -f on the registration line.
+        // When --aesh-complete returns empty (e.g. positional arg position),
+        // fish should fall back to default file completion.
+        String out = generateDynamic(ShellType.FISH, SimpleCmd.class, "mycli");
+
+        // The registration line should NOT have -f
+        // Find the 'complete -c mycli' registration line (not inside the function)
+        String registrationLine = null;
+        for (String line : out.split("\n")) {
+            if (line.startsWith("complete -c mycli") && line.contains("__mycli_complete")) {
+                registrationLine = line;
+                break;
+            }
+        }
+        assertNotNull("Should have a completion registration line", registrationLine);
+        assertFalse("Dynamic completion registration should NOT use -f flag (#487)",
+                registrationLine.contains(" -f"));
+
+        // The function should capture results and only output when non-empty
+        assertTrue("Should capture results into variable", out.contains("set -l results"));
+        assertTrue("Should check result count", out.contains("count $results"));
     }
 
     @Test
