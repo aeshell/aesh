@@ -2,6 +2,7 @@ package org.aesh.command.completer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -122,7 +123,7 @@ public class CommandSuggestionProviderTest {
 
     @Test
     public void testIntegrationWithConsole() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(CacheCommand.class)
@@ -148,13 +149,12 @@ public class CommandSuggestionProviderTest {
         connection.clearOutputBuffer();
         connection.read("ca");
 
-        // Ghost text is rendered with ANSI DIM codes; in non-stripped mode we should see "che" in the output
-        Thread.sleep(50);
-        String output = connection.getOutputBuffer();
-        // The output should contain both the typed text and the ghost suggestion
-        // "ca" is typed, then "che" is shown as ghost text (with ANSI codes around it)
-        assert output.contains("ca") : "Output should contain typed text 'ca', got: " + output;
-        assert output.contains("che") : "Output should contain ghost suggestion 'che', got: " + output;
+        // Ghost text suggestion "che" is rendered after the typed "ca".
+        // Wait for the ghost text to appear -- the output may include DEC-style
+        // escape codes (\0337/\0338) that are not stripped by the ANSI filter,
+        // so check for "che" which is the unique suggestion content.
+        String output = connection.waitForOutputContaining("che", 3000);
+        assertTrue("Output should contain ghost suggestion 'che', got: " + output, output.contains("che"));
 
         console.stop();
     }
