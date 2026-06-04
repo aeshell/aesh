@@ -99,9 +99,10 @@ public final class MetadataProviderRegistry {
 
     /**
      * Reset the registry, forcing re-discovery on next access.
-     * Package-private for testing.
+     * This is needed when the classloader changes (e.g., during hot-reload
+     * or test frameworks that restart the application with a new classloader).
      */
-    static void reset() {
+    public static void reset() {
         synchronized (MetadataProviderRegistry.class) {
             registries = null;
         }
