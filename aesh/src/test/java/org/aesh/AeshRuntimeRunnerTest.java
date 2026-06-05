@@ -1676,6 +1676,21 @@ public class AeshRuntimeRunnerTest {
                 midOutput.contains("leaf-b\tLeaf command B"));
     }
 
+    @Test
+    public void testThreeLevelGroupChildDescriptionsWithTrailingSpace() {
+        // #500: When shell passes args as single element with trailing space
+        // (e.g., ["alias "] instead of ["alias", ""]), findScopedParser must
+        // trim args before matching child parser names.
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(Desc500Root.class)
+                .args("--aesh-complete", "--", "mid ")
+                .execute());
+        assertTrue("Mid children with trailing-space arg: 'leaf-a' should have description: " + output,
+                output.contains("leaf-a\tLeaf command A"));
+        assertTrue("Mid children with trailing-space arg: 'leaf-b' should have description: " + output,
+                output.contains("leaf-b\tLeaf command B"));
+    }
+
     // --- Tests for completion descriptions (#498) ---
 
     @CommandDefinition(name = "desccmd", description = "Desc test", groupCommands = { DescSubCmd.class }, generateHelp = true)

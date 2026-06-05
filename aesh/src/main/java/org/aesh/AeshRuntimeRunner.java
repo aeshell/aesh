@@ -334,13 +334,14 @@ public class AeshRuntimeRunner {
             return root;
         CommandLineParser<CI> current = root;
         for (String arg : args) {
-            if (arg == null || arg.isEmpty() || arg.startsWith("-"))
+            String trimmed = arg != null ? arg.trim() : null;
+            if (trimmed == null || trimmed.isEmpty() || trimmed.startsWith("-"))
                 break;
             if (!current.isGroupCommand())
                 break;
             boolean found = false;
             for (CommandLineParser<CI> child : current.getAllChildParsers()) {
-                if (child.getProcessedCommand().name().equals(arg)) {
+                if (child.getProcessedCommand().name().equals(trimmed)) {
                     current = child;
                     if (parserPath != null)
                         parserPath.add(current);
