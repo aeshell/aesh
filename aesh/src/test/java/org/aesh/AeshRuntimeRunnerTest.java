@@ -1751,6 +1751,25 @@ public class AeshRuntimeRunnerTest {
     }
 
     @Test
+    public void testCompletionDescriptionsWithJoinedArgs() {
+        // #501: When args are passed as a single joined string (e.g., "runcmd --")
+        // instead of separate elements, findScopedParser must split on whitespace
+        // to correctly descend to the child parser level.
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DescMixApp.class)
+                .args("--aesh-complete", "--", "runcmd --")
+                .execute());
+
+        // All options (own, mixin, inherited) should have descriptions
+        assertTrue("--debug should have description with joined args: " + output,
+                output.contains("--debug") && output.contains("Launch with debug enabled"));
+        assertTrue("--deps (mixin) should have description with joined args: " + output,
+                output.contains("--deps") && output.contains("Add additional dependencies"));
+        assertTrue("--catalog (mixin) should have description with joined args: " + output,
+                output.contains("--catalog") && output.contains("Path to catalog file"));
+    }
+
+    @Test
     public void testCompletionDescriptionsForMixinOptionsWithTrailingSpace() {
         // #501 + #500: trailing-space arg format should still produce descriptions
         String output = captureStdout(() -> AeshRuntimeRunner.builder()

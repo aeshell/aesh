@@ -324,6 +324,8 @@ public class AeshRuntimeRunner {
     /**
      * Walk the parser tree to find the deepest group command matching the args.
      * If parserPath is non-null, collects all parsers along the path (including root).
+     * Args may be pre-split (["alias", ""]) or joined (["alias --debug"]),
+     * so each arg is split on whitespace before matching.
      */
     @SuppressWarnings("unchecked")
     private static <CI extends CommandInvocation> CommandLineParser<CI> findScopedParser(
@@ -332,16 +334,27 @@ public class AeshRuntimeRunner {
             parserPath.add(root);
         if (args == null || args.length == 0)
             return root;
-        CommandLineParser<CI> current = root;
+
+        // Flatten args into individual tokens (handles both ["alias", ""] and ["alias --debug"])
+        java.util.List<String> tokens = new java.util.ArrayList<>();
         for (String arg : args) {
-            String trimmed = arg != null ? arg.trim() : null;
-            if (trimmed == null || trimmed.isEmpty() || trimmed.startsWith("-"))
+            if (arg == null)
+                continue;
+            for (String token : arg.split("\\s+")) {
+                if (!token.isEmpty())
+                    tokens.add(token);
+            }
+        }
+
+        CommandLineParser<CI> current = root;
+        for (String token : tokens) {
+            if (token.startsWith("-"))
                 break;
             if (!current.isGroupCommand())
                 break;
             boolean found = false;
             for (CommandLineParser<CI> child : current.getAllChildParsers()) {
-                if (child.getProcessedCommand().name().equals(trimmed)) {
+                if (child.getProcessedCommand().name().equals(token)) {
                     current = child;
                     if (parserPath != null)
                         parserPath.add(current);
