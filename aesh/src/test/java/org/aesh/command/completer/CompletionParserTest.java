@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.List;
+import java.util.Map;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -42,6 +43,7 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.complete.AeshCompleteOperation;
@@ -1097,5 +1099,49 @@ public class CompletionParserTest {
 
     @CommandDefinition(name = "status", description = "Show status", generateHelp = true)
     public class SubCmdStatus extends TestCommand<CommandInvocation> {
+    }
+
+    // --- Tests for @OptionGroup completion with --option=key=value syntax (#496) ---
+
+    @CommandDefinition(name = "buildtest", description = "Build test")
+    public class OptionGroupCompleteCmd<CI extends CommandInvocation> extends TestCommand<CI> {
+        @OptionGroup(shortName = 'D', name = "manifest", description = "Manifest entries")
+        private Map<String, String> manifest;
+
+        @Option(name = "output", description = "Output file")
+        private String output;
+    }
+
+    @Test
+    public void testOptionGroupCompletionBothSyntaxes() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new OptionGroupCompleteCmd<>()).getParser();
+
+        // Parsing --manifest=Foo=Bar in COMPLETION mode should not throw (picocli syntax)
+        clp.parse("buildtest --manifest=Foo=Bar", CommandLineParser.Mode.COMPLETION);
+        assertNotNull("Should parse --manifest=Foo=Bar in completion mode",
+                clp.getProcessedCommand());
+
+        // Parsing --manifestFoo=Bar in COMPLETION mode should also work (aesh syntax)
+        clp.parse("buildtest --manifestFoo=Bar", CommandLineParser.Mode.COMPLETION);
+        assertNotNull("Should parse --manifestFoo=Bar in completion mode",
+                clp.getProcessedCommand());
+
+        // Both syntaxes should produce the same property in VALIDATE mode
+        clp.parse("buildtest --manifest=Key=Val", CommandLineParser.Mode.VALIDATE);
+        assertEquals("Picocli syntax: property key should be Key", "Val",
+                clp.getProcessedCommand().findLongOptionNoActivatorCheck("manifest")
+                        .getProperties().get("Key"));
+
+        clp.parse("buildtest --manifestKey=Val", CommandLineParser.Mode.VALIDATE);
+        assertEquals("Aesh syntax: property key should be Key", "Val",
+                clp.getProcessedCommand().findLongOptionNoActivatorCheck("manifest")
+                        .getProperties().get("Key"));
+
+        // Multiple properties with picocli syntax
+        clp.parse("buildtest --manifest=A=1 --manifest=B=2", CommandLineParser.Mode.VALIDATE);
+        ProcessedOption manifestOpt = clp.getProcessedCommand().findLongOptionNoActivatorCheck("manifest");
+        assertEquals("Multiple picocli: A", "1", manifestOpt.getProperties().get("A"));
+        assertEquals("Multiple picocli: B", "2", manifestOpt.getProperties().get("B"));
     }
 }

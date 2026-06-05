@@ -3077,4 +3077,70 @@ public class CommandLineParserTest {
         assertTrue("Help should show --help", help.contains("--help"));
     }
 
+    // --- Tests for @OptionGroup --option=key=value syntax (#496) ---
+
+    @CommandDefinition(name = "buildcmd", description = "Build command")
+    public class OptionGroupEqualsCmd<CI extends CommandInvocation> implements Command<CI> {
+        @OptionGroup(shortName = 'D', name = "manifest", description = "Manifest entries")
+        Map<String, String> manifest;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testOptionGroupEqualsSyntax() throws Exception {
+        // #496: --manifest=Key=Value (picocli syntax) should work the same as --manifestKey=Value (aesh syntax)
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionGroupEqualsCmd<>()).getParser();
+
+        // Aesh concatenated syntax: --manifestFoo=Bar
+        parser.populateObject("buildcmd --manifestFoo=Bar", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        OptionGroupEqualsCmd<?> cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+        assertEquals("Aesh syntax: key should be Foo", "Bar", cmd.manifest.get("Foo"));
+
+        // Picocli equals syntax: --manifest=Foo=Bar
+        parser.populateObject("buildcmd --manifest=Foo=Bar", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+        assertEquals("Picocli syntax: key should be Foo", "Bar", cmd.manifest.get("Foo"));
+
+        // Short name syntax: -DFoo=Bar
+        parser.populateObject("buildcmd -DFoo=Bar", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+        assertEquals("Short syntax: key should be Foo", "Bar", cmd.manifest.get("Foo"));
+
+        // Multiple properties with picocli syntax
+        parser.populateObject("buildcmd --manifest=Key1=Val1 --manifest=Key2=Val2", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+        assertEquals("Multiple: Key1", "Val1", cmd.manifest.get("Key1"));
+        assertEquals("Multiple: Key2", "Val2", cmd.manifest.get("Key2"));
+
+        // Mixed syntaxes in same command
+        parser.populateObject("buildcmd --manifestA=1 --manifest=B=2 -DC=3", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+        assertEquals("Mixed: A", "1", cmd.manifest.get("A"));
+        assertEquals("Mixed: B", "2", cmd.manifest.get("B"));
+        assertEquals("Mixed: C", "3", cmd.manifest.get("C"));
+
+        // Empty value: --manifest=Key=
+        parser.populateObject("buildcmd --manifest=Key=", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+        assertEquals("Empty value", "", cmd.manifest.get("Key"));
+
+        // Value containing equals: --manifest=Key=a=b
+        parser.populateObject("buildcmd --manifest=Key=a=b", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+        assertEquals("Value with equals", "a=b", cmd.manifest.get("Key"));
+    }
+
 }

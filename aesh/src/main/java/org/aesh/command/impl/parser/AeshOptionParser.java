@@ -227,18 +227,30 @@ public class AeshOptionParser implements OptionParser {
         String name = currOption.isLongNameUsed() ? currOption.name() : currOption.shortName();
         if (word.length() < (1 + name.length()))
             throw new OptionParserException("Option " + currOption.getDisplayName() + ", must be part of a property");
-        if (!word.contains(EQUALS)) {
+
+        // Skip separator '=' between option name and property key (#496).
+        // Supports both --manifestFoo=Bar (aesh) and --manifest=Foo=Bar (picocli) syntaxes.
+        int afterName = name.length();
+        if (afterName < word.length() && word.charAt(afterName) == '=') {
+            afterName++;
+        }
+        String rest = word.substring(afterName);
+
+        if (!rest.contains(EQUALS)) {
+            if (rest.isEmpty()) {
+                throw new OptionParserException(
+                        "Option " + currOption.getDisplayName() + ", must be part of a property");
+            }
             if (currOption.hasDefaultValue()) {
-                String propertyName = word.substring(name.length());
-                currOption.addProperty(propertyName, currOption.getDefaultValues().get(0));
+                currOption.addProperty(rest, currOption.getDefaultValues().get(0));
             } else {
                 throw new OptionParserException(
                         "Option " + currOption.getDisplayName() + ", must be part of a property");
             }
         } else {
-            String propertyName = word.substring(name.length(), word.indexOf(EQUALS));
-            String value = word.substring(word.indexOf(EQUALS) + 1);
-            if (value.length() < 1 && currOption.hasDefaultValue())
+            String propertyName = rest.substring(0, rest.indexOf(EQUALS));
+            String value = rest.substring(rest.indexOf(EQUALS) + 1);
+            if (value.isEmpty() && currOption.hasDefaultValue())
                 currOption.addProperty(propertyName, currOption.getDefaultValues().get(0));
             else {
                 currOption.addProperty(propertyName, value);
