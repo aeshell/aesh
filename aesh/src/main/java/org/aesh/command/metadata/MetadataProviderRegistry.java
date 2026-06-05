@@ -39,9 +39,6 @@ public final class MetadataProviderRegistry {
     private static volatile List<MetadataRegistry> registries;
     private static final ConcurrentHashMap<Class<?>, CommandMetadataProvider<?>> cache = new ConcurrentHashMap<>();
 
-    /** Sentinel value cached when no provider exists for a command class. */
-    private static final CommandMetadataProvider<?> ABSENT = null;
-
     private MetadataProviderRegistry() {
     }
 

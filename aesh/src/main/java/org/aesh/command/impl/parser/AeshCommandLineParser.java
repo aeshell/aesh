@@ -77,7 +77,6 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private boolean parsedCommand = false;
     private LineParser lineParser;
     private static final char DASH = '-';
-    private CompleteStatus completeStatus;
     private AeshCommandLineParser<CI> parent;
     private boolean ansiMode = !isNoColorSet();
 
@@ -924,7 +923,6 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             processedCommand.clear();
             lastParsedOption = null;
             parsedCommand = false;
-            completeStatus = null;
         }
         //else find the parsed command and clear that one
         else {
@@ -1103,7 +1101,6 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 ", isChild=" + isChild +
                 ", lastParsedOption=" + lastParsedOption +
                 ", parsedCommand=" + parsedCommand +
-                ", completeStatus=" + completeStatus +
                 '}';
     }
 

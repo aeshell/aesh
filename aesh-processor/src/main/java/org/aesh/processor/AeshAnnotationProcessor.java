@@ -82,7 +82,6 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     private Messager messager;
     private Elements elementUtils;
     private Types typeUtils;
-    private final List<String> generatedProviders = new ArrayList<>();
     /** Pairs of (binaryClassName, metadataSimpleName) for the registry switch. */
     private final List<String[]> registryEntries = new ArrayList<>();
     private String registryPackage;
@@ -165,7 +164,7 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         boolean hasNoArgConstructor = false;
         for (Element enclosed : element.getEnclosedElements()) {
             if (enclosed.getKind() == ElementKind.CONSTRUCTOR) {
-                javax.lang.model.element.ExecutableElement constructor = (javax.lang.model.element.ExecutableElement) enclosed;
+                ExecutableElement constructor = (ExecutableElement) enclosed;
                 if (constructor.getParameters().isEmpty()
                         && !constructor.getModifiers().contains(Modifier.PRIVATE)) {
                     hasNoArgConstructor = true;
@@ -274,8 +273,6 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         try (Writer writer = sourceFile.openWriter()) {
             writer.write(code);
         }
-
-        generatedProviders.add(fullMetadataName);
 
         // Collect registry entry: binary name (with $ for inner classes) -> fully-qualified metadata class name
         String binaryName = elementUtils.getBinaryName(commandElement).toString();

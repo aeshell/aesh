@@ -262,49 +262,6 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
      *        }
      */
 
-    private void resetField(Object instance, String fieldName, boolean hasValue) {
-        try {
-            Field field = getField(instance.getClass(), fieldName);
-            //for some options, the field might be null. eg generatedHelp
-            //if so we ignore it
-            if (field == null)
-                return;
-            if (!Modifier.isPublic(field.getModifiers()))
-                field.setAccessible(true);
-            if (field.getType().isPrimitive()) {
-                if (boolean.class.isAssignableFrom(field.getType()))
-                    field.set(instance, false);
-                else if (int.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0);
-                else if (short.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0);
-                else if (char.class.isAssignableFrom(field.getType()))
-                    field.set(instance, '\u0000');
-                else if (byte.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0);
-                else if (long.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0L);
-                else if (float.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0.0f);
-                else if (double.class.isAssignableFrom(field.getType()))
-                    field.set(instance, 0.0d);
-            } else
-                field.set(instance, null);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            // Field reset failed, continue
-        }
-    }
-
-    private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
-        for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
-            for (Field f : c.getDeclaredFields()) {
-                if (f.getName().equals(fieldName))
-                    return f;
-            }
-        }
-        return null;
-    }
-
     @Override
     public O getObject() {
         return instance;
