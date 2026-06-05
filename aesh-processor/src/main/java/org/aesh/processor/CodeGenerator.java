@@ -529,6 +529,9 @@ final class CodeGenerator {
                     .append(");\n");
         if (o.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
+        if (o.selector() != org.aesh.selector.SelectorType.NO_OP)
+            sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(o.selector()))
+                    .append(");\n");
         emitCompleteFallbackSetter(sb, var, o.completeFallback(), field, typeUtils);
         emitAliasesSetter(sb, var, o.aliases());
         emitHelpGroupSetter(sb, var, o.helpGroup());
@@ -587,6 +590,9 @@ final class CodeGenerator {
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
         emitParserSetter(sb, var, field, "parser", elementUtils);
+        if (ol.selector() != org.aesh.selector.SelectorType.NO_OP)
+            sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(ol.selector()))
+                    .append(");\n");
         emitAliasesSetter(sb, var, ol.aliases());
         emitHelpGroupSetter(sb, var, ol.helpGroup());
         emitExclusiveWithSetter(sb, var, ol.exclusiveWith());

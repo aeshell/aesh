@@ -2268,6 +2268,56 @@ public class ProcessorTest {
                 org.aesh.command.option.CompletionFallback.FILES, inputOpt.getCompleteFallback());
     }
 
+    // --- Test: @Option.selector emitted by processor (#7 code review) ---
+
+    private static final String SELECTOR_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.selector.SelectorType;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"selcmd\", description = \"Selector test\")\n" +
+            "public class SelectorCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"env\", selector = SelectorType.SELECT, description = \"Environment\")\n" +
+            "    public String env;\n" +
+            "\n" +
+            "    @Option(name = \"plain\", description = \"Plain option\")\n" +
+            "    public String plain;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testSelectorTypeOnProcessorPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SelectorCommand", SELECTOR_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.SelectorCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.SelectorCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // env should have SelectorType.LIST
+        ProcessedOption envOpt = generatedPC.findLongOptionNoActivatorCheck("env");
+        assertNotNull("Should have --env", envOpt);
+        assertEquals("env should have SELECT selector",
+                org.aesh.selector.SelectorType.SELECT, envOpt.selectorType());
+
+        // plain should have NO_OP (default)
+        ProcessedOption plainOpt = generatedPC.findLongOptionNoActivatorCheck("plain");
+        assertNotNull("Should have --plain", plainOpt);
+        assertEquals("plain should have NO_OP selector",
+                org.aesh.selector.SelectorType.NO_OP, plainOpt.selectorType());
+    }
+
     // --- Test: Generated _AeshMetadataRegistry ---
 
     @Test
