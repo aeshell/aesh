@@ -46,9 +46,19 @@ import org.aesh.selector.SelectorType;
 public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation> implements CommandPopulator<O, CI> {
 
     private final O instance;
+    private boolean isChildCommand;
 
     public AeshCommandPopulator(O instance) {
         this.instance = instance;
+    }
+
+    /**
+     * Mark this populator as populating a child command.
+     * When true, inherited options skip DefaultValueProvider because
+     * the parent command handles their defaults and propagates resolved values.
+     */
+    public void setChildCommand(boolean isChild) {
+        this.isChildCommand = isChild;
     }
 
     /**
@@ -101,11 +111,19 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
     /**
      * Query the dynamic default value provider for this option. If a non-null value is returned,
      * add it as the option value and inject it. Returns true if a dynamic default was applied.
+     * <p>
+     * Inherited options on child commands are skipped (#488): the parent command
+     * applies the default and propagates the resolved value to children via
+     * {@code propagateInheritedOptions()}, so re-querying the DVP on the child
+     * would override what the parent (or the user's CLI flag) already set.
      */
     private boolean applyDynamicDefault(DefaultValueProvider dvp, ProcessedOption option,
             InvocationProviders invocationProviders, AeshContext aeshContext,
             boolean doValidate) throws CommandLineParserException, OptionValidatorException {
         if (dvp == null)
+            return false;
+        // Skip inherited options on child commands -- the parent handles these
+        if (option.isInherited() && isChildCommand)
             return false;
         try {
             String dynamicDefault = dvp.defaultValue(option);

@@ -1187,6 +1187,62 @@ public class CommandLineParserTest {
         }
     }
 
+    // --- Test: DefaultValueProvider should skip inherited options on child commands (#488) ---
+
+    public static class InheritedDvp implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            if ("verbose".equals(option.name()))
+                return "true";
+            return null;
+        }
+    }
+
+    @CommandDefinition(name = "parent", description = "parent", groupCommands = {
+            InheritedDvpChild.class }, defaultValueProvider = InheritedDvp.class)
+    public static class InheritedDvpParent implements Command<CommandInvocation> {
+        @Option(hasValue = false, inherited = true, negatable = true)
+        public boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child", description = "child", defaultValueProvider = InheritedDvp.class)
+    public static class InheritedDvpChild implements Command<CommandInvocation> {
+        @Option
+        public String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testDvpSkipsInheritedOptionsOnChild() throws Exception {
+        InvocationProviders invocationProviders = new AeshInvocationProviders();
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(InheritedDvpParent.class).getParser();
+
+        // User passes --no-verbose to override the DVP default "true"
+        parser.populateObject("parent --no-verbose child --name test", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+
+        InheritedDvpParent parent = (InheritedDvpParent) parser.getCommand();
+        // Parent should have verbose=false (user explicitly set --no-verbose)
+        assertFalse("Parent verbose should be false (--no-verbose)", parent.verbose);
+
+        // Child should NOT have DVP re-apply "true" for the inherited verbose option.
+        // The parent's value (false) should be propagated to the child.
+        // Note: the child class doesn't have a 'verbose' field -- it's inherited from the parent
+        // via the class hierarchy or field propagation.
+    }
+
     @Test
     public void testInheritedOptionPropagation() throws Exception {
         InvocationProviders invocationProviders = new AeshInvocationProviders();

@@ -35,6 +35,7 @@ import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.populator.AeshCommandPopulator;
 import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
@@ -280,6 +281,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, mode);
         if (isGroupCommand() && childParsers != null) {
             for (CommandLineParser<CI> parser : childParsers) {
+                // Mark child populators so inherited options skip DefaultValueProvider (#488)
+                CommandPopulator<Object, CI> childPopulator = parser.getCommandPopulator();
+                if (childPopulator instanceof AeshCommandPopulator) {
+                    ((AeshCommandPopulator<?, CI>) childPopulator).setChildCommand(true);
+                }
                 parser.doPopulate(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
             }
             propagateInheritedOptions();
