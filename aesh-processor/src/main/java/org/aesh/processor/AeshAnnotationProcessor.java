@@ -179,11 +179,54 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         }
 
         // Validate field types
-        for (VariableElement field : collectFields(element)) {
+        List<VariableElement> fields = collectFields(element);
+        for (VariableElement field : fields) {
             validateField(field);
         }
 
+        // Validate positional index ranges don't overlap
+        validatePositionalIndexes(element, fields);
+
         return valid;
+    }
+
+    private void validatePositionalIndexes(TypeElement element, List<VariableElement> fields) {
+        List<String[]> positionals = new ArrayList<>(); // [fieldName, indexString]
+        for (VariableElement field : fields) {
+            org.aesh.command.option.Argument arg = field.getAnnotation(org.aesh.command.option.Argument.class);
+            if (arg != null && !arg.index().isEmpty()) {
+                positionals.add(new String[] { field.getSimpleName().toString(), arg.index() });
+            }
+            org.aesh.command.option.Arguments args = field.getAnnotation(org.aesh.command.option.Arguments.class);
+            if (args != null && !args.index().isEmpty()) {
+                positionals.add(new String[] { field.getSimpleName().toString(), args.index() });
+            }
+        }
+        for (int i = 0; i < positionals.size(); i++) {
+            org.aesh.command.option.IndexRange left;
+            try {
+                left = org.aesh.command.option.IndexRange.parse(positionals.get(i)[1]);
+            } catch (IllegalArgumentException e) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "Invalid index range on field '" + positionals.get(i)[0] + "': " + e.getMessage(), element);
+                continue;
+            }
+            for (int j = i + 1; j < positionals.size(); j++) {
+                org.aesh.command.option.IndexRange right;
+                try {
+                    right = org.aesh.command.option.IndexRange.parse(positionals.get(j)[1]);
+                } catch (IllegalArgumentException e) {
+                    continue; // already reported above
+                }
+                if (left.overlaps(right)) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "Positional index ranges overlap: field '" + positionals.get(i)[0]
+                                    + "' (" + positionals.get(i)[1] + ") and field '"
+                                    + positionals.get(j)[0] + "' (" + positionals.get(j)[1] + ")",
+                            element);
+                }
+            }
+        }
     }
 
     private void validateField(VariableElement field) {

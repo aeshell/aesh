@@ -2318,6 +2318,38 @@ public class ProcessorTest {
                 org.aesh.selector.SelectorType.NO_OP, plainOpt.selectorType());
     }
 
+    // --- Test: Overlapping positional index validation (#9 code review) ---
+
+    private static final String OVERLAPPING_INDEX_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Arguments;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"overlap\", description = \"Overlap test\")\n" +
+            "public class OverlapCommand implements Command<CommandInvocation> {\n" +
+            "    @Argument(index = \"0\", description = \"First\")\n" +
+            "    public String first;\n" +
+            "\n" +
+            "    @Arguments(index = \"0..2\", description = \"Extras\")\n" +
+            "    public List<String> extras;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    public void testOverlappingPositionalIndexesError() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.OverlapCommand", OVERLAPPING_INDEX_SOURCE));
+        assertTrue("Should report overlapping index error",
+                result.diagnostics.toString().contains("overlap"));
+    }
+
     // --- Test: Generated _AeshMetadataRegistry ---
 
     @Test

@@ -1355,7 +1355,8 @@ final class CodeGenerator {
 
     private static boolean isFileOrResourceType(TypeMirror type, Types typeUtils) {
         String name = type.toString();
-        return name.equals("java.io.File") || name.equals("org.aesh.io.Resource");
+        return name.equals("java.io.File") || name.equals("java.nio.file.Path")
+                || name.equals("org.aesh.io.Resource");
     }
 
     private static String getBoxedTypeName(TypeMirror type, Types typeUtils) {
