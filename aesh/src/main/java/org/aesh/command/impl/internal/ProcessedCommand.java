@@ -85,6 +85,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private int optionDeclarationCounter;
     private List<ProcessedOption> cachedPositionalOrder;
     private boolean hasInheritedOptions;
+    private ParsedCommand cachedParsedCommand;
 
     // Lazy-built lookup maps for O(1) option search (built on first lookup, invalidated on add)
     private Map<String, ProcessedOption> longNameMap;
@@ -361,6 +362,16 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return hasInheritedOptions;
     }
 
+    /**
+     * Returns a cached ParsedCommand wrapper for use in activator checks.
+     * Avoids allocating a new ParsedCommand on every option lookup.
+     */
+    private ParsedCommand parsedCommand() {
+        if (cachedParsedCommand == null)
+            cachedParsedCommand = new ParsedCommand(this);
+        return cachedParsedCommand;
+    }
+
     private void buildLookupMaps() {
         List<ProcessedOption> opts = getOptions();
         Map<String, ProcessedOption> lm = new HashMap<>(opts.size() * 2);
@@ -475,7 +486,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             for (ProcessedOption opt : getOptions()) {
                 if (opt.name() != null &&
                         (opt.name().equals(longName) || opt.hasAlias(longName)) &&
-                        opt.isActivated(new ParsedCommand(this))) {
+                        opt.isActivated(parsedCommand())) {
                     throw new OptionParserException("Option --" + longName + " is already added to Param: " + this.toString());
                 }
             }
@@ -484,7 +495,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             String nameStr = String.valueOf(name);
             for (ProcessedOption opt : getOptions()) {
                 if (opt.shortName() != null && opt.shortName().equals(nameStr) &&
-                        opt.isActivated(new ParsedCommand(this))) {
+                        opt.isActivated(parsedCommand())) {
                     throw new OptionParserException("Option -" + name + " is already added to Param: " + this.toString());
                 }
             }
@@ -501,7 +512,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (shortNameMap == null)
             buildLookupMaps();
         ProcessedOption opt = shortNameMap.get(name);
-        if (opt != null && opt.isActivated(new ParsedCommand(this)))
+        if (opt != null && opt.isActivated(parsedCommand()))
             return opt;
         return null;
     }
@@ -570,7 +581,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (longNameMap == null)
             buildLookupMaps();
         ProcessedOption opt = longNameMap.get(name);
-        if (opt != null && opt.isActivated(new ParsedCommand(this)))
+        if (opt != null && opt.isActivated(parsedCommand()))
             return opt;
         return null;
     }
@@ -592,7 +603,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (negatedNameMap == null)
             buildLookupMaps();
         ProcessedOption opt = negatedNameMap.get(name);
-        if (opt != null && opt.isActivated(new ParsedCommand(this))) {
+        if (opt != null && opt.isActivated(parsedCommand())) {
             opt.setNegatedByUser(true);
             return opt;
         }
@@ -628,7 +639,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         for (ProcessedOption o : opts) {
             if (o.name() != null && o.acceptNameWithoutDashes()
                     && o.getValues().size() == 0
-                    && o.isActivated(new ParsedCommand(this))) {
+                    && o.isActivated(parsedCommand())) {
                 if (o.name().startsWith(name)) {
                     names.add(o.getRenderedNameWithDashes());
                 }
@@ -645,7 +656,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedOption startWithOption(String name) {
         for (ProcessedOption option : getOptions())
             if (option.shortName() != null && name.startsWith(option.shortName()) &&
-                    option.isActivated(new ParsedCommand(this)))
+                    option.isActivated(parsedCommand()))
                 return option;
 
         return null;
@@ -654,7 +665,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedOption startWithLongOption(String name) {
         for (ProcessedOption option : getOptions())
             if ((name.startsWith(option.name()) || startsWithAlias(option, name)) &&
-                    option.isActivated(new ParsedCommand(this)))
+                    option.isActivated(parsedCommand()))
                 return option;
 
         return null;
@@ -773,7 +784,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
                 continue;
             if (o.getValues().size() == 0 &&
-                    o.isActivated(new ParsedCommand(this)) &&
+                    o.isActivated(parsedCommand()) &&
                     !isExcludedBySetOption(o)) {
                 names.add(o.getRenderedNameWithDashes());
                 names.addAll(o.getRenderedAliasNamesWithDashes());
@@ -799,10 +810,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (((o.shortName() != null && o.shortName().equals(name) &&
                     !o.isLongNameUsed() && o.getValues().size() == 0) ||
                     (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                    o.isActivated(new ParsedCommand(this)))
+                    o.isActivated(parsedCommand()))
                 names.add(o.getRenderedNameWithDashes());
             // Check aliases
-            if (o.getValues().size() == 0 && o.isActivated(new ParsedCommand(this))) {
+            if (o.getValues().size() == 0 && o.isActivated(parsedCommand())) {
                 for (String alias : o.getAliases()) {
                     if (alias.startsWith(name)) {
                         names.add(new TerminalString("--" + alias, true));
@@ -812,7 +823,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             // Also check negated option names for negatable options
             if (o.isNegatable() && o.getNegatedName() != null &&
                     o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
-                    o.isActivated(new ParsedCommand(this))) {
+                    o.isActivated(parsedCommand())) {
                 TerminalString negated = o.getRenderedNegatedNameWithDashes();
                 if (negated != null) {
                     names.add(negated);
@@ -842,10 +853,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (((o.shortName() != null && o.shortName().equals(name) &&
                     !o.isLongNameUsed() && o.getValues().size() == 0) ||
                     (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                    o.isActivated(new ParsedCommand(this)))
+                    o.isActivated(parsedCommand()))
                 names.add(o.name());
             // Check aliases
-            if (o.getValues().size() == 0 && o.isActivated(new ParsedCommand(this))) {
+            if (o.getValues().size() == 0 && o.isActivated(parsedCommand())) {
                 for (String alias : o.getAliases()) {
                     if (alias.startsWith(name))
                         names.add(alias);
@@ -854,7 +865,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             // Also check negated option names for negatable options
             if (o.isNegatable() && o.getNegatedName() != null &&
                     o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
-                    o.isActivated(new ParsedCommand(this)))
+                    o.isActivated(parsedCommand()))
                 names.add(o.getNegatedName());
         }
         return names;
