@@ -1591,6 +1591,91 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
+    // --- Test for group child descriptions (#500) ---
+
+    @Test
+    public void testCompletionDescriptionsForNestedGroupChildren() {
+        // #500: Group command children (e.g., alias add/list/remove) should have descriptions
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DuplicateChildApp.class)
+                .args("--aesh-complete", "--", "alias", "")
+                .execute());
+
+        // Children of the "alias" group should have their descriptions
+        assertTrue("'add' should have description: " + output,
+                output.contains("add\tAdd an alias"));
+        assertTrue("'list' should have description: " + output,
+                output.contains("list\tList aliases"));
+    }
+
+    // --- Test for three-level group child descriptions (#500) ---
+
+    @CommandDefinition(name = "root3", description = "Root", groupCommands = {
+            Desc500MidGroup.class, Desc500TopSub.class })
+    public static class Desc500Root implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mid", description = "Mid-level group", groupCommands = {
+            Desc500LeafA.class, Desc500LeafB.class })
+    public static class Desc500MidGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "topsub", description = "Top-level subcommand")
+    public static class Desc500TopSub implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "leaf-a", description = "Leaf command A")
+    public static class Desc500LeafA implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "leaf-b", description = "Leaf command B")
+    public static class Desc500LeafB implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testThreeLevelGroupChildDescriptions() {
+        // #500: Three-level nesting: root3 → mid → leaf-a/leaf-b
+        // Top-level children should have descriptions
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(Desc500Root.class)
+                .args("--aesh-complete", "--", "")
+                .execute());
+        assertTrue("Top-level: 'mid' should have description: " + output,
+                output.contains("mid\tMid-level group"));
+        assertTrue("Top-level: 'topsub' should have description: " + output,
+                output.contains("topsub\tTop-level subcommand"));
+
+        // Third-level children should also have descriptions
+        String midOutput = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(Desc500Root.class)
+                .args("--aesh-complete", "--", "mid", "")
+                .execute());
+        assertTrue("Mid children: 'leaf-a' should have description: " + midOutput,
+                midOutput.contains("leaf-a\tLeaf command A"));
+        assertTrue("Mid children: 'leaf-b' should have description: " + midOutput,
+                midOutput.contains("leaf-b\tLeaf command B"));
+    }
+
     // --- Tests for completion descriptions (#498) ---
 
     @CommandDefinition(name = "desccmd", description = "Desc test", groupCommands = { DescSubCmd.class }, generateHelp = true)
