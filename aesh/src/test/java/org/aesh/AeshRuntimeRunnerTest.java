@@ -1567,4 +1567,84 @@ public class AeshRuntimeRunnerTest {
                 null, CaptureCommand.class));
     }
 
+    // --- Tests for completion descriptions (#498) ---
+
+    @CommandDefinition(name = "desccmd", description = "Desc test", groupCommands = { DescSubCmd.class }, generateHelp = true)
+    public static class DescGroupCmd implements Command<CommandInvocation> {
+        @Option(shortName = 'v', name = "verbose", hasValue = false, inherited = true, description = "Enable verbose output")
+        public boolean verbose;
+
+        @Option(name = "config", description = "Config file path")
+        public String config;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub", description = "A sub command")
+    public static class DescSubCmd implements Command<CommandInvocation> {
+        @Option(name = "target", description = "Target environment")
+        public String target;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCompletionDescriptionsForGroupSubcommands() {
+        // #498: Group subcommands should have descriptions in --aesh-complete output
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DescGroupCmd.class)
+                .args("--aesh-complete", "--", "")
+                .execute());
+
+        // Top-level subcommand should have description
+        assertTrue("Sub should have description", output.contains("sub\tA sub command"));
+    }
+
+    @Test
+    public void testCompletionDescriptionsForOptions() {
+        // #498: All options should have descriptions in --aesh-complete output
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DescGroupCmd.class)
+                .args("--aesh-complete", "--", "--")
+                .execute());
+
+        // Options should have their descriptions
+        assertTrue("--config should have description",
+                output.contains("--config") && output.contains("Config file path"));
+        assertTrue("--verbose should have description",
+                output.contains("--verbose") && output.contains("Enable verbose output"));
+    }
+
+    @Test
+    public void testCompletionDescriptionsForChildOptions() {
+        // #498: Child command options should have descriptions
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DescGroupCmd.class)
+                .args("--aesh-complete", "--", "sub", "--")
+                .execute());
+
+        // Child's own option should have description
+        assertTrue("--target should have description",
+                output.contains("--target") && output.contains("Target environment"));
+    }
+
+    @Test
+    public void testCompletionDescriptionsForInheritedOptions() {
+        // #498: Inherited options from parent should have descriptions on child
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DescGroupCmd.class)
+                .args("--aesh-complete", "--", "sub", "--")
+                .execute());
+
+        // Inherited --verbose from parent should have description on child
+        assertTrue("Inherited --verbose should have description on child",
+                output.contains("--verbose") && output.contains("Enable verbose output"));
+    }
+
 }

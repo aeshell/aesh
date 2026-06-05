@@ -276,8 +276,11 @@ public class AeshRuntimeRunner {
             CommandContainer<CommandInvocation> container = commandRegistry.getCommand(commandName, "");
             CommandLineParser<CommandInvocation> parser = container.getParser();
 
-            // Find the deepest group command matching the partial line to scope descriptions
-            CommandLineParser<CommandInvocation> scopedParser = findScopedParser(parser, args);
+            // Find the deepest group command matching the partial line to scope descriptions.
+            // Also collect the path of parsers we walked through so we can add
+            // inherited option descriptions from each ancestor (#498).
+            java.util.List<CommandLineParser<CommandInvocation>> parserPath = new java.util.ArrayList<>();
+            CommandLineParser<CommandInvocation> scopedParser = findScopedParser(parser, args, parserPath);
 
             // Add subcommand descriptions scoped to the current group
             if (scopedParser.isGroupCommand()) {
@@ -290,8 +293,15 @@ public class AeshRuntimeRunner {
                 }
             }
 
-            // Add option descriptions from the scoped parser
+            // Add option descriptions from the scoped parser (all options)
             addOptionDescriptions(descriptions, scopedParser);
+
+            // Add inherited option descriptions from ancestor parsers (#498)
+            for (CommandLineParser<CommandInvocation> ancestor : parserPath) {
+                if (ancestor != scopedParser) {
+                    addOptionDescriptionsFromParser(descriptions, ancestor, true);
+                }
+            }
         } catch (Exception ignored) {
         }
         return descriptions;
@@ -305,6 +315,18 @@ public class AeshRuntimeRunner {
     @SuppressWarnings("unchecked")
     private static <CI extends CommandInvocation> CommandLineParser<CI> findScopedParser(
             CommandLineParser<CI> root, String[] args) {
+        return findScopedParser(root, args, null);
+    }
+
+    /**
+     * Walk the parser tree to find the deepest group command matching the args.
+     * If parserPath is non-null, collects all parsers along the path (including root).
+     */
+    @SuppressWarnings("unchecked")
+    private static <CI extends CommandInvocation> CommandLineParser<CI> findScopedParser(
+            CommandLineParser<CI> root, String[] args, java.util.List<CommandLineParser<CI>> parserPath) {
+        if (parserPath != null)
+            parserPath.add(root);
         if (args == null || args.length == 0)
             return root;
         CommandLineParser<CI> current = root;
@@ -317,6 +339,8 @@ public class AeshRuntimeRunner {
             for (CommandLineParser<CI> child : current.getAllChildParsers()) {
                 if (child.getProcessedCommand().name().equals(arg)) {
                     current = child;
+                    if (parserPath != null)
+                        parserPath.add(current);
                     found = true;
                     break;
                 }
@@ -327,19 +351,46 @@ public class AeshRuntimeRunner {
         return current;
     }
 
+    /**
+     * Add option descriptions for all options on the given parser.
+     * If onlyInherited is true, only adds inherited options (used for parent parsers).
+     */
     private static void addOptionDescriptions(java.util.Map<String, String> descriptions,
             CommandLineParser<?> parser) {
+        addOptionDescriptionsFromParser(descriptions, parser, false);
+    }
+
+    private static void addOptionDescriptionsFromParser(java.util.Map<String, String> descriptions,
+            CommandLineParser<?> parser, boolean onlyInherited) {
         for (org.aesh.command.impl.internal.ProcessedOption opt : parser.getProcessedCommand().getOptions()) {
+            if (onlyInherited && !opt.isInherited())
+                continue;
+            String desc = opt.description();
+            if (desc == null || desc.isEmpty())
+                continue;
+
+            // Long name
             String optName = "--" + opt.name();
-            if (opt.description() != null && !opt.description().isEmpty()) {
-                descriptions.put(optName, opt.description());
+            descriptions.put(optName, desc);
+            // Also with trailing = for value options (completion candidates may include it)
+            if (opt.hasValue())
+                descriptions.put(optName + "=", desc);
+
+            // Aliases
+            for (String alias : opt.getAliases()) {
+                descriptions.put("--" + alias, desc);
+                if (opt.hasValue())
+                    descriptions.put("--" + alias + "=", desc);
             }
-            // Add description for negated form of negatable options
+
+            // Negated form
             if (opt.isNegatable() && opt.getNegatedName() != null) {
-                String negatedName = "--" + opt.getNegatedName();
-                if (opt.description() != null && !opt.description().isEmpty()) {
-                    descriptions.put(negatedName, opt.description());
-                }
+                descriptions.put("--" + opt.getNegatedName(), desc);
+            }
+
+            // Short name (for -v style candidates)
+            if (opt.shortName() != null && !opt.shortName().isEmpty()) {
+                descriptions.put("-" + opt.shortName(), desc);
             }
         }
     }
