@@ -79,7 +79,16 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private static final char DASH = '-';
     private CompleteStatus completeStatus;
     private AeshCommandLineParser<CI> parent;
-    private boolean ansiMode = true;
+    private boolean ansiMode = !isNoColorSet();
+
+    /**
+     * Check if the NO_COLOR environment variable is set.
+     * Per <a href="https://no-color.org">no-color.org</a>, when set (to any value),
+     * CLI tools should not emit ANSI color codes.
+     */
+    private static boolean isNoColorSet() {
+        return System.getenv("NO_COLOR") != null;
+    }
 
     @SuppressWarnings("unchecked")
     public AeshCommandLineParser(ProcessedCommand<? extends Command<CI>, CI> processedCommand) {
