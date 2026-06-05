@@ -1545,6 +1545,47 @@ public class CommandLineParserTest {
     }
 
     @Test
+    public void testEnumOptionAutoListsValidValues() throws Exception {
+        // #491: Enum options should auto-append valid values in help output
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new EnumOptionCmd<>()).getParser();
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        // Should auto-append "Valid values: text, json, yaml"
+        assertTrue("Help should contain 'Valid values:'", help.contains("Valid values:"));
+        assertTrue("Help should list 'text'", help.contains("text"));
+        assertTrue("Help should list 'json'", help.contains("json"));
+        assertTrue("Help should list 'yaml'", help.contains("yaml"));
+    }
+
+    @CommandDefinition(name = "enumvar", description = "")
+    public class EnumVarCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "format", description = "Output format (${COMPLETION-CANDIDATES})")
+        OutputFormat format;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testEnumOptionSkipsWhenAlreadyInDescription() throws Exception {
+        // #491: Should NOT double-list values when ${COMPLETION-CANDIDATES} is used
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new EnumVarCmd<>()).getParser();
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        // Should contain the values from ${COMPLETION-CANDIDATES}
+        assertTrue("Help should contain 'text'", help.contains("text"));
+        // Should NOT contain "Valid values:" since the description already lists them
+        assertFalse("Help should NOT contain 'Valid values:' when already in description",
+                help.contains("Valid values:"));
+    }
+
+    @Test
     public void testExclusiveWithEnforcement() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()

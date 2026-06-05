@@ -1453,7 +1453,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
 
         private String resolveOptionDescription(ProcessedOption option) {
-            return resolve(option != null ? option.description() : null, option);
+            String resolved = resolve(option != null ? option.description() : null, option);
+            // Auto-append allowed values for enum options when not already in the description (#491)
+            if (option != null && option.type() != null && option.type().isEnum()
+                    && option.hasAllowedValues()) {
+                String candidates = optionCompletionCandidates(option);
+                if (!candidates.isEmpty() && (resolved == null || !resolved.contains(candidates))) {
+                    String suffix = "Valid values: " + candidates;
+                    if (resolved == null || resolved.isEmpty())
+                        resolved = suffix;
+                    else
+                        resolved = resolved + ". " + suffix;
+                }
+            }
+            return resolved;
         }
 
         private String resolve(String raw, ProcessedOption option) {
