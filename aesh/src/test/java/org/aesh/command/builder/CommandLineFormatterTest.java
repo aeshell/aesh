@@ -39,7 +39,9 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -1450,6 +1452,68 @@ public class CommandLineFormatterTest {
         assertTrue(help.contains("--output=<output>"));
         assertTrue(help.contains("--verbose"));
         assertTrue(help.contains("Output"));
+    }
+
+    @Test
+    public void testAnsi_SynopsisAndOptionsStrippedWhenAnsiDisabled() throws CommandLineParserException {
+        // #499: Verify that ALL ANSI codes are suppressed in help output when ansiMode=false,
+        // including synopsis (bold command name, yellow options, cyan placeholders).
+        // This test would have caught the bug where ProcessedCommand.printHelp() used the
+        // option's isAnsiMode() which was still true even when the parser had ansiMode=false.
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("deploy").description("Deploy application");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('e').name("environment").type(String.class)
+                .description("Target environment").required(true).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('f').name("force").type(boolean.class).hasValue(false)
+                .description("Force deployment").negatable(true).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('v').name("verbose").type(boolean.class).hasValue(false)
+                .description("Verbose output").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // Synopsis should have NO ANSI codes
+        assertFalse("Synopsis should not contain ANSI bold",
+                help.contains("\u001B[1m"));
+        assertFalse("Synopsis should not contain ANSI yellow",
+                help.contains("\u001B[0;33m"));
+        assertFalse("Synopsis should not contain ANSI cyan",
+                help.contains("\u001B[0;36m"));
+        assertFalse("Synopsis should not contain any ESC code",
+                help.contains("\u001B["));
+
+        // Content should still be correct
+        assertTrue("Should contain Usage:", help.contains("Usage:"));
+        assertTrue("Should contain deploy", help.contains("deploy"));
+        assertTrue("Should contain --environment", help.contains("--environment"));
+        assertTrue("Should contain negatable --[no-]force", help.contains("[no-]force"));
+        assertTrue("Should contain --verbose", help.contains("--verbose"));
+    }
+
+    @Test
+    public void testAnsi_ProcessedCommandPrintHelpRespectsAnsiMode() throws CommandLineParserException {
+        // #499: Verify ProcessedCommand.printHelp() directly respects option ansiMode,
+        // not just the parser's ansiMode. This catches the case where options are created
+        // but ansiMode is not propagated from parser to options.
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("test").description("Test");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("opt").type(String.class).description("An option").build());
+
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = pb.create();
+
+        // Manually set options to ansiMode=false (simulating NO_COLOR propagation)
+        for (ProcessedOption opt : pc.getOptions()) {
+            opt.updateAnsiMode(false);
+        }
+
+        String help = pc.printHelp("test", false, false);
+        assertFalse("ProcessedCommand.printHelp should not contain ANSI when options have ansiMode=false",
+                help.contains("\u001B["));
     }
 
     @Test

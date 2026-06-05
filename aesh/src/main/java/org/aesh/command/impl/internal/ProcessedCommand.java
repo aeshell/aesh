@@ -936,7 +936,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         //first line — description
         sb.append(descriptionResolver.resolveCommandDescription(description())).append(Config.getLineSeparator());
         //second line — detailed synopsis with wrapping
-        boolean ansi = !visibleOpts.isEmpty() && visibleOpts.get(0).isAnsiMode();
+        boolean ansi = !visibleOpts.isEmpty() && visibleOpts.get(0).isAnsiMode()
+                && System.getenv("NO_COLOR") == null;
         String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;
         String prefix = ansi
                 ? "Usage: " + ANSI.BOLD + cmdDisplay + ANSI.BOLD_OFF
@@ -1058,8 +1059,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (visibleOpts.isEmpty())
             return "";
 
-        // Determine ansiMode from the first option
-        boolean ansi = visibleOpts.get(0).isAnsiMode();
+        // Determine ansiMode from the first option and NO_COLOR env var
+        boolean ansi = visibleOpts.get(0).isAnsiMode()
+                && System.getenv("NO_COLOR") == null;
 
         // Collect mutually exclusive groups to avoid showing them individually
         java.util.Set<String> exclusiveHandled = new java.util.HashSet<>();

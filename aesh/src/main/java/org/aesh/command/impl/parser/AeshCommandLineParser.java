@@ -92,6 +92,12 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @SuppressWarnings("unchecked")
     public AeshCommandLineParser(ProcessedCommand<? extends Command<CI>, CI> processedCommand) {
         this.processedCommand = (ProcessedCommand<Command<CI>, CI>) processedCommand;
+        // Propagate NO_COLOR to all options so help rendering respects it (#499)
+        if (!ansiMode) {
+            for (org.aesh.command.impl.internal.ProcessedOption opt : this.processedCommand.getOptions()) {
+                opt.updateAnsiMode(false);
+            }
+        }
     }
 
     @Override
