@@ -1691,6 +1691,79 @@ public class AeshRuntimeRunnerTest {
                 output.contains("leaf-b\tLeaf command B"));
     }
 
+    // --- Test for mixin option descriptions (#501) ---
+
+    public static class DescMixin {
+        @Option(name = "deps", description = "Add additional dependencies")
+        public String deps;
+
+        @Option(name = "catalog", description = "Path to catalog file")
+        public String catalog;
+    }
+
+    @CommandDefinition(name = "runcmd", description = "Run a script", groupCommands = {}, generateHelp = true)
+    public static class DescRunCmd implements Command<CommandInvocation> {
+        @org.aesh.command.option.Mixin
+        public DescMixin mixin;
+
+        @Option(name = "debug", description = "Launch with debug enabled", hasValue = false)
+        public boolean debug;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mixapp", description = "App with mixin commands", groupCommands = {
+            DescRunCmd.class }, generateHelp = true)
+    public static class DescMixApp implements Command<CommandInvocation> {
+        @Option(name = "verbose", hasValue = false, inherited = true, description = "Verbose output")
+        public boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCompletionDescriptionsForMixinAndOwnOptions() {
+        // #501: Both command-own options and mixin options should have descriptions
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DescMixApp.class)
+                .args("--aesh-complete", "--", "runcmd", "--")
+                .execute());
+
+        // Command's own option should have description
+        assertTrue("--debug should have description: " + output,
+                output.contains("--debug") && output.contains("Launch with debug enabled"));
+
+        // Mixin options should have descriptions
+        assertTrue("--deps (mixin) should have description: " + output,
+                output.contains("--deps") && output.contains("Add additional dependencies"));
+        assertTrue("--catalog (mixin) should have description: " + output,
+                output.contains("--catalog") && output.contains("Path to catalog file"));
+
+        // Inherited option from parent should also have description
+        assertTrue("--verbose (inherited) should have description: " + output,
+                output.contains("--verbose") && output.contains("Verbose output"));
+    }
+
+    @Test
+    public void testCompletionDescriptionsForMixinOptionsWithTrailingSpace() {
+        // #501 + #500: trailing-space arg format should still produce descriptions
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DescMixApp.class)
+                .args("--aesh-complete", "--", "runcmd ", "--")
+                .execute());
+
+        assertTrue("--debug should have description with trailing-space arg: " + output,
+                output.contains("--debug") && output.contains("Launch with debug enabled"));
+        assertTrue("--deps (mixin) should have description with trailing-space arg: " + output,
+                output.contains("--deps") && output.contains("Add additional dependencies"));
+    }
+
     // --- Tests for completion descriptions (#498) ---
 
     @CommandDefinition(name = "desccmd", description = "Desc test", groupCommands = { DescSubCmd.class }, generateHelp = true)
