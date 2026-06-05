@@ -39,6 +39,34 @@ public final class MetadataProviderRegistry {
     private static volatile List<MetadataRegistry> registries;
     private static final ConcurrentHashMap<Class<?>, CommandMetadataProvider<?>> cache = new ConcurrentHashMap<>();
 
+    /** Sentinel cached for command classes that have no generated provider. */
+    @SuppressWarnings("rawtypes")
+    private static final CommandMetadataProvider ABSENT = new CommandMetadataProvider() {
+        public Class commandType() {
+            return null;
+        }
+
+        public Command newInstance() {
+            return null;
+        }
+
+        public org.aesh.command.impl.internal.ProcessedCommand buildProcessedCommand(Command instance) {
+            return null;
+        }
+
+        public boolean isGroupCommand() {
+            return false;
+        }
+
+        public Class[] groupCommandClasses() {
+            return new Class[0];
+        }
+
+        public String commandName() {
+            return null;
+        }
+    };
+
     private MetadataProviderRegistry() {
     }
 
@@ -47,7 +75,8 @@ public final class MetadataProviderRegistry {
      * <p>
      * On first call for a given class, queries all discovered
      * {@link MetadataRegistry} instances. The result is cached for
-     * subsequent lookups.
+     * subsequent lookups. Negative results (no provider found) are
+     * also cached to avoid repeated registry iteration.
      *
      * @param commandClass the command class to look up
      * @param <C> the command type
@@ -56,6 +85,9 @@ public final class MetadataProviderRegistry {
     @SuppressWarnings("unchecked")
     public static <C extends Command> CommandMetadataProvider<C> getProvider(Class<C> commandClass) {
         CommandMetadataProvider<?> cached = cache.get(commandClass);
+        if (cached == ABSENT) {
+            return null;
+        }
         if (cached != null) {
             return (CommandMetadataProvider<C>) cached;
         }
@@ -68,6 +100,7 @@ public final class MetadataProviderRegistry {
                 return (CommandMetadataProvider<C>) provider;
             }
         }
+        cache.put(commandClass, ABSENT);
         return null;
     }
 
