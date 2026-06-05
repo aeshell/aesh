@@ -23,10 +23,10 @@ import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.aesh.command.converter.Converter;
 import org.aesh.command.impl.converter.BooleanConverter;
@@ -60,7 +60,7 @@ public class CLConverterManager {
     }
 
     private CLConverterManager() {
-        converters = new HashMap<>(22);
+        converters = new ConcurrentHashMap<>(22);
         Converter intConverter = new IntegerConverter();
         converters.put(Integer.class, intConverter);
         converters.put(int.class, intConverter);
@@ -101,8 +101,8 @@ public class CLConverterManager {
     public Converter getConverter(Class clazz) {
         Converter converter = converters.get(clazz);
         if (converter == null && clazz.isEnum()) {
-            converter = new org.aesh.command.impl.converter.EnumConverter(clazz);
-            converters.put(clazz, converter);
+            return (Converter) converters.computeIfAbsent(clazz,
+                    k -> new org.aesh.command.impl.converter.EnumConverter(k));
         }
         return converter;
     }

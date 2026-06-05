@@ -127,8 +127,8 @@ public final class MetadataProviderRegistry {
      */
     public static void reset() {
         synchronized (MetadataProviderRegistry.class) {
+            cache.clear();
             registries = null;
         }
-        cache.clear();
     }
 }
