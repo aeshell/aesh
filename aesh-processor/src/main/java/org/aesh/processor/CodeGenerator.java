@@ -942,7 +942,8 @@ final class CodeGenerator {
                     // String, File, Path -> FILES; other types -> NONE
                     String typeName = fieldType.toString();
                     if (typeName.equals("java.lang.String") || typeName.equals("java.io.File")
-                            || typeName.equals("java.nio.file.Path")) {
+                            || typeName.equals("java.nio.file.Path")
+                            || typeName.equals("org.aesh.io.Resource")) {
                         resolved = org.aesh.command.option.CompletionFallback.FILES;
                     } else {
                         resolved = org.aesh.command.option.CompletionFallback.NONE;

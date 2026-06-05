@@ -39,31 +39,31 @@ public final class MetadataProviderRegistry {
     private static volatile List<MetadataRegistry> registries;
     private static final ConcurrentHashMap<Class<?>, CommandMetadataProvider<?>> cache = new ConcurrentHashMap<>();
 
-    /** Sentinel cached for command classes that have no generated provider. */
+    /** Sentinel cached for command classes that have no generated provider. Must never escape getProvider(). */
     @SuppressWarnings("rawtypes")
     private static final CommandMetadataProvider ABSENT = new CommandMetadataProvider() {
         public Class commandType() {
-            return null;
+            throw new UnsupportedOperationException("ABSENT sentinel");
         }
 
         public Command newInstance() {
-            return null;
+            throw new UnsupportedOperationException("ABSENT sentinel");
         }
 
         public org.aesh.command.impl.internal.ProcessedCommand buildProcessedCommand(Command instance) {
-            return null;
+            throw new UnsupportedOperationException("ABSENT sentinel");
         }
 
         public boolean isGroupCommand() {
-            return false;
+            throw new UnsupportedOperationException("ABSENT sentinel");
         }
 
         public Class[] groupCommandClasses() {
-            return new Class[0];
+            throw new UnsupportedOperationException("ABSENT sentinel");
         }
 
         public String commandName() {
-            return null;
+            throw new UnsupportedOperationException("ABSENT sentinel");
         }
     };
 
@@ -82,26 +82,19 @@ public final class MetadataProviderRegistry {
      * @param <C> the command type
      * @return the provider, or null if no generated provider exists
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <C extends Command> CommandMetadataProvider<C> getProvider(Class<C> commandClass) {
-        CommandMetadataProvider<?> cached = cache.get(commandClass);
-        if (cached == ABSENT) {
-            return null;
-        }
-        if (cached != null) {
-            return (CommandMetadataProvider<C>) cached;
-        }
-
-        String className = commandClass.getName();
-        for (MetadataRegistry registry : getRegistries()) {
-            CommandMetadataProvider<?> provider = registry.get(className);
-            if (provider != null) {
-                cache.put(commandClass, provider);
-                return (CommandMetadataProvider<C>) provider;
+        CommandMetadataProvider<?> result = cache.computeIfAbsent(commandClass, cls -> {
+            String className = cls.getName();
+            for (MetadataRegistry registry : getRegistries()) {
+                CommandMetadataProvider provider = registry.get(className);
+                if (provider != null) {
+                    return provider;
+                }
             }
-        }
-        cache.put(commandClass, ABSENT);
-        return null;
+            return ABSENT;
+        });
+        return result == ABSENT ? null : (CommandMetadataProvider<C>) result;
     }
 
     private static List<MetadataRegistry> getRegistries() {
