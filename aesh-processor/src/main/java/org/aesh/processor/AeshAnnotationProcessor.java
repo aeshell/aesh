@@ -86,6 +86,7 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     /** Pairs of (binaryClassName, metadataSimpleName) for the registry switch. */
     private final List<String[]> registryEntries = new ArrayList<>();
     private String registryPackage;
+    private boolean registryGenerated;
     /** Private fields needing reflection config, grouped by declaring class name. */
     private final Map<String, Set<String>> reflectConfigEntries = new LinkedHashMap<>();
 
@@ -101,8 +102,8 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver()) {
+            // Write resource files in the final round (resources don't trigger the warning)
             if (!registryEntries.isEmpty()) {
-                generateRegistryClass();
                 writeServiceFile();
                 writeNativeImageConfigs();
             }
@@ -133,6 +134,13 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
                 messager.printMessage(Diagnostic.Kind.ERROR,
                         "Failed to generate metadata provider: " + e.getMessage(), commandElement);
             }
+        }
+
+        // Generate the registry source file in the same round as the providers,
+        // not in the final round, to avoid javac's "created in the last round" warning (#492).
+        if (!registryEntries.isEmpty() && !commandElements.isEmpty() && !registryGenerated) {
+            generateRegistryClass();
+            registryGenerated = true;
         }
 
         return false;
