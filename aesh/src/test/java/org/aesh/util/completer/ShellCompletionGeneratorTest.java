@@ -15,7 +15,6 @@
  */
 package org.aesh.util.completer;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -283,14 +282,12 @@ public class ShellCompletionGeneratorTest {
     }
 
     @Test
-    public void testFishDynamicCompletionNoSuppressFileCompletion() {
-        // #487: dynamic fish completion must NOT use -f on the registration line.
-        // When --aesh-complete returns empty (e.g. positional arg position),
-        // fish should fall back to default file completion.
+    public void testFishDynamicCompletionFilePathFallback() {
+        // #493: dynamic fish completion uses -f to suppress default file mixing,
+        // but explicitly calls __fish_complete_path when aesh returns no candidates.
         String out = generateDynamic(ShellType.FISH, SimpleCmd.class, "mycli");
 
-        // The registration line should NOT have -f
-        // Find the 'complete -c mycli' registration line (not inside the function)
+        // The registration line SHOULD have -f to suppress default file mixing
         String registrationLine = null;
         for (String line : out.split("\n")) {
             if (line.startsWith("complete -c mycli") && line.contains("__mycli_complete")) {
@@ -299,12 +296,16 @@ public class ShellCompletionGeneratorTest {
             }
         }
         assertNotNull("Should have a completion registration line", registrationLine);
-        assertFalse("Dynamic completion registration should NOT use -f flag (#487)",
+        assertTrue("Registration should use -f to suppress default file mixing (#493)",
                 registrationLine.contains(" -f"));
 
-        // The function should capture results and only output when non-empty
+        // The function should capture results and output when non-empty
         assertTrue("Should capture results into variable", out.contains("set -l results"));
         assertTrue("Should check result count", out.contains("count $results"));
+
+        // When no results, should explicitly call __fish_complete_path for file fallback
+        assertTrue("Should call __fish_complete_path when no candidates (#493)",
+                out.contains("__fish_complete_path"));
     }
 
     @Test

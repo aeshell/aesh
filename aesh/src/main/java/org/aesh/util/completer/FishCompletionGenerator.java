@@ -198,12 +198,17 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
                 "    set -l results (" + programName + " --aesh-complete -- $tokens[2..])" + NL +
                 "    if test (count $results) -gt 0" + NL +
                 "        printf '%s\\n' $results" + NL +
+                "    else" + NL +
+                "        # No candidates from aesh — fall back to file/path completion." + NL +
+                "        # This handles positional arguments that expect file paths." + NL +
+                "        __fish_complete_path $current" + NL +
                 "    end" + NL +
                 "end" + NL +
                 NL +
-                "# Do not use -f: when __" + programName + "_complete returns empty," + NL +
-                "# fish falls back to default file completion (e.g. for positional args)." + NL +
-                "complete -c " + programName + " -a '(__" + programName + "_complete)'" + NL;
+                "# -f suppresses default file completion so aesh candidates (options," + NL +
+                "# subcommands) are not mixed with filenames. When aesh returns empty," + NL +
+                "# the function above explicitly calls __fish_complete_path as fallback." + NL +
+                "complete -c " + programName + " -f -a '(__" + programName + "_complete)'" + NL;
     }
 
     private static String escapeFish(String s) {
