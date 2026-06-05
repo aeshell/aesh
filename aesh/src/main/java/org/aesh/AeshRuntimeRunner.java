@@ -525,54 +525,9 @@ public class AeshRuntimeRunner {
         try {
             String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();
             String name = completionProgramName != null ? completionProgramName : commandName;
-
-            ShellType shellType = detectShell();
-            if (shellType == null) {
-                System.err.println("Could not detect shell type. Use --aesh-completion bash|zsh|fish instead.");
-                return CommandResult.FAILURE;
-            }
-
-            java.io.File installPath = getCompletionInstallPath(shellType, name);
-            if (installPath == null) {
-                System.err.println("Could not determine completion install path for " + shellType + ".");
-                return CommandResult.FAILURE;
-            }
-
-            // Generate the script
             CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) commandRegistry
                     .getCommand(commandName, "");
-            String script = ShellCompletionGenerator.forShell(shellType)
-                    .generateDynamic(container.getParser(), name);
-
-            // Confirm with user
-            String action = installPath.exists() ? "Overwrite" : "Write";
-            System.out.println(action + " completion script to: " + installPath.getAbsolutePath());
-            System.out.print("Proceed? [y/N] ");
-            System.out.flush();
-
-            java.io.Console console = System.console();
-            String response;
-            if (console != null) {
-                response = console.readLine();
-            } else {
-                response = new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
-            }
-
-            if (response != null && (response.equalsIgnoreCase("y") || response.equalsIgnoreCase("yes"))) {
-                java.io.File parentDir = installPath.getParentFile();
-                if (parentDir != null && !parentDir.exists()) {
-                    parentDir.mkdirs();
-                }
-                try (java.io.FileWriter writer = new java.io.FileWriter(installPath)) {
-                    writer.write(script);
-                }
-                System.out.println("Completion script installed to " + installPath.getAbsolutePath());
-                System.out.println("Note: '" + name + "' must be on your $PATH for completions to work.");
-                System.out.println("Restart your shell or source the file to activate completions.");
-            } else {
-                System.out.println("Installation cancelled.");
-            }
-            return CommandResult.SUCCESS;
+            return doInstallCompletion(container.getParser(), name) ? CommandResult.SUCCESS : CommandResult.FAILURE;
         } catch (Exception e) {
             System.err.println("Failed to install completion: " + e.getMessage());
             return CommandResult.FAILURE;
@@ -671,6 +626,61 @@ public class AeshRuntimeRunner {
      * @return true if the flag was handled, false if not a completion install request
      */
     @SuppressWarnings("unchecked")
+    /**
+     * Shared logic for completion script installation.
+     * Detects shell, generates script, prompts user, and writes file.
+     *
+     * @return true if installation succeeded or was cancelled, false on error
+     */
+    private static boolean doInstallCompletion(CommandLineParser<?> parser, String programName) throws Exception {
+        ShellType shellType = detectShell();
+        if (shellType == null) {
+            System.err.println("Could not detect shell type. Use --aesh-completion bash|zsh|fish instead.");
+            return false;
+        }
+
+        java.io.File installPath = getCompletionInstallPath(shellType, programName);
+        if (installPath == null) {
+            System.err.println("Could not determine completion install path for " + shellType + ".");
+            return false;
+        }
+
+        String script = ShellCompletionGenerator.forShell(shellType)
+                .generateDynamic(parser, programName);
+
+        // Confirm with user
+        String action = installPath.exists() ? "Overwrite" : "Write";
+        System.out.println(action + " completion script to: " + installPath.getAbsolutePath());
+        System.out.print("Proceed? [y/N] ");
+        System.out.flush();
+
+        String response = readUserResponse();
+
+        if (response != null && (response.equalsIgnoreCase("y") || response.equalsIgnoreCase("yes"))) {
+            java.io.File parentDir = installPath.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+            try (java.io.FileWriter writer = new java.io.FileWriter(installPath)) {
+                writer.write(script);
+            }
+            System.out.println("Completion script installed to " + installPath.getAbsolutePath());
+            System.out.println("Note: '" + programName + "' must be on your $PATH for completions to work.");
+            System.out.println("Restart your shell or source the file to activate completions.");
+        } else {
+            System.out.println("Installation cancelled.");
+        }
+        return true;
+    }
+
+    private static String readUserResponse() throws java.io.IOException {
+        java.io.Console console = System.console();
+        if (console != null) {
+            return console.readLine();
+        }
+        return new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
+    }
+
     public static boolean handleCompletionInstall(String[] args, Class<? extends Command> commandClass,
             String programName) {
         if (args == null || args.length == 0 || !"--aesh-completion-install".equals(args[0]))
@@ -681,53 +691,8 @@ public class AeshRuntimeRunner {
                     .command(commandClass).create();
             String commandName = registry.getAllCommandNames().iterator().next();
             String name = programName != null ? programName : commandName;
-
-            ShellType shellType = detectShell();
-            if (shellType == null) {
-                System.err.println("Could not detect shell type. Use --aesh-completion bash|zsh|fish instead.");
-                return true;
-            }
-
-            java.io.File installPath = getCompletionInstallPath(shellType, name);
-            if (installPath == null) {
-                System.err.println("Could not determine completion install path for " + shellType + ".");
-                return true;
-            }
-
-            // Generate the script
             CommandContainer<CommandInvocation> container = registry.getCommand(commandName, "");
-            String script = ShellCompletionGenerator.forShell(shellType)
-                    .generateDynamic(container.getParser(), name);
-
-            // Confirm with user
-            String action = installPath.exists() ? "Overwrite" : "Write";
-            System.out.println(action + " completion script to: " + installPath.getAbsolutePath());
-            System.out.print("Proceed? [y/N] ");
-            System.out.flush();
-
-            java.io.Console console = System.console();
-            String response;
-            if (console != null) {
-                response = console.readLine();
-            } else {
-                // Fallback for non-interactive (piped input)
-                response = new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
-            }
-
-            if (response != null && (response.equalsIgnoreCase("y") || response.equalsIgnoreCase("yes"))) {
-                java.io.File parentDir = installPath.getParentFile();
-                if (parentDir != null && !parentDir.exists()) {
-                    parentDir.mkdirs();
-                }
-                try (java.io.FileWriter writer = new java.io.FileWriter(installPath)) {
-                    writer.write(script);
-                }
-                System.out.println("Completion script installed to " + installPath.getAbsolutePath());
-                System.out.println("Note: '" + name + "' must be on your $PATH for completions to work.");
-                System.out.println("Restart your shell or source the file to activate completions.");
-            } else {
-                System.out.println("Installation cancelled.");
-            }
+            doInstallCompletion(container.getParser(), name);
         } catch (Exception e) {
             System.err.println("Failed to install completion: " + e.getMessage());
         }
