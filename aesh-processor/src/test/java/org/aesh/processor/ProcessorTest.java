@@ -2208,6 +2208,66 @@ public class ProcessorTest {
         assertTrue("Should contain verbose field", json.contains("\"name\": \"verbose\""));
     }
 
+    // --- Test: CompletionFallback on annotation processor path (#494) ---
+
+    private static final String COMPLETION_FALLBACK_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.CompletionFallback;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"fbcmd\", description = \"Fallback test\")\n" +
+            "public class FallbackCommand implements Command<CommandInvocation> {\n" +
+            "    @Argument(description = \"Catalog name\", completeFallback = CompletionFallback.NONE)\n" +
+            "    public String catalog;\n" +
+            "\n" +
+            "    @Option(name = \"workspace\", completeFallback = CompletionFallback.DIRECTORIES)\n" +
+            "    public String workspace;\n" +
+            "\n" +
+            "    @Option(name = \"input\", description = \"Input file\")\n" +
+            "    public String input;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testCompletionFallbackOnProcessorPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.FallbackCommand", COMPLETION_FALLBACK_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.FallbackCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.FallbackCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // @Argument with CompletionFallback.NONE
+        ProcessedOption arg = generatedPC.getArgument();
+        assertNotNull("Should have @Argument", arg);
+        assertEquals("Argument should have NONE fallback",
+                org.aesh.command.option.CompletionFallback.NONE, arg.getCompleteFallback());
+
+        // @Option with CompletionFallback.DIRECTORIES
+        ProcessedOption wsOpt = generatedPC.findLongOptionNoActivatorCheck("workspace");
+        assertNotNull("Should have --workspace", wsOpt);
+        assertEquals("workspace should have DIRECTORIES fallback",
+                org.aesh.command.option.CompletionFallback.DIRECTORIES, wsOpt.getCompleteFallback());
+
+        // @Option with DEFAULT (String type -> resolved to FILES)
+        ProcessedOption inputOpt = generatedPC.findLongOptionNoActivatorCheck("input");
+        assertNotNull("Should have --input", inputOpt);
+        assertEquals("input (String, DEFAULT) should resolve to FILES",
+                org.aesh.command.option.CompletionFallback.FILES, inputOpt.getCompleteFallback());
+    }
+
     // --- Test: Generated _AeshMetadataRegistry ---
 
     @Test

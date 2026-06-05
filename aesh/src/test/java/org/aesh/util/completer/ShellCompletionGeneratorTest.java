@@ -15,6 +15,7 @@
  */
 package org.aesh.util.completer;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -31,6 +32,7 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.option.CompletionFallback;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
@@ -249,9 +251,10 @@ public class ShellCompletionGeneratorTest {
         assertTrue(out.contains("_complete_mycli()"));
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
         assertTrue("Should pass COMP_WORDS", out.contains("${COMP_WORDS[@]:1}"));
-        assertTrue(out.contains("complete -o default -F _complete_mycli mycli"));
-        // Should strip tab-separated descriptions for compgen compatibility
-        assertTrue("Should strip descriptions with cut", out.contains("cut -f1"));
+        assertTrue(out.contains("complete -F _complete_mycli mycli"));
+        // Should handle __aesh_file__ and __aesh_dir__ sentinels
+        assertTrue("Should check for __aesh_file__ sentinel", out.contains("__aesh_file__"));
+        assertTrue("Should check for __aesh_dir__ sentinel", out.contains("__aesh_dir__"));
     }
 
     @Test
@@ -451,5 +454,83 @@ public class ShellCompletionGeneratorTest {
         public CommandResult execute(CommandInvocation inv) throws CommandException {
             return CommandResult.SUCCESS;
         }
+    }
+
+    // --- Tests for CompletionFallback (#494) ---
+
+    @CommandDefinition(name = "fallback", description = "Fallback test")
+    public static class FallbackCmd implements Command {
+        @Argument(description = "Script file", completeFallback = CompletionFallback.FILES)
+        public String script;
+
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "nofallback", description = "No fallback test")
+    public static class NoFallbackCmd implements Command {
+        @Argument(description = "Catalog name", completeFallback = CompletionFallback.NONE)
+        public String catalog;
+
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCompleteFallbackResolvedOnProcessedOption() throws Exception {
+        // FILES explicit
+        org.aesh.command.impl.parser.CommandLineParser<?> parser = new org.aesh.command.impl.container.AeshCommandContainerBuilder<>()
+                .create(FallbackCmd.class).getParser();
+        org.aesh.command.impl.internal.ProcessedOption arg = parser.getProcessedCommand().getArgument();
+        assertNotNull(arg);
+        assertEquals("Explicit FILES", CompletionFallback.FILES, arg.getCompleteFallback());
+
+        // NONE explicit
+        parser = new org.aesh.command.impl.container.AeshCommandContainerBuilder<>()
+                .create(NoFallbackCmd.class).getParser();
+        arg = parser.getProcessedCommand().getArgument();
+        assertNotNull(arg);
+        assertEquals("Explicit NONE", CompletionFallback.NONE, arg.getCompleteFallback());
+    }
+
+    public enum Format {
+        TEXT,
+        JSON
+    }
+
+    @CommandDefinition(name = "autodetect", description = "Auto-detect test")
+    public static class AutoDetectCmd implements Command {
+        @Argument(description = "Format")
+        public Format format;
+
+        @Option(name = "config", description = "Config file")
+        public File config;
+
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCompleteFallbackAutoDetect() throws Exception {
+        // DEFAULT resolves: enum -> NONE, File -> FILES
+        org.aesh.command.impl.parser.CommandLineParser<?> parser = new org.aesh.command.impl.container.AeshCommandContainerBuilder<>()
+                .create(AutoDetectCmd.class).getParser();
+
+        // Enum argument -> NONE
+        org.aesh.command.impl.internal.ProcessedOption arg = parser.getProcessedCommand().getArgument();
+        assertNotNull(arg);
+        assertEquals("Enum should resolve to NONE", CompletionFallback.NONE, arg.getCompleteFallback());
+
+        // File option -> FILES
+        org.aesh.command.impl.internal.ProcessedOption configOpt = parser.getProcessedCommand()
+                .findLongOptionNoActivatorCheck("config");
+        assertNotNull(configOpt);
+        assertEquals("File should resolve to FILES", CompletionFallback.FILES, configOpt.getCompleteFallback());
     }
 }

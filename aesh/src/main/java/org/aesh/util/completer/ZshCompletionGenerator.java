@@ -230,17 +230,28 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
                 NL +
                 "_" + programName + "() {" + NL +
                 "    local -a completions descriptions" + NL +
-                "    local line" + NL +
+                "    local line has_file_sentinel=0 has_dir_sentinel=0" + NL +
                 "    while IFS=$'\\t' read -r val desc; do" + NL +
-                "        completions+=(\"$val\")" + NL +
-                "        if [[ -n \"$desc\" ]]; then" + NL +
-                "            descriptions+=(\"$val:$desc\")" + NL +
+                "        if [[ \"$val\" == \"__aesh_file__\" ]]; then" + NL +
+                "            has_file_sentinel=1" + NL +
+                "        elif [[ \"$val\" == \"__aesh_dir__\" ]]; then" + NL +
+                "            has_dir_sentinel=1" + NL +
+                "        else" + NL +
+                "            completions+=(\"$val\")" + NL +
+                "            if [[ -n \"$desc\" ]]; then" + NL +
+                "                descriptions+=(\"$val:$desc\")" + NL +
+                "            fi" + NL +
                 "        fi" + NL +
                 "    done < <(" + programName + " --aesh-complete -- \"${words[@]:1}\")" + NL +
                 "    if (( ${#descriptions} > 0 )); then" + NL +
                 "        _describe '' descriptions" + NL +
-                "    else" + NL +
+                "    elif (( ${#completions} > 0 )); then" + NL +
                 "        compadd -a completions" + NL +
+                "    fi" + NL +
+                "    if (( has_file_sentinel )); then" + NL +
+                "        _files" + NL +
+                "    elif (( has_dir_sentinel )); then" + NL +
+                "        _files -/" + NL +
                 "    fi" + NL +
                 "}" + NL +
                 NL +

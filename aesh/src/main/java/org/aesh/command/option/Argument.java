@@ -164,4 +164,12 @@ public @interface Argument {
      */
     boolean url() default false;
 
+    /**
+     * Controls what shell completion scripts offer as a fallback when no other
+     * completion candidates are available for this argument.
+     * <p>
+     * Default: auto-detect based on field type (FILES for String/File/Path, NONE for enums).
+     */
+    CompletionFallback completeFallback() default CompletionFallback.DEFAULT;
+
 }

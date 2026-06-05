@@ -336,6 +336,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .inherited(o.inherited())
                             .descriptionUrl(o.descriptionUrl())
                             .url(o.url())
+                            .completeFallback(o.completeFallback())
                             .aliases(o.aliases())
                             .helpGroup(o.helpGroup())
                             .exclusiveWith(o.exclusiveWith())
@@ -486,6 +487,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .activator(a.activator())
                     .parser(a.parser())
                     .url(a.url())
+                    .completeFallback(a.completeFallback())
                     .mixinFieldName(mixinFieldName)
                     .build());
         } else if ((arg = field.getAnnotation(Argument.class)) != null) {
@@ -523,6 +525,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .overrideRequired(arg.overrideRequired())
                             .inherited(arg.inherited())
                             .url(arg.url())
+                            .completeFallback(arg.completeFallback())
                             .mixinFieldName(mixinFieldName)
                             .build());
         } else if (field.getAnnotation(Mixin.class) != null) {

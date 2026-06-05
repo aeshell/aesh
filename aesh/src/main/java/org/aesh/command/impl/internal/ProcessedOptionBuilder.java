@@ -94,6 +94,7 @@ public class ProcessedOptionBuilder {
     private List<String> allowedValues = java.util.Collections.emptyList();
     private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
     private int order = Integer.MAX_VALUE;
+    private org.aesh.command.option.CompletionFallback completeFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
 
     private ProcessedOptionBuilder() {
         defaultValues = java.util.Collections.emptyList();
@@ -453,6 +454,11 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
+    public ProcessedOptionBuilder completeFallback(org.aesh.command.option.CompletionFallback completeFallback) {
+        this.completeFallback = completeFallback;
+        return this;
+    }
+
     public ProcessedOption build() throws OptionParserException {
         if (optionType == null) {
             if (!hasValue)
@@ -559,6 +565,21 @@ public class ProcessedOptionBuilder {
             option.setArity(org.aesh.command.option.Arity.parse(arity));
         if (index != null && !index.isEmpty())
             option.setIndex(index);
+        // Resolve DEFAULT completeFallback based on type
+        if (completeFallback == org.aesh.command.option.CompletionFallback.DEFAULT) {
+            if (type != null && type.isEnum()) {
+                option.setCompleteFallback(org.aesh.command.option.CompletionFallback.NONE);
+            } else if (type != null && (java.io.File.class.isAssignableFrom(type)
+                    || java.nio.file.Path.class.isAssignableFrom(type)
+                    || org.aesh.io.Resource.class.isAssignableFrom(type)
+                    || String.class.isAssignableFrom(type))) {
+                option.setCompleteFallback(org.aesh.command.option.CompletionFallback.FILES);
+            } else {
+                option.setCompleteFallback(org.aesh.command.option.CompletionFallback.NONE);
+            }
+        } else {
+            option.setCompleteFallback(completeFallback);
+        }
         return option;
     }
 }

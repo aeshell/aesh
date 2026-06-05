@@ -529,6 +529,7 @@ final class CodeGenerator {
                     .append(");\n");
         if (o.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
+        emitCompleteFallbackSetter(sb, var, o.completeFallback(), field, typeUtils);
         emitAliasesSetter(sb, var, o.aliases());
         emitHelpGroupSetter(sb, var, o.helpGroup());
         emitExclusiveWithSetter(sb, var, o.exclusiveWith());
@@ -704,6 +705,7 @@ final class CodeGenerator {
         emitParserSetter(sb, var, field, "parser", elementUtils);
         if (a.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
+        emitCompleteFallbackSetter(sb, var, a.completeFallback(), field, typeUtils);
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
@@ -764,6 +766,7 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setInherited(true);\n");
         if (arg.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
+        emitCompleteFallbackSetter(sb, var, arg.completeFallback(), field, typeUtils);
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
@@ -918,6 +921,40 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".").append(setterName)
                     .append("(new ").append(className).append("());\n");
         }
+    }
+
+    /**
+     * Emit setCompleteFallback() resolving DEFAULT based on field type at compile time.
+     */
+    private static void emitCompleteFallbackSetter(StringBuilder sb, String var,
+            org.aesh.command.option.CompletionFallback value, VariableElement field, Types typeUtils) {
+        org.aesh.command.option.CompletionFallback resolved = value;
+        if (resolved == org.aesh.command.option.CompletionFallback.DEFAULT) {
+            // Resolve DEFAULT based on field type
+            TypeMirror fieldType = field.asType();
+            if (isOptionalType(fieldType))
+                fieldType = unwrapOptionalTypeMirror(fieldType);
+            if (fieldType.getKind() == TypeKind.DECLARED) {
+                javax.lang.model.element.Element element = typeUtils.asElement(fieldType);
+                if (element != null && element.getKind() == javax.lang.model.element.ElementKind.ENUM) {
+                    resolved = org.aesh.command.option.CompletionFallback.NONE;
+                } else {
+                    // String, File, Path -> FILES; other types -> NONE
+                    String typeName = fieldType.toString();
+                    if (typeName.equals("java.lang.String") || typeName.equals("java.io.File")
+                            || typeName.equals("java.nio.file.Path")) {
+                        resolved = org.aesh.command.option.CompletionFallback.FILES;
+                    } else {
+                        resolved = org.aesh.command.option.CompletionFallback.NONE;
+                    }
+                }
+            } else {
+                // Primitive types -> NONE
+                resolved = org.aesh.command.option.CompletionFallback.NONE;
+            }
+        }
+        sb.append("            ").append(var).append(".setCompleteFallback(org.aesh.command.option.CompletionFallback.")
+                .append(resolved.name()).append(");\n");
     }
 
     private static void emitAliasesSetter(StringBuilder sb, String var, String[] aliases) {

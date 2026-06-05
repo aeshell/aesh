@@ -106,6 +106,7 @@ public class ProcessedOption {
     private List<String> allowedValues = Collections.emptyList();
     private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
     private int order = Integer.MAX_VALUE;
+    private org.aesh.command.option.CompletionFallback completeFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
     private int declarationOrder = Integer.MAX_VALUE;
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
@@ -403,6 +404,14 @@ public class ProcessedOption {
 
     public void setOrder(int order) {
         this.order = order;
+    }
+
+    public org.aesh.command.option.CompletionFallback getCompleteFallback() {
+        return completeFallback;
+    }
+
+    public void setCompleteFallback(org.aesh.command.option.CompletionFallback completeFallback) {
+        this.completeFallback = completeFallback;
     }
 
     public int getOrder() {

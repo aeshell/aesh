@@ -257,4 +257,12 @@ public @interface Option {
      */
     int order() default Integer.MAX_VALUE;
 
+    /**
+     * Controls what shell completion scripts offer as a fallback when no other
+     * completion candidates are available for this option's value.
+     * <p>
+     * Default: auto-detect based on field type (FILES for String/File/Path, NONE for enums).
+     */
+    CompletionFallback completeFallback() default CompletionFallback.DEFAULT;
+
 }

@@ -215,14 +215,23 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
                 "_complete_" + programName + "() {" + NL +
                 "    local cur=\"${COMP_WORDS[COMP_CWORD]}\"" + NL +
                 "    local IFS=$'\\n'" + NL +
-                "    # Get completions (strip descriptions after tab for compgen)" + NL +
                 "    local candidates" + NL +
                 "    candidates=$(" + programName + " --aesh-complete -- \"${COMP_WORDS[@]:1}\")" + NL +
-                "    local values" + NL +
-                "    values=$(echo \"$candidates\" | cut -f1)" + NL +
-                "    COMPREPLY=( $(compgen -W \"$values\" -- \"$cur\") )" + NL +
+                "    # Check for file/dir sentinels from aesh" + NL +
+                "    if echo \"$candidates\" | grep -q '^__aesh_file__$'; then" + NL +
+                "        candidates=$(echo \"$candidates\" | grep -v '^__aesh_file__$')" + NL +
+                "        local values=$(echo \"$candidates\" | cut -f1)" + NL +
+                "        COMPREPLY=( $(compgen -W \"$values\" -- \"$cur\") $(compgen -f -- \"$cur\") )" + NL +
+                "    elif echo \"$candidates\" | grep -q '^__aesh_dir__$'; then" + NL +
+                "        candidates=$(echo \"$candidates\" | grep -v '^__aesh_dir__$')" + NL +
+                "        local values=$(echo \"$candidates\" | cut -f1)" + NL +
+                "        COMPREPLY=( $(compgen -W \"$values\" -- \"$cur\") $(compgen -d -- \"$cur\") )" + NL +
+                "    else" + NL +
+                "        local values=$(echo \"$candidates\" | cut -f1)" + NL +
+                "        COMPREPLY=( $(compgen -W \"$values\" -- \"$cur\") )" + NL +
+                "    fi" + NL +
                 "}" + NL +
-                "complete -o default -F _complete_" + programName + " " + programName + NL;
+                "complete -F _complete_" + programName + " " + programName + NL;
     }
 
     static boolean isBooleanType(ProcessedOption option) {

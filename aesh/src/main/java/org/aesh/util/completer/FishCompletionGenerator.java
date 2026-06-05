@@ -196,18 +196,27 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
                 "        set tokens $tokens ''" + NL +
                 "    end" + NL +
                 "    set -l results (" + programName + " --aesh-complete -- $tokens[2..])" + NL +
-                "    if test (count $results) -gt 0" + NL +
-                "        printf '%s\\n' $results" + NL +
-                "    else" + NL +
-                "        # No candidates from aesh — fall back to file/path completion." + NL +
-                "        # This handles positional arguments that expect file paths." + NL +
+                "    # Check for file/dir sentinels from aesh and provide appropriate completion" + NL +
+                "    if contains -- __aesh_file__ $results" + NL +
+                "        set results (string match -v -- '__aesh_file__' $results)" + NL +
+                "        if test (count $results) -gt 0" + NL +
+                "            printf '%s\\n' $results" + NL +
+                "        end" + NL +
                 "        __fish_complete_path $current" + NL +
+                "    else if contains -- __aesh_dir__ $results" + NL +
+                "        set results (string match -v -- '__aesh_dir__' $results)" + NL +
+                "        if test (count $results) -gt 0" + NL +
+                "            printf '%s\\n' $results" + NL +
+                "        end" + NL +
+                "        __fish_complete_directories $current" + NL +
+                "    else if test (count $results) -gt 0" + NL +
+                "        printf '%s\\n' $results" + NL +
                 "    end" + NL +
                 "end" + NL +
                 NL +
                 "# -f suppresses default file completion so aesh candidates (options," + NL +
-                "# subcommands) are not mixed with filenames. When aesh returns empty," + NL +
-                "# the function above explicitly calls __fish_complete_path as fallback." + NL +
+                "# subcommands) are not mixed with filenames. The function above handles" + NL +
+                "# file/dir fallback via __aesh_file__/__aesh_dir__ sentinels." + NL +
                 "complete -c " + programName + " -f -a '(__" + programName + "_complete)'" + NL;
     }
 

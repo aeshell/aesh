@@ -248,6 +248,19 @@ public class AeshRuntimeRunner {
                     System.out.println(value);
                 }
             }
+
+            // When no candidates and at a positional position, emit file/dir sentinel
+            // based on the current argument's completeFallback setting (#494)
+            if (candidates.isEmpty() && cursorAtPositional) {
+                org.aesh.command.option.CompletionFallback fallback = resolvePositionalFallback(
+                        commandRegistry, commandName);
+                if (fallback == org.aesh.command.option.CompletionFallback.FILES) {
+                    System.out.println("__aesh_file__");
+                } else if (fallback == org.aesh.command.option.CompletionFallback.DIRECTORIES) {
+                    System.out.println("__aesh_dir__");
+                }
+            }
+
             return CommandResult.SUCCESS;
         } catch (Exception e) {
             System.err.println("Completion error: " + e.getMessage());
@@ -329,6 +342,33 @@ public class AeshRuntimeRunner {
                 }
             }
         }
+    }
+
+    /**
+     * Resolve the CompletionFallback for the current positional argument position.
+     * Walks the parser tree to find the scoped command, then checks its argument/arguments.
+     */
+    @SuppressWarnings("unchecked")
+    private org.aesh.command.option.CompletionFallback resolvePositionalFallback(
+            CommandRegistry commandRegistry, String commandName) {
+        try {
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) commandRegistry
+                    .getCommand(commandName, "");
+            CommandLineParser<CommandInvocation> scopedParser = findScopedParser(container.getParser(), args);
+            org.aesh.command.impl.internal.ProcessedCommand<?, ?> cmd = scopedParser.getProcessedCommand();
+
+            // Check @Argument first
+            if (cmd.getArgument() != null) {
+                return cmd.getArgument().getCompleteFallback();
+            }
+            // Then @Arguments
+            if (cmd.getArguments() != null) {
+                return cmd.getArguments().getCompleteFallback();
+            }
+        } catch (Exception ignored) {
+        }
+        // Default: offer files for backward compatibility
+        return org.aesh.command.option.CompletionFallback.FILES;
     }
 
     // --- Built-in flag handlers (intercepted from args in execute()) ---

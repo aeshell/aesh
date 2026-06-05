@@ -154,4 +154,12 @@ public @interface Arguments {
      * If the terminal supports hyperlinks, the values are rendered as clickable links.
      */
     boolean url() default false;
+
+    /**
+     * Controls what shell completion scripts offer as a fallback when no other
+     * completion candidates are available for these arguments.
+     * <p>
+     * Default: auto-detect based on field type (FILES for String/File/Path, NONE for enums).
+     */
+    CompletionFallback completeFallback() default CompletionFallback.DEFAULT;
 }
