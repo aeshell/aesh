@@ -239,6 +239,9 @@ public class AeshRuntimeRunner {
                 candidates.removeIf(c -> c.getCharacters().trim().startsWith("-"));
             }
 
+            // Sort candidates alphabetically for consistent shell completion (#497)
+            candidates.sort((a, b) -> a.getCharacters().trim().compareToIgnoreCase(b.getCharacters().trim()));
+
             for (org.aesh.terminal.formatting.TerminalString candidate : candidates) {
                 String value = candidate.getCharacters();
                 String desc = descriptions.get(value.trim());

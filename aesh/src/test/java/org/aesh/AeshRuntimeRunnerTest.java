@@ -1567,6 +1567,30 @@ public class AeshRuntimeRunnerTest {
                 null, CaptureCommand.class));
     }
 
+    // --- Test for sorted completion candidates (#497) ---
+
+    @Test
+    public void testCompletionCandidatesSortedAlphabetically() {
+        // #497: --aesh-complete should return candidates in alphabetical order
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DuplicateChildApp.class)
+                .args("--aesh-complete", "--", "")
+                .execute());
+
+        // Subcommands should be sorted: alias before catalog
+        String[] lines = output.trim().split("\n");
+        java.util.List<String> names = new java.util.ArrayList<>();
+        for (String line : lines) {
+            String name = line.split("\t")[0].trim();
+            if (!name.isEmpty() && !name.startsWith("__aesh_"))
+                names.add(name);
+        }
+        for (int i = 1; i < names.size(); i++) {
+            assertTrue("Candidates should be sorted: '" + names.get(i - 1) + "' before '" + names.get(i) + "'",
+                    names.get(i - 1).compareToIgnoreCase(names.get(i)) <= 0);
+        }
+    }
+
     // --- Tests for completion descriptions (#498) ---
 
     @CommandDefinition(name = "desccmd", description = "Desc test", groupCommands = { DescSubCmd.class }, generateHelp = true)
