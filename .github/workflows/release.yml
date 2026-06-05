@@ -93,10 +93,56 @@ jobs:
           git push origin HEAD
           git push origin "v${{ steps.versions.outputs.release_version }}"
 
+      - name: Generate release notes
+        id: notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_VERSION="${{ steps.versions.outputs.release_version }}"
+          PREV_TAG=$(git tag --sort=-v:refname | grep -v "v${RELEASE_VERSION}" | head -1)
+          echo "Previous tag: $PREV_TAG"
+
+          NOTES_FILE=$(mktemp)
+          echo "## What's New in ${RELEASE_VERSION}" >> "$NOTES_FILE"
+          echo "" >> "$NOTES_FILE"
+
+          # Collect issues closed by commits in this release
+          ISSUES=$(git log "${PREV_TAG}..v${RELEASE_VERSION}" --oneline \
+            | grep -oP '#\d+' | sort -t'#' -k2 -n -u | tr -d '#')
+
+          if [ -n "$ISSUES" ]; then
+            echo "### Issues" >> "$NOTES_FILE"
+            echo "" >> "$NOTES_FILE"
+            for issue in $ISSUES; do
+              TITLE=$(gh issue view "$issue" --json title -q '.title' 2>/dev/null || echo "")
+              STATE=$(gh issue view "$issue" --json state -q '.state' 2>/dev/null || echo "")
+              if [ -n "$TITLE" ]; then
+                if [ "$STATE" = "CLOSED" ]; then
+                  echo "- ~~#${issue}~~ ${TITLE}" >> "$NOTES_FILE"
+                else
+                  echo "- #${issue} ${TITLE}" >> "$NOTES_FILE"
+                fi
+              fi
+            done
+            echo "" >> "$NOTES_FILE"
+          fi
+
+          # Categorize commits
+          echo "### Changes" >> "$NOTES_FILE"
+          echo "" >> "$NOTES_FILE"
+          git log "${PREV_TAG}..v${RELEASE_VERSION}" --oneline --no-merges \
+            | grep -v "Release \|Next version \|Bump " \
+            | sed 's/^[0-9a-f]* /- /' >> "$NOTES_FILE"
+          echo "" >> "$NOTES_FILE"
+
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...v${RELEASE_VERSION}" >> "$NOTES_FILE"
+
+          echo "notes_file=$NOTES_FILE" >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "v${{ steps.versions.outputs.release_version }}" \
             --title "Release ${{ steps.versions.outputs.release_version }}" \
-            --generate-notes
+            --notes-file "${{ steps.notes.outputs.notes_file }}"
