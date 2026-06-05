@@ -119,6 +119,60 @@ public class GroupCommandRuntimeTest {
         lastVerbose = false;
     }
 
+    @Test
+    public void testGroupCommandSubcommandAliases() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(AliasGroupCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // Test: resolve by primary name
+        reset();
+        runtime.executeCommand("agroup install");
+        assertEquals("install", lastSubcommand);
+
+        // Test: resolve by alias
+        reset();
+        runtime.executeCommand("agroup i");
+        assertEquals("install", lastSubcommand);
+
+        // Test: second subcommand by alias
+        reset();
+        runtime.executeCommand("agroup l");
+        assertEquals("list", lastSubcommand);
+
+        // Test: second subcommand by primary name
+        reset();
+        runtime.executeCommand("agroup list");
+        assertEquals("list", lastSubcommand);
+    }
+
+    @CommandDefinition(name = "install", aliases = { "i" }, description = "Install something")
+    public static class AliasInstallCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            lastSubcommand = "install";
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "list", aliases = { "l" }, description = "List things")
+    public static class AliasListCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            lastSubcommand = "list";
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "agroup", description = "", groupCommands = { AliasInstallCommand.class, AliasListCommand.class })
+    public static class AliasGroupCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     @CommandDefinition(name = "version", description = "Show version")
     public static class VersionCommand implements Command<CommandInvocation> {
         @Override
