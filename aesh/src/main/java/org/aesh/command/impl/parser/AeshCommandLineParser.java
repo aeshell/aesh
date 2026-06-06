@@ -28,9 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.aesh.command.Command;
-import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandLifecycle;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.container.CommandContainer;
@@ -153,12 +151,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (lazyChildClasses == null)
             return null;
         Class<? extends Command> clazz = lazyChildClasses.remove(name);
-        if (clazz == null) {
-            // Check if the name matches an alias of any lazy child
-            clazz = findLazyChildByAlias(name);
-            if (clazz == null)
-                return null;
-        }
+        if (clazz == null)
+            return null;
         try {
             AeshCommandContainerBuilder<CI> builder = new AeshCommandContainerBuilder<>();
             CommandContainer<CI> container = builder.create(clazz);
@@ -168,35 +162,6 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         } catch (CommandLineParserException e) {
             return null;
         }
-    }
-
-    private Class<? extends Command> findLazyChildByAlias(String alias) {
-        if (lazyChildClasses == null)
-            return null;
-        for (Map.Entry<String, Class<? extends Command>> entry : lazyChildClasses.entrySet()) {
-            Class<? extends Command> clazz = entry.getValue();
-            String[] aliases = getCommandAliases(clazz);
-            if (aliases != null) {
-                for (String a : aliases) {
-                    if (a.equals(alias)) {
-                        // Remove by primary name so it won't be resolved again
-                        lazyChildClasses.remove(entry.getKey());
-                        return clazz;
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    private static String[] getCommandAliases(Class<? extends Command> clazz) {
-        CommandDefinition cd = clazz.getAnnotation(CommandDefinition.class);
-        if (cd != null)
-            return cd.aliases();
-        GroupCommandDefinition gcd = clazz.getAnnotation(GroupCommandDefinition.class);
-        if (gcd != null)
-            return gcd.aliases();
-        return null;
     }
 
     private void applyStoredProviders(CommandLineParser<CI> child) {

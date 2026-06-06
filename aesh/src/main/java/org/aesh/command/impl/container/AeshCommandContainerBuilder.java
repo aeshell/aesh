@@ -107,7 +107,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 for (Class<? extends Command> groupClazz : provider.groupCommandClasses()) {
                     String childName = getCommandName(groupClazz);
                     if (childName != null) {
-                        container.addLazyChild(childName, groupClazz);
+                        addLazyChildWithAliases(container, childName, groupClazz);
                     } else {
                         container.addChild(create(groupClazz));
                     }
@@ -169,7 +169,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     for (Class<? extends Command> groupClazz : command.groupCommands()) {
                         String childName = getCommandName(groupClazz);
                         if (childName != null) {
-                            groupContainer.addLazyChild(childName, groupClazz);
+                            addLazyChildWithAliases(groupContainer, childName, groupClazz);
                         } else {
                             Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
                             groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
@@ -230,7 +230,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 for (Class<? extends Command> groupClazz : groupCommand.groupCommands()) {
                     String childName = getCommandName(groupClazz);
                     if (childName != null) {
-                        groupContainer.addLazyChild(childName, groupClazz);
+                        addLazyChildWithAliases(groupContainer, childName, groupClazz);
                     } else {
                         Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
                         groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
@@ -550,6 +550,32 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         if (clazz.getSuperclass() != null && clazz.getSuperclass() != Object.class) {
             processMixinClass(processedCommand, clazz.getSuperclass(), mixinFieldName);
         }
+    }
+
+    /**
+     * Register a lazy child by its primary name and also by its aliases,
+     * so alias resolution works via simple map lookup at parse time.
+     */
+    private static <CI extends CommandInvocation> void addLazyChildWithAliases(
+            AeshCommandContainer<CI> container, String childName,
+            Class<? extends Command> clazz) throws CommandLineParserException {
+        container.addLazyChild(childName, clazz);
+        String[] aliases = getCommandAliases(clazz);
+        if (aliases != null) {
+            for (String alias : aliases) {
+                container.addLazyChild(alias, clazz);
+            }
+        }
+    }
+
+    private static String[] getCommandAliases(Class<? extends Command> clazz) {
+        CommandDefinition cd = clazz.getAnnotation(CommandDefinition.class);
+        if (cd != null && cd.aliases().length > 0)
+            return cd.aliases();
+        GroupCommandDefinition gcd = clazz.getAnnotation(GroupCommandDefinition.class);
+        if (gcd != null && gcd.aliases().length > 0)
+            return gcd.aliases();
+        return null;
     }
 
     @SuppressWarnings("unchecked")
