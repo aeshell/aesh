@@ -1949,4 +1949,34 @@ public class CommandLineFormatterTest {
         assertEquals("Continuation should align", descStart, contStart);
     }
 
+    @Test
+    public void testNegatableShortNameInFlagCluster() throws CommandLineParserException {
+        // #504: Negatable options with short names should appear in the grouped flags cluster
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("app").description("App");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('h').name("help").type(boolean.class).hasValue(false).description("Help").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('v').name("verbose").type(boolean.class).hasValue(false).description("Verbose").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('o').name("offline").type(boolean.class).hasValue(false)
+                .negatable(true).description("Offline mode").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('x').name("stacktrace").type(boolean.class).hasValue(false)
+                .negatable(true).description("Show stacktrace").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        // Short names of negatable options should be in the flag cluster
+        assertTrue("Synopsis should contain -o and -x in cluster: " + help,
+                help.contains("[-hvox]"));
+        // Negatable long forms should also appear separately
+        assertTrue("Synopsis should contain --[no-]offline: " + help,
+                help.contains("[--[no-]offline]"));
+        assertTrue("Synopsis should contain --[no-]stacktrace: " + help,
+                help.contains("[--[no-]stacktrace]"));
+    }
+
 }

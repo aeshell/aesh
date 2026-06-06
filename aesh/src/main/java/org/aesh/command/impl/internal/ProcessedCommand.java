@@ -1075,12 +1075,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         // Collect mutually exclusive groups to avoid showing them individually
         java.util.Set<String> exclusiveHandled = new java.util.HashSet<>();
 
-        // 1. Group boolean short flags (exclude negatable — they need --[no-]name format)
+        // 1. Group boolean short flags (negatable included for their short form)
         StringBuilder shortFlags = new StringBuilder();
         for (ProcessedOption o : visibleOpts) {
             if (o.getOptionType() == OptionType.BOOLEAN && o.shortName() != null
-                    && !o.isRequired() && o.getExclusiveWith().isEmpty()
-                    && !o.isNegatable()) {
+                    && !o.isRequired() && o.getExclusiveWith().isEmpty()) {
                 shortFlags.append(o.shortName());
             }
         }
