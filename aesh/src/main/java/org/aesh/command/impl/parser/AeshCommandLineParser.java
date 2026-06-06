@@ -134,7 +134,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (lazyChildClasses == null || lazyChildClasses.isEmpty())
             return;
         AeshCommandContainerBuilder<CI> builder = new AeshCommandContainerBuilder<>();
-        for (Class<? extends Command> clazz : new ArrayList<>(lazyChildClasses.values())) {
+        // Deduplicate: aliases register the same class under multiple keys (#503)
+        java.util.Set<Class<? extends Command>> uniqueClasses = new java.util.LinkedHashSet<>(lazyChildClasses.values());
+        for (Class<? extends Command> clazz : uniqueClasses) {
             try {
                 CommandContainer<CI> container = builder.create(clazz);
                 addChildParser(container.getParser());

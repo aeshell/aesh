@@ -15,6 +15,7 @@
  */
 package org.aesh.util.doc;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -701,5 +702,68 @@ public class DocumentationGeneratorTest {
         public CommandResult execute(CommandInvocation ci) {
             return CommandResult.SUCCESS;
         }
+    }
+
+    // --- Test: No duplicate nav entries for aliased subcommands (#503) ---
+
+    @CommandDefinition(name = "install", aliases = { "i" }, description = "Install something")
+    public static class AliasedInstallCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "list", aliases = { "l" }, description = "List things")
+    public static class AliasedListCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "jdk", description = "Manage JDKs", groupCommands = { AliasedInstallCmd.class,
+            AliasedListCmd.class })
+    public static class JdkGroupCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testNoDuplicateNavEntriesForAliasedSubcommands() throws Exception {
+        Path tempDir = Files.createTempDirectory("aesh-doc-alias-test");
+        try {
+            File navFile = new File(tempDir.toFile(), "nav.adoc");
+            DocumentationGenerator.builder()
+                    .commandClass(JdkGroupCmd.class)
+                    .outputDir(tempDir.toFile())
+                    .navFile(navFile)
+                    .format(DocFormat.ASCIIDOC)
+                    .generate();
+
+            assertTrue("Nav file should exist", navFile.exists());
+            String nav = new String(Files.readAllBytes(navFile.toPath()));
+
+            // Each subcommand should appear exactly once
+            int installCount = countOccurrences(nav, "jdk-install.adoc");
+            int listCount = countOccurrences(nav, "jdk-list.adoc");
+            assertEquals("install should appear once in nav, got: " + nav, 1, installCount);
+            assertEquals("list should appear once in nav, got: " + nav, 1, listCount);
+        } finally {
+            Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
+                    .map(Path::toFile).forEach(File::delete);
+        }
+    }
+
+    private static int countOccurrences(String text, String search) {
+        int count = 0;
+        int idx = 0;
+        while ((idx = text.indexOf(search, idx)) >= 0) {
+            count++;
+            idx += search.length();
+        }
+        return count;
     }
 }
