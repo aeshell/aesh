@@ -568,7 +568,15 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static String[] getCommandAliases(Class<? extends Command> clazz) {
+        // Check metadata provider first to avoid reflection on the processor path
+        CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(clazz);
+        if (provider != null) {
+            String[] aliases = provider.commandAliases();
+            return aliases != null && aliases.length > 0 ? aliases : null;
+        }
+        // Fallback to annotation reflection for non-processed commands
         CommandDefinition cd = clazz.getAnnotation(CommandDefinition.class);
         if (cd != null && cd.aliases().length > 0)
             return cd.aliases();

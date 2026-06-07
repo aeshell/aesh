@@ -136,6 +136,21 @@ final class CodeGenerator {
         sb.append("        return ").append(stringLiteral(cmdName)).append(";\n");
         sb.append("    }\n\n");
 
+        // commandAliases()
+        String[] aliases = getAnnotationStringArrayValue(commandElement, "aliases", elementUtils);
+        if (aliases != null && aliases.length > 0) {
+            sb.append("    @Override\n");
+            sb.append("    public String[] commandAliases() {\n");
+            sb.append("        return new String[] {");
+            for (int i = 0; i < aliases.length; i++) {
+                if (i > 0)
+                    sb.append(", ");
+                sb.append(stringLiteral(aliases[i]));
+            }
+            sb.append("};\n");
+            sb.append("    }\n\n");
+        }
+
         // Collect field accessor info for the switch-based Accessor class
         List<FieldAccessorInfo> accessorInfos = new java.util.ArrayList<>();
 

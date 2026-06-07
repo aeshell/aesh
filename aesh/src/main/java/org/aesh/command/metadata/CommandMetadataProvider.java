@@ -79,4 +79,11 @@ public interface CommandMetadataProvider<C extends Command> {
      * @return the command name as specified in the annotation, without building the full ProcessedCommand
      */
     String commandName();
+
+    /**
+     * @return the command aliases as specified in the annotation, or empty array if none
+     */
+    default String[] commandAliases() {
+        return new String[0];
+    }
 }

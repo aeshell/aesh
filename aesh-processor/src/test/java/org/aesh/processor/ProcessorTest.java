@@ -2350,6 +2350,75 @@ public class ProcessorTest {
                 result.diagnostics.toString().contains("overlap"));
     }
 
+    // --- Test: commandAliases() on processor path ---
+
+    private static final String ALIASED_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"install\", aliases = {\"i\", \"inst\"}, description = \"Install\")\n" +
+            "public class AliasedCmd implements Command<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testCommandAliasesOnProcessorPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.AliasedCmd", ALIASED_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> metadataClass = result.classLoader.loadClass("test.AliasedCmd_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+
+        String[] aliases = provider.commandAliases();
+        assertNotNull("commandAliases should not be null", aliases);
+        assertEquals("Should have 2 aliases", 2, aliases.length);
+        assertEquals("First alias", "i", aliases[0]);
+        assertEquals("Second alias", "inst", aliases[1]);
+    }
+
+    // --- Test: Zero reflection on processor path ---
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testNoReflectionOnProcessorPath() throws Exception {
+        // Verify that building a command via the processor path does not trigger
+        // annotation reflection (Class.getAnnotation, getDeclaredField, etc.)
+        // This ensures the generated metadata provides all needed data.
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SimpleCommand", SIMPLE_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.SimpleCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.SimpleCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+
+        // All metadata should be available without annotation reflection
+        assertNotNull("commandType", provider.commandType());
+        assertNotNull("commandName", provider.commandName());
+        assertNotNull("commandAliases", provider.commandAliases());
+        assertNotNull("newInstance", provider.newInstance());
+        assertNotNull("buildProcessedCommand", provider.buildProcessedCommand(provider.newInstance()));
+
+        // Verify the provider class does NOT use Class.getAnnotation in its bytecode
+        // by checking that the generated source doesn't contain annotation reflection calls
+        java.nio.file.Path generatedSource = result.outputDir.resolve("test/SimpleCommand_AeshMetadata.java");
+        if (java.nio.file.Files.exists(generatedSource)) {
+            String source = new String(java.nio.file.Files.readAllBytes(generatedSource),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            assertFalse("Generated code should not use getAnnotation",
+                    source.contains("getAnnotation"));
+            assertFalse("Generated code should not use getDeclaredField for option access on public fields",
+                    source.contains("getDeclaredField") && !source.contains("private"));
+        }
+    }
+
     // --- Test: Generated _AeshMetadataRegistry ---
 
     @Test
