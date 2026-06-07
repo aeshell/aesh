@@ -242,13 +242,13 @@ class AsciidocRenderer implements DocRenderer {
         ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
         List<ProcessedOption> options = cmd.getDisplayOptions();
 
-        // Group boolean short flags
+        // Group boolean short flags (negatable included for their short form, #504/#506)
         StringBuilder shortFlags = new StringBuilder();
         for (ProcessedOption opt : options) {
             if (opt.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             if (opt.getOptionType() == OptionType.BOOLEAN && opt.shortName() != null
-                    && !opt.isRequired() && !opt.isNegatable()) {
+                    && !opt.isRequired()) {
                 shortFlags.append(opt.shortName());
             }
         }
@@ -256,13 +256,13 @@ class AsciidocRenderer implements DocRenderer {
             sb.append(" [-").append(shortFlags).append("]");
         }
 
-        // Remaining options
+        // Remaining options (skip non-negatable booleans already in cluster)
         for (ProcessedOption opt : options) {
             if (opt.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             if (opt.getOptionType() == OptionType.BOOLEAN && opt.shortName() != null
                     && !opt.isRequired() && !opt.isNegatable()) {
-                continue; // already grouped
+                continue; // already grouped, no separate rendering needed
             }
 
             String optName;

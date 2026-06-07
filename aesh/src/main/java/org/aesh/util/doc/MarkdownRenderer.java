@@ -235,9 +235,28 @@ class MarkdownRenderer implements DocRenderer {
         ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
         List<ProcessedOption> options = cmd.getDisplayOptions();
 
+        // Group boolean short flags (negatable included for their short form, #504/#506)
+        StringBuilder shortFlags = new StringBuilder();
         for (ProcessedOption opt : options) {
             if (opt.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
+            if (opt.getOptionType() == OptionType.BOOLEAN && opt.shortName() != null
+                    && !opt.isRequired()) {
+                shortFlags.append(opt.shortName());
+            }
+        }
+        if (shortFlags.length() > 0) {
+            sb.append(" [-").append(shortFlags).append("]");
+        }
+
+        // Remaining options (skip non-negatable booleans already in cluster)
+        for (ProcessedOption opt : options) {
+            if (opt.getVisibility() == OptionVisibility.HIDDEN)
+                continue;
+            if (opt.getOptionType() == OptionType.BOOLEAN && opt.shortName() != null
+                    && !opt.isRequired() && !opt.isNegatable()) {
+                continue; // already grouped
+            }
 
             String optName;
             if (opt.isNegatable()) {

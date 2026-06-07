@@ -757,6 +757,53 @@ public class DocumentationGeneratorTest {
         }
     }
 
+    // --- Test: Negatable short names in doc synopsis (#506) ---
+
+    @CommandDefinition(name = "negdoc", description = "Negatable doc test")
+    public static class NegatableDocCmd implements Command<CommandInvocation> {
+        @Option(shortName = 'h', hasValue = false, description = "Help")
+        public boolean help;
+        @Option(shortName = 'v', hasValue = false, description = "Verbose")
+        public boolean verbose;
+        @Option(shortName = 'o', hasValue = false, negatable = true, description = "Offline mode")
+        public boolean offline;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testNegatableShortNamesInAsciidocSynopsis() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(NegatableDocCmd.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+
+        // Short name of negatable option should be in cluster
+        assertTrue("Asciidoc synopsis should include -o in cluster: " + doc,
+                doc.contains("[-hvo]"));
+        // Negated long form should also appear
+        assertTrue("Asciidoc synopsis should include --[no-]offline: " + doc,
+                doc.contains("[--[no-]offline]"));
+    }
+
+    @Test
+    public void testNegatableShortNamesInMarkdownSynopsis() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(NegatableDocCmd.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+
+        // Short name of negatable option should be in cluster
+        assertTrue("Markdown synopsis should include -o in cluster: " + doc,
+                doc.contains("[-hvo]"));
+        // Negated long form should also appear
+        assertTrue("Markdown synopsis should include --[no-]offline: " + doc,
+                doc.contains("[--[no-]offline]"));
+    }
+
     private static int countOccurrences(String text, String search) {
         int count = 0;
         int idx = 0;
