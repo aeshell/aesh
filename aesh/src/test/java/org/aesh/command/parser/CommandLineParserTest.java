@@ -1243,6 +1243,121 @@ public class CommandLineParserTest {
         // via the class hierarchy or field propagation.
     }
 
+    // --- Tests for DefaultValueProvider.fallbackValue() (#507) ---
+
+    public static class FallbackDvp implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            if ("port".equals(option.name()))
+                return "8080"; // default when omitted
+            return null;
+        }
+
+        @Override
+        public String fallbackValue(ProcessedOption option) {
+            if ("debug".equals(option.name()))
+                return "9999"; // from config
+            return null;
+        }
+    }
+
+    @CommandDefinition(name = "fbtest", description = "Fallback test", defaultValueProvider = FallbackDvp.class)
+    public class FallbackTestCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "debug", fallbackValue = "4004")
+        public String debug;
+
+        @Option(name = "port", defaultValue = "3000")
+        public String port;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testProviderFallbackOverridesAnnotation() throws Exception {
+        // #507: provider.fallbackValue() should override annotation fallbackValue
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackTestCommand<>()).getParser();
+        parser.populateObject("fbtest --debug", invocationProviders,
+                SettingsBuilder.builder().build().aeshContext(), CommandLineParser.Mode.VALIDATE);
+        FallbackTestCommand<?> cmd = (FallbackTestCommand<?>) parser.getCommand();
+        assertEquals("Provider fallback should override annotation", "9999", cmd.debug);
+    }
+
+    @Test
+    public void testProviderFallbackNullFallsThrough() throws Exception {
+        // #507: provider returning null falls through to annotation fallbackValue
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackTestCommand<>()).getParser();
+        // port has no provider fallback (returns null), no annotation fallbackValue,
+        // but has optionalValue=false so this tests a different option
+        // Use debug with a provider that returns null for a different option name
+        parser.populateObject("fbtest --port=7777", invocationProviders,
+                SettingsBuilder.builder().build().aeshContext(), CommandLineParser.Mode.VALIDATE);
+        FallbackTestCommand<?> cmd = (FallbackTestCommand<?>) parser.getCommand();
+        assertEquals("Explicit value wins", "7777", cmd.port);
+    }
+
+    @Test
+    public void testExplicitValueOverridesProviderFallback() throws Exception {
+        // #507: explicit --debug=5005 takes priority over provider fallback
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackTestCommand<>()).getParser();
+        parser.populateObject("fbtest --debug=5005", invocationProviders,
+                SettingsBuilder.builder().build().aeshContext(), CommandLineParser.Mode.VALIDATE);
+        FallbackTestCommand<?> cmd = (FallbackTestCommand<?>) parser.getCommand();
+        assertEquals("Explicit value should win over provider", "5005", cmd.debug);
+    }
+
+    @Test
+    public void testProviderDefaultNotCalledForBareFlag() throws Exception {
+        // #507: when option is bare, defaultValue() should NOT be called,
+        // only fallbackValue(). When omitted, only defaultValue() should be called.
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackTestCommand<>()).getParser();
+
+        // --debug (bare) → fallbackValue "9999", NOT defaultValue
+        parser.populateObject("fbtest --debug", invocationProviders,
+                SettingsBuilder.builder().build().aeshContext(), CommandLineParser.Mode.VALIDATE);
+        FallbackTestCommand<?> cmd = (FallbackTestCommand<?>) parser.getCommand();
+        assertEquals("Bare flag: provider fallback", "9999", cmd.debug);
+
+        // port omitted → defaultValue "8080" from provider (overrides annotation "3000")
+        assertEquals("Omitted: provider default", "8080", cmd.port);
+    }
+
+    public static class NoFallbackDvp implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            return null;
+        }
+        // No fallbackValue override — uses default (returns null)
+    }
+
+    @CommandDefinition(name = "nofbtest", description = "No fallback provider test", defaultValueProvider = NoFallbackDvp.class)
+    public class NoFallbackTestCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "debug", fallbackValue = "4004")
+        public String debug;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testBackwardCompatNoFallbackOverride() throws Exception {
+        // #507: provider without fallbackValue() override works as before
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new NoFallbackTestCommand<>()).getParser();
+        parser.populateObject("nofbtest --debug", invocationProviders,
+                SettingsBuilder.builder().build().aeshContext(), CommandLineParser.Mode.VALIDATE);
+        NoFallbackTestCommand<?> cmd = (NoFallbackTestCommand<?>) parser.getCommand();
+        assertEquals("Should use annotation fallbackValue", "4004", cmd.debug);
+    }
+
     @Test
     public void testInheritedOptionPropagation() throws Exception {
         InvocationProviders invocationProviders = new AeshInvocationProviders();

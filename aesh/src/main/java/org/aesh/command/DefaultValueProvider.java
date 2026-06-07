@@ -22,14 +22,22 @@ package org.aesh.command;
 import org.aesh.command.impl.internal.ProcessedOption;
 
 /**
- * Provides dynamic default values for command options at runtime.
- *
+ * Provides dynamic values for command options at different stages of the
+ * value resolution chain.
  * <p>
  * Register on a command via {@code @CommandDefinition(defaultValueProvider = MyProvider.class)}.
- * The provider is called during command population for any option that was not explicitly set
- * by the user. If the provider returns a non-null value, it takes precedence over the static
- * {@code defaultValue} from the annotation.
- *
+ * <p>
+ * The full resolution order (highest to lowest priority):
+ * <ol>
+ * <li><b>Explicit user value</b> ({@code --option=value}) — always wins</li>
+ * <li><b>{@link #fallbackValue}</b> — when option is present but bare ({@code --option})</li>
+ * <li><b>Annotation {@code fallbackValue}</b> — static fallback for bare options</li>
+ * <li><b>{@link #defaultValue}</b> — when option is omitted entirely</li>
+ * <li><b>Annotation {@code defaultValue}</b> — static default for omitted options</li>
+ * <li><b>Field type default</b> (null, 0, false)</li>
+ * </ol>
+ * <p>
+ * At each stage, returning {@code null} means "fall through to the next stage."
  * <p>
  * The provider can use {@link ProcessedOption#name()} and {@link ProcessedOption#parent()}
  * to identify which option is being queried.
@@ -39,12 +47,30 @@ import org.aesh.command.impl.internal.ProcessedOption;
 public interface DefaultValueProvider {
 
     /**
-     * Return the default value for the given option, or {@code null} to fall back
-     * to the static default from the annotation.
+     * Called when the option is NOT specified on the command line at all.
+     * Returning {@code null} falls through to the annotation's {@code defaultValue}.
      *
      * @param option the option to provide a default for
      * @return default value string, or null
      * @throws Exception if the provider cannot resolve the default
      */
     String defaultValue(ProcessedOption option) throws Exception;
+
+    /**
+     * Called when the option IS specified but without a value (bare flag).
+     * For example, {@code --debug} without {@code =value}.
+     * <p>
+     * Returning {@code null} falls through to the annotation's {@code fallbackValue}.
+     * <p>
+     * This is useful for options that should resolve their "bare" value from
+     * configuration or environment at runtime, rather than using a static
+     * annotation value.
+     *
+     * @param option the option to provide a fallback value for
+     * @return fallback value string, or null to use the annotation fallbackValue
+     * @throws Exception if the provider cannot resolve the fallback
+     */
+    default String fallbackValue(ProcessedOption option) throws Exception {
+        return null;
+    }
 }

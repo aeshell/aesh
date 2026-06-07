@@ -2382,6 +2382,69 @@ public class ProcessorTest {
         assertEquals("Second alias", "inst", aliases[1]);
     }
 
+    // --- Test: Provider fallbackValue on processor path (#507) ---
+
+    private static final String FALLBACK_PROVIDER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.DefaultValueProvider;\n" +
+            "import org.aesh.command.impl.internal.ProcessedOption;\n" +
+            "\n" +
+            "public class TestFallbackProvider implements DefaultValueProvider {\n" +
+            "    @Override\n" +
+            "    public String defaultValue(ProcessedOption option) { return null; }\n" +
+            "    @Override\n" +
+            "    public String fallbackValue(ProcessedOption option) {\n" +
+            "        if (\"debug\".equals(option.name())) return \"from-provider\";\n" +
+            "        return null;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String FALLBACK_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"fbcmd\", description = \"Fallback test\",\n" +
+            "        defaultValueProvider = TestFallbackProvider.class)\n" +
+            "public class FallbackCmd implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"debug\", fallbackValue = \"4004\")\n" +
+            "    public String debug;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testProviderFallbackOnProcessorPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.TestFallbackProvider", FALLBACK_PROVIDER_SOURCE),
+                new InMemorySource("test.FallbackCmd", FALLBACK_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.FallbackCmd");
+        Class<?> metadataClass = result.classLoader.loadClass("test.FallbackCmd_AeshMetadata");
+
+        // Build via generated provider
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // Parse --debug (bare) — should get provider fallback "from-provider"
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        org.aesh.command.invocation.InvocationProviders invProviders = new org.aesh.command.impl.invocation.AeshInvocationProviders();
+        parser.populateObject("fbcmd --debug", invProviders, null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+
+        ProcessedOption debugOpt = generatedPC.findLongOptionNoActivatorCheck("debug");
+        assertNotNull("Should have --debug", debugOpt);
+        assertEquals("Provider fallback should win on processor path",
+                "from-provider", debugOpt.getValue());
+    }
+
     // --- Test: Zero reflection on processor path ---
 
     @Test

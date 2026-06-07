@@ -269,15 +269,37 @@ public class AeshOptionParser implements OptionParser {
     }
 
     /**
-     * Apply the fallback or default value when an optionalValue option is specified bare.
-     * fallbackValue takes precedence over defaultValue for this path.
+     * Apply the fallback value when an optionalValue option is specified bare.
+     * Resolution order (#507):
+     * 1. DefaultValueProvider.fallbackValue() (dynamic, from config/env)
+     * 2. Annotation fallbackValue (static)
+     * 3. Annotation defaultValue (static, legacy fallback)
      */
     private static void applyOptionalFallback(ProcessedOption option) {
         if (!option.isOptionalValue() || option.getValue() != null)
             return;
+
+        // Priority 1: Provider fallback (dynamic)
+        org.aesh.command.DefaultValueProvider dvp = option.parent() != null
+                ? option.parent().getDefaultValueProvider()
+                : null;
+        if (dvp != null) {
+            try {
+                String providerFallback = dvp.fallbackValue(option);
+                if (providerFallback != null) {
+                    option.addValue(providerFallback);
+                    return;
+                }
+            } catch (Exception e) {
+                // Provider failed — fall through to annotation fallback
+            }
+        }
+
+        // Priority 2: Annotation fallbackValue (static)
         if (option.hasFallbackValue()) {
             option.addValue(option.getFallbackValue());
         } else if (option.hasDefaultValue()) {
+            // Priority 3: Annotation defaultValue (legacy fallback for optionalValue)
             option.addValue(option.getDefaultValues().get(0));
         }
     }
