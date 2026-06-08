@@ -2753,6 +2753,47 @@ public class ProcessorTest {
                 result.classLoader.loadClass("test.PortCommand_AeshMetadata"));
     }
 
+    // --- Processor parity: ${env:...} and ${sys:...} in defaultValue (#512) ---
+
+    private static final String ENV_DEFAULT_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"envcmd\", description = \"Env default test\")\n" +
+            "public class EnvDefaultCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"provider\", defaultValue = \"${env:AESH_TEST_PROVIDER}\")\n" +
+            "    public String provider;\n" +
+            "\n" +
+            "    @Option(name = \"home\", defaultValue = \"${sys:user.home}\")\n" +
+            "    public String home;\n" +
+            "\n" +
+            "    @Option(name = \"plain\", defaultValue = \"literal\")\n" +
+            "    public String plain;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testEnvAndSysDefaultValueResolution() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.EnvDefaultCommand", ENV_DEFAULT_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        // assertEquivalence checks defaultValues parity between reflection and generated paths.
+        // Both should resolve ${sys:user.home} to the same value and ${env:AESH_TEST_PROVIDER}
+        // to the same value (empty string if env var not set).
+        assertEquivalence(
+                result.classLoader.loadClass("test.EnvDefaultCommand"),
+                result.classLoader.loadClass("test.EnvDefaultCommand_AeshMetadata"));
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

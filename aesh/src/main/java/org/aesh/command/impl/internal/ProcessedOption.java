@@ -312,7 +312,9 @@ public class ProcessedOption {
     }
 
     public void setDefaultValues(List<String> defaultValues) {
-        this.defaultValues = defaultValues != null ? defaultValues : Collections.emptyList();
+        this.defaultValues = defaultValues != null
+                ? PropertiesLookup.checkForSystemVariables(defaultValues)
+                : Collections.emptyList();
     }
 
     public void setCompleter(OptionCompleter completer) {
