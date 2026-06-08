@@ -813,4 +813,174 @@ public class DocumentationGeneratorTest {
         }
         return count;
     }
+
+    // --- Test: Synopsis consistency across all doc formats ---
+
+    @CommandDefinition(name = "syntest", description = "Synopsis consistency test", generateHelp = true)
+    public static class SynopsisTestCommand implements Command<CommandInvocation> {
+        @Option(shortName = 'v', hasValue = false, description = "Verbose")
+        boolean verbose;
+
+        @Option(shortName = 'o', hasValue = false, negatable = true, description = "Offline mode")
+        boolean offline;
+
+        @Option(name = "json", hasValue = false, exclusiveWith = { "xml" }, description = "JSON output")
+        boolean json;
+
+        @Option(name = "xml", hasValue = false, exclusiveWith = { "json" }, description = "XML output")
+        boolean xml;
+
+        @Option(name = "config", description = "Config file")
+        String config;
+
+        @Option(name = "debug", fallbackValue = "4004", description = "Debug port")
+        String debug;
+
+        @OptionGroup(shortName = 'D', description = "Properties")
+        java.util.Map<String, String> properties;
+
+        @Argument(description = "Application name")
+        String app;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testSynopsisConsistencyAcrossFormats() throws CommandLineParserException {
+        // Extract synopsis lines from each format
+        String asciidoc = DocumentationGenerator.builder()
+                .commandClass(SynopsisTestCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        String markdown = DocumentationGenerator.builder()
+                .commandClass(SynopsisTestCommand.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+        String skill = DocumentationGenerator.builder()
+                .commandClass(SynopsisTestCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        // Also get the --help output (with ansi stripped)
+        org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> parser = new org.aesh.command.impl.container.AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new SynopsisTestCommand()).getParser();
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+        String helpSynopsis = extractSynopsisFromHelp(help);
+
+        // Extract the synopsis portion from each doc format
+        String adSynopsis = extractSynopsisFromAsciidoc(asciidoc);
+        String mdSynopsis = extractSynopsisFromMarkdown(markdown);
+        String skillSynopsis = extractSynopsisFromSkill(skill);
+
+        // All four should have the same option layout (after stripping format-specific prefix)
+        // Note: skill includes HIDDEN options, but this command has none, so all should match
+
+        // Short flag cluster
+        for (String synopsis : new String[] { helpSynopsis, adSynopsis, mdSynopsis, skillSynopsis }) {
+            assertTrue("Should have short flag cluster with v: " + synopsis,
+                    synopsis.contains("[-") && synopsis.contains("v"));
+        }
+
+        // Negatable option
+        for (String synopsis : new String[] { helpSynopsis, adSynopsis, mdSynopsis, skillSynopsis }) {
+            assertTrue("Should have negatable --[no-]offline: " + synopsis,
+                    synopsis.contains("--[no-]offline"));
+        }
+
+        // Exclusive pipe notation
+        for (String synopsis : new String[] { helpSynopsis, adSynopsis, mdSynopsis, skillSynopsis }) {
+            assertTrue("Should have exclusive pipe --json | --xml: " + synopsis,
+                    synopsis.contains("--json | --xml") || synopsis.contains("--xml | --json"));
+        }
+
+        // Value placeholder for config
+        for (String synopsis : new String[] { helpSynopsis, adSynopsis, mdSynopsis, skillSynopsis }) {
+            assertTrue("Should have --config=<config>: " + synopsis,
+                    synopsis.contains("--config=<config>"));
+        }
+
+        // OptionGroup placeholder
+        for (String synopsis : new String[] { helpSynopsis, adSynopsis, mdSynopsis, skillSynopsis }) {
+            assertTrue("Should have -D<key>=<value>: " + synopsis,
+                    synopsis.contains("-D<key>=<value>"));
+        }
+
+        // Optional/fallback value should NOT show placeholder
+        for (String synopsis : new String[] { helpSynopsis, adSynopsis, mdSynopsis, skillSynopsis }) {
+            assertFalse("Should NOT have --debug=<debug>: " + synopsis,
+                    synopsis.contains("--debug=<debug>"));
+            assertTrue("Should have bare [--debug]: " + synopsis,
+                    synopsis.contains("[--debug]"));
+        }
+
+        // Positional argument
+        for (String synopsis : new String[] { helpSynopsis, adSynopsis, mdSynopsis, skillSynopsis }) {
+            assertTrue("Should have <app>: " + synopsis,
+                    synopsis.contains("<app>"));
+        }
+    }
+
+    private String extractSynopsisFromHelp(String help) {
+        // Usage line may wrap at 80 chars; continuation lines are indented
+        StringBuilder sb = new StringBuilder();
+        boolean inUsage = false;
+        for (String line : help.split("\\r?\\n")) {
+            if (line.startsWith("Usage:")) {
+                inUsage = true;
+                sb.append(line);
+            } else if (inUsage && line.startsWith("  ")) {
+                // Continuation line — join with existing content
+                sb.append(line.trim());
+            } else if (inUsage) {
+                break;
+            }
+        }
+        return sb.toString();
+    }
+
+    private String extractSynopsisFromAsciidoc(String doc) {
+        // Synopsis is between ---- markers
+        int start = doc.indexOf("----\n");
+        if (start < 0)
+            return "";
+        start += 5;
+        int end = doc.indexOf("\n----", start);
+        return end > start ? doc.substring(start, end) : "";
+    }
+
+    private String extractSynopsisFromMarkdown(String doc) {
+        // Synopsis is in the line after "## SYNOPSIS" in a ``` block
+        String[] lines = doc.split("\\r?\\n");
+        boolean inSynopsis = false;
+        for (String line : lines) {
+            if (line.startsWith("## SYNOPSIS")) {
+                inSynopsis = true;
+                continue;
+            }
+            if (inSynopsis && !line.startsWith("```") && !line.trim().isEmpty()) {
+                return line;
+            }
+        }
+        return "";
+    }
+
+    private String extractSynopsisFromSkill(String doc) {
+        // Synopsis is in the line after "## Usage"
+        String[] lines = doc.split("\\r?\\n");
+        boolean inUsage = false;
+        for (String line : lines) {
+            if (line.startsWith("## Usage")) {
+                inUsage = true;
+                continue;
+            }
+            if (inUsage && !line.startsWith("```") && !line.trim().isEmpty()) {
+                return line;
+            }
+        }
+        return "";
+    }
 }

@@ -2601,6 +2601,104 @@ public class ProcessorTest {
         assertEquivalence(result.classLoader.loadClass("test.Outer$InnerCommand"), metadataClass);
     }
 
+    // --- Processor parity: acceptNameWithoutDashes ---
+
+    private static final String ACCEPT_NO_DASHES_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"nodashes\", description = \"Accept without dashes\")\n" +
+            "public class NoDashesCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(acceptNameWithoutDashes = true, description = \"Format option\")\n" +
+            "    public String format;\n" +
+            "\n" +
+            "    @Option(description = \"Normal option\")\n" +
+            "    public String normal;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testAcceptNameWithoutDashes() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.NoDashesCommand", ACCEPT_NO_DASHES_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertEquivalence(
+                result.classLoader.loadClass("test.NoDashesCommand"),
+                result.classLoader.loadClass("test.NoDashesCommand_AeshMetadata"));
+    }
+
+    // --- Processor parity: askIfNotSet ---
+
+    private static final String ASK_IF_NOT_SET_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"asktest\", description = \"Ask if not set test\")\n" +
+            "public class AskCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(askIfNotSet = true, description = \"Password\")\n" +
+            "    public String password;\n" +
+            "\n" +
+            "    @Option(description = \"Username\")\n" +
+            "    public String username;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testAskIfNotSet() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.AskCommand", ASK_IF_NOT_SET_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertEquivalence(
+                result.classLoader.loadClass("test.AskCommand"),
+                result.classLoader.loadClass("test.AskCommand_AeshMetadata"));
+    }
+
+    // --- Processor parity: disableParsing ---
+
+    private static final String DISABLE_PARSING_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"nop\", description = \"No parsing\", disableParsing = true)\n" +
+            "public class NopCommand implements Command<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testDisableParsing() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.NopCommand", DISABLE_PARSING_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertEquivalence(
+                result.classLoader.loadClass("test.NopCommand"),
+                result.classLoader.loadClass("test.NopCommand_AeshMetadata"));
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -238,75 +238,7 @@ class AsciidocRenderer implements DocRenderer {
         StringBuilder sb = new StringBuilder();
         sb.append("[source]\n----\n");
         sb.append(fullName.replace('-', ' '));
-
-        ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
-        List<ProcessedOption> options = cmd.getDisplayOptions();
-
-        // Group boolean short flags (negatable included for their short form, #504/#506)
-        StringBuilder shortFlags = new StringBuilder();
-        for (ProcessedOption opt : options) {
-            if (opt.getVisibility() == OptionVisibility.HIDDEN)
-                continue;
-            if (opt.getOptionType() == OptionType.BOOLEAN && opt.shortName() != null
-                    && !opt.isRequired() && opt.getExclusiveWith().isEmpty()) {
-                shortFlags.append(opt.shortName());
-            }
-        }
-        if (shortFlags.length() > 0) {
-            sb.append(" [-").append(shortFlags).append("]");
-        }
-
-        // Remaining options (skip non-negatable booleans already in cluster)
-        for (ProcessedOption opt : options) {
-            if (opt.getVisibility() == OptionVisibility.HIDDEN)
-                continue;
-            if (opt.getOptionType() == OptionType.BOOLEAN && opt.shortName() != null
-                    && !opt.isRequired() && !opt.isNegatable()
-                    && opt.getExclusiveWith().isEmpty()) {
-                continue; // already grouped, no separate rendering needed
-            }
-
-            String optName;
-            if (opt.isNegatable()) {
-                optName = "--[" + opt.getNegationPrefix() + "]" + opt.name();
-            } else {
-                optName = opt.shortName() != null ? "-" + opt.shortName() : "--" + opt.name();
-            }
-
-            String rendered = optName;
-            if (opt.getOptionType() == OptionType.GROUP) {
-                rendered = optName + "<key>=<value>";
-            } else if (opt.hasValue() && opt.getOptionType() != OptionType.BOOLEAN
-                    && opt.type() != Boolean.class && opt.type() != boolean.class
-                    && !opt.isOptionalValue() && !opt.hasFallbackValue()) {
-                String label = opt.getArgument() != null && !opt.getArgument().isEmpty()
-                        ? opt.getArgument()
-                        : opt.name();
-                rendered = optName + "=<" + label + ">";
-            }
-
-            if (opt.isRequired()) {
-                sb.append(" ").append(rendered);
-            } else {
-                sb.append(" [").append(rendered).append("]");
-            }
-        }
-
-        // Positional arguments
-        for (ProcessedOption pos : cmd.getPositionalOptionsInDisplayOrder()) {
-            String label = pos.getDisplayLabel();
-            if (pos.isRequired()) {
-                sb.append(" <").append(label).append(">");
-            } else {
-                sb.append(" [<").append(label).append(">]");
-            }
-        }
-
-        // Subcommands placeholder
-        if (parser.isGroupCommand()) {
-            sb.append(" [COMMAND]");
-        }
-
+        sb.append(parser.getProcessedCommand().buildSynopsisString(false, parser.isGroupCommand()));
         sb.append("\n----");
         return sb.toString();
     }

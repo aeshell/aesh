@@ -32,11 +32,13 @@ import java.util.List;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.option.CompletionFallback;
 import org.aesh.command.option.Option;
 import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
 import org.junit.Test;
@@ -1861,6 +1863,250 @@ public class AeshRuntimeRunnerTest {
         // Inherited --verbose from parent should have description on child
         assertTrue("Inherited --verbose should have description on child",
                 output.contains("--verbose") && output.contains("Enable verbose output"));
+    }
+
+    // --- Completion sentinel end-to-end tests (#494) ---
+
+    @CommandDefinition(name = "sentinelcmd", description = "Sentinel test")
+    public static class SentinelFilesCommand implements Command<CommandInvocation> {
+        @Option(description = "Config path")
+        private String config;
+
+        @Argument(description = "Script file", completeFallback = CompletionFallback.FILES)
+        private String script;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sentineldir", description = "Dir sentinel test")
+    public static class SentinelDirsCommand implements Command<CommandInvocation> {
+        @Argument(description = "Target directory", completeFallback = CompletionFallback.DIRECTORIES)
+        private String dir;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sentinelnone", description = "No sentinel test")
+    public static class SentinelNoneCommand implements Command<CommandInvocation> {
+        @Argument(description = "Enum value", completeFallback = CompletionFallback.NONE)
+        private String value;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCompletionSentinelFiles() {
+        // At positional argument position with no candidates, FILES fallback should
+        // emit __aesh_file__ sentinel
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(SentinelFilesCommand.class)
+                .args("--aesh-complete", "--", "")
+                .execute());
+
+        assertTrue("Should contain __aesh_file__ sentinel for FILES fallback",
+                output.contains("__aesh_file__"));
+        assertFalse("Should NOT contain __aesh_dir__ sentinel",
+                output.contains("__aesh_dir__"));
+    }
+
+    @Test
+    public void testCompletionSentinelDirectories() {
+        // At positional argument position, DIRECTORIES fallback should emit __aesh_dir__
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(SentinelDirsCommand.class)
+                .args("--aesh-complete", "--", "")
+                .execute());
+
+        assertTrue("Should contain __aesh_dir__ sentinel for DIRECTORIES fallback",
+                output.contains("__aesh_dir__"));
+        assertFalse("Should NOT contain __aesh_file__ sentinel",
+                output.contains("__aesh_file__"));
+    }
+
+    @Test
+    public void testCompletionSentinelNone() {
+        // At positional argument position, NONE fallback should emit neither sentinel
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(SentinelNoneCommand.class)
+                .args("--aesh-complete", "--", "")
+                .execute());
+
+        assertFalse("Should NOT contain __aesh_file__ sentinel for NONE fallback",
+                output.contains("__aesh_file__"));
+        assertFalse("Should NOT contain __aesh_dir__ sentinel for NONE fallback",
+                output.contains("__aesh_dir__"));
+    }
+
+    @Test
+    public void testCompletionSentinelNotEmittedAtOptionPosition() {
+        // When completing options (--), sentinels should NOT be emitted
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(SentinelFilesCommand.class)
+                .args("--aesh-complete", "--", "--")
+                .execute());
+
+        assertFalse("Sentinels should not appear at option position",
+                output.contains("__aesh_file__") || output.contains("__aesh_dir__"));
+        assertTrue("Options should appear", output.contains("--config"));
+    }
+
+    // --- Subcommand alias resolution and stale key cleanup tests ---
+
+    @CommandDefinition(name = "aliaschild", description = "Aliased child", aliases = { "ac", "aliased" })
+    public static class AliasedChildCommand implements Command<CommandInvocation> {
+        @Option(description = "Child option")
+        private String childOpt;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "otherchild", description = "Another child")
+    public static class OtherChildCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @GroupCommandDefinition(name = "aliasgroup", description = "Alias group test", groupCommands = { AliasedChildCommand.class,
+            OtherChildCommand.class })
+    public static class AliasGroupCmd implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testSubcommandAliasParsing() throws Exception {
+        // Subcommand should be reachable by its alias via parser
+        org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> parser = new org.aesh.command.impl.container.AeshCommandContainerBuilder<CommandInvocation>()
+                .create(AliasGroupCmd.class).getParser();
+
+        // Parse with alias name
+        parser.parse("aliasgroup ac --childOpt=hello");
+        org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> child = parser.parsedCommand();
+        assertNotNull("Alias 'ac' should resolve to a child parser", child);
+        assertEquals("Resolved child should be 'aliaschild'", "aliaschild",
+                child.getProcessedCommand().name());
+    }
+
+    @Test
+    public void testSubcommandAliasCompletion() {
+        // --aesh-complete should list subcommand primary names
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(AliasGroupCmd.class)
+                .args("--aesh-complete", "--", "")
+                .execute());
+
+        // Primary names should be listed
+        assertTrue("Should list primary name 'aliaschild'", output.contains("aliaschild"));
+        assertTrue("Should list 'otherchild'", output.contains("otherchild"));
+    }
+
+    @Test
+    public void testSubcommandAliasDuplicatePrevention() throws Exception {
+        // When resolving by alias, should not create duplicate child parsers
+        org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> parser = new org.aesh.command.impl.container.AeshCommandContainerBuilder<CommandInvocation>()
+                .create(AliasGroupCmd.class).getParser();
+
+        // Resolve by alias first
+        parser.parse("aliasgroup ac --childOpt=hello");
+        org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> child1 = parser.parsedCommand();
+        assertEquals("aliaschild", child1.getProcessedCommand().name());
+
+        parser.clear();
+
+        // Resolve by primary name second — should get the same child, no duplicate
+        parser.parse("aliasgroup aliaschild --childOpt=world");
+        org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> child2 = parser.parsedCommand();
+        assertEquals("aliaschild", child2.getProcessedCommand().name());
+
+        // Count child parsers — should be exactly 2 (aliaschild + otherchild), not 3+
+        List<org.aesh.command.impl.parser.CommandLineParser<CommandInvocation>> children = parser.getAllChildParsers();
+        int aliaschildCount = 0;
+        for (org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> cp : children) {
+            if ("aliaschild".equals(cp.getProcessedCommand().name()))
+                aliaschildCount++;
+        }
+        assertEquals("Should have exactly one aliaschild parser", 1, aliaschildCount);
+    }
+
+    // --- NO_COLOR propagation to generated help/version options ---
+
+    @Test
+    public void testNoColorHelpOutputHasNoAnsi() {
+        // When NO_COLOR is set, help output should not contain ANSI escape codes.
+        // We test this indirectly via the parser's ansiMode propagation.
+        // Since we can't easily set env vars in-process, we test the parser's
+        // updateAnsiMode(false) path which is equivalent.
+        try {
+            org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> parser = new org.aesh.command.impl.container.AeshCommandContainerBuilder<CommandInvocation>()
+                    .create(new NoColorTestCmd<>()).getParser();
+            parser.updateAnsiMode(false);
+
+            String help = parser.printHelp();
+
+            assertFalse("Help output should not contain ANSI escape codes",
+                    help.contains("\u001B["));
+            // Verify that auto-generated --help option is present and visible
+            assertTrue("Help should contain --help option", help.contains("--help"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testNoColorVersionOptionInHelp() {
+        // Version option (auto-generated) should also respect ansiMode
+        try {
+            org.aesh.command.impl.parser.CommandLineParser<CommandInvocation> parser = new org.aesh.command.impl.container.AeshCommandContainerBuilder<CommandInvocation>()
+                    .create(new VersionTestCmd<>()).getParser();
+            parser.updateAnsiMode(false);
+
+            String help = parser.printHelp();
+
+            assertFalse("Help output should not contain ANSI escape codes",
+                    help.contains("\u001B["));
+            assertTrue("Help should contain --version option", help.contains("--version"));
+            assertTrue("Help should contain --help option", help.contains("--help"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @CommandDefinition(name = "nocolor", description = "No color test", generateHelp = true)
+    public static class NoColorTestCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(description = "Some option")
+        private String option1;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "versiontest", description = "Version test", generateHelp = true, version = "1.0.0")
+    public static class VersionTestCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(description = "Some option")
+        private String option1;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
     }
 
 }

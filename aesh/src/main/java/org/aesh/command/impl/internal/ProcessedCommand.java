@@ -1071,6 +1071,48 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
         // Determine ansiMode from the first option
         boolean ansi = visibleOpts.get(0).isAnsiMode();
+        return buildOptionsSynopsis(visibleOpts, ansi);
+    }
+
+    /**
+     * Build a plain-text synopsis string for documentation renderers.
+     * Includes options, positional arguments, and [COMMAND] placeholder.
+     * Produces the same layout as {@code --help} but without ANSI codes.
+     *
+     * @param includeHidden when true, includes HIDDEN visibility options (for AI/skill docs)
+     * @param isGroupCommand when true, appends [COMMAND] placeholder
+     * @return the synopsis string (without command name prefix)
+     */
+    public String buildSynopsisString(boolean includeHidden, boolean isGroupCommand) {
+        List<ProcessedOption> opts = getDisplayOptions();
+        List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
+        for (ProcessedOption o : opts) {
+            if (!includeHidden && o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+                continue;
+            visibleOpts.add(o);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(buildOptionsSynopsis(visibleOpts, false));
+
+        // Positional arguments
+        for (ProcessedOption positional : getPositionalOptionsInDisplayOrder()) {
+            sb.append(formatArgumentSynopsis(positional));
+        }
+
+        if (isGroupCommand) {
+            sb.append(" [COMMAND]");
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Core synopsis builder shared by {@code --help} and doc renderers.
+     */
+    private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
+        if (visibleOpts.isEmpty())
+            return "";
 
         // Collect mutually exclusive groups to avoid showing them individually
         java.util.Set<String> exclusiveHandled = new java.util.HashSet<>();
@@ -1120,7 +1162,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 for (String exName : o.getExclusiveWith()) {
                     ProcessedOption exOpt = findLongOptionNoActivatorCheck(exName);
                     if (exOpt != null) {
-                        String exOptName = exOpt.shortName() != null ? "-" + exOpt.shortName() : "--" + exOpt.name();
+                        String exOptName;
+                        if (exOpt.isNegatable()) {
+                            exOptName = "--[" + exOpt.getNegationPrefix() + "]" + exOpt.name();
+                        } else {
+                            exOptName = exOpt.shortName() != null ? "-" + exOpt.shortName() : "--" + exOpt.name();
+                        }
                         String styledEx = ansi ? ANSI.YELLOW_TEXT + exOptName + ANSI.RESET : exOptName;
                         exclusive.append(" | ").append(styledEx);
                         exclusiveHandled.add(exOpt.name());

@@ -1950,6 +1950,39 @@ public class CommandLineFormatterTest {
     }
 
     @Test
+    public void testSynopsis_ExclusiveNegatableShortName() throws CommandLineParserException {
+        // Gap: exclusive + negatable + short name combination was not tested.
+        // Negatable options with exclusiveWith should use --[no-]name in the exclusive group,
+        // and should not appear in the short-flags cluster.
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("build").description("Build project");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('v').name("verbose").type(boolean.class).hasValue(false)
+                .negatable(true).exclusiveWith("quiet").description("Verbose output").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('q').name("quiet").type(boolean.class).hasValue(false)
+                .exclusiveWith("verbose").description("Quiet output").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('h').name("help").type(boolean.class).hasValue(false)
+                .description("Show help").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+        String synopsis = extractSynopsisLine(help);
+
+        // verbose is negatable + exclusive, so should render as --[no-]verbose | -q in group
+        assertTrue("Synopsis should contain exclusive group with negatable and short name: " + synopsis,
+                synopsis.contains("--[no-]verbose | -q") || synopsis.contains("-q | --[no-]verbose"));
+        // The exclusive options should NOT appear as individual entries
+        assertFalse("--verbose should not appear individually: " + synopsis,
+                synopsis.contains("[--verbose]") || synopsis.contains("[--[no-]verbose]"));
+        // -h should be in the flag cluster since it's a non-exclusive, non-negatable boolean
+        assertTrue("Non-exclusive -h should be in flag cluster: " + synopsis,
+                synopsis.contains("[-h]") || synopsis.matches(".*\\[-[^]]*h[^]]*\\].*"));
+    }
+
+    @Test
     public void testNegatableShortNameInFlagCluster() throws CommandLineParserException {
         // #504: Negatable options with short names should appear in the grouped flags cluster
         ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
@@ -1977,6 +2010,32 @@ public class CommandLineFormatterTest {
                 help.contains("[--[no-]offline]"));
         assertTrue("Synopsis should contain --[no-]stacktrace: " + help,
                 help.contains("[--[no-]stacktrace]"));
+    }
+
+    @Test
+    public void testSynopsis_BothExclusivePartnersNegatable() throws CommandLineParserException {
+        // Bug: when BOTH options in an exclusive pair are negatable,
+        // the partner should also render as --[no-]name, not -shortName.
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('v').name("verbose").type(boolean.class).hasValue(false)
+                .negatable(true).exclusiveWith("quiet").description("Verbose").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('q').name("quiet").type(boolean.class).hasValue(false)
+                .negatable(true).exclusiveWith("verbose").description("Quiet").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+        String synopsis = extractSynopsisLine(help);
+
+        // The exclusive partner "quiet" is also negatable, so it should render as
+        // --[no-]quiet, NOT as -q
+        assertTrue("Negatable exclusive partner should use --[no-]quiet form, got: " + synopsis,
+                synopsis.contains("--[no-]quiet"));
+        assertTrue("First exclusive option should use --[no-]verbose form, got: " + synopsis,
+                synopsis.contains("--[no-]verbose"));
     }
 
 }

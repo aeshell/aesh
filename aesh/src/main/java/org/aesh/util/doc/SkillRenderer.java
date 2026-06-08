@@ -245,39 +245,7 @@ class SkillRenderer implements DocRenderer {
     private String buildSynopsis(CommandLineParser<?> parser, String fullName) {
         StringBuilder sb = new StringBuilder();
         sb.append(fullName.replace('-', ' '));
-
-        ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
-        List<ProcessedOption> options = cmd.getDisplayOptions();
-
-        // All options shown (including HIDDEN for AI)
-        for (ProcessedOption opt : options) {
-            String optName;
-            if (opt.shortName() != null && !opt.shortName().isEmpty()) {
-                optName = "-" + opt.shortName();
-            } else {
-                optName = "--" + opt.name();
-            }
-
-            if (opt.isRequired()) {
-                sb.append(" ").append(optName);
-            } else {
-                sb.append(" [").append(optName).append("]");
-            }
-        }
-
-        for (ProcessedOption pos : cmd.getPositionalOptionsInDisplayOrder()) {
-            String label = pos.getDisplayLabel();
-            if (pos.isRequired()) {
-                sb.append(" <").append(label).append(">");
-            } else {
-                sb.append(" [<").append(label).append(">]");
-            }
-        }
-
-        if (parser.isGroupCommand()) {
-            sb.append(" [COMMAND]");
-        }
-
+        sb.append(parser.getProcessedCommand().buildSynopsisString(true, parser.isGroupCommand()));
         return sb.toString();
     }
 

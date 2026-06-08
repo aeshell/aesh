@@ -3258,4 +3258,148 @@ public class CommandLineParserTest {
         assertEquals("Value with equals", "a=b", cmd.manifest.get("Key"));
     }
 
+    // --- HashMap lookup map invalidation tests ---
+
+    @Test
+    public void testLookupMapInvalidationAfterAddOption() throws Exception {
+        // Gap: options added after the first lookup should still be findable.
+        // The lookup maps are lazily built; addOption must invalidate them.
+        org.aesh.command.impl.internal.ProcessedCommand processedCommand = new AeshCommandContainerBuilder<>()
+                .create(new LookupTestCmd<>())
+                .getParser().getProcessedCommand();
+
+        // Trigger map build by doing a lookup
+        assertNotNull("Initial option should be found", processedCommand.findLongOptionNoActivatorCheck("initial"));
+
+        // Now add a new option after the map was built
+        processedCommand.addOption(
+                org.aesh.command.impl.internal.ProcessedOptionBuilder.builder()
+                        .name("dynamic")
+                        .type(String.class)
+                        .description("Dynamically added option")
+                        .build());
+
+        // The new option should be findable (map was invalidated and rebuilt)
+        assertNotNull("Dynamically added option should be found",
+                processedCommand.findLongOptionNoActivatorCheck("dynamic"));
+        // Original option should still be found
+        assertNotNull("Initial option should still be found",
+                processedCommand.findLongOptionNoActivatorCheck("initial"));
+    }
+
+    @Test
+    public void testLookupMapInvalidationForShortName() throws Exception {
+        org.aesh.command.impl.internal.ProcessedCommand processedCommand = new AeshCommandContainerBuilder<>()
+                .create(new LookupTestCmd<>())
+                .getParser().getProcessedCommand();
+
+        // Trigger map build
+        processedCommand.findOptionNoActivatorCheck("i");
+
+        // Add option with short name
+        processedCommand.addOption(
+                org.aesh.command.impl.internal.ProcessedOptionBuilder.builder()
+                        .shortName('d')
+                        .name("dynamic")
+                        .type(String.class)
+                        .description("Dynamic")
+                        .build());
+
+        // Short name should be findable
+        assertNotNull("Short name should be found after add",
+                processedCommand.findOptionNoActivatorCheck("d"));
+    }
+
+    @CommandDefinition(name = "lookuptest", description = "Lookup test command")
+    public static class LookupTestCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(shortName = 'i', description = "Initial option")
+        private String initial;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- DefaultValueProvider.fallbackValue() exception handling test ---
+
+    @Test
+    public void testFallbackValueProviderExceptionFallsThrough() throws Exception {
+        // Gap: when DefaultValueProvider.fallbackValue() throws, should gracefully
+        // fall through to annotation fallbackValue.
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackExceptionCmd<>()).getParser();
+
+        // --debug without value triggers applyOptionalFallback
+        parser.populateObject("fallback-exc --debug", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        FallbackExceptionCmd<CommandInvocation> cmd = (FallbackExceptionCmd<CommandInvocation>) parser.getCommand();
+
+        // Provider throws, so annotation fallbackValue "4004" should be used
+        assertEquals("Should fall through to annotation fallbackValue", "4004", cmd.debug);
+    }
+
+    @Test
+    public void testFallbackValueProviderReturnsNull() throws Exception {
+        // When provider returns null for fallbackValue, should fall through to annotation
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new FallbackNullCmd<>()).getParser();
+
+        parser.populateObject("fallback-null --debug", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        FallbackNullCmd<CommandInvocation> cmd = (FallbackNullCmd<CommandInvocation>) parser.getCommand();
+
+        assertEquals("Should fall through to annotation fallbackValue", "5005", cmd.debug);
+    }
+
+    /** Provider that throws on fallbackValue */
+    public static class ThrowingFallbackProvider implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            return null;
+        }
+
+        @Override
+        public String fallbackValue(ProcessedOption option) throws Exception {
+            throw new RuntimeException("Simulated provider failure");
+        }
+    }
+
+    /** Provider that returns null for fallbackValue */
+    public static class NullFallbackProvider implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            return null;
+        }
+
+        @Override
+        public String fallbackValue(ProcessedOption option) {
+            return null;
+        }
+    }
+
+    @CommandDefinition(name = "fallback-exc", description = "Fallback exception test", defaultValueProvider = ThrowingFallbackProvider.class)
+    public static class FallbackExceptionCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(fallbackValue = "4004")
+        private String debug;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "fallback-null", description = "Fallback null test", defaultValueProvider = NullFallbackProvider.class)
+    public static class FallbackNullCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(fallbackValue = "5005")
+        private String debug;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
 }
