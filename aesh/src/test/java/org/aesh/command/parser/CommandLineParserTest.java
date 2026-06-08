@@ -3593,4 +3593,53 @@ public class CommandLineParserTest {
         assertEquals("Explicit value should override provider fallback", "5005", cmd.debug);
     }
 
+    // --- ${env:...} and ${sys:...} resolution in fallbackValue ---
+
+    @CommandDefinition(name = "envfb", description = "Env fallback test")
+    public static class EnvFallbackCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "port", fallbackValue = "${sys:user.home}")
+        private String port;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testFallbackValueResolvesSystemProperty() throws Exception {
+        // fallbackValue = "${sys:user.home}" should resolve to the actual user.home value
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new EnvFallbackCmd<>()).getParser();
+
+        parser.populateObject("envfb --port", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        EnvFallbackCmd<CommandInvocation> cmd = (EnvFallbackCmd<CommandInvocation>) parser.getCommand();
+
+        String expected = System.getProperty("user.home");
+        assertEquals("fallbackValue should resolve ${sys:user.home}", expected, cmd.port);
+    }
+
+    @Test
+    public void testFallbackValueLiteralUnchanged() throws Exception {
+        // A plain literal fallbackValue should pass through unchanged
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        org.aesh.command.impl.internal.ProcessedCommand processedCommand = org.aesh.command.impl.internal.ProcessedCommandBuilder
+                .builder()
+                .name("test")
+                .command(new EnvFallbackCmd<>())
+                .create();
+        processedCommand.addOption(
+                org.aesh.command.impl.internal.ProcessedOptionBuilder.builder()
+                        .name("level")
+                        .type(String.class)
+                        .fallbackValue("INFO")
+                        .build());
+
+        org.aesh.command.impl.internal.ProcessedOption opt = processedCommand.findLongOptionNoActivatorCheck("level");
+        assertEquals("Literal fallbackValue should be unchanged", "INFO", opt.getFallbackValue());
+    }
+
 }

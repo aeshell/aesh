@@ -2794,6 +2794,41 @@ public class ProcessorTest {
                 result.classLoader.loadClass("test.EnvDefaultCommand_AeshMetadata"));
     }
 
+    // --- Processor parity: ${sys:...} in fallbackValue ---
+
+    private static final String FALLBACK_VAR_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"fbvar\", description = \"Fallback var test\")\n" +
+            "public class FallbackVarCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"port\", fallbackValue = \"${sys:user.home}\")\n" +
+            "    public String port;\n" +
+            "\n" +
+            "    @Option(name = \"level\", fallbackValue = \"INFO\")\n" +
+            "    public String level;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testFallbackValueVariableResolution() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.FallbackVarCommand", FALLBACK_VAR_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertEquivalence(
+                result.classLoader.loadClass("test.FallbackVarCommand"),
+                result.classLoader.loadClass("test.FallbackVarCommand_AeshMetadata"));
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

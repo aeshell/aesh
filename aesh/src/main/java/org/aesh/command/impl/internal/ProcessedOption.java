@@ -300,7 +300,7 @@ public class ProcessedOption {
     }
 
     public void setFallbackValue(String fallbackValue) {
-        this.fallbackValue = fallbackValue;
+        this.fallbackValue = PropertiesLookup.resolveVariable(fallbackValue);
     }
 
     public String getFallbackValue() {
