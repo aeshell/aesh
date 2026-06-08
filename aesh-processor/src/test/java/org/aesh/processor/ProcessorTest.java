@@ -2699,6 +2699,60 @@ public class ProcessorTest {
                 result.classLoader.loadClass("test.NopCommand_AeshMetadata"));
     }
 
+    // --- Processor parity: custom parser + fallbackValue (#511) ---
+
+    private static final String PORT_PARSER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.impl.internal.ProcessedOption;\n" +
+            "import org.aesh.command.parser.OptionParser;\n" +
+            "import org.aesh.command.parser.OptionParserException;\n" +
+            "import org.aesh.parser.ParsedLineIterator;\n" +
+            "\n" +
+            "public class PortParser implements OptionParser {\n" +
+            "    @Override\n" +
+            "    public void parse(ParsedLineIterator iter, ProcessedOption option) throws OptionParserException {\n" +
+            "        iter.pollParsedWord();\n" +
+            "        if (iter.hasNextWord()) {\n" +
+            "            String next = iter.peekWord();\n" +
+            "            if (next.matches(\"\\\\d+\")) {\n" +
+            "                option.addValue(next);\n" +
+            "                iter.pollParsedWord();\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String PORT_PARSER_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"portcmd\", description = \"Custom parser fallback test\")\n" +
+            "public class PortCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"debug\", parser = PortParser.class, fallbackValue = \"4004\")\n" +
+            "    public String debug;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testCustomParserWithFallbackValue() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.PortParser", PORT_PARSER_SOURCE),
+                new InMemorySource("test.PortCommand", PORT_PARSER_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertEquivalence(
+                result.classLoader.loadClass("test.PortCommand"),
+                result.classLoader.loadClass("test.PortCommand_AeshMetadata"));
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

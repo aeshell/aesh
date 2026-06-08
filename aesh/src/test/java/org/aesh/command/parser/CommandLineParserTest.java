@@ -3402,4 +3402,195 @@ public class CommandLineParserTest {
         }
     }
 
+    // --- Issue #511: Custom parser + fallback value chain ---
+
+    /**
+     * Custom parser that peeks ahead and only consumes a numeric port value.
+     * Does NOT set a sentinel — leaves value unset when no match, relying on
+     * the framework to apply the fallback chain.
+     */
+    public static class FallbackAwarePeekParser implements OptionParser {
+        private static final java.util.regex.Pattern PORT_PATTERN = java.util.regex.Pattern.compile("\\d+");
+
+        @Override
+        public void parse(ParsedLineIterator iter, ProcessedOption option) throws OptionParserException {
+            String word = iter.peekWord();
+            String prefix = option.isLongNameUsed() ? "--" : "-";
+            String optName = option.isLongNameUsed() ? option.name() : option.shortName();
+            String fullPrefix = prefix + optName;
+
+            // Handle --debug=5005 (equals syntax)
+            if (word.startsWith(fullPrefix + "=")) {
+                option.addValue(word.substring(fullPrefix.length() + 1));
+                iter.pollParsedWord();
+                return;
+            }
+
+            // Consume the option name word
+            iter.pollParsedWord();
+
+            // Peek at next word — only consume if it matches a port pattern
+            if (iter.hasNextWord()) {
+                String nextWord = iter.peekWord();
+                if (!nextWord.startsWith("-") && PORT_PATTERN.matcher(nextWord).matches()) {
+                    option.addValue(nextWord);
+                    iter.pollParsedWord();
+                    return;
+                }
+            }
+
+            // Do NOT set any value — let the framework apply the fallback chain
+        }
+    }
+
+    @CommandDefinition(name = "customfb", description = "Custom parser with fallback")
+    public static class CustomParserFallbackCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "debug", parser = FallbackAwarePeekParser.class, fallbackValue = "4004")
+        private String debug;
+
+        @Option(name = "verbose", hasValue = false)
+        private boolean verbose;
+
+        @Argument(description = "Script file")
+        private String script;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCustomParser_FallbackOnBareOption() throws Exception {
+        // --debug (bare, no next token) → custom parser leaves no value → fallback "4004"
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CustomParserFallbackCmd<>()).getParser();
+
+        parser.populateObject("customfb --debug", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        CustomParserFallbackCmd<CommandInvocation> cmd = (CustomParserFallbackCmd<CommandInvocation>) parser.getCommand();
+
+        assertEquals("Bare --debug should use fallbackValue", "4004", cmd.debug);
+    }
+
+    @Test
+    public void testCustomParser_FallbackWhenNextTokenIsNotPort() throws Exception {
+        // --debug myfile.java → next token doesn't match port, parser leaves no value → fallback "4004"
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CustomParserFallbackCmd<>()).getParser();
+
+        parser.populateObject("customfb --debug myfile.java", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        CustomParserFallbackCmd<CommandInvocation> cmd = (CustomParserFallbackCmd<CommandInvocation>) parser.getCommand();
+
+        assertEquals("--debug followed by non-port should use fallbackValue", "4004", cmd.debug);
+        assertEquals("myfile.java should be consumed as argument", "myfile.java", cmd.script);
+    }
+
+    @Test
+    public void testCustomParser_ExplicitValueOverridesFallback() throws Exception {
+        // --debug 5005 → custom parser consumes "5005" → no fallback needed
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CustomParserFallbackCmd<>()).getParser();
+
+        parser.populateObject("customfb --debug 5005 myfile.java", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        CustomParserFallbackCmd<CommandInvocation> cmd = (CustomParserFallbackCmd<CommandInvocation>) parser.getCommand();
+
+        assertEquals("Explicit port should override fallback", "5005", cmd.debug);
+        assertEquals("myfile.java should be argument", "myfile.java", cmd.script);
+    }
+
+    @Test
+    public void testCustomParser_EqualsValueOverridesFallback() throws Exception {
+        // --debug=8080 → custom parser consumes via equals → no fallback
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CustomParserFallbackCmd<>()).getParser();
+
+        parser.populateObject("customfb --debug=8080", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        CustomParserFallbackCmd<CommandInvocation> cmd = (CustomParserFallbackCmd<CommandInvocation>) parser.getCommand();
+
+        assertEquals("Equals value should be used directly", "8080", cmd.debug);
+    }
+
+    @Test
+    public void testCustomParser_FallbackBeforeAnotherOption() throws Exception {
+        // --debug --verbose → next token is another option, parser leaves no value → fallback "4004"
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CustomParserFallbackCmd<>()).getParser();
+
+        parser.populateObject("customfb --debug --verbose", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        CustomParserFallbackCmd<CommandInvocation> cmd = (CustomParserFallbackCmd<CommandInvocation>) parser.getCommand();
+
+        assertEquals("--debug before another option should use fallback", "4004", cmd.debug);
+        assertTrue("--verbose should be set", cmd.verbose);
+    }
+
+    // --- Custom parser + DefaultValueProvider.fallbackValue() (#511 + #507) ---
+
+    /** Provider that returns dynamic fallback value */
+    public static class DynamicDebugProvider implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            return null;
+        }
+
+        @Override
+        public String fallbackValue(ProcessedOption option) {
+            if ("debug".equals(option.name())) {
+                return "9999"; // dynamic port from config
+            }
+            return null;
+        }
+    }
+
+    @CommandDefinition(name = "dynfb", description = "Dynamic provider fallback", defaultValueProvider = DynamicDebugProvider.class)
+    public static class CustomParserDynamicFallbackCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "debug", parser = FallbackAwarePeekParser.class, fallbackValue = "4004")
+        private String debug;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCustomParser_ProviderFallbackTakesPriorityOverAnnotation() throws Exception {
+        // Provider returns "9999", annotation says "4004" — provider wins
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CustomParserDynamicFallbackCmd<>()).getParser();
+
+        parser.populateObject("dynfb --debug", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        CustomParserDynamicFallbackCmd<CommandInvocation> cmd = (CustomParserDynamicFallbackCmd<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("Provider fallback should take priority over annotation fallback",
+                "9999", cmd.debug);
+    }
+
+    @Test
+    public void testCustomParser_ExplicitValueOverridesProvider() throws Exception {
+        // --debug 5005 → explicit value wins over both provider and annotation
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CustomParserDynamicFallbackCmd<>()).getParser();
+
+        parser.populateObject("dynfb --debug 5005", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        CustomParserDynamicFallbackCmd<CommandInvocation> cmd = (CustomParserDynamicFallbackCmd<CommandInvocation>) parser
+                .getCommand();
+
+        assertEquals("Explicit value should override provider fallback", "5005", cmd.debug);
+    }
+
 }

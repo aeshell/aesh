@@ -19,7 +19,6 @@
  */
 package org.aesh.command.impl.parser;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -273,38 +272,10 @@ public class AeshOptionParser implements OptionParser {
 
     /**
      * Apply the fallback value when an optionalValue option is specified bare.
-     * Resolution order (#507):
-     * 1. DefaultValueProvider.fallbackValue() (dynamic, from config/env)
-     * 2. Annotation fallbackValue (static)
-     * 3. Annotation defaultValue (static, legacy fallback)
+     * Delegates to {@link ProcessedOption#applyOptionalFallback()}.
      */
     private static void applyOptionalFallback(ProcessedOption option) {
-        if (!option.isOptionalValue() || option.getValue() != null)
-            return;
-
-        // Priority 1: Provider fallback (dynamic)
-        org.aesh.command.DefaultValueProvider dvp = option.parent() != null
-                ? option.parent().getDefaultValueProvider()
-                : null;
-        if (dvp != null) {
-            try {
-                String providerFallback = dvp.fallbackValue(option);
-                if (providerFallback != null) {
-                    option.addValue(providerFallback);
-                    return;
-                }
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "DefaultValueProvider.fallbackValue() failed for --" + option.name(), e);
-            }
-        }
-
-        // Priority 2: Annotation fallbackValue (static)
-        if (option.hasFallbackValue()) {
-            option.addValue(option.getFallbackValue());
-        } else if (option.hasDefaultValue()) {
-            // Priority 3: Annotation defaultValue (legacy fallback for optionalValue)
-            option.addValue(option.getDefaultValues().get(0));
-        }
+        option.applyOptionalFallback();
     }
 
     private enum Status {

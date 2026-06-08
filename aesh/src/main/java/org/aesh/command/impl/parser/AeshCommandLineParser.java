@@ -572,6 +572,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         }
                         if (lastParsedOption != null) {
                             lastParsedOption.parser().parse(iter, lastParsedOption);
+                            // Apply fallback chain if the parser left no value (#511).
+                            // Idempotent: skips if the parser already set a value.
+                            lastParsedOption.applyOptionalFallback();
                         } else {
                             //if we have a -- and its not at the end of the line it is used as a
                             //marker to signal that all the values after it are arguments, so we will ignore this
@@ -736,6 +739,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                 iter.pollParsedWord();
                             } else {
                                 lastParsedOption.parser().parse(iter, lastParsedOption);
+                                // Apply fallback chain if the parser left no value (#511)
+                                lastParsedOption.applyOptionalFallback();
                                 if (!iter.hasNextWord()) {
                                     if (lastParsedOption.hasValue() || iter.baseLine().spaceAtEnd())
                                         processedCommand.setCompleteStatus(

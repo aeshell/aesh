@@ -34,7 +34,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
@@ -58,6 +61,8 @@ import org.aesh.util.PropertiesLookup;
  * @author Aesh team
  */
 public class ProcessedOption {
+
+    private static final Logger LOGGER = Logger.getLogger(ProcessedOption.class.getName());
 
     private String shortName;
     private String name;
@@ -1396,6 +1401,49 @@ public class ProcessedOption {
 
     public boolean hasDefaultValue() {
         return getDefaultValues() != null && getDefaultValues().size() > 0;
+    }
+
+    /**
+     * Apply the fallback value chain when this option was specified but has no value.
+     * Resolution order (#507):
+     * <ol>
+     * <li>{@link DefaultValueProvider#fallbackValue} (dynamic, from config/env)</li>
+     * <li>Annotation {@code fallbackValue} (static)</li>
+     * <li>Annotation {@code defaultValue} (static, legacy fallback)</li>
+     * </ol>
+     * <p>
+     * Only applies when this option has {@code optionalValue=true} and no value
+     * has been set yet. This method is called by both the built-in
+     * {@link AeshOptionParser} and by the framework after any custom
+     * {@link OptionParser} returns without setting a value (#511).
+     */
+    public void applyOptionalFallback() {
+        if (!isOptionalValue() || getValue() != null)
+            return;
+
+        // Priority 1: Provider fallback (dynamic)
+        DefaultValueProvider dvp = parent() != null
+                ? parent().getDefaultValueProvider()
+                : null;
+        if (dvp != null) {
+            try {
+                String providerFallback = dvp.fallbackValue(this);
+                if (providerFallback != null) {
+                    addValue(providerFallback);
+                    return;
+                }
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, "DefaultValueProvider.fallbackValue() failed for --" + name(), e);
+            }
+        }
+
+        // Priority 2: Annotation fallbackValue (static)
+        if (hasFallbackValue()) {
+            addValue(getFallbackValue());
+        } else if (hasDefaultValue()) {
+            // Priority 3: Annotation defaultValue (legacy fallback for optionalValue)
+            addValue(getDefaultValues().get(0));
+        }
     }
 
     public boolean isTypeAssignableByResourcesOrFile() {
