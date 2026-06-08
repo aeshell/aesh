@@ -4,8 +4,6 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.aesh.terminal.utils.Config;
 import org.junit.Test;
@@ -13,35 +11,36 @@ import org.junit.Test;
 public class PropertiesLookupTest {
 
     @Test
-    public void testDefaultValues() {
-        Pattern systemProperties = PropertiesLookup.systemProperties;
+    public void testResolveVariable() {
+        // Non-variable strings pass through unchanged
+        assertEquals("foo", PropertiesLookup.resolveVariable("foo"));
+        assertEquals("$foo", PropertiesLookup.resolveVariable("$foo"));
+        assertEquals("${foo", PropertiesLookup.resolveVariable("${foo"));
+        assertEquals("$foo}", PropertiesLookup.resolveVariable("$foo}"));
+        assertNull(PropertiesLookup.resolveVariable(null));
+        assertEquals("", PropertiesLookup.resolveVariable(""));
+        assertEquals("ab", PropertiesLookup.resolveVariable("ab"));
 
-        Matcher m = systemProperties.matcher("foo");
-        assertFalse(m.find());
-        m = systemProperties.matcher("$foo");
-        assertFalse(m.find());
-        m = systemProperties.matcher("${foo");
-        assertFalse(m.find());
-        m = systemProperties.matcher("$foo}");
-        assertFalse(m.find());
-        m = systemProperties.matcher("${foo}");
-        assertTrue(m.find());
-        assertEquals("foo", m.group(4));
-        assertEquals("foo", m.group(4));
-        m = systemProperties.matcher("${java.version}");
-        assertTrue(m.find());
-        assertEquals("java.version", m.group(4));
-        m = systemProperties.matcher("${sys:version}");
-        assertTrue(m.find());
-        assertEquals("sys:", m.group(3));
-        assertEquals("version", m.group(4));
-        m = systemProperties.matcher("${env:version}");
-        assertTrue(m.find());
-        assertEquals("env:", m.group(2));
-        assertEquals("version", m.group(4));
-        m = systemProperties.matcher("${env:}");
-        assertFalse(m.find());
+        // Valid variable references resolve
+        // ${foo} — no prefix, tries sys then env
+        assertNotNull(PropertiesLookup.resolveVariable("${foo}"));
 
+        // ${sys:user.home} — system property
+        assertEquals(System.getProperty("user.home"),
+                PropertiesLookup.resolveVariable("${sys:user.home}"));
+
+        // ${java.version} — no prefix, matches system property
+        assertEquals(System.getProperty("java.version"),
+                PropertiesLookup.resolveVariable("${java.version}"));
+
+        // ${env:} — empty var name, returned as-is
+        assertEquals("${env:}", PropertiesLookup.resolveVariable("${env:}"));
+
+        // ${sys:} — empty prop name, returned as-is
+        assertEquals("${sys:}", PropertiesLookup.resolveVariable("${sys:}"));
+
+        // ${} — empty content, returned as-is
+        assertEquals("${}", PropertiesLookup.resolveVariable("${}"));
     }
 
     @Test
