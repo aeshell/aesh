@@ -248,7 +248,7 @@ class AsciidocRenderer implements DocRenderer {
             if (opt.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             if (opt.getOptionType() == OptionType.BOOLEAN && opt.shortName() != null
-                    && !opt.isRequired()) {
+                    && !opt.isRequired() && opt.getExclusiveWith().isEmpty()) {
                 shortFlags.append(opt.shortName());
             }
         }
@@ -261,7 +261,8 @@ class AsciidocRenderer implements DocRenderer {
             if (opt.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             if (opt.getOptionType() == OptionType.BOOLEAN && opt.shortName() != null
-                    && !opt.isRequired() && !opt.isNegatable()) {
+                    && !opt.isRequired() && !opt.isNegatable()
+                    && opt.getExclusiveWith().isEmpty()) {
                 continue; // already grouped, no separate rendering needed
             }
 

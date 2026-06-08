@@ -155,6 +155,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         Class<? extends Command> clazz = lazyChildClasses.remove(name);
         if (clazz == null)
             return null;
+        // Remove all other keys mapping to the same class (aliases)
+        // to prevent duplicate resolution via stale alias entries
+        lazyChildClasses.values().removeIf(c -> c == clazz);
         try {
             AeshCommandContainerBuilder<CI> builder = new AeshCommandContainerBuilder<>();
             CommandContainer<CI> container = builder.create(clazz);
