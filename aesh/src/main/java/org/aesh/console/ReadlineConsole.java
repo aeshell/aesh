@@ -46,6 +46,7 @@ import org.aesh.command.export.ExportManager;
 import org.aesh.command.export.ExportPreProcessor;
 import org.aesh.command.impl.AeshCommandResolver;
 import org.aesh.command.impl.completer.AeshCompletionHandler;
+import org.aesh.command.impl.completer.TailTipSuggestionProvider;
 import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
@@ -74,6 +75,7 @@ import org.aesh.readline.history.FileHistory;
 import org.aesh.readline.history.History;
 import org.aesh.readline.history.InMemoryHistory;
 import org.aesh.readline.prompt.Prompt;
+import org.aesh.readline.suggestion.CompositeSuggestionProvider;
 import org.aesh.readline.suggestion.SuggestionProvider;
 import org.aesh.readline.util.FileAccessPermission;
 import org.aesh.terminal.Attributes;
@@ -279,8 +281,22 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         }
         readline = new Readline(EditModeBuilder.builder(settings.mode()).create(), history,
                 completionHandler);
-        if (suggestionProvider != null) {
-            readline.setSuggestionProvider(suggestionProvider);
+
+        // Build the suggestion provider chain.
+        // Tail tips are lowest priority — only shown when no other provider has a suggestion.
+        SuggestionProvider effectiveProvider = suggestionProvider;
+        if (settings.tailTipSuggestions()) {
+            @SuppressWarnings("unchecked")
+            TailTipSuggestionProvider<CommandInvocation> tailTip = new TailTipSuggestionProvider<>(
+                    (CommandRegistry<CommandInvocation>) commandResolver.getRegistry());
+            if (effectiveProvider != null) {
+                effectiveProvider = new CompositeSuggestionProvider(effectiveProvider, tailTip);
+            } else {
+                effectiveProvider = tailTip;
+            }
+        }
+        if (effectiveProvider != null) {
+            readline.setSuggestionProvider(effectiveProvider);
         }
         running = true;
     }

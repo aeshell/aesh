@@ -313,6 +313,11 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    public SettingsBuilder<CI> tailTipSuggestions(boolean enable) {
+        settings.setTailTipSuggestions(enable);
+        return this;
+    }
+
     public SettingsBuilder<CI> subCommandModeSettings(SubCommandModeSettings subCommandModeSettings) {
         settings.setSubCommandModeSettings(subCommandModeSettings);
         return this;

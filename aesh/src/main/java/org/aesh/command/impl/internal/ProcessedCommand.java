@@ -1108,6 +1108,46 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     /**
+     * Build a synopsis string showing only options and arguments that have not
+     * been provided yet. Used by tail tip suggestions to show remaining
+     * parameters after the cursor.
+     *
+     * @param isGroupCommand when true, appends [COMMAND] placeholder
+     * @return the remaining synopsis string, or empty if everything is provided
+     */
+    public String buildRemainingSynopsis(boolean isGroupCommand) {
+        List<ProcessedOption> opts = getDisplayOptions();
+        List<ProcessedOption> remaining = new ArrayList<>();
+        for (ProcessedOption o : opts) {
+            if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+                continue;
+            // Skip options that already have a value
+            if (o.getValue() != null || o.getValues().size() > 0)
+                continue;
+            // Skip options excluded by a set exclusive partner
+            if (isExcludedBySetOption(o))
+                continue;
+            remaining.add(o);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(buildOptionsSynopsis(remaining, false));
+
+        // Positional arguments that still need values
+        for (ProcessedOption positional : getPositionalOptionsInDisplayOrder()) {
+            if (positional.getValue() == null && positional.getValues().size() == 0) {
+                sb.append(formatArgumentSynopsis(positional));
+            }
+        }
+
+        if (isGroupCommand) {
+            sb.append(" [COMMAND]");
+        }
+
+        return sb.toString();
+    }
+
+    /**
      * Core synopsis builder shared by {@code --help} and doc renderers.
      */
     private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {

@@ -101,6 +101,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     private Consumer<Void> interruptHandler;
     private String[] scanPackages;
     private boolean enableSearchPaging;
+    private boolean tailTipSuggestions;
     private AliasManager aliasManager;
     private Consumer<Void> connectionClosedHandler;
     private SubCommandModeSettings subCommandModeSettings;
@@ -154,6 +155,7 @@ public class SettingsImpl<CI extends CommandInvocation>
         setInterruptHandler(baseSettings.getInterruptHandler());
         setScanForCommandPackages(baseSettings.getScanForCommandPackages());
         setEnableSearchInPaging(baseSettings.enableSearchInPaging());
+        setTailTipSuggestions(baseSettings.tailTipSuggestions());
         setAliasManager(baseSettings.aliasManager());
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
         setSubCommandModeSettings(baseSettings.subCommandModeSettings());
@@ -830,5 +832,15 @@ public class SettingsImpl<CI extends CommandInvocation>
 
     public void setSubCommandModeSettings(SubCommandModeSettings subCommandModeSettings) {
         this.subCommandModeSettings = subCommandModeSettings;
+    }
+
+    @Override
+    public void setTailTipSuggestions(boolean enable) {
+        tailTipSuggestions = enable;
+    }
+
+    @Override
+    public boolean tailTipSuggestions() {
+        return tailTipSuggestions;
     }
 }

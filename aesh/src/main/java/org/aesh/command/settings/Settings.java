@@ -304,6 +304,20 @@ public interface Settings<CI extends CommandInvocation>
     boolean enableSearchInPaging();
 
     /**
+     * Enable tail tip suggestions — dimmed parameter hints shown after the
+     * cursor in interactive mode. Only applies to ReadlineConsole (REPL),
+     * not AeshRuntimeRunner (single-shot).
+     *
+     * @param enable true to enable tail tip suggestions
+     */
+    void setTailTipSuggestions(boolean enable);
+
+    /**
+     * @return true if tail tip suggestions are enabled
+     */
+    boolean tailTipSuggestions();
+
+    /**
      * Get sub-command mode settings.
      *
      * @return the sub-command mode settings
