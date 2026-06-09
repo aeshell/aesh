@@ -8,12 +8,12 @@ import java.util.List;
  * <p>
  * Supports:
  * <ul>
- * <li>{@code ${env:VAR}} — environment variable lookup</li>
- * <li>{@code ${sys:prop}} — system property lookup</li>
- * <li>{@code ${key}} — try system property first, then environment variable</li>
- * <li>{@code ${key:-fallback}} — use fallback if key is not found (bash-style)</li>
- * <li>{@code ${env:A:-${sys:B:-default}}} — nested fallback chains</li>
- * <li>{@code $${...}} — escape, produces literal {@code ${...}}</li>
+ * <li><code>${env:VAR}</code> — environment variable lookup</li>
+ * <li><code>${sys:prop}</code> — system property lookup</li>
+ * <li><code>${key}</code> — try system property first, then environment variable</li>
+ * <li><code>${key:-fallback}</code> — use fallback if key is not found (bash-style)</li>
+ * <li><code>${env:A:-${sys:B:-default}}</code> — nested fallback chains</li>
+ * <li><code>$${...}</code> — escape, produces literal <code>${...}</code></li>
  * </ul>
  * <p>
  * "Not found" means the variable does not exist (null from the source).
@@ -46,16 +46,26 @@ public class PropertiesLookup {
     /**
      * Resolve a single value that may contain a variable reference.
      * <p>
-     * Supports {@code ${env:VAR}}, {@code ${sys:prop}}, {@code ${key}},
-     * the {@code :-} fallback syntax, nested expressions, and {@code $$} escaping.
+     * Supports <code>${env:VAR}</code>, <code>${sys:prop}</code>, <code>${key}</code>,
+     * the <code>:-</code> fallback syntax, nested expressions, and <code>$$</code> escaping.
      * <p>
      * Zero-allocation for non-variable strings (fast-path returns immediately).
      *
      * @param value the value to resolve
      * @return the resolved value, or the original string if not a variable reference
      */
+    /** Maximum nesting depth for recursive fallback resolution. */
+    private static final int MAX_DEPTH = 10;
+
     public static String resolveVariable(String value) {
+        return resolveVariable(value, 0);
+    }
+
+    private static String resolveVariable(String value, int depth) {
         if (value == null || value.length() <= 3)
+            return value;
+
+        if (depth >= MAX_DEPTH)
             return value;
 
         // Escape: $${...} produces literal ${...}
@@ -77,15 +87,15 @@ public class PropertiesLookup {
         if (content.isEmpty())
             return value;
 
-        return resolveExpression(content);
+        return resolveExpression(content, depth);
     }
 
     /**
-     * Resolve the content of a {@code ${...}} expression.
-     * The content may contain a {@code :-} fallback separator with
-     * optional nested {@code ${...}} expressions in the fallback part.
+     * Resolve the content of a <code>${...}</code> expression.
+     * The content may contain a <code>:-</code> fallback separator with
+     * optional nested <code>${...}</code> expressions in the fallback part.
      */
-    private static String resolveExpression(String content) {
+    private static String resolveExpression(String content, int depth) {
         // Find the :- separator at the top level (not inside nested ${...})
         int fallbackIdx = findFallbackSeparator(content);
 
@@ -114,7 +124,7 @@ public class PropertiesLookup {
         // Variable not found — use fallback
         if (fallback != null) {
             // The fallback may itself be a variable expression
-            return resolveVariable(fallback);
+            return resolveVariable(fallback, depth + 1);
         }
 
         // No fallback, not found — return empty string for backward compatibility
@@ -154,10 +164,10 @@ public class PropertiesLookup {
     }
 
     /**
-     * Find the index of the {@code :-} fallback separator at the top level,
-     * skipping any nested {@code ${...}} expressions.
+     * Find the index of the <code>:-</code> fallback separator at the top level,
+     * skipping any nested <code>${...}</code> expressions.
      *
-     * @return the index of {@code :} in {@code :-}, or -1 if not found
+     * @return the index of the colon in <code>:-</code>, or -1 if not found
      */
     private static int findFallbackSeparator(String content) {
         int depth = 0;
@@ -176,13 +186,12 @@ public class PropertiesLookup {
     }
 
     /**
-     * Find the matching closing brace for a {@code ${} at the given position,
-     * accounting for nested {@code ${...}} pairs.
+     * Find the matching closing brace for a <code>${</code> at the given position,
+     * accounting for nested <code>${...}</code> pairs.
      *
      * @param value the full string
-     *
-     * @param openBrace the index of the opening {@code {}
-     *        @return the index of the matching {@code }}, or -1 if not found
+     * @param openBrace the index of the opening brace
+     * @return the index of the matching closing brace, or -1 if not found
      */
     private static int findMatchingBrace(String value, int openBrace) {
         int depth = 1;

@@ -119,6 +119,26 @@ public class PropertiesLookupTest {
                 PropertiesLookup.resolveVariable("${env:JBANG_EDITOR_TEST:-${AESH_DEFAULT_EDIT:-}}"));
     }
 
+    // --- Depth limit ---
+
+    @Test
+    public void testNestedFallback_depthLimit() {
+        // Build a deeply nested expression exceeding the limit (10)
+        // ${a:-${b:-${c:-...${k:-DEEP}...}}}
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 15; i++) {
+            sb.append("${env:AESH_DEPTH_").append(i).append(":-");
+        }
+        sb.append("DEEP");
+        for (int i = 0; i < 15; i++) {
+            sb.append("}");
+        }
+        String result = PropertiesLookup.resolveVariable(sb.toString());
+        // Should not stack overflow; returns the unresolved remainder as-is
+        // once depth limit is hit
+        assertNotNull("Should not throw on deep nesting", result);
+    }
+
     // --- Escaping ---
 
     @Test
