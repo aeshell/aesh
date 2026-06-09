@@ -3258,6 +3258,42 @@ public class CommandLineParserTest {
         assertEquals("Value with equals", "a=b", cmd.manifest.get("Key"));
     }
 
+    // --- Issue #513: @OptionGroup preserves insertion order ---
+
+    @Test
+    public void testOptionGroupPreservesInsertionOrder() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionGroupEqualsCmd<>()).getParser();
+
+        // Insert multiple properties in a specific order
+        parser.populateObject("buildcmd -Dalpha=1 -Dbeta=2 -Dgamma=3 -Ddelta=4 -Depsilon=5",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionGroupEqualsCmd<?> cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+
+        // Iteration order must match insertion order
+        java.util.Iterator<String> keys = cmd.manifest.keySet().iterator();
+        assertEquals("First key", "alpha", keys.next());
+        assertEquals("Second key", "beta", keys.next());
+        assertEquals("Third key", "gamma", keys.next());
+        assertEquals("Fourth key", "delta", keys.next());
+        assertEquals("Fifth key", "epsilon", keys.next());
+    }
+
+    @Test
+    public void testOptionGroupMapIsLinkedHashMap() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionGroupEqualsCmd<>()).getParser();
+
+        parser.populateObject("buildcmd -DA=1", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        OptionGroupEqualsCmd<?> cmd = (OptionGroupEqualsCmd<?>) parser.getCommand();
+
+        assertTrue("Injected map should be a LinkedHashMap",
+                cmd.manifest instanceof java.util.LinkedHashMap);
+    }
+
     // --- HashMap lookup map invalidation tests ---
 
     @Test

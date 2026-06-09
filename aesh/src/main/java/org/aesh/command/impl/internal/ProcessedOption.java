@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -613,7 +614,7 @@ public class ProcessedOption {
                 try {
                     val = initialValue.getClass().getDeclaredConstructor().newInstance();
                 } catch (ReflectiveOperationException e) {
-                    val = new HashMap<>();
+                    val = new LinkedHashMap<>();
                 }
             }
             if (fieldAccessor != null)
@@ -726,8 +727,8 @@ public class ProcessedOption {
     }
 
     public void addProperty(String name, String value) {
-        if (properties.isEmpty() && !(properties instanceof HashMap))
-            properties = new HashMap<>();
+        if (properties.isEmpty() && !(properties instanceof LinkedHashMap))
+            properties = new LinkedHashMap<>();
         properties.put(name, value);
     }
 
@@ -1325,7 +1326,7 @@ public class ProcessedOption {
     }
 
     private <S, T> Map<S, T> newHashMap() {
-        return new HashMap<>();
+        return new LinkedHashMap<>();
     }
 
     private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
