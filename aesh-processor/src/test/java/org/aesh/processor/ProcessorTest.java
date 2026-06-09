@@ -2829,6 +2829,44 @@ public class ProcessorTest {
                 result.classLoader.loadClass("test.FallbackVarCommand_AeshMetadata"));
     }
 
+    // --- Processor parity: cascading variable resolution (#514) ---
+
+    private static final String CASCADING_VAR_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"cascade\", description = \"Cascading var test\")\n" +
+            "public class CascadeCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"editor\", defaultValue = \"${env:AESH_TEST_EDITOR:-${sys:aesh.test.editor:-vim}}\")\n" +
+            "    public String editor;\n" +
+            "\n" +
+            "    @Option(name = \"port\", fallbackValue = \"${env:AESH_TEST_PORT:-4004}\")\n" +
+            "    public String port;\n" +
+            "\n" +
+            "    @Option(name = \"plain\", defaultValue = \"literal\")\n" +
+            "    public String plain;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testCascadingVariableResolution() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CascadeCommand", CASCADING_VAR_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertEquivalence(
+                result.classLoader.loadClass("test.CascadeCommand"),
+                result.classLoader.loadClass("test.CascadeCommand_AeshMetadata"));
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
