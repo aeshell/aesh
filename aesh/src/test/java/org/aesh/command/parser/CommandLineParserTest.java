@@ -3258,6 +3258,79 @@ public class CommandLineParserTest {
         assertEquals("Value with equals", "a=b", cmd.manifest.get("Key"));
     }
 
+    // --- Issue #515: @OptionGroup key-only entries ---
+
+    @CommandDefinition(name = "agentcmd", description = "Agent command")
+    public class OptionGroupKeyOnlyCmd<CI extends CommandInvocation> implements Command<CI> {
+        @OptionGroup(shortName = 'J', name = "javaagent", description = "Java agents", defaultValue = "")
+        Map<String, String> agents;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testOptionGroupKeyOnlyWithDefault() throws Exception {
+        // Key-only entry uses the defaultValue as the value
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionGroupKeyOnlyCmd<>()).getParser();
+
+        parser.populateObject("agentcmd --javaagent=xyz.jar", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        OptionGroupKeyOnlyCmd<?> cmd = (OptionGroupKeyOnlyCmd<?>) parser.getCommand();
+
+        assertEquals("Key-only should use default value", "", cmd.agents.get("xyz.jar"));
+    }
+
+    @Test
+    public void testOptionGroupMixedKeyOnlyAndKeyValue() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionGroupKeyOnlyCmd<>()).getParser();
+
+        parser.populateObject("agentcmd --javaagent=agent1.jar --javaagent=agent2.jar=opts",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionGroupKeyOnlyCmd<?> cmd = (OptionGroupKeyOnlyCmd<?>) parser.getCommand();
+
+        assertEquals("Key-only entry", "", cmd.agents.get("agent1.jar"));
+        assertEquals("Key-value entry", "opts", cmd.agents.get("agent2.jar"));
+    }
+
+    @Test
+    public void testOptionGroupKeyOnlyPreservesOrder() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionGroupKeyOnlyCmd<>()).getParser();
+
+        parser.populateObject("agentcmd --javaagent=first.jar --javaagent=second.jar=opts --javaagent=third.jar",
+                invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        OptionGroupKeyOnlyCmd<?> cmd = (OptionGroupKeyOnlyCmd<?>) parser.getCommand();
+
+        java.util.Iterator<String> keys = cmd.agents.keySet().iterator();
+        assertEquals("first.jar", keys.next());
+        assertEquals("second.jar", keys.next());
+        assertEquals("third.jar", keys.next());
+    }
+
+    @Test
+    public void testOptionGroupKeyOnlyWithoutDefaultThrows() throws Exception {
+        // Without defaultValue, key-only entry should throw
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new OptionGroupEqualsCmd<>()).getParser();
+
+        try {
+            parser.populateObject("buildcmd --manifest=keyonly", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Key-only without defaultValue should throw");
+        } catch (Exception e) {
+            assertTrue("Should mention 'property'", e.getMessage().contains("property"));
+        }
+    }
+
     // --- Issue #513: @OptionGroup preserves insertion order ---
 
     @Test
