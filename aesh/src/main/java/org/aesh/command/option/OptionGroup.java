@@ -74,8 +74,13 @@ public @interface OptionGroup {
     boolean required() default false;
 
     /**
-     * If this options has a value the default will be auto completed if it matches
-     * the value already typed
+     * Default value for property values. Used when a key is specified without
+     * a value (key-only entry). For example, with {@code defaultValue = ""}:
+     * <pre>
+     *   --javaagent=xyz.jar          → {xyz.jar → ""}
+     *   --javaagent=xyz.jar=options  → {xyz.jar → "options"}
+     * </pre>
+     * Without {@code defaultValue}, key-only entries throw a parse error.
      */
     String[] defaultValue() default {};
 
