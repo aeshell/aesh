@@ -19,7 +19,6 @@
  */
 package org.aesh.command.impl.parser;
 
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.aesh.command.impl.internal.OptionType;
@@ -34,7 +33,6 @@ import org.aesh.terminal.utils.Parser;
  */
 public class AeshOptionParser implements OptionParser {
 
-    private static final Logger LOGGER = Logger.getLogger(AeshOptionParser.class.getName());
     private static final String EQUALS = "=";
     private static final char DASH = '-';
     private Status status;

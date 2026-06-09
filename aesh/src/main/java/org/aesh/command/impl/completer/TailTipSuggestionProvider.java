@@ -93,31 +93,22 @@ public class TailTipSuggestionProvider<CI extends CommandInvocation> implements 
             CommandContainer<CI> container = registry.getCommand(commandName, trimmed);
             CommandLineParser<CI> parser = container.getParser();
 
-            // For group commands, resolve to the subcommand parser if present
-            CommandLineParser<CI> targetParser = parser;
-            if (parser.isGroupCommand() && parts.length >= 2 && !parts[1].startsWith("-")) {
-                CommandLineParser<CI> childParser = parser.getChildParser(parts[1]);
-                if (childParser != null) {
-                    targetParser = childParser;
-                } else {
-                    // Partial subcommand name or unknown — don't show tail tip
-                    lastBuffer = buffer;
-                    lastTip = null;
-                    return null;
-                }
-            }
-
-            // Parse the buffer in COMPLETION mode to populate option values.
-            // This tells us which options have already been specified.
+            // Parse the full buffer via the root parser in COMPLETION mode.
+            // The parser handles subcommand routing internally.
             try {
-                targetParser.parse(trimmed, CommandLineParser.Mode.COMPLETION);
+                parser.parse(trimmed, CommandLineParser.Mode.COMPLETION);
+
+                // Get the deepest parsed command (subcommand if applicable)
+                CommandLineParser<CI> parsedParser = parser.parsedCommand();
+                if (parsedParser == null)
+                    parsedParser = parser;
 
                 // Build the remaining synopsis (options + args not yet provided)
-                String tip = targetParser.getProcessedCommand()
-                        .buildRemainingSynopsis(targetParser.isGroupCommand());
+                String tip = parsedParser.getProcessedCommand()
+                        .buildRemainingSynopsis(parsedParser.isGroupCommand());
 
                 // Clean up parser state
-                targetParser.clear();
+                parser.clear();
 
                 if (tip != null && !tip.trim().isEmpty()) {
                     lastBuffer = buffer;
@@ -128,7 +119,7 @@ public class TailTipSuggestionProvider<CI extends CommandInvocation> implements 
                 // Parse errors are expected for partial/invalid input
                 LOGGER.log(Level.FINEST, "Tail tip parse error", e);
                 try {
-                    targetParser.clear();
+                    parser.clear();
                 } catch (Exception ignored) {
                 }
             }

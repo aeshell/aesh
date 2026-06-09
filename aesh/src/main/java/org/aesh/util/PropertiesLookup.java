@@ -44,6 +44,11 @@ public class PropertiesLookup {
     }
 
     /**
+     * /** Maximum nesting depth for recursive fallback resolution.
+     */
+    private static final int MAX_DEPTH = 10;
+
+    /**
      * Resolve a single value that may contain a variable reference.
      * <p>
      * Supports <code>${env:VAR}</code>, <code>${sys:prop}</code>, <code>${key}</code>,
@@ -54,9 +59,6 @@ public class PropertiesLookup {
      * @param value the value to resolve
      * @return the resolved value, or the original string if not a variable reference
      */
-    /** Maximum nesting depth for recursive fallback resolution. */
-    private static final int MAX_DEPTH = 10;
-
     public static String resolveVariable(String value) {
         return resolveVariable(value, 0);
     }
