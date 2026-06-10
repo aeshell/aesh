@@ -9,8 +9,10 @@ import org.aesh.charts.canvas.BrailleEncoder;
 import org.aesh.charts.canvas.Canvas;
 import org.aesh.charts.common.ChartStyle;
 import org.aesh.charts.common.DataSeries;
+import org.aesh.charts.common.HorizontalLine;
 import org.aesh.charts.common.Legend;
 import org.aesh.charts.common.LineStyle;
+import org.aesh.charts.common.Marker;
 import org.aesh.charts.common.Scale;
 
 /**
@@ -42,6 +44,8 @@ public class LineChart {
     private final Scale xScale;
     private final Scale yScale;
     private final List<DataSeries> seriesList = new ArrayList<>();
+    private final List<Marker> markers = new ArrayList<>();
+    private final List<HorizontalLine> horizontalLines = new ArrayList<>();
     private boolean showLegend = true;
 
     // Viewport for scrolling
@@ -70,6 +74,23 @@ public class LineChart {
 
     public List<DataSeries> seriesList() {
         return seriesList;
+    }
+
+    /**
+     * Add a marker to highlight a specific data point.
+     * Used for change detection alerts, regression markers, etc.
+     */
+    public LineChart addMarker(Marker marker) {
+        markers.add(marker);
+        return this;
+    }
+
+    /**
+     * Add a horizontal reference line (threshold, baseline, target).
+     */
+    public LineChart addHorizontalLine(HorizontalLine line) {
+        horizontalLines.add(line);
+        return this;
     }
 
     // --- Viewport scrolling ---
@@ -114,6 +135,15 @@ public class LineChart {
             yMin = Math.min(yMin, s.yMin());
             yMax = Math.max(yMax, s.yMax());
         }
+        // Include horizontal lines and markers in Y range
+        for (HorizontalLine hl : horizontalLines) {
+            yMin = Math.min(yMin, hl.yValue());
+            yMax = Math.max(yMax, hl.yValue());
+        }
+        for (Marker m : markers) {
+            yMin = Math.min(yMin, m.y());
+            yMax = Math.max(yMax, m.y());
+        }
         yAxis.autoRange(yMin, yMax);
 
         // Compute X-axis range
@@ -148,9 +178,19 @@ public class LineChart {
         yAxis.drawYAxis(canvas, plotLeft - 1, plotTop, plotBottom, style);
         xAxis.drawXAxis(canvas, plotLeft - 1, plotRight, plotBottom + 1, style);
 
+        // Draw horizontal reference lines (behind data)
+        for (HorizontalLine hline : horizontalLines) {
+            drawHorizontalLine(canvas, hline, yAxis, plotLeft, plotRight, plotTop, plotBottom);
+        }
+
         // Plot each series
         for (DataSeries series : seriesList) {
             plotSeries(canvas, series, xAxis, yAxis, plotLeft, plotRight, plotTop, plotBottom);
+        }
+
+        // Draw markers (on top of data)
+        for (Marker marker : markers) {
+            drawMarker(canvas, marker, xAxis, yAxis, plotLeft, plotRight, plotTop, plotBottom);
         }
 
         // Draw legend
@@ -268,6 +308,83 @@ public class LineChart {
             int cellY = plotTop + (int) ((1.0 - yNorm) * plotHeight);
 
             canvas.set(cellX, cellY, dot, color);
+        }
+    }
+
+    /**
+     * Draw a marker (change detection point, annotation) on the chart.
+     */
+    private void drawMarker(Canvas canvas, Marker marker,
+            Axis xAxis, Axis yAxis,
+            int plotLeft, int plotRight, int plotTop, int plotBottom) {
+
+        int plotWidth = plotRight - plotLeft + 1;
+        int plotHeight = plotBottom - plotTop;
+
+        double xNorm = xAxis.normalize(marker.x());
+        double yNorm = yAxis.normalize(marker.y());
+
+        int cellX = plotLeft + (int) (xNorm * (plotWidth - 1));
+        int cellY = plotTop + (int) ((1.0 - yNorm) * plotHeight);
+
+        if (cellX < plotLeft || cellX > plotRight || cellY < plotTop || cellY > plotBottom)
+            return;
+
+        // Draw the marker symbol
+        char symbol = style == ChartStyle.ASCII ? 'X' : marker.symbol();
+        canvas.set(cellX, cellY, symbol, marker.color());
+
+        // Draw label above the marker if there's room
+        String label = marker.label();
+        if (label != null && !label.isEmpty()) {
+            int labelY = cellY - 1;
+            if (labelY >= plotTop) {
+                int labelX = cellX - label.length() / 2;
+                if (labelX < plotLeft)
+                    labelX = plotLeft;
+                if (labelX + label.length() > plotRight)
+                    labelX = plotRight - label.length() + 1;
+                canvas.writeString(labelX, labelY, label, marker.color());
+            }
+        }
+    }
+
+    /**
+     * Draw a horizontal reference line across the chart.
+     */
+    private void drawHorizontalLine(Canvas canvas, HorizontalLine hline,
+            Axis yAxis,
+            int plotLeft, int plotRight, int plotTop, int plotBottom) {
+
+        int plotHeight = plotBottom - plotTop;
+        double yNorm = yAxis.normalize(hline.yValue());
+        int cellY = plotTop + (int) ((1.0 - yNorm) * plotHeight);
+
+        if (cellY < plotTop || cellY > plotBottom)
+            return;
+
+        // Draw the line
+        char lineChar;
+        if (hline.dashed()) {
+            lineChar = style == ChartStyle.ASCII ? '-' : '\u2504'; // ┄ dashed
+        } else {
+            lineChar = style.horizontalLine();
+        }
+
+        for (int x = plotLeft; x <= plotRight; x++) {
+            // Only draw if cell is empty (don't overwrite data points)
+            if (canvas.get(x, cellY) == ' ') {
+                canvas.set(x, cellY, lineChar, hline.color());
+            }
+        }
+
+        // Draw label at the right end
+        String label = hline.label();
+        if (label != null && !label.isEmpty()) {
+            int labelX = plotRight - label.length();
+            if (labelX > plotLeft) {
+                canvas.writeString(labelX, cellY, label, hline.color());
+            }
         }
     }
 
