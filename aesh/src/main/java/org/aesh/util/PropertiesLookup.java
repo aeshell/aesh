@@ -43,9 +43,7 @@ public class PropertiesLookup {
         return result;
     }
 
-    /**
-     * /** Maximum nesting depth for recursive fallback resolution.
-     */
+    /** Maximum nesting depth for recursive fallback resolution. */
     private static final int MAX_DEPTH = 10;
 
     /**
