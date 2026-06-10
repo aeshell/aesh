@@ -25,7 +25,9 @@ import java.util.concurrent.TimeUnit;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.Key;
+import org.aesh.terminal.tty.ScreenRegion;
 import org.aesh.terminal.tty.Size;
+import org.aesh.terminal.tty.SplitScreen;
 import org.aesh.terminal.utils.ANSI;
 
 /**
@@ -167,5 +169,55 @@ public interface Shell {
     default boolean supportsHyperlinks() {
         Connection conn = connection();
         return conn != null && conn.terminal().supportsHyperlinks();
+    }
+
+    /**
+     * Enable split-screen mode, dividing the terminal into a scrolling
+     * output region (top) and a readline prompt region (bottom).
+     * <p>
+     * The ratio controls the fraction of screen allocated to the top region.
+     * For example, 0.7 gives 70% to output and 30% to the prompt.
+     * <p>
+     * When split-screen is not supported (e.g., runtime mode), returns null.
+     *
+     * @param ratio fraction of screen for the top region (0.0-1.0)
+     * @return the SplitScreen manager, or null if not supported
+     */
+    default SplitScreen enableSplitScreen(double ratio) {
+        Connection conn = connection();
+        if (conn != null) {
+            return conn.splitScreen(ratio);
+        }
+        return null;
+    }
+
+    /**
+     * Returns the current split-screen manager, or null if split-screen
+     * is not active.
+     *
+     * @return the SplitScreen, or null
+     */
+    default SplitScreen splitScreen() {
+        Connection conn = connection();
+        if (conn != null) {
+            return conn.splitScreen();
+        }
+        return null;
+    }
+
+    /**
+     * Set the current screen region for output routing.
+     * <p>
+     * When set, {@link #write(String)} routes output to the specified region
+     * instead of the default terminal output. When split-screen is not active,
+     * this is a no-op.
+     *
+     * @param region the region to route output to, or null for default
+     */
+    default void setCurrentRegion(ScreenRegion region) {
+        Connection conn = connection();
+        if (conn != null) {
+            conn.setCurrentRegion(region);
+        }
     }
 }
