@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandLifecycle;
@@ -71,6 +72,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private final ProcessedCommand<Command<CI>, CI> processedCommand;
     private List<CommandLineParser<CI>> childParsers;
     private Map<String, Class<? extends Command>> lazyChildClasses;
+    private Function<Class<? extends Command>, CommandContainer<CI>> childResolver;
     private InvocationProviders storedInvocationProviders;
     private boolean isChild = false;
     private ProcessedOption lastParsedOption;
@@ -129,17 +131,46 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         this.storedInvocationProviders = providers;
     }
 
+    /**
+     * Set the resolver used to create child command containers during lazy
+     * resolution. If not set, falls back to {@code new AeshCommandContainerBuilder}.
+     * <p>
+     * This allows frameworks (CDI, Spring) to use their own
+     * {@code CommandContainerBuilder} for subcommand creation (#517).
+     */
+    public void setChildResolver(Function<Class<? extends Command>, CommandContainer<CI>> resolver) {
+        this.childResolver = resolver;
+    }
+
+    /**
+     * Resolve a child command class into a container, using the configured
+     * childResolver if available, or the default builder as fallback.
+     */
+    private CommandContainer<CI> resolveChildContainer(Class<? extends Command> clazz)
+            throws CommandLineParserException {
+        if (childResolver != null) {
+            try {
+                return childResolver.apply(clazz);
+            } catch (RuntimeException e) {
+                if (e.getCause() instanceof CommandLineParserException)
+                    throw (CommandLineParserException) e.getCause();
+                throw e;
+            }
+        }
+        return new AeshCommandContainerBuilder<CI>().create(clazz);
+    }
+
     @SuppressWarnings("unchecked")
     private void resolveAllLazyChildren() {
         if (lazyChildClasses == null || lazyChildClasses.isEmpty())
             return;
-        AeshCommandContainerBuilder<CI> builder = new AeshCommandContainerBuilder<>();
         // Deduplicate: aliases register the same class under multiple keys (#503)
         java.util.Set<Class<? extends Command>> uniqueClasses = new java.util.LinkedHashSet<>(lazyChildClasses.values());
         for (Class<? extends Command> clazz : uniqueClasses) {
             try {
-                CommandContainer<CI> container = builder.create(clazz);
+                CommandContainer<CI> container = resolveChildContainer(clazz);
                 addChildParser(container.getParser());
+                propagateChildResolver(container.getParser());
                 applyStoredProviders(container.getParser());
             } catch (CommandLineParserException e) {
                 // best-effort: skip unresolvable children
@@ -159,9 +190,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         // to prevent duplicate resolution via stale alias entries
         lazyChildClasses.values().removeIf(c -> c == clazz);
         try {
-            AeshCommandContainerBuilder<CI> builder = new AeshCommandContainerBuilder<>();
-            CommandContainer<CI> container = builder.create(clazz);
+            CommandContainer<CI> container = resolveChildContainer(clazz);
             addChildParser(container.getParser());
+            propagateChildResolver(container.getParser());
             applyStoredProviders(container.getParser());
             return container.getParser();
         } catch (CommandLineParserException e) {
@@ -172,6 +203,16 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private void applyStoredProviders(CommandLineParser<CI> child) {
         if (storedInvocationProviders != null) {
             child.getProcessedCommand().updateInvocationProviders(storedInvocationProviders);
+        }
+    }
+
+    /**
+     * Propagate the child resolver to a resolved child parser so that
+     * nested group commands also use the correct builder.
+     */
+    private void propagateChildResolver(CommandLineParser<CI> child) {
+        if (childResolver != null && child instanceof AeshCommandLineParser) {
+            ((AeshCommandLineParser<CI>) child).setChildResolver(childResolver);
         }
     }
 

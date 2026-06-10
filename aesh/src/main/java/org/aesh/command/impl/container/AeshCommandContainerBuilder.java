@@ -86,10 +86,12 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             throws CommandLineParserException {
         ProcessedCommand<Command<CI>, CI> processedCommand = provider.buildProcessedCommand(command);
 
-        AeshCommandContainer<CI> container = new AeshCommandContainer<>(
-                new AeshCommandLineParser<>(processedCommand));
+        AeshCommandLineParser<CI> parser = new AeshCommandLineParser<>(processedCommand);
+        AeshCommandContainer<CI> container = new AeshCommandContainer<>(parser);
 
         if (provider.isGroupCommand()) {
+            // Set child resolver so lazy children use the same builder (#517)
+            setChildResolverFromBuilder(parser);
             if (command instanceof GroupCommand) {
                 List<Command<CI>> commands = ((GroupCommand<CI>) command).getCommands();
                 if (commands != null) {
@@ -149,8 +151,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
             if (isGroup) {
                 // Handle as group command
-                AeshCommandContainer<CI> groupContainer = new AeshCommandContainer<>(
-                        new AeshCommandLineParser<>(processedCommand));
+                AeshCommandLineParser<CI> groupParser = new AeshCommandLineParser<>(processedCommand);
+                setChildResolverFromBuilder(groupParser);
+                AeshCommandContainer<CI> groupContainer = new AeshCommandContainer<>(groupParser);
 
                 if (commandObject instanceof GroupCommand) {
                     List<Command<CI>> commands = ((GroupCommand<CI>) commandObject).getCommands();
@@ -208,10 +211,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             if (groupCommand.helpSectionProvider() != NullHelpSectionProvider.class)
                 processedGroupCommand.setHelpSectionProviderClass(groupCommand.helpSectionProvider());
 
-            AeshCommandContainer<CI> groupContainer;
-
-            groupContainer = new AeshCommandContainer<>(
-                    new AeshCommandLineParser<>(processedGroupCommand));
+            AeshCommandLineParser<CI> groupCmdParser = new AeshCommandLineParser<>(processedGroupCommand);
+            setChildResolverFromBuilder(groupCmdParser);
+            AeshCommandContainer<CI> groupContainer = new AeshCommandContainer<>(groupCmdParser);
 
             if (commandObject instanceof GroupCommand) {
                 List<Command<CI>> commands = ((GroupCommand<CI>) commandObject).getCommands();
@@ -550,6 +552,27 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         if (clazz.getSuperclass() != null && clazz.getSuperclass() != Object.class) {
             processMixinClass(processedCommand, clazz.getSuperclass(), mixinFieldName);
         }
+    }
+
+    /** Cached child resolver function to avoid repeated lambda allocation. */
+    private java.util.function.Function<Class<? extends Command>, CommandContainer<CI>> cachedChildResolver;
+
+    /**
+     * Set the child resolver on a parser, using a cached function that
+     * delegates to this builder. The function is created once per builder
+     * instance and reused for all parsers.
+     */
+    private void setChildResolverFromBuilder(AeshCommandLineParser<CI> parser) {
+        if (cachedChildResolver == null) {
+            cachedChildResolver = clazz -> {
+                try {
+                    return this.create(clazz);
+                } catch (CommandLineParserException e) {
+                    throw new RuntimeException(e);
+                }
+            };
+        }
+        parser.setChildResolver(cachedChildResolver);
     }
 
     /**
