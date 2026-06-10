@@ -20,7 +20,6 @@ package org.aesh.command.metadata;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.aesh.command.Command;
 
@@ -30,6 +29,11 @@ import org.aesh.command.Command;
  * instances on demand. Only the requested command's metadata class is loaded
  * and instantiated — other commands remain untouched.
  * <p>
+ * Uses {@link ClassValue} for per-class caching, which is automatically
+ * garbage-collected when a classloader is unloaded. This avoids
+ * {@code ClassCastException} when frameworks reload classes with a new
+ * classloader (e.g., Quarkus dev mode, {@code @QuarkusMainTest}).
+ * <p>
  * Thread-safe with lazy initialization and per-command caching.
  *
  * @author Aesh team
@@ -37,9 +41,29 @@ import org.aesh.command.Command;
 public final class MetadataProviderRegistry {
 
     private static volatile List<MetadataRegistry> registries;
-    private static final ConcurrentHashMap<Class<?>, CommandMetadataProvider<?>> cache = new ConcurrentHashMap<>();
+    private static volatile ClassLoader registriesClassLoader;
 
-    /** Sentinel cached for command classes that have no generated provider. Must never escape getProvider(). */
+    /**
+     * Per-class cache using ClassValue. Entries are automatically removed
+     * when the class's classloader is garbage-collected, preventing stale
+     * cross-classloader references (#519).
+     */
+    private static final ClassValue<CommandMetadataProvider<?>> cache = new ClassValue<CommandMetadataProvider<?>>() {
+        @Override
+        protected CommandMetadataProvider<?> computeValue(Class<?> cls) {
+            String className = cls.getName();
+            for (MetadataRegistry registry : getRegistries()) {
+                @SuppressWarnings("rawtypes")
+                CommandMetadataProvider provider = registry.get(className);
+                if (provider != null) {
+                    return provider;
+                }
+            }
+            return ABSENT;
+        }
+    };
+
+    /** Sentinel for command classes that have no generated provider. Must never escape getProvider(). */
     @SuppressWarnings("rawtypes")
     private static final CommandMetadataProvider ABSENT = new CommandMetadataProvider() {
         public Class commandType() {
@@ -77,34 +101,31 @@ public final class MetadataProviderRegistry {
      * {@link MetadataRegistry} instances. The result is cached for
      * subsequent lookups. Negative results (no provider found) are
      * also cached to avoid repeated registry iteration.
+     * <p>
+     * The cache is per-classloader: when a classloader is garbage-collected,
+     * all cached entries for its classes are automatically removed.
      *
      * @param commandClass the command class to look up
      * @param <C> the command type
      * @return the provider, or null if no generated provider exists
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings("unchecked")
     public static <C extends Command> CommandMetadataProvider<C> getProvider(Class<C> commandClass) {
-        CommandMetadataProvider<?> result = cache.computeIfAbsent(commandClass, cls -> {
-            String className = cls.getName();
-            for (MetadataRegistry registry : getRegistries()) {
-                CommandMetadataProvider provider = registry.get(className);
-                if (provider != null) {
-                    return provider;
-                }
-            }
-            return ABSENT;
-        });
+        CommandMetadataProvider<?> result = cache.get(commandClass);
         return result == ABSENT ? null : (CommandMetadataProvider<C>) result;
     }
 
     private static List<MetadataRegistry> getRegistries() {
+        ClassLoader currentCL = Thread.currentThread().getContextClassLoader();
         List<MetadataRegistry> result = registries;
-        if (result == null) {
+        // Reload if registries haven't been loaded yet or classloader changed
+        if (result == null || registriesClassLoader != currentCL) {
             synchronized (MetadataProviderRegistry.class) {
                 result = registries;
-                if (result == null) {
+                if (result == null || registriesClassLoader != currentCL) {
                     result = loadRegistries();
                     registries = result;
+                    registriesClassLoader = currentCL;
                 }
             }
         }
@@ -122,13 +143,17 @@ public final class MetadataProviderRegistry {
 
     /**
      * Reset the registry, forcing re-discovery on next access.
-     * This is needed when the classloader changes (e.g., during hot-reload
-     * or test frameworks that restart the application with a new classloader).
+     * <p>
+     * Note: with the ClassValue-based cache, explicit reset is typically
+     * not needed for classloader changes — the cache is automatically
+     * GC'd when the classloader is collected. This method is still useful
+     * for test frameworks that reuse the same classloader but need to
+     * force re-discovery of registries.
      */
     public static void reset() {
         synchronized (MetadataProviderRegistry.class) {
-            cache.clear();
             registries = null;
+            registriesClassLoader = null;
         }
     }
 }
