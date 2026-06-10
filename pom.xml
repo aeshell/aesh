@@ -38,6 +38,7 @@
         <module>bom</module>
         <module>aesh</module>
         <module>aesh-processor</module>
+        <module>aesh-charts</module>
     </modules>
 
     <!-- aesh-tamboui is in a profile since it requires tamboui snapshot dependencies -->
