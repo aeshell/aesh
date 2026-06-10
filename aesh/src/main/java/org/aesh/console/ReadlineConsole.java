@@ -323,7 +323,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                             .connection(conn)
                             .prompt(prompt)
                             .requestHandler(line -> {
-                                if (line != null && !line.trim().isEmpty()) {
+                                if (line == null) {
+                                    // EOF (Ctrl+D) — stop the console
+                                    doStop(true);
+                                } else if (!line.trim().isEmpty()) {
                                     shell.startCollectOutput();
                                     processLine(line, conn);
                                 } else
