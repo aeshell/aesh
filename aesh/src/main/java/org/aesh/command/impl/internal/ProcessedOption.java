@@ -322,6 +322,10 @@ public class ProcessedOption {
         this.completer = completer;
     }
 
+    public void setConverter(Converter converter) {
+        this.converter = converter;
+    }
+
     public void setValidator(OptionValidator validator) {
         this.validator = validator;
     }
