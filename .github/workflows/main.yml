@@ -14,5 +14,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
+      - name: Clear stale aesh-readline cache
+        run: rm -rf ~/.m2/repository/org/aesh/terminal-api ~/.m2/repository/org/aesh/readline-api ~/.m2/repository/org/aesh/readline ~/.m2/repository/org/aesh/readline-all
       - name: Build with Maven
-        run: mvn -U clean install
+        run: mvn clean install
