@@ -3845,6 +3845,147 @@ public class CommandLineParserTest {
         assertEquals("Fallback should use :-4004 when sys prop not set", "4004", cmd.port);
     }
 
+    // --- Issue #521: Env var default overrides provider ---
+
+    /** Provider that returns config values for specific options */
+    public static class ConfigProvider implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            if ("editor".equals(option.name()))
+                return "vim-from-config";
+            return null;
+        }
+
+        @Override
+        public String fallbackValue(ProcessedOption option) {
+            if ("port".equals(option.name()))
+                return "8080-from-config";
+            return null;
+        }
+    }
+
+    @CommandDefinition(name = "priority", description = "Priority test", defaultValueProvider = ConfigProvider.class)
+    public static class PriorityCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "editor", defaultValue = "${sys:aesh.test.priority.editor:-}")
+        public String editor;
+
+        @Option(name = "port", fallbackValue = "${sys:aesh.test.priority.port:-4004}")
+        public String port;
+
+        @Option(name = "plain", defaultValue = "hardcoded")
+        public String plain;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testEnvVarWinsOverProvider() throws Exception {
+        // When env var is set, it should win over the provider
+        System.setProperty("aesh.test.priority.editor", "code-from-env");
+        try {
+            AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+            CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                    .create(new PriorityCmd<>()).getParser();
+
+            parser.populateObject("priority", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            PriorityCmd<CommandInvocation> cmd = (PriorityCmd<CommandInvocation>) parser.getCommand();
+
+            assertEquals("Env var should win over provider", "code-from-env", cmd.editor);
+        } finally {
+            System.clearProperty("aesh.test.priority.editor");
+        }
+    }
+
+    @Test
+    public void testProviderWinsWhenEnvVarNotSet() throws Exception {
+        // When env var is NOT set, provider should win
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new PriorityCmd<>()).getParser();
+
+        parser.populateObject("priority", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        PriorityCmd<CommandInvocation> cmd = (PriorityCmd<CommandInvocation>) parser.getCommand();
+
+        assertEquals("Provider should win when env var not set", "vim-from-config", cmd.editor);
+    }
+
+    @Test
+    public void testProviderStillWorksForLiteralDefaults() throws Exception {
+        // Options without ${...} should still let the provider win
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new PriorityCmd<>()).getParser();
+
+        parser.populateObject("priority", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        PriorityCmd<CommandInvocation> cmd = (PriorityCmd<CommandInvocation>) parser.getCommand();
+
+        // "plain" has defaultValue="hardcoded" (literal, no ${...})
+        // Provider returns null for "plain" → static default wins
+        assertEquals("Literal default should be used when provider returns null",
+                "hardcoded", cmd.plain);
+    }
+
+    @Test
+    public void testExplicitValueWinsOverAll() throws Exception {
+        // Explicit --editor=explicit should always win
+        System.setProperty("aesh.test.priority.editor", "code-from-env");
+        try {
+            AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+            CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                    .create(new PriorityCmd<>()).getParser();
+
+            parser.populateObject("priority --editor explicit", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            PriorityCmd<CommandInvocation> cmd = (PriorityCmd<CommandInvocation>) parser.getCommand();
+
+            assertEquals("Explicit value should win over env var and provider",
+                    "explicit", cmd.editor);
+        } finally {
+            System.clearProperty("aesh.test.priority.editor");
+        }
+    }
+
+    @Test
+    public void testFallbackEnvVarWinsOverProvider() throws Exception {
+        // Bare --port with env var set → env var should win over provider fallback
+        System.setProperty("aesh.test.priority.port", "9999-from-env");
+        try {
+            AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+            CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                    .create(new PriorityCmd<>()).getParser();
+
+            parser.populateObject("priority --port", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            PriorityCmd<CommandInvocation> cmd = (PriorityCmd<CommandInvocation>) parser.getCommand();
+
+            assertEquals("Fallback env var should win over provider fallback",
+                    "9999-from-env", cmd.port);
+        } finally {
+            System.clearProperty("aesh.test.priority.port");
+        }
+    }
+
+    @Test
+    public void testFallbackProviderWinsWhenEnvVarNotSet() throws Exception {
+        // Bare --port without env var → provider fallback should win
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new PriorityCmd<>()).getParser();
+
+        parser.populateObject("priority --port", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        PriorityCmd<CommandInvocation> cmd = (PriorityCmd<CommandInvocation>) parser.getCommand();
+
+        assertEquals("Provider fallback should win when env var not set",
+                "8080-from-config", cmd.port);
+    }
+
     @CommandDefinition(name = "literal", description = "Literal default test")
     public static class LiteralDefaultCmd<CI extends CommandInvocation> implements Command<CI> {
         @Option(defaultValue = "hello")

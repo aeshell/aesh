@@ -107,6 +107,10 @@ public class ProcessedOption {
     // Only set when the value contains ${...} variable references.
     private List<String> rawDefaultValues;
     private String rawFallbackValue;
+    // True when the primary variable in the template resolved (not just the :- fallback).
+    // Used to give env var defaults priority over DefaultValueProvider (#521).
+    private boolean variableDefaultResolved;
+    private boolean variableFallbackResolved;
     private boolean inherited = false;
     private String descriptionUrl;
     private boolean isUrl = false;
@@ -199,6 +203,7 @@ public class ProcessedOption {
         if (hasVariableReference(defaultValue)) {
             this.rawDefaultValues = defaultValue;
             this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValue);
+            this.variableDefaultResolved = checkVariableResolved(defaultValue);
         } else {
             this.defaultValues = defaultValue;
         }
@@ -313,9 +318,12 @@ public class ProcessedOption {
         if (fallbackValue != null && fallbackValue.length() > 3
                 && fallbackValue.charAt(0) == '$' && fallbackValue.charAt(1) == '{') {
             this.rawFallbackValue = fallbackValue;
-            this.fallbackValue = PropertiesLookup.resolveVariable(fallbackValue);
+            PropertiesLookup.ResolvedValue resolved = PropertiesLookup.resolveWithSource(fallbackValue);
+            this.fallbackValue = resolved.value;
+            this.variableFallbackResolved = resolved.fromVariable;
         } else {
             this.rawFallbackValue = null;
+            this.variableFallbackResolved = false;
             this.fallbackValue = fallbackValue;
         }
     }
@@ -332,8 +340,10 @@ public class ProcessedOption {
         if (defaultValues != null && hasVariableReference(defaultValues)) {
             this.rawDefaultValues = defaultValues;
             this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValues);
+            this.variableDefaultResolved = checkVariableResolved(defaultValues);
         } else {
             this.rawDefaultValues = null;
+            this.variableDefaultResolved = false;
             this.defaultValues = defaultValues != null ? defaultValues : Collections.emptyList();
         }
     }
@@ -982,9 +992,12 @@ public class ProcessedOption {
         // so that env var changes between parse cycles are picked up
         if (rawDefaultValues != null) {
             defaultValues = PropertiesLookup.checkForSystemVariables(rawDefaultValues);
+            variableDefaultResolved = checkVariableResolved(rawDefaultValues);
         }
         if (rawFallbackValue != null) {
-            fallbackValue = PropertiesLookup.resolveVariable(rawFallbackValue);
+            PropertiesLookup.ResolvedValue resolved = PropertiesLookup.resolveWithSource(rawFallbackValue);
+            fallbackValue = resolved.value;
+            variableFallbackResolved = resolved.fromVariable;
         }
     }
 
@@ -1452,6 +1465,41 @@ public class ProcessedOption {
     }
 
     /**
+     * Check if any variable reference in the list resolved from the primary
+     * variable (not just the :- fallback).
+     */
+    private static boolean checkVariableResolved(List<String> values) {
+        if (values == null || values.isEmpty())
+            return false;
+        for (String v : values) {
+            if (v != null && v.length() > 3 && v.charAt(0) == '$' && v.charAt(1) == '{') {
+                PropertiesLookup.ResolvedValue result = PropertiesLookup.resolveWithSource(v);
+                if (result.fromVariable)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * True when the annotation {@code defaultValue} contains a variable
+     * reference (e.g., {@code ${env:VAR}}) and the primary variable resolved
+     * (the env/sys var was set). Used to give env var defaults priority over
+     * {@link DefaultValueProvider} (#521).
+     */
+    public boolean isVariableDefaultResolved() {
+        return variableDefaultResolved;
+    }
+
+    /**
+     * True when the annotation {@code fallbackValue} contains a variable
+     * reference and the primary variable resolved.
+     */
+    public boolean isVariableFallbackResolved() {
+        return variableFallbackResolved;
+    }
+
+    /**
      * Apply the fallback value chain when this option was specified but has no value.
      * Resolution order (#507):
      * <ol>
@@ -1469,7 +1517,13 @@ public class ProcessedOption {
         if (!isOptionalValue() || getValue() != null)
             return;
 
-        // Priority 1: Provider fallback (dynamic)
+        // Priority 1: Annotation fallbackValue resolved from env/sys var (#521)
+        if (variableFallbackResolved && hasFallbackValue()) {
+            addValue(getFallbackValue());
+            return;
+        }
+
+        // Priority 2: Provider fallback (dynamic, from config)
         DefaultValueProvider dvp = parent() != null
                 ? parent().getDefaultValueProvider()
                 : null;
@@ -1485,11 +1539,11 @@ public class ProcessedOption {
             }
         }
 
-        // Priority 2: Annotation fallbackValue (static)
+        // Priority 3: Annotation fallbackValue (static/fallback portion)
         if (hasFallbackValue()) {
             addValue(getFallbackValue());
         } else if (hasDefaultValue()) {
-            // Priority 3: Annotation defaultValue (legacy fallback for optionalValue)
+            // Priority 4: Annotation defaultValue (legacy fallback for optionalValue)
             addValue(getDefaultValues().get(0));
         }
     }

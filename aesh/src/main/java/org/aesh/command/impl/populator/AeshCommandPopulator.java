@@ -80,9 +80,14 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
         for (ProcessedOption option : processedCommand.getOptions()) {
             if (option.getValues() != null && option.getValues().size() > 0)
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
-            else if (applyDynamicDefault(dvp, option, invocationProviders, aeshContext, doValidate)) {
-                // dynamic default applied
+            else if (option.isVariableDefaultResolved()
+                    && option.getDefaultValues().size() > 0 && option.selectorType() == SelectorType.NO_OP) {
+                // Annotation default resolved from env/sys var — priority over provider (#521)
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
+            } else if (applyDynamicDefault(dvp, option, invocationProviders, aeshContext, doValidate)) {
+                // dynamic default from provider (config)
             } else if (option.getDefaultValues().size() > 0 && option.selectorType() == SelectorType.NO_OP) {
+                // static annotation default (fallback portion)
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
             } else if (option.getOptionType().equals(OptionType.GROUP) && option.getProperties().size() > 0)
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);

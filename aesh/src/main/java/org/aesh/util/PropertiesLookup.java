@@ -58,34 +58,49 @@ public class PropertiesLookup {
      * @return the resolved value, or the original string if not a variable reference
      */
     public static String resolveVariable(String value) {
-        return resolveVariable(value, 0);
+        return resolveWithSource(value, 0).value;
     }
 
-    private static String resolveVariable(String value, int depth) {
+    /**
+     * Resolve a variable reference and report whether the primary variable
+     * (before the <code>:-</code> fallback) was found.
+     * <p>
+     * This is used to determine resolution priority: when the primary
+     * variable resolved (e.g., env var was set), the resolved value should
+     * take priority over a {@code DefaultValueProvider} (#521).
+     *
+     * @param value the value to resolve
+     * @return a {@link ResolvedValue} with the resolved string and source flag
+     */
+    public static ResolvedValue resolveWithSource(String value) {
+        return resolveWithSource(value, 0);
+    }
+
+    private static ResolvedValue resolveWithSource(String value, int depth) {
         if (value == null || value.length() <= 3)
-            return value;
+            return new ResolvedValue(value, false);
 
         if (depth >= MAX_DEPTH)
-            return value;
+            return new ResolvedValue(value, false);
 
         // Escape: $${...} produces literal ${...}
         if (value.length() > 4 && value.charAt(0) == '$' && value.charAt(1) == '$'
                 && value.charAt(2) == '{') {
-            return value.substring(1);
+            return new ResolvedValue(value.substring(1), false);
         }
 
         if (value.charAt(0) != '$' || value.charAt(1) != '{')
-            return value;
+            return new ResolvedValue(value, false);
 
         // Find the matching closing brace (handles nesting)
         int closeBrace = findMatchingBrace(value, 1);
         if (closeBrace < 0 || closeBrace != value.length() - 1)
-            return value;
+            return new ResolvedValue(value, false);
 
         // Extract content between ${ and }
         String content = value.substring(2, closeBrace);
         if (content.isEmpty())
-            return value;
+            return new ResolvedValue(value, false);
 
         return resolveExpression(content, depth);
     }
@@ -95,7 +110,7 @@ public class PropertiesLookup {
      * The content may contain a <code>:-</code> fallback separator with
      * optional nested <code>${...}</code> expressions in the fallback part.
      */
-    private static String resolveExpression(String content, int depth) {
+    private static ResolvedValue resolveExpression(String content, int depth) {
         // Find the :- separator at the top level (not inside nested ${...})
         int fallbackIdx = findFallbackSeparator(content);
 
@@ -114,21 +129,42 @@ public class PropertiesLookup {
 
         // Invalid variable name — return original literal
         if (resolved == INVALID) {
-            return "${" + content + "}";
+            return new ResolvedValue("${" + content + "}", false);
         }
 
         if (resolved != null) {
-            return resolved;
+            return new ResolvedValue(resolved, true); // primary variable found
         }
 
         // Variable not found — use fallback
         if (fallback != null) {
-            // The fallback may itself be a variable expression
-            return resolveVariable(fallback, depth + 1);
+            // The fallback may itself be a variable expression.
+            // fromVariable stays false — we didn't resolve the primary variable.
+            ResolvedValue fallbackResult = resolveWithSource(fallback, depth + 1);
+            return new ResolvedValue(fallbackResult.value, false);
         }
 
         // No fallback, not found — return empty string for backward compatibility
-        return "";
+        return new ResolvedValue("", false);
+    }
+
+    /**
+     * Result of resolving a variable expression, including whether the
+     * primary variable (before <code>:-</code>) was found.
+     */
+    public static final class ResolvedValue {
+        /** The resolved value. */
+        public final String value;
+        /**
+         * True if the primary variable resolved (e.g., env var was set).
+         * False if the fallback was used or the input was a literal.
+         */
+        public final boolean fromVariable;
+
+        public ResolvedValue(String value, boolean fromVariable) {
+            this.value = value;
+            this.fromVariable = fromVariable;
+        }
     }
 
     /**
