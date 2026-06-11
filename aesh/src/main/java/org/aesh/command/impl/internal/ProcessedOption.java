@@ -103,6 +103,10 @@ public class ProcessedOption {
     private boolean optionalValue = false;
     private boolean optionalWrapped = false;
     private String fallbackValue;
+    // Raw template strings for deferred resolution (#520).
+    // Only set when the value contains ${...} variable references.
+    private List<String> rawDefaultValues;
+    private String rawFallbackValue;
     private boolean inherited = false;
     private String descriptionUrl;
     private boolean isUrl = false;
@@ -192,7 +196,12 @@ public class ProcessedOption {
         if (renderer != null)
             this.renderer = renderer;
 
-        this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValue);
+        if (hasVariableReference(defaultValue)) {
+            this.rawDefaultValues = defaultValue;
+            this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValue);
+        } else {
+            this.defaultValues = defaultValue;
+        }
         this.negatable = negatable;
         this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
         this.inherited = inherited;
@@ -301,7 +310,14 @@ public class ProcessedOption {
     }
 
     public void setFallbackValue(String fallbackValue) {
-        this.fallbackValue = PropertiesLookup.resolveVariable(fallbackValue);
+        if (fallbackValue != null && fallbackValue.length() > 3
+                && fallbackValue.charAt(0) == '$' && fallbackValue.charAt(1) == '{') {
+            this.rawFallbackValue = fallbackValue;
+            this.fallbackValue = PropertiesLookup.resolveVariable(fallbackValue);
+        } else {
+            this.rawFallbackValue = null;
+            this.fallbackValue = fallbackValue;
+        }
     }
 
     public String getFallbackValue() {
@@ -313,9 +329,13 @@ public class ProcessedOption {
     }
 
     public void setDefaultValues(List<String> defaultValues) {
-        this.defaultValues = defaultValues != null
-                ? PropertiesLookup.checkForSystemVariables(defaultValues)
-                : Collections.emptyList();
+        if (defaultValues != null && hasVariableReference(defaultValues)) {
+            this.rawDefaultValues = defaultValues;
+            this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValues);
+        } else {
+            this.rawDefaultValues = null;
+            this.defaultValues = defaultValues != null ? defaultValues : Collections.emptyList();
+        }
     }
 
     public void setCompleter(OptionCompleter completer) {
@@ -958,6 +978,14 @@ public class ProcessedOption {
         cursorOption = false;
         cursorValue = false;
         negatedByUser = false;
+        // Re-resolve variable references from raw templates (#520)
+        // so that env var changes between parse cycles are picked up
+        if (rawDefaultValues != null) {
+            defaultValues = PropertiesLookup.checkForSystemVariables(rawDefaultValues);
+        }
+        if (rawFallbackValue != null) {
+            fallbackValue = PropertiesLookup.resolveVariable(rawFallbackValue);
+        }
     }
 
     public String getDisplayName() {
@@ -1408,6 +1436,19 @@ public class ProcessedOption {
 
     public boolean hasDefaultValue() {
         return getDefaultValues() != null && getDefaultValues().size() > 0;
+    }
+
+    /**
+     * Check if any value in the list contains a variable reference ({@code ${...}}).
+     */
+    private static boolean hasVariableReference(List<String> values) {
+        if (values == null || values.isEmpty())
+            return false;
+        for (String v : values) {
+            if (v != null && v.length() > 3 && v.charAt(0) == '$' && v.charAt(1) == '{')
+                return true;
+        }
+        return false;
     }
 
     /**

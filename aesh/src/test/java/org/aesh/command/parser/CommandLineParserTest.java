@@ -3751,4 +3751,122 @@ public class CommandLineParserTest {
         assertEquals("Literal fallbackValue should be unchanged", "INFO", opt.getFallbackValue());
     }
 
+    // --- Issue #520: Deferred ${env:...} resolution ---
+
+    @CommandDefinition(name = "deferred", description = "Deferred env resolution test")
+    public static class DeferredEnvCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(name = "provider", defaultValue = "${sys:aesh.test.deferred.provider}")
+        private String provider;
+
+        @Option(name = "port", fallbackValue = "${sys:aesh.test.deferred.port:-4004}")
+        private String port;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testDeferredResolution_defaultValuePicksUpChanges() throws Exception {
+        // Set the sys prop AFTER command construction
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DeferredEnvCmd<>()).getParser();
+
+        // At construction time, sys prop is not set → default is ""
+        // Now set the sys prop
+        System.setProperty("aesh.test.deferred.provider", "test-provider");
+        try {
+            // Parse should pick up the new value (clear() re-resolves)
+            parser.populateObject("deferred", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            DeferredEnvCmd<CommandInvocation> cmd = (DeferredEnvCmd<CommandInvocation>) parser.getCommand();
+            assertEquals("Should pick up sys prop set after construction", "test-provider", cmd.provider);
+        } finally {
+            System.clearProperty("aesh.test.deferred.provider");
+        }
+    }
+
+    @Test
+    public void testDeferredResolution_changesBetweenParses() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DeferredEnvCmd<>()).getParser();
+
+        // First parse with value "first"
+        System.setProperty("aesh.test.deferred.provider", "first");
+        try {
+            parser.populateObject("deferred", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            DeferredEnvCmd<CommandInvocation> cmd = (DeferredEnvCmd<CommandInvocation>) parser.getCommand();
+            assertEquals("First parse should use 'first'", "first", cmd.provider);
+
+            // Change the value and parse again
+            System.setProperty("aesh.test.deferred.provider", "second");
+            parser.populateObject("deferred", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            cmd = (DeferredEnvCmd<CommandInvocation>) parser.getCommand();
+            assertEquals("Second parse should use 'second'", "second", cmd.provider);
+        } finally {
+            System.clearProperty("aesh.test.deferred.provider");
+        }
+    }
+
+    @Test
+    public void testDeferredResolution_fallbackValuePicksUpChanges() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DeferredEnvCmd<>()).getParser();
+
+        // Set sys prop after construction
+        System.setProperty("aesh.test.deferred.port", "9999");
+        try {
+            // Bare --port triggers fallbackValue resolution
+            parser.populateObject("deferred --port", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            DeferredEnvCmd<CommandInvocation> cmd = (DeferredEnvCmd<CommandInvocation>) parser.getCommand();
+            assertEquals("Fallback should pick up sys prop", "9999", cmd.port);
+        } finally {
+            System.clearProperty("aesh.test.deferred.port");
+        }
+    }
+
+    @Test
+    public void testDeferredResolution_fallbackToStaticDefault() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DeferredEnvCmd<>()).getParser();
+
+        // No sys prop set → should fall through to :-4004
+        parser.populateObject("deferred --port", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        DeferredEnvCmd<CommandInvocation> cmd = (DeferredEnvCmd<CommandInvocation>) parser.getCommand();
+        assertEquals("Fallback should use :-4004 when sys prop not set", "4004", cmd.port);
+    }
+
+    @CommandDefinition(name = "literal", description = "Literal default test")
+    public static class LiteralDefaultCmd<CI extends CommandInvocation> implements Command<CI> {
+        @Option(defaultValue = "hello")
+        public String value;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testDeferredResolution_literalDefaultUnchanged() throws Exception {
+        // Options with literal defaults should work exactly as before
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new LiteralDefaultCmd<>()).getParser();
+
+        parser.populateObject("literal", invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE);
+        LiteralDefaultCmd<CommandInvocation> cmd = (LiteralDefaultCmd<CommandInvocation>) parser.getCommand();
+        assertEquals("Literal default should be unchanged", "hello", cmd.value);
+    }
+
 }
