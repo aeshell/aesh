@@ -2,10 +2,16 @@ package org.aesh.command.impl.converter;
 
 import org.aesh.command.converter.Converter;
 import org.aesh.command.converter.ConverterInvocation;
+import org.aesh.command.validator.OptionValidatorException;
 
 public class ByteConverter implements Converter<Byte, ConverterInvocation> {
     @Override
-    public Byte convert(ConverterInvocation input) {
-        return Byte.valueOf(input.getInput());
+    public Byte convert(ConverterInvocation input) throws OptionValidatorException {
+        try {
+            return Byte.parseByte(input.getInput().trim());
+        } catch (NumberFormatException e) {
+            throw new OptionValidatorException(
+                    "Invalid byte value: '" + input.getInput() + "'");
+        }
     }
 }
