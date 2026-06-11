@@ -83,9 +83,14 @@
          <version>${project.version}</version>
       </dependency>
       <dependency>
-         <groupId>org.aesh</groupId>
-         <artifactId>readline</artifactId>
-         <version>${readline.version}</version>
+          <groupId>org.aesh</groupId>
+          <artifactId>readline</artifactId>
+          <version>${readline.version}</version>
+      </dependency>
+      <dependency>
+          <groupId>org.aesh</groupId>
+          <artifactId>aesh-charts</artifactId>
+          <version>${project.version}</version>
       </dependency>
     </dependencies>
 
