@@ -41,50 +41,55 @@
                <artifactId>aesh</artifactId>
                <version>${project.version}</version>
            </dependency>
-           <dependency>
-               <groupId>org.aesh</groupId>
-               <artifactId>aesh-processor</artifactId>
-               <version>${project.version}</version>
-           </dependency>
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>aesh-processor</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>aesh-charts</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
-           <!-- Readline -->
-           <dependency>
-               <groupId>org.aesh</groupId>
-               <artifactId>readline</artifactId>
-               <version>${project.version}</version>
-           </dependency>
-           <dependency>
-               <groupId>org.aesh</groupId>
-               <artifactId>readline-api</artifactId>
-               <version>${project.version}</version>
-           </dependency>
+            <!-- Readline -->
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>readline</artifactId>
+                <version>${readline.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>readline-api</artifactId>
+                <version>${readline.version}</version>
+            </dependency>
 
-           <!-- Terminal -->
-           <dependency>
-               <groupId>org.aesh</groupId>
-               <artifactId>terminal-api</artifactId>
-               <version>${project.version}</version>
-           </dependency>
-           <dependency>
-               <groupId>org.aesh</groupId>
-               <artifactId>terminal-detect</artifactId>
-               <version>${project.version}</version>
-           </dependency>
-           <dependency>
-               <groupId>org.aesh</groupId>
-               <artifactId>terminal-http</artifactId>
-               <version>${project.version}</version>
-           </dependency>
-           <dependency>
-               <groupId>org.aesh</groupId>
-               <artifactId>terminal-ssh</artifactId>
-               <version>${project.version}</version>
-           </dependency>
-           <dependency>
-               <groupId>org.aesh</groupId>
-               <artifactId>terminal-telnet</artifactId>
-               <version>${project.version}</version>
-           </dependency>
+            <!-- Terminal -->
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>terminal-api</artifactId>
+                <version>${readline.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>terminal-detect</artifactId>
+                <version>${readline.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>terminal-http</artifactId>
+                <version>${readline.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>terminal-ssh</artifactId>
+                <version>${readline.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>terminal-telnet</artifactId>
+                <version>${readline.version}</version>
+            </dependency>
        </dependencies>
    </dependencyManagement>
 
