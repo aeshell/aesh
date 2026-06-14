@@ -251,7 +251,8 @@ public class ShellCompletionGeneratorTest {
         assertTrue(out.contains("_complete_mycli()"));
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
         assertTrue("Should pass COMP_WORDS", out.contains("${COMP_WORDS[@]:1}"));
-        assertTrue(out.contains("complete -F _complete_mycli mycli"));
+        assertTrue("Should have -o nosort to preserve candidate order",
+                out.contains("complete -o nosort -F _complete_mycli mycli"));
         // Should handle __aesh_file__ and __aesh_dir__ sentinels
         assertTrue("Should check for __aesh_file__ sentinel", out.contains("__aesh_file__"));
         assertTrue("Should check for __aesh_dir__ sentinel", out.contains("__aesh_dir__"));
@@ -275,6 +276,7 @@ public class ShellCompletionGeneratorTest {
         String out = generateDynamic(ShellType.FISH, SimpleCmd.class, "mycli");
 
         assertTrue(out.contains("complete -c mycli"));
+        assertTrue("Should have -k to preserve candidate order (#524)", out.contains("-k -a"));
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
         assertTrue("Should use commandline", out.contains("commandline -opc"));
         assertTrue("Should include current token", out.contains("commandline -ct"));

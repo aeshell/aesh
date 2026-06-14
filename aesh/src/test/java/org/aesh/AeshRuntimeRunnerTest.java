@@ -290,7 +290,7 @@ public class AeshRuntimeRunnerTest {
                 .execute());
 
         assertTrue(output.contains("_complete_myapp"));
-        assertTrue(output.contains("complete -F _complete_myapp myapp"));
+        assertTrue(output.contains("complete -o nosort -F _complete_myapp myapp"));
     }
 
     // -- Built-in --aesh-completion flag tests --

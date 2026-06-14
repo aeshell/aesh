@@ -217,7 +217,7 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
                 "# -f suppresses default file completion so aesh candidates (options," + NL +
                 "# subcommands) are not mixed with filenames. The function above handles" + NL +
                 "# file/dir fallback via __aesh_file__/__aesh_dir__ sentinels." + NL +
-                "complete -c " + programName + " -f -a '(__" + programName + "_complete)'" + NL;
+                "complete -c " + programName + " -f -k -a '(__" + programName + "_complete)'" + NL;
     }
 
     private static String escapeFish(String s) {

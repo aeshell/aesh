@@ -231,7 +231,7 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
                 "        COMPREPLY=( $(compgen -W \"$values\" -- \"$cur\") )" + NL +
                 "    fi" + NL +
                 "}" + NL +
-                "complete -F _complete_" + programName + " " + programName + NL;
+                "complete -o nosort -F _complete_" + programName + " " + programName + NL;
     }
 
     static boolean isBooleanType(ProcessedOption option) {
