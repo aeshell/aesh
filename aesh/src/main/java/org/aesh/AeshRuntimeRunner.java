@@ -710,14 +710,20 @@ public class AeshRuntimeRunner {
 
         // Fall back to $SHELL
         String shell = System.getenv("SHELL");
-        if (shell == null || shell.isEmpty())
+        if (shell == null || shell.isEmpty()) {
+            // No $SHELL — check if running inside PowerShell (last resort)
+            if (System.getenv("PSModulePath") != null)
+                return ShellType.PWSH;
             return null;
+        }
         if (shell.contains("fish"))
             return ShellType.FISH;
         if (shell.contains("zsh"))
             return ShellType.ZSH;
         if (shell.contains("bash"))
             return ShellType.BASH;
+        if (shell.contains("pwsh") || shell.contains("powershell"))
+            return ShellType.PWSH;
         return null;
     }
 
@@ -742,6 +748,14 @@ public class AeshRuntimeRunner {
                 return new java.io.File(
                         configDir + java.io.File.separator + "fish" + java.io.File.separator + "completions"
                                 + java.io.File.separator + programName + ".fish");
+            case PWSH:
+                // ~/.config/powershell/completions/<program>_complete.ps1
+                String pwshConfig = System.getenv("XDG_CONFIG_HOME");
+                if (pwshConfig == null || pwshConfig.isEmpty())
+                    pwshConfig = home + java.io.File.separator + ".config";
+                return new java.io.File(
+                        pwshConfig + java.io.File.separator + "powershell" + java.io.File.separator + "completions"
+                                + java.io.File.separator + programName + "_complete.ps1");
             default:
                 return null;
         }

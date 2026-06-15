@@ -59,7 +59,8 @@ public interface ShellCompletionGenerator {
     enum ShellType {
         BASH("_complete.bash"),
         ZSH("_complete.zsh"),
-        FISH(".fish");
+        FISH(".fish"),
+        PWSH("_complete.ps1");
 
         private final String fileExtension;
 
@@ -83,6 +84,8 @@ public interface ShellCompletionGenerator {
                 return new ZshCompletionGenerator();
             case FISH:
                 return new FishCompletionGenerator();
+            case PWSH:
+                return new PowerShellCompletionGenerator();
             default:
                 throw new IllegalArgumentException("Unknown shell type: " + type);
         }

@@ -535,4 +535,56 @@ public class ShellCompletionGeneratorTest {
         assertNotNull(configOpt);
         assertEquals("File should resolve to FILES", CompletionFallback.FILES, configOpt.getCompleteFallback());
     }
+
+    // --- PowerShell (pwsh) completion tests (#525) ---
+
+    @Test
+    public void testPwshStaticCompletion() {
+        String out = generate(ShellType.PWSH, SimpleCmd.class, "mycli");
+
+        assertTrue("Should have PowerShell comment header", out.contains("# PowerShell completion for mycli"));
+        assertTrue("Should use Register-ArgumentCompleter", out.contains("Register-ArgumentCompleter"));
+        assertTrue("Should use -Native flag", out.contains("-Native"));
+        assertTrue("Should use -CommandName", out.contains("-CommandName mycli"));
+        assertTrue("Should contain option names", out.contains("--verbose"));
+    }
+
+    @Test
+    public void testPwshStaticGroupCompletion() {
+        String out = generate(ShellType.PWSH, GroupCmd.class, "myapp");
+
+        assertTrue("Should contain subcommand names", out.contains("commit"));
+        assertTrue("Should contain subcommand names", out.contains("push"));
+        assertTrue("Should use CompletionResult", out.contains("CompletionResult"));
+    }
+
+    @Test
+    public void testPwshDynamicCompletion() {
+        String out = generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli");
+
+        assertTrue("Should have PowerShell header", out.contains("# Dynamic PowerShell completion"));
+        assertTrue("Should use Register-ArgumentCompleter", out.contains("Register-ArgumentCompleter"));
+        assertTrue("Should use -Native flag", out.contains("-Native"));
+        assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
+        assertTrue("Should handle __aesh_file__ sentinel", out.contains("__aesh_file__"));
+        assertTrue("Should handle __aesh_dir__ sentinel", out.contains("__aesh_dir__"));
+        assertTrue("Should use CompletionResult", out.contains("CompletionResult"));
+        assertTrue("Should pass descriptions as tooltips", out.contains("$desc"));
+    }
+
+    @Test
+    public void testPwshDynamicTrailingSpace() {
+        String out = generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli");
+
+        assertTrue("Should detect trailing space", out.contains("EndsWith(' ')"));
+        assertTrue("Should append empty token for trailing space", out.contains("$cmdArgs += ''"));
+    }
+
+    @Test
+    public void testPwshOneShotDynamic() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli");
+
+        assertTrue("Should contain Register-ArgumentCompleter", out.contains("Register-ArgumentCompleter"));
+        assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
+    }
 }
