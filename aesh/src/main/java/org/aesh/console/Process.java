@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.aesh.command.CommandException;
+import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Execution;
 import org.aesh.command.invocation.CommandInvocation;
@@ -43,16 +44,21 @@ public class Process extends Thread implements Consumer<Signal> {
     private final Connection conn;
     private final Execution<? extends CommandInvocation> execution;
     private final ProcessManager manager;
+    private final String commandLine;
+    private final CommandExecutionListener executionListener;
     private volatile boolean running;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(Process.class.getName());
     private int pid;
 
     public Process(ProcessManager manager, Connection conn,
-            Execution<? extends CommandInvocation> execution) {
+            Execution<? extends CommandInvocation> execution,
+            String commandLine, CommandExecutionListener executionListener) {
         this.manager = manager;
         this.conn = conn;
         this.execution = execution;
+        this.commandLine = commandLine;
+        this.executionListener = executionListener;
     }
 
     @Override
@@ -76,6 +82,7 @@ public class Process extends Thread implements Consumer<Signal> {
         running = true;
         pid = (int) Thread.currentThread().getId();
 
+        long startTime = executionListener != null ? System.currentTimeMillis() : 0;
         try {
             execution.execute();
         } catch (CommandValidatorException | CommandException | OptionValidatorException | CommandLineParserException e) {
@@ -92,6 +99,15 @@ public class Process extends Thread implements Consumer<Signal> {
             running = false;
             conn.setSignalHandler(prev);
             conn.setStdinHandler(prevIn);
+            // Fire completion callback before re-entering readline loop
+            if (executionListener != null) {
+                try {
+                    long durationMs = System.currentTimeMillis() - startTime;
+                    executionListener.onCommandComplete(commandLine, execution.getResult(), durationMs);
+                } catch (Exception e) {
+                    LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", e);
+                }
+            }
             manager.processFinished(this);
         }
     }

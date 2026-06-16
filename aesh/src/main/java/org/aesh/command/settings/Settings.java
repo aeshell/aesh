@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.function.Consumer;
 
+import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
@@ -316,6 +317,18 @@ public interface Settings<CI extends CommandInvocation>
      * @return true if tail tip suggestions are enabled
      */
     boolean tailTipSuggestions();
+
+    /**
+     * Set a listener that is called after each command finishes execution.
+     *
+     * @param listener the listener, or null to remove
+     */
+    void setCommandExecutionListener(CommandExecutionListener listener);
+
+    /**
+     * @return the command execution listener, or null
+     */
+    CommandExecutionListener commandExecutionListener();
 
     /**
      * Get sub-command mode settings.

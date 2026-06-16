@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -118,6 +119,34 @@ public class AeshConsoleRunner {
             this.prompt = prompt;
         if (console != null && console.running())
             console.setPrompt(this.prompt);
+        return this;
+    }
+
+    /**
+     * Set a callback that fires after each command finishes execution.
+     * Convenience wrapper that creates a {@link CommandExecutionListener}
+     * from a {@link java.util.function.Consumer}.
+     *
+     * @param callback receives the {@link CommandResult} after each command
+     * @return this builder
+     */
+    public AeshConsoleRunner onCommandComplete(java.util.function.Consumer<CommandResult> callback) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setCommandExecutionListener((commandLine, result, durationMs) -> callback.accept(result));
+        return this;
+    }
+
+    /**
+     * Set a listener that fires after each command finishes execution.
+     *
+     * @param listener the listener
+     * @return this builder
+     */
+    public AeshConsoleRunner commandExecutionListener(CommandExecutionListener listener) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setCommandExecutionListener(listener);
         return this;
     }
 

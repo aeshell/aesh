@@ -19,6 +19,7 @@
  */
 package org.aesh.console;
 
+import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.Executor;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.Connection;
@@ -31,14 +32,21 @@ public class ProcessManager {
     private Connection conn;
     private final Console console;
     private Executor<? extends CommandInvocation> executor;
+    private CommandExecutionListener executionListener;
+    private String commandLine;
 
     public ProcessManager(Console console) {
         this.console = console;
     }
 
-    public void execute(Executor<? extends CommandInvocation> executor, Connection conn) {
+    public void setExecutionListener(CommandExecutionListener listener) {
+        this.executionListener = listener;
+    }
+
+    public void execute(Executor<? extends CommandInvocation> executor, Connection conn, String commandLine) {
         this.conn = conn;
         this.executor = executor;
+        this.commandLine = commandLine;
         executeNext();
     }
 
@@ -62,7 +70,7 @@ public class ProcessManager {
 
     public void executeNext() {
         if (hasNext()) {
-            new Process(this, conn, executor.getNextExecution()).start();
+            new Process(this, conn, executor.getNextExecution(), commandLine, executionListener).start();
         }
     }
 }

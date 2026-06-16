@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.function.Consumer;
 
+import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
@@ -102,6 +103,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     private String[] scanPackages;
     private boolean enableSearchPaging;
     private boolean tailTipSuggestions;
+    private CommandExecutionListener commandExecutionListener;
     private AliasManager aliasManager;
     private Consumer<Void> connectionClosedHandler;
     private SubCommandModeSettings subCommandModeSettings;
@@ -156,6 +158,7 @@ public class SettingsImpl<CI extends CommandInvocation>
         setScanForCommandPackages(baseSettings.getScanForCommandPackages());
         setEnableSearchInPaging(baseSettings.enableSearchInPaging());
         setTailTipSuggestions(baseSettings.tailTipSuggestions());
+        setCommandExecutionListener(baseSettings.commandExecutionListener());
         setAliasManager(baseSettings.aliasManager());
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
         setSubCommandModeSettings(baseSettings.subCommandModeSettings());
@@ -832,6 +835,16 @@ public class SettingsImpl<CI extends CommandInvocation>
 
     public void setSubCommandModeSettings(SubCommandModeSettings subCommandModeSettings) {
         this.subCommandModeSettings = subCommandModeSettings;
+    }
+
+    @Override
+    public void setCommandExecutionListener(CommandExecutionListener listener) {
+        this.commandExecutionListener = listener;
+    }
+
+    @Override
+    public CommandExecutionListener commandExecutionListener() {
+        return commandExecutionListener;
     }
 
     @Override

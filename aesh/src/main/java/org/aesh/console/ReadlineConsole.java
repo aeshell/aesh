@@ -256,6 +256,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         this.runtime = generateRuntime();
         read(this.connection, readline);
         processManager = new ProcessManager(this);
+        processManager.setExecutionListener(settings.commandExecutionListener());
         this.connection.openBlocking();
     }
 
@@ -421,7 +422,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         try {
             Executor<? extends CommandInvocation> executor = runtime.buildExecutor(line);
-            processManager.execute(executor, conn);
+            processManager.execute(executor, conn, line);
         } catch (CommandNotFoundException cnfe) {
             if (settings.commandNotFoundHandler() != null) {
                 //TODO: review CommandNotFoundHandler
