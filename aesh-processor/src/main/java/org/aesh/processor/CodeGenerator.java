@@ -32,7 +32,6 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 import org.aesh.command.CommandDefinition;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Mixin;
@@ -182,7 +181,7 @@ final class CodeGenerator {
     }
 
     private static void generateGroupCommandClasses(StringBuilder sb, TypeElement commandElement, Elements elementUtils) {
-        // We need to extract groupCommands() from @GroupCommandDefinition via annotation mirror
+        // Extract groupCommands() from @CommandDefinition via annotation mirror
         // because accessing it directly would trigger MirroredTypesException at compile time.
         List<String> groupClasses = getGroupCommandClassNames(commandElement, elementUtils);
         if (groupClasses.isEmpty()) {
@@ -205,8 +204,7 @@ final class CodeGenerator {
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
             String annotationType = ((TypeElement) mirror.getAnnotationType().asElement())
                     .getQualifiedName().toString();
-            if (annotationType.equals(GroupCommandDefinition.class.getCanonicalName())
-                    || annotationType.equals(CommandDefinition.class.getCanonicalName())) {
+            if (annotationType.equals(CommandDefinition.class.getCanonicalName())) {
                 for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
                         .getElementValues().entrySet()) {
                     if (entry.getKey().getSimpleName().toString().equals("groupCommands")) {
@@ -262,10 +260,7 @@ final class CodeGenerator {
         String version;
         // Read all annotation values via annotation mirrors to avoid MirroredTypesException
         // (which occurs when annotations have Class[] attributes like groupCommands)
-        // Determine annotation type via mirrors (safe from MirroredTypesException)
-        String annotationName = hasAnnotationType(commandElement, CommandDefinition.class.getCanonicalName())
-                ? CommandDefinition.class.getCanonicalName()
-                : GroupCommandDefinition.class.getCanonicalName();
+        String annotationName = CommandDefinition.class.getCanonicalName();
         generateHelp = "true".equals(getAnnotationValue(commandElement, "generateHelp", elementUtils));
         version = getAnnotationValue(commandElement, "version", elementUtils);
         if (version == null)
@@ -359,7 +354,7 @@ final class CodeGenerator {
     private static void generateCommandValidator(StringBuilder sb, TypeElement element, boolean isGroup,
             Elements elementUtils) {
         String validatorClass = getAnnotationClassValue(element,
-                isGroup ? GroupCommandDefinition.class.getCanonicalName() : CommandDefinition.class.getCanonicalName(),
+                CommandDefinition.class.getCanonicalName(),
                 "validator", elementUtils);
         if (validatorClass != null && !validatorClass.equals(NULL_COMMAND_VALIDATOR)) {
             sb.append("                .validator(new ").append(validatorClass).append("())\n");
@@ -369,7 +364,7 @@ final class CodeGenerator {
     private static void generateResultHandler(StringBuilder sb, TypeElement element, boolean isGroup,
             Elements elementUtils) {
         String handlerClass = getAnnotationClassValue(element,
-                isGroup ? GroupCommandDefinition.class.getCanonicalName() : CommandDefinition.class.getCanonicalName(),
+                CommandDefinition.class.getCanonicalName(),
                 "resultHandler", elementUtils);
         if (handlerClass != null && !handlerClass.equals(NULL_RESULT_HANDLER)) {
             sb.append("                .resultHandler(new ").append(handlerClass).append("())\n");
@@ -379,7 +374,7 @@ final class CodeGenerator {
     private static void generateDefaultValueProvider(StringBuilder sb, TypeElement element, boolean isGroup,
             Elements elementUtils) {
         String providerClass = getAnnotationClassValue(element,
-                isGroup ? GroupCommandDefinition.class.getCanonicalName() : CommandDefinition.class.getCanonicalName(),
+                CommandDefinition.class.getCanonicalName(),
                 "defaultValueProvider", elementUtils);
         if (providerClass != null && !providerClass.equals(NULL_DEFAULT_VALUE_PROVIDER)) {
             sb.append("                .defaultValueProvider(new ").append(providerClass).append("())\n");
@@ -389,7 +384,7 @@ final class CodeGenerator {
     private static void generateCommandActivator(StringBuilder sb, TypeElement element, boolean isGroup,
             Elements elementUtils) {
         String activatorClass = getAnnotationClassValue(element,
-                isGroup ? GroupCommandDefinition.class.getCanonicalName() : CommandDefinition.class.getCanonicalName(),
+                CommandDefinition.class.getCanonicalName(),
                 "activator", elementUtils);
         if (activatorClass != null && !activatorClass.equals(NULL_COMMAND_ACTIVATOR)) {
             sb.append("                .activator(new ").append(activatorClass).append("())\n");
@@ -1301,8 +1296,7 @@ final class CodeGenerator {
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
             String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
                     .getQualifiedName().toString();
-            if (mirrorType.equals(CommandDefinition.class.getCanonicalName())
-                    || mirrorType.equals(GroupCommandDefinition.class.getCanonicalName())) {
+            if (mirrorType.equals(CommandDefinition.class.getCanonicalName())) {
                 for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
                         .getElementValues().entrySet()) {
                     if (entry.getKey().getSimpleName().toString().equals(attributeName)) {
@@ -1323,8 +1317,7 @@ final class CodeGenerator {
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
             String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
                     .getQualifiedName().toString();
-            if (mirrorType.equals(CommandDefinition.class.getCanonicalName())
-                    || mirrorType.equals(GroupCommandDefinition.class.getCanonicalName())) {
+            if (mirrorType.equals(CommandDefinition.class.getCanonicalName())) {
                 for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
                         .getElementValues().entrySet()) {
                     if (entry.getKey().getSimpleName().toString().equals(attributeName)) {

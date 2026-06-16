@@ -53,18 +53,15 @@ import javax.tools.JavaFileObject;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
-import org.aesh.command.GroupCommandDefinition;
 
 /**
  * JSR 269 annotation processor that generates {@code CommandMetadataProvider}
- * implementations for classes annotated with {@link CommandDefinition} or
- * {@link GroupCommandDefinition}.
+ * implementations for classes annotated with {@link CommandDefinition}.
  *
  * @author Aesh team
  */
 @SupportedAnnotationTypes({
-        "org.aesh.command.CommandDefinition",
-        "org.aesh.command.GroupCommandDefinition"
+        "org.aesh.command.CommandDefinition"
 })
 @SupportedOptions({
         AeshAnnotationProcessor.OPT_PROJECT,
@@ -112,12 +109,6 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         Set<TypeElement> commandElements = new LinkedHashSet<>();
 
         for (Element element : roundEnv.getElementsAnnotatedWith(CommandDefinition.class)) {
-            if (element.getKind() == ElementKind.CLASS) {
-                commandElements.add((TypeElement) element);
-            }
-        }
-
-        for (Element element : roundEnv.getElementsAnnotatedWith(GroupCommandDefinition.class)) {
             if (element.getKind() == ElementKind.CLASS) {
                 commandElements.add((TypeElement) element);
             }
@@ -299,12 +290,9 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         }
         String fullMetadataName = packageName.isEmpty() ? metadataClassName : packageName + "." + metadataClassName;
 
-        boolean isGroup = commandElement.getAnnotation(GroupCommandDefinition.class) != null;
-        if (!isGroup) {
-            // Check if @CommandDefinition has groupCommands via annotation mirror
-            // (direct access triggers MirroredTypesException at compile time)
-            isGroup = hasGroupCommands(commandElement);
-        }
+        // Check if @CommandDefinition has groupCommands via annotation mirror
+        // (direct access triggers MirroredTypesException at compile time)
+        boolean isGroup = hasGroupCommands(commandElement);
 
         List<VariableElement> fields = collectFields(commandElement);
 

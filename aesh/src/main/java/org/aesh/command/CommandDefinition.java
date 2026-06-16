@@ -167,8 +167,7 @@ public @interface CommandDefinition {
 
     /**
      * Specify subcommands for this command, making it a group command.
-     * When non-empty, the command acts as a group command container
-     * (equivalent to using {@link GroupCommandDefinition}).
+     * When non-empty, the command acts as a group command container.
      * <p>
      * Note: {@code disableParsing} is ignored when {@code groupCommands} is non-empty.
      *

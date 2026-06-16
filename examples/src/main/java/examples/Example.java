@@ -33,7 +33,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.builder.CommandBuilder;
@@ -575,7 +574,7 @@ public class Example {
         }
     }
 
-    @GroupCommandDefinition(name = "group", description = "This is a group command", groupCommands = { Base.class,
+    @CommandDefinition(name = "group", description = "This is a group command", groupCommands = { Base.class,
             Rebase.class })
     public static class GroupCommand implements Command {
 

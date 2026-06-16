@@ -27,7 +27,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
@@ -84,7 +83,7 @@ public class SubCommandModeExample {
                 .start();
     }
 
-    @GroupCommandDefinition(name = "app", description = "Application manager",
+    @CommandDefinition(name = "app", description = "Application manager",
             generateHelp = true,
             groupCommands = {
                     BuildCommand.class,

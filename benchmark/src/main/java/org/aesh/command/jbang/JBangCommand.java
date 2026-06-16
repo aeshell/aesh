@@ -1,11 +1,11 @@
 package org.aesh.command.jbang;
 
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
+import org.aesh.command.CommandDefinition;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
 
-@GroupCommandDefinition(name = "jbang", description = "JBang CLI tool", groupCommands = {
+@CommandDefinition(name = "jbang", description = "JBang CLI tool", groupCommands = {
         RunCommand.class, BuildCommand.class, EditCommand.class,
         InitCommand.class, ExportCommand.class, InfoCommand.class,
         AliasCommand.class, CacheCommand.class, ConfigCommand.class,

@@ -32,7 +32,6 @@ import java.util.List;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.invocation.CommandInvocation;
@@ -1980,7 +1979,7 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
-    @GroupCommandDefinition(name = "aliasgroup", description = "Alias group test", groupCommands = { AliasedChildCommand.class,
+    @CommandDefinition(name = "aliasgroup", description = "Alias group test", groupCommands = { AliasedChildCommand.class,
             OtherChildCommand.class })
     public static class AliasGroupCmd implements Command<CommandInvocation> {
         @Override

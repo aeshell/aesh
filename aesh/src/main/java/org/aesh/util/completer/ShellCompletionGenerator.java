@@ -95,7 +95,7 @@ public interface ShellCompletionGenerator {
      * One-shot static completion script generation from a command class.
      *
      * @param type shell type
-     * @param commandClass the command class annotated with @CommandDefinition or @GroupCommandDefinition
+     * @param commandClass the command class annotated with @CommandDefinition
      * @param programName the program name
      * @return the completion script content
      * @throws CommandLineParserException if the command class cannot be parsed
@@ -112,7 +112,7 @@ public interface ShellCompletionGenerator {
      * One-shot dynamic callback completion script generation from a command class.
      *
      * @param type shell type
-     * @param commandClass the command class annotated with @CommandDefinition or @GroupCommandDefinition
+     * @param commandClass the command class annotated with @CommandDefinition
      * @param programName the program name
      * @return the dynamic completion script content
      * @throws CommandLineParserException if the command class cannot be parsed

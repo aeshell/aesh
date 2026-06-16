@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.completer.TailTipSuggestionProvider;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -194,7 +193,7 @@ public class TailTipSuggestionProviderTest {
         }
     }
 
-    @GroupCommandDefinition(name = "git", description = "Git", groupCommands = { GitCommitCmd.class })
+    @CommandDefinition(name = "git", description = "Git", groupCommands = { GitCommitCmd.class })
     public static class GitCmd implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {

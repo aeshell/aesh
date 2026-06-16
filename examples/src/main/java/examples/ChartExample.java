@@ -4,7 +4,6 @@ import org.aesh.AeshConsoleRunner;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
 import org.aesh.charts.barchart.BarChart;
@@ -46,7 +45,7 @@ public class ChartExample {
                 .start();
     }
 
-    @GroupCommandDefinition(name = "chart", description = "Terminal chart demos",
+    @CommandDefinition(name = "chart", description = "Terminal chart demos",
             groupCommands = {
                     SparkCmd.class, BarCmd.class, LineCmd.class,
                     ChangeCmd.class, CompareCmd.class, DashboardCmd.class

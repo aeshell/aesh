@@ -41,7 +41,7 @@ import java.lang.annotation.Target;
  * </p>
  *
  * <pre>
- * {@literal @}GroupCommandDefinition(name = "module", groupCommands = {TagCommand.class})
+ * {@literal @}CommandDefinition(name = "module", groupCommands = {TagCommand.class})
  * public class ModuleCommand implements Command&lt;CommandInvocation&gt; {
  *     {@literal @}Option(name = "verbose", hasValue = false)
  *     private boolean verbose;

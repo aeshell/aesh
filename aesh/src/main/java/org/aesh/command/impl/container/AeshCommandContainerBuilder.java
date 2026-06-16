@@ -32,7 +32,6 @@ import java.util.Optional;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommand;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.internal.OptionType;
@@ -186,64 +185,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     new AeshCommandLineParser<>(processedCommand));
         }
 
-        GroupCommandDefinition groupCommand = clazz.getAnnotation(GroupCommandDefinition.class);
-        if (groupCommand != null) {
-            ProcessedCommand<Command<CI>, CI> processedGroupCommand = ProcessedCommandBuilder.<Command<CI>, CI> builder()
-                    .name(groupCommand.name())
-                    .activator(groupCommand.activator())
-                    .aliases(Arrays.asList(groupCommand.aliases()))
-                    .description(groupCommand.description())
-                    .validator((Class<? extends CommandValidator<Command<CI>, CI>>) groupCommand.validator())
-                    .command(commandObject)
-                    .generateHelp(groupCommand.generateHelp())
-                    .stopAtFirstPositional(groupCommand.stopAtFirstPositional())
-                    .sortOptions(groupCommand.sortOptions())
-                    .defaultValueProvider(groupCommand.defaultValueProvider())
-                    .version(groupCommand.version())
-                    .resultHandler(groupCommand.resultHandler())
-                    .helpUrl(groupCommand.helpUrl())
-                    .create();
-
-            processCommand(processedGroupCommand, clazz);
-            validatePositionalIndexes(processedGroupCommand);
-            if (groupCommand.helpGroup().length() > 0)
-                processedGroupCommand.setHelpGroup(groupCommand.helpGroup());
-            if (groupCommand.helpSectionProvider() != NullHelpSectionProvider.class)
-                processedGroupCommand.setHelpSectionProviderClass(groupCommand.helpSectionProvider());
-
-            AeshCommandLineParser<CI> groupCmdParser = new AeshCommandLineParser<>(processedGroupCommand);
-            setChildResolverFromBuilder(groupCmdParser);
-            AeshCommandContainer<CI> groupContainer = new AeshCommandContainer<>(groupCmdParser);
-
-            if (commandObject instanceof GroupCommand) {
-                List<Command<CI>> commands = ((GroupCommand<CI>) commandObject).getCommands();
-                if (commands != null) {
-                    for (Command<CI> sub : commands) {
-                        groupContainer.addChild(doGenerateCommandLineParser(sub));
-                    }
-                }
-                List<CommandContainer<CI>> parsedCommands = ((GroupCommand<CI>) commandObject).getParsedCommands();
-                if (parsedCommands != null) {
-                    for (CommandContainer<CI> sub : parsedCommands) {
-                        groupContainer.addChild(sub);
-                    }
-                }
-            } else {
-                for (Class<? extends Command> groupClazz : groupCommand.groupCommands()) {
-                    String childName = getCommandName(groupClazz);
-                    if (childName != null) {
-                        addLazyChildWithAliases(groupContainer, childName, groupClazz);
-                    } else {
-                        Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
-                        groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
-                    }
-                }
-            }
-
-            return groupContainer;
-        } else
-            throw new CommandLineParserException(
-                    "Commands must be annotated with @CommandDefinition or @GroupCommandDefinition");
+        throw new CommandLineParserException(
+                "Commands must be annotated with @CommandDefinition");
     }
 
     private static void processCommand(ProcessedCommand processedCommand, Class clazz) throws CommandLineParserException {
@@ -603,9 +546,6 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         CommandDefinition cd = clazz.getAnnotation(CommandDefinition.class);
         if (cd != null && cd.aliases().length > 0)
             return cd.aliases();
-        GroupCommandDefinition gcd = clazz.getAnnotation(GroupCommandDefinition.class);
-        if (gcd != null && gcd.aliases().length > 0)
-            return gcd.aliases();
         return null;
     }
 
@@ -618,9 +558,6 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         CommandDefinition cd = clazz.getAnnotation(CommandDefinition.class);
         if (cd != null)
             return cd.name();
-        GroupCommandDefinition gcd = clazz.getAnnotation(GroupCommandDefinition.class);
-        if (gcd != null)
-            return gcd.name();
         return null;
     }
 

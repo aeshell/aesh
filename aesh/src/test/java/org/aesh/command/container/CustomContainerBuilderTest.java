@@ -26,7 +26,6 @@ import org.aesh.AeshRuntimeRunner;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
@@ -138,7 +137,7 @@ public class CustomContainerBuilderTest {
         }
     }
 
-    @GroupCommandDefinition(name = "app", description = "App group", groupCommands = { Sub1Cmd.class, Sub2Cmd.class })
+    @CommandDefinition(name = "app", description = "App group", groupCommands = { Sub1Cmd.class, Sub2Cmd.class })
     public static class AppGroupCmd implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {
@@ -159,7 +158,7 @@ public class CustomContainerBuilderTest {
         }
     }
 
-    @GroupCommandDefinition(name = "mid", description = "Mid group", groupCommands = { LeafCmd.class })
+    @CommandDefinition(name = "mid", description = "Mid group", groupCommands = { LeafCmd.class })
     public static class MidGroupCmd implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {
@@ -167,7 +166,7 @@ public class CustomContainerBuilderTest {
         }
     }
 
-    @GroupCommandDefinition(name = "outer", description = "Outer group", groupCommands = { MidGroupCmd.class })
+    @CommandDefinition(name = "outer", description = "Outer group", groupCommands = { MidGroupCmd.class })
     public static class OuterGroupCmd implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {

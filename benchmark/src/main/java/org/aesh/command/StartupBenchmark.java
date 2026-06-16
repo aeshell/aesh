@@ -420,7 +420,7 @@ public class StartupBenchmark {
 
     // ---- Aesh group command classes (5 groups x 3 = 15 classes) ----
 
-    @GroupCommandDefinition(name = "grp-1", description = "Group 1", groupCommands = { AeshGrpChild1a.class,
+    @CommandDefinition(name = "grp-1", description = "Group 1", groupCommands = { AeshGrpChild1a.class,
             AeshGrpChild1b.class })
     public static class AeshGrpCmd1 implements Command<CommandInvocation> {
         @Option(shortName = 'f', inherited = true, description = "Format")
@@ -464,7 +464,7 @@ public class StartupBenchmark {
         }
     }
 
-    @GroupCommandDefinition(name = "grp-2", description = "Group 2", groupCommands = { AeshGrpChild2a.class,
+    @CommandDefinition(name = "grp-2", description = "Group 2", groupCommands = { AeshGrpChild2a.class,
             AeshGrpChild2b.class }, defaultValueProvider = BenchmarkDefaultValueProvider.class)
     public static class AeshGrpCmd2 implements Command<CommandInvocation> {
         @Option(shortName = 'e', inherited = true, description = "Environment")
@@ -508,7 +508,7 @@ public class StartupBenchmark {
         }
     }
 
-    @GroupCommandDefinition(name = "grp-3", description = "Group 3", groupCommands = { AeshGrpChild3a.class,
+    @CommandDefinition(name = "grp-3", description = "Group 3", groupCommands = { AeshGrpChild3a.class,
             AeshGrpChild3b.class }, stopAtFirstPositional = true)
     public static class AeshGrpCmd3 implements Command<CommandInvocation> {
         @Option(shortName = 'l', inherited = true, description = "Level")
@@ -552,7 +552,7 @@ public class StartupBenchmark {
         }
     }
 
-    @GroupCommandDefinition(name = "grp-4", description = "Group 4", groupCommands = { AeshGrpChild4a.class,
+    @CommandDefinition(name = "grp-4", description = "Group 4", groupCommands = { AeshGrpChild4a.class,
             AeshGrpChild4b.class })
     public static class AeshGrpCmd4 implements Command<CommandInvocation> {
         @Option(shortName = 'r', description = "Region")
@@ -596,7 +596,7 @@ public class StartupBenchmark {
         }
     }
 
-    @GroupCommandDefinition(name = "grp-5", description = "Group 5", groupCommands = { AeshGrpChild5a.class,
+    @CommandDefinition(name = "grp-5", description = "Group 5", groupCommands = { AeshGrpChild5a.class,
             AeshGrpChild5b.class })
     public static class AeshGrpCmd5 implements Command<CommandInvocation> {
         @Option(shortName = 's', description = "Scope")
@@ -895,7 +895,7 @@ public class StartupBenchmark {
 
     // ---- Aesh 3-level nested group commands ----
 
-    @GroupCommandDefinition(name = "top", description = "Top level", groupCommands = { AeshMidGroup.class })
+    @CommandDefinition(name = "top", description = "Top level", groupCommands = { AeshMidGroup.class })
     public static class AeshTopGroup implements Command<CommandInvocation> {
         @Option(shortName = 'g', hasValue = false, description = "Global flag")
         private boolean global;
@@ -906,7 +906,7 @@ public class StartupBenchmark {
         }
     }
 
-    @GroupCommandDefinition(name = "mid", description = "Mid level", groupCommands = { AeshLeafCmd1.class,
+    @CommandDefinition(name = "mid", description = "Mid level", groupCommands = { AeshLeafCmd1.class,
             AeshLeafCmd2.class })
     public static class AeshMidGroup implements Command<CommandInvocation> {
         @Option(shortName = 'r', description = "Region")

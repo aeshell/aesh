@@ -25,7 +25,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
-import org.aesh.command.GroupCommandDefinition;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.CompleterInvocation;
@@ -123,7 +122,7 @@ public class ParentCommandExample {
      * When executed without a subcommand, enters sub-command mode where
      * subsequent commands have access to the project's options.
      */
-    @GroupCommandDefinition(name = "project", description = "Project management commands", groupCommands = { BuildCommand.class,
+    @CommandDefinition(name = "project", description = "Project management commands", groupCommands = { BuildCommand.class,
             TestCommand.class, DeployCommand.class, StatusCommand.class })
     public static class ProjectCommand implements Command<CommandInvocation> {
 
