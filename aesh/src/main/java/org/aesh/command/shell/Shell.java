@@ -28,6 +28,7 @@ import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.ScreenRegion;
 import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.tty.SplitScreen;
+import org.aesh.terminal.tty.StatusLine;
 import org.aesh.terminal.utils.ANSI;
 
 /**
@@ -219,5 +220,67 @@ public interface Shell {
         if (conn != null) {
             conn.setCurrentRegion(region);
         }
+    }
+
+    /**
+     * Print text above the current prompt without disrupting the input line.
+     * <p>
+     * Thread-safe — can be called from any thread (e.g., background tasks,
+     * async notifications, log streams). The current input buffer and prompt
+     * are preserved and redrawn after the text is printed.
+     * <p>
+     * When no readline session is active, the text is written directly to output.
+     * In non-interactive mode (runtime runner), this is a no-op.
+     *
+     * @param text the text to print above the prompt
+     */
+    default void printAbove(String text) {
+        Connection conn = connection();
+        if (conn != null) {
+            conn.printAbove(text);
+        }
+    }
+
+    /**
+     * Register a persistent status line displayed between scrolling output
+     * and the prompt.
+     * <p>
+     * Status lines persist across commands and {@link #printAbove(String)} calls,
+     * and are redrawn automatically when the prompt is redrawn. They support
+     * ANSI escape sequences for colors and styling.
+     * <p>
+     * Priority controls ordering: lowest priority renders at top, highest at
+     * bottom (closest to the prompt). Use priorities like 100, 200, 300 for
+     * spacing between status lines.
+     * <p>
+     * Returns null when status lines are not supported (non-interactive mode,
+     * or Connection implementations without status line support).
+     * <p>
+     * Example:
+     *
+     * <pre>{@code
+     * StatusLine status = shell.registerStatusLine(100);
+     * if (status != null) {
+     *     status.setMessage("[Building] src/main/java...");
+     *     // ... later
+     *     status.setMessage("[Ready] Build complete in 1.2s");
+     *     // ... when no longer needed
+     *     status.close();
+     * }
+     * }</pre>
+     *
+     * @param priority the display priority (lower = further from prompt)
+     * @return a StatusLine that can be updated or closed, or null if not supported
+     */
+    default StatusLine registerStatusLine(int priority) {
+        Connection conn = connection();
+        if (conn != null) {
+            try {
+                return conn.registerStatusLine(priority);
+            } catch (UnsupportedOperationException e) {
+                return null;
+            }
+        }
+        return null;
     }
 }
