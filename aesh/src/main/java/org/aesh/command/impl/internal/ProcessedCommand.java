@@ -1555,6 +1555,54 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 parentCommandFullName).resolveOptionDescription(option);
     }
 
+    /**
+     * Resolve {@code ${...}} variables in a command description for use by completion
+     * script generators and other consumers that don't have parser hierarchy access.
+     * <p>
+     * For a root command, {@code commandName} and {@code programName} may differ
+     * (e.g., annotation name "jbang-cli" vs binary name "jbang"). For child commands,
+     * {@code parentName} is the parent command's name and {@code programName} is the
+     * root program name.
+     *
+     * @param cmd the processed command owning the description
+     * @param description the raw description string (may contain {@code ${ROOT-COMMAND-NAME}} etc.)
+     * @param programName the root program name (used for {@code ${ROOT-COMMAND-NAME}})
+     * @param parentName the parent command name, or null for root commands
+     * @return the resolved description
+     */
+    public static String resolveDescription(ProcessedCommand<?, ?> cmd, String description,
+            String programName, String parentName) {
+        if (description == null || description.isEmpty() || !description.contains("${"))
+            return description;
+        String commandName = cmd.name();
+        String fullName = parentName != null ? parentName + " " + commandName : commandName;
+        String parentFullName = parentName;
+        return cmd.resolveCommandDescription(description, commandName, fullName,
+                programName, parentName, parentFullName);
+    }
+
+    /**
+     * Resolve {@code ${...}} variables in an option description for use by completion
+     * script generators and other consumers that don't have parser hierarchy access.
+     *
+     * @param cmd the processed command owning the option
+     * @param option the option whose description should be resolved
+     * @param programName the root program name (used for {@code ${ROOT-COMMAND-NAME}})
+     * @param parentName the parent command name, or null for root commands
+     * @return the resolved option description
+     */
+    public static String resolveOptionDesc(ProcessedCommand<?, ?> cmd, ProcessedOption option,
+            String programName, String parentName) {
+        String raw = option.description();
+        if (raw == null || raw.isEmpty() || !raw.contains("${"))
+            return raw;
+        String commandName = cmd.name();
+        String fullName = parentName != null ? parentName + " " + commandName : commandName;
+        String parentFullName = parentName;
+        return cmd.resolveOptionDescription(option, commandName, fullName,
+                programName, parentName, parentFullName);
+    }
+
     private static final class DescriptionResolver {
         private final String commandName;
         private final String commandFullName;

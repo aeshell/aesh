@@ -19,6 +19,7 @@
  */
 package org.aesh.util.completer;
 
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -41,11 +42,11 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
         out.append("# Place this file in a directory listed in $fpath (e.g., ~/.zsh/completions/)").append(NL);
         out.append(NL);
 
-        generateFunction(out, parser, programName, "_" + programName);
+        generateFunction(out, parser, programName, "_" + programName, null);
         if (parser.isGroupCommand()) {
             for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
                 String childFuncName = "_" + programName + "_" + child.getProcessedCommand().name().toLowerCase();
-                generateFunction(out, child, programName, childFuncName);
+                generateFunction(out, child, programName, childFuncName, programName);
             }
         }
 
@@ -56,13 +57,13 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
 
     private void generateFunction(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser,
-            String programName, String funcName) {
+            String programName, String funcName, String parentName) {
         out.append(funcName).append("() {").append(NL);
 
         if (parser.isGroupCommand()) {
             generateGroupCommandBody(out, parser, programName);
         } else {
-            generateSimpleCommandBody(out, parser);
+            generateSimpleCommandBody(out, parser, programName, parentName);
         }
 
         out.append("}").append(NL).append(NL);
@@ -75,7 +76,9 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
         out.append("    commands=(").append(NL);
         for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
             String name = child.getProcessedCommand().name().toLowerCase();
-            String desc = escapeZsh(child.getProcessedCommand().description());
+            String desc = escapeZsh(ProcessedCommand.resolveDescription(
+                    child.getProcessedCommand(), child.getProcessedCommand().description(),
+                    programName, programName));
             if (desc.isEmpty())
                 desc = name;
             out.append("        '").append(name).append(":").append(desc).append("'").append(NL);
@@ -84,7 +87,7 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
         out.append(NL);
 
         out.append("    _arguments -C \\").append(NL);
-        appendOptionsAsArguments(out, parser);
+        appendOptionsAsArguments(out, parser, programName, null);
         out.append("        '1:command:->cmd' \\").append(NL);
         out.append("        '*::arg:->args'").append(NL);
         out.append(NL);
@@ -108,15 +111,17 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
     }
 
     private void generateSimpleCommandBody(StringBuilder out,
-            CommandLineParser<? extends CommandInvocation> parser) {
+            CommandLineParser<? extends CommandInvocation> parser,
+            String programName, String parentName) {
         out.append("    _arguments \\").append(NL);
-        appendOptionsAsArguments(out, parser);
+        appendOptionsAsArguments(out, parser, programName, parentName);
 
         if (parser.getProcessedCommand().hasArguments() || parser.getProcessedCommand().hasArgument()) {
             ProcessedOption arg = parser.getProcessedCommand().hasArguments()
                     ? parser.getProcessedCommand().getArguments()
                     : parser.getProcessedCommand().getArgument();
-            String desc = escapeZsh(arg.description());
+            String desc = escapeZsh(ProcessedCommand.resolveOptionDesc(
+                    parser.getProcessedCommand(), arg, programName, parentName));
             if (desc.isEmpty())
                 desc = "argument";
 
@@ -135,15 +140,16 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
     }
 
     private void appendOptionsAsArguments(StringBuilder out,
-            CommandLineParser<? extends CommandInvocation> parser) {
+            CommandLineParser<? extends CommandInvocation> parser,
+            String programName, String parentName) {
         for (ProcessedOption option : parser.getProcessedCommand().getOptions()) {
             if (option.isProperty())
                 continue;
 
-            appendZshOption(out, option);
+            appendZshOption(out, option, parser.getProcessedCommand(), programName, parentName);
 
             for (String alias : option.getAliases()) {
-                appendZshOptionAlias(out, option, alias);
+                appendZshOptionAlias(out, option, parser.getProcessedCommand(), programName, parentName, alias);
             }
 
             if (option.isNegatable() && option.getNegatedName() != null) {
@@ -153,7 +159,8 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
         }
     }
 
-    private void appendZshOption(StringBuilder out, ProcessedOption option) {
+    private void appendZshOption(StringBuilder out, ProcessedOption option,
+            ProcessedCommand<?, ?> cmd, String programName, String parentName) {
         StringBuilder spec = new StringBuilder();
         spec.append("'");
 
@@ -162,10 +169,10 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
         }
         spec.append("--").append(option.name());
 
-        String desc = escapeZsh(option.description());
+        String desc = escapeZsh(ProcessedCommand.resolveOptionDesc(cmd, option, programName, parentName));
         spec.append("[").append(desc.isEmpty() ? option.name() : desc).append("]");
 
-        appendValueSpec(spec, option);
+        appendValueSpec(spec, option, cmd, programName, parentName);
         spec.append("' \\");
         out.append("        ").append(spec).append(NL);
 
@@ -174,30 +181,33 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
             shortSpec.append("'(--").append(option.name()).append(")");
             shortSpec.append("-").append(option.shortName());
             shortSpec.append("[").append(desc.isEmpty() ? option.name() : desc).append("]");
-            appendValueSpec(shortSpec, option);
+            appendValueSpec(shortSpec, option, cmd, programName, parentName);
             shortSpec.append("' \\");
             out.append("        ").append(shortSpec).append(NL);
         }
     }
 
-    private void appendZshOptionAlias(StringBuilder out, ProcessedOption option, String alias) {
+    private void appendZshOptionAlias(StringBuilder out, ProcessedOption option,
+            ProcessedCommand<?, ?> cmd, String programName, String parentName, String alias) {
         StringBuilder spec = new StringBuilder();
         spec.append("'(--").append(option.name()).append(")");
         spec.append("--").append(alias);
 
-        String desc = escapeZsh(option.description());
+        String desc = escapeZsh(ProcessedCommand.resolveOptionDesc(cmd, option, programName, parentName));
         spec.append("[").append(desc.isEmpty() ? option.name() : desc).append("]");
 
-        appendValueSpec(spec, option);
+        appendValueSpec(spec, option, cmd, programName, parentName);
         spec.append("' \\");
         out.append("        ").append(spec).append(NL);
     }
 
-    private void appendValueSpec(StringBuilder spec, ProcessedOption option) {
+    private void appendValueSpec(StringBuilder spec, ProcessedOption option,
+            ProcessedCommand<?, ?> cmd, String programName, String parentName) {
         if (!option.hasValue())
             return;
 
-        String desc = option.description().isEmpty() ? "value" : escapeZsh(option.description());
+        String resolved = ProcessedCommand.resolveOptionDesc(cmd, option, programName, parentName);
+        String desc = (resolved == null || resolved.isEmpty()) ? "value" : escapeZsh(resolved);
 
         if (option.isTypeAssignableByResourcesOrFile()) {
             spec.append(":").append(desc).append(":_files");

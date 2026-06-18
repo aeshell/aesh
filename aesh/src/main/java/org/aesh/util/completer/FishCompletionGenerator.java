@@ -22,6 +22,7 @@ package org.aesh.util.completer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -62,13 +63,16 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
         for (ProcessedOption option : parser.getProcessedCommand().getOptions()) {
             if (option.isProperty())
                 continue;
-            appendFishOption(out, programName, null, option);
+            appendFishOption(out, programName, null, option,
+                    parser.getProcessedCommand(), null);
         }
         out.append(NL);
 
         for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
             String childName = child.getProcessedCommand().name().toLowerCase();
-            String desc = escapeFish(child.getProcessedCommand().description());
+            String desc = escapeFish(ProcessedCommand.resolveDescription(
+                    child.getProcessedCommand(), child.getProcessedCommand().description(),
+                    programName, programName));
             out.append("complete -c ").append(programName).append(" -f")
                     .append(" -n \"__fish_use_subcommand\"")
                     .append(" -a ").append(childName);
@@ -89,7 +93,9 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
                 }
                 for (CommandLineParser<? extends CommandInvocation> nested : child.getAllChildParsers()) {
                     String nestedName = nested.getProcessedCommand().name().toLowerCase();
-                    String nestedDesc = escapeFish(nested.getProcessedCommand().description());
+                    String nestedDesc = escapeFish(ProcessedCommand.resolveDescription(
+                            nested.getProcessedCommand(), nested.getProcessedCommand().description(),
+                            programName, childName));
                     out.append("complete -c ").append(programName).append(" -f")
                             .append(" -n \"__fish_seen_subcommand_from ").append(childName)
                             .append("; and not __fish_seen_subcommand_from ")
@@ -108,29 +114,33 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
             CommandLineParser<? extends CommandInvocation> parser,
             String programName, String subcommand) {
 
+        String parentName = subcommand != null ? programName : null;
         for (ProcessedOption option : parser.getProcessedCommand().getOptions()) {
             if (option.isProperty())
                 continue;
-            appendFishOption(out, programName, subcommand, option);
+            appendFishOption(out, programName, subcommand, option,
+                    parser.getProcessedCommand(), parentName);
         }
     }
 
     private void appendFishOption(StringBuilder out, String programName,
-            String subcommand, ProcessedOption option) {
+            String subcommand, ProcessedOption option,
+            ProcessedCommand<?, ?> cmd, String parentName) {
 
-        appendFishOptionEntry(out, programName, subcommand, option, option.name(), false);
+        appendFishOptionEntry(out, programName, subcommand, option, cmd, parentName, option.name(), false);
 
         for (String alias : option.getAliases()) {
-            appendFishOptionEntry(out, programName, subcommand, option, alias, false);
+            appendFishOptionEntry(out, programName, subcommand, option, cmd, parentName, alias, false);
         }
 
         if (option.isNegatable() && option.getNegatedName() != null) {
-            appendFishOptionEntry(out, programName, subcommand, option, option.getNegatedName(), true);
+            appendFishOptionEntry(out, programName, subcommand, option, cmd, parentName, option.getNegatedName(), true);
         }
     }
 
     private void appendFishOptionEntry(StringBuilder out, String programName,
-            String subcommand, ProcessedOption option, String name, boolean isNegated) {
+            String subcommand, ProcessedOption option,
+            ProcessedCommand<?, ?> cmd, String parentName, String name, boolean isNegated) {
 
         boolean isFileOpt = option.isTypeAssignableByResourcesOrFile();
 
@@ -154,7 +164,7 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
         if (option.hasValue() && !isNegated)
             out.append(" -r");
 
-        String desc = escapeFish(option.description());
+        String desc = escapeFish(ProcessedCommand.resolveOptionDesc(cmd, option, programName, parentName));
         if (isNegated)
             desc = "Disable " + option.name();
         if (!desc.isEmpty())

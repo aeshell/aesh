@@ -19,6 +19,7 @@ package org.aesh.util.completer;
 
 import java.util.List;
 
+import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -52,7 +53,7 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
         if (parser.isGroupCommand()) {
             generateGroupCompletion(out, parser, programName);
         } else {
-            generateSimpleCompletion(out, parser, programName);
+            generateSimpleCompletion(out, parser, programName, null);
         }
 
         out.append("}").append(NL);
@@ -60,15 +61,17 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
     }
 
     private void generateSimpleCompletion(StringBuilder out,
-            CommandLineParser<? extends CommandInvocation> parser, String programName) {
+            CommandLineParser<? extends CommandInvocation> parser, String programName,
+            String parentName) {
 
         out.append("    $candidates = @()").append(NL);
 
         // Options
-        List<ProcessedOption> options = parser.getProcessedCommand().getOptions();
+        ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
+        List<ProcessedOption> options = cmd.getOptions();
         for (ProcessedOption opt : options) {
             String name = opt.name() != null && !opt.name().isEmpty() ? "--" + opt.name() : "-" + opt.shortName();
-            String desc = escapePwsh(opt.description());
+            String desc = escapePwsh(ProcessedCommand.resolveOptionDesc(cmd, opt, programName, parentName));
             out.append("    if ('").append(name).append("' -like \"$wordToComplete*\") {").append(NL);
             out.append("        $candidates += [System.Management.Automation.CompletionResult]::new(");
             out.append("'").append(name).append("', '").append(name).append("', 'ParameterValue', '").append(desc).append("')");
@@ -90,7 +93,9 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
                 .append(NL);
         for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
             String name = child.getProcessedCommand().name();
-            String desc = escapePwsh(child.getProcessedCommand().description());
+            String desc = escapePwsh(ProcessedCommand.resolveDescription(
+                    child.getProcessedCommand(), child.getProcessedCommand().description(),
+                    programName, programName));
             out.append("        if ('").append(name).append("' -like \"$wordToComplete*\") {").append(NL);
             out.append("            $candidates += [System.Management.Automation.CompletionResult]::new(");
             out.append("'").append(name).append("', '").append(name).append("', 'ParameterValue', '").append(desc).append("')");
@@ -106,7 +111,8 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
             out.append("            '").append(childName).append("' {").append(NL);
             for (ProcessedOption opt : child.getProcessedCommand().getOptions()) {
                 String optName = opt.name() != null && !opt.name().isEmpty() ? "--" + opt.name() : "-" + opt.shortName();
-                String desc = escapePwsh(opt.description());
+                String desc = escapePwsh(ProcessedCommand.resolveOptionDesc(
+                        child.getProcessedCommand(), opt, programName, programName));
                 out.append("                if ('").append(optName).append("' -like \"$wordToComplete*\") {").append(NL);
                 out.append("                    $candidates += [System.Management.Automation.CompletionResult]::new(");
                 out.append("'").append(optName).append("', '").append(optName).append("', 'ParameterValue', '").append(desc)

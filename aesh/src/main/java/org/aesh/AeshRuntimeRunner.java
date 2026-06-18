@@ -285,11 +285,19 @@ public class AeshRuntimeRunner {
             java.util.List<CommandLineParser<CommandInvocation>> parserPath = new java.util.ArrayList<>();
             CommandLineParser<CommandInvocation> scopedParser = findScopedParser(parser, args, parserPath);
 
+            // Derive parent name from parser path for variable resolution
+            String scopedParentName = parserPath.size() > 1
+                    ? parserPath.get(parserPath.size() - 2).getProcessedCommand().name()
+                    : null;
+
             // Add subcommand descriptions scoped to the current group
             if (scopedParser.isGroupCommand()) {
+                String scopedName = scopedParser.getProcessedCommand().name();
                 for (CommandLineParser<CommandInvocation> child : scopedParser.getAllChildParsers()) {
                     String name = child.getProcessedCommand().name();
-                    String desc = child.getProcessedCommand().description();
+                    String desc = org.aesh.command.impl.internal.ProcessedCommand.resolveDescription(
+                            child.getProcessedCommand(), child.getProcessedCommand().description(),
+                            commandName, scopedName);
                     if (desc != null && !desc.isEmpty()) {
                         descriptions.put(name, desc);
                     }
@@ -297,12 +305,15 @@ public class AeshRuntimeRunner {
             }
 
             // Add option descriptions from the scoped parser (all options)
-            addOptionDescriptions(descriptions, scopedParser);
+            addOptionDescriptions(descriptions, scopedParser, commandName, scopedParentName);
 
             // Add inherited option descriptions from ancestor parsers (#498)
-            for (CommandLineParser<CommandInvocation> ancestor : parserPath) {
+            for (int i = 0; i < parserPath.size(); i++) {
+                CommandLineParser<CommandInvocation> ancestor = parserPath.get(i);
                 if (ancestor != scopedParser) {
-                    addOptionDescriptionsFromParser(descriptions, ancestor, true);
+                    String ancestorParent = i > 0 ? parserPath.get(i - 1).getProcessedCommand().name() : null;
+                    addOptionDescriptionsFromParser(descriptions, ancestor, true,
+                            commandName, ancestorParent);
                 }
             }
         } catch (Exception ignored) {
@@ -373,16 +384,19 @@ public class AeshRuntimeRunner {
      * If onlyInherited is true, only adds inherited options (used for parent parsers).
      */
     private static void addOptionDescriptions(java.util.Map<String, String> descriptions,
-            CommandLineParser<?> parser) {
-        addOptionDescriptionsFromParser(descriptions, parser, false);
+            CommandLineParser<?> parser, String programName, String parentName) {
+        addOptionDescriptionsFromParser(descriptions, parser, false, programName, parentName);
     }
 
     private static void addOptionDescriptionsFromParser(java.util.Map<String, String> descriptions,
-            CommandLineParser<?> parser, boolean onlyInherited) {
-        for (org.aesh.command.impl.internal.ProcessedOption opt : parser.getProcessedCommand().getOptions()) {
+            CommandLineParser<?> parser, boolean onlyInherited,
+            String programName, String parentName) {
+        org.aesh.command.impl.internal.ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
+        for (org.aesh.command.impl.internal.ProcessedOption opt : cmd.getOptions()) {
             if (onlyInherited && !opt.isInherited())
                 continue;
-            String desc = opt.description();
+            String desc = org.aesh.command.impl.internal.ProcessedCommand.resolveOptionDesc(
+                    cmd, opt, programName, parentName);
             if (desc == null || desc.isEmpty())
                 continue;
 
