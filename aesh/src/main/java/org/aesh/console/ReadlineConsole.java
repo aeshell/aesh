@@ -319,25 +319,31 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         shell.printCollectedOutput();
 
         if (running) {
-            readline.readline(
-                    ReadlineRequest.builder()
-                            .connection(conn)
-                            .prompt(prompt)
-                            .requestHandler(line -> {
-                                if (line == null) {
-                                    // EOF (Ctrl+D) — stop the console
-                                    doStop(true);
-                                } else if (!line.trim().isEmpty()) {
-                                    shell.startCollectOutput();
-                                    processLine(line, conn);
-                                } else
-                                    read(conn, readline);
-                            })
-                            .completions(completions)
-                            .preProcessors(preProcessors)
-                            .history(history)
-                            .flags(readlineFlags)
-                            .build());
+            ReadlineRequest.Builder requestBuilder = ReadlineRequest.builder()
+                    .connection(conn)
+                    .requestHandler(line -> {
+                        if (line == null) {
+                            // EOF (Ctrl+D) — stop the console
+                            doStop(true);
+                        } else if (!line.trim().isEmpty()) {
+                            shell.startCollectOutput();
+                            processLine(line, conn);
+                        } else
+                            read(conn, readline);
+                    })
+                    .completions(completions)
+                    .preProcessors(preProcessors)
+                    .history(history)
+                    .flags(readlineFlags);
+
+            // Use dynamic prompt supplier if set, otherwise static prompt
+            if (settings.promptSupplier() != null) {
+                requestBuilder.promptSupplier(settings.promptSupplier());
+            } else {
+                requestBuilder.prompt(prompt);
+            }
+
+            readline.readline(requestBuilder.build());
         }
         // Just call readline and get a callback when line is startBlockingReader
         else {

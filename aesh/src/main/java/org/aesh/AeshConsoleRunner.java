@@ -20,6 +20,7 @@
 package org.aesh;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -147,6 +148,21 @@ public class AeshConsoleRunner {
         if (settings == null)
             settings = SettingsBuilder.builder().build();
         settings.setCommandExecutionListener(listener);
+        return this;
+    }
+
+    /**
+     * Set a dynamic prompt supplier that is called before each readline cycle.
+     * Enables prompts that change based on context (git branch, command duration, etc.).
+     * Takes precedence over a static prompt set via {@link #prompt(String)} or {@link #prompt(Prompt)}.
+     *
+     * @param supplier the prompt supplier
+     * @return this builder
+     */
+    public AeshConsoleRunner promptSupplier(Supplier<Prompt> supplier) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setPromptSupplier(supplier);
         return this;
     }
 

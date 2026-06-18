@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundHandler;
@@ -45,6 +46,7 @@ import org.aesh.io.Resource;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.readline.editing.EditModeBuilder;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.utils.Config;
 
@@ -104,6 +106,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     private boolean enableSearchPaging;
     private boolean tailTipSuggestions;
     private CommandExecutionListener commandExecutionListener;
+    private Supplier<Prompt> promptSupplier;
     private AliasManager aliasManager;
     private Consumer<Void> connectionClosedHandler;
     private SubCommandModeSettings subCommandModeSettings;
@@ -159,6 +162,7 @@ public class SettingsImpl<CI extends CommandInvocation>
         setEnableSearchInPaging(baseSettings.enableSearchInPaging());
         setTailTipSuggestions(baseSettings.tailTipSuggestions());
         setCommandExecutionListener(baseSettings.commandExecutionListener());
+        setPromptSupplier(baseSettings.promptSupplier());
         setAliasManager(baseSettings.aliasManager());
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
         setSubCommandModeSettings(baseSettings.subCommandModeSettings());
@@ -845,6 +849,16 @@ public class SettingsImpl<CI extends CommandInvocation>
     @Override
     public CommandExecutionListener commandExecutionListener() {
         return commandExecutionListener;
+    }
+
+    @Override
+    public void setPromptSupplier(Supplier<Prompt> supplier) {
+        this.promptSupplier = supplier;
+    }
+
+    @Override
+    public Supplier<Prompt> promptSupplier() {
+        return promptSupplier;
     }
 
     @Override

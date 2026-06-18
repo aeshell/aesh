@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundHandler;
@@ -40,6 +41,7 @@ import org.aesh.console.AeshContext;
 import org.aesh.io.Resource;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Connection;
 
 /**
@@ -317,6 +319,20 @@ public interface Settings<CI extends CommandInvocation>
      * @return true if tail tip suggestions are enabled
      */
     boolean tailTipSuggestions();
+
+    /**
+     * Set a dynamic prompt supplier that is called before each readline cycle.
+     * Enables prompts that change based on context (git branch, command duration, etc.).
+     * If set, takes precedence over a static prompt.
+     *
+     * @param supplier the prompt supplier, or null to use static prompt
+     */
+    void setPromptSupplier(Supplier<Prompt> supplier);
+
+    /**
+     * @return the prompt supplier, or null if using static prompt
+     */
+    Supplier<Prompt> promptSupplier();
 
     /**
      * Set a listener that is called after each command finishes execution.

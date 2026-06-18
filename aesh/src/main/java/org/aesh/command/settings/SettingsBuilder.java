@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundHandler;
@@ -41,6 +42,7 @@ import org.aesh.console.AeshContext;
 import org.aesh.io.Resource;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.editing.EditMode;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.utils.LoggerUtil;
 
@@ -311,6 +313,11 @@ public class SettingsBuilder<CI extends CommandInvocation> {
 
     public SettingsBuilder<CI> enableSearchInPaging(boolean enable) {
         settings.setEnableSearchInPaging(enable);
+        return this;
+    }
+
+    public SettingsBuilder<CI> promptSupplier(Supplier<Prompt> supplier) {
+        settings.setPromptSupplier(supplier);
         return this;
     }
 
