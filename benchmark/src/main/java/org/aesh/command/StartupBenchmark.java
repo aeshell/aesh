@@ -1466,6 +1466,10 @@ public class StartupBenchmark {
             benchmark.runJBangLikeBenchmark();
             System.out.println();
         }
+        if (all || filter.contains("jbang-startup")) {
+            benchmark.runJBangLikeStartupBenchmark();
+            System.out.println();
+        }
         if (all || filter.contains("jbang-parse")) {
             benchmark.runJBangLikeParseExecuteBenchmark();
             System.out.println();
@@ -2613,6 +2617,77 @@ public class StartupBenchmark {
         System.out.printf("%14s | %14s | Speedup%n", "Generated (us)", "Reflection (us)");
         System.out.println("-".repeat(14) + "-|-" + "-".repeat(14) + "-|--------");
         System.out.printf("%14.1f | %14.1f | %5.2fx%n", genUs, reflUs, speedup);
+    }
+
+    /**
+     * Measures the full end-to-end startup cost for a single command invocation.
+     * This represents what a user experiences when they type e.g. "jbang run test.java":
+     * container creation + registry + runtime build + parse + populate + execute.
+     */
+    public void runJBangLikeStartupBenchmark() throws Exception {
+        System.out.println("=== JBang-like CLI Benchmark (full startup) ===");
+        System.out.println("Single command: create container + registry + runtime + parse + execute");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        // Representative command lines covering different subcommands
+        String[] commands = {
+                "jbang run test.java",
+                "jbang run --debug test.java -- --arg1 --arg2",
+                "jbang build --java 21 test.java",
+                "jbang init --template cli hello.java",
+                "jbang edit --open idea test.java",
+                "jbang alias --list",
+                "jbang config --set key",
+                "jbang export --format native test.java",
+                "jbang info --tools test.java",
+                "jbang --verbose run test.java",
+        };
+
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+
+        // Generated path — full startup per iteration
+        ThrowingRunnable genRun = () -> {
+            for (String cmd : commands) {
+                MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+                registry.addCommand(containerBuilder.create(org.aesh.command.jbang.JBangCommand.class));
+                CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                        .commandRegistry(registry).build();
+                runtime.executeCommand(cmd);
+            }
+        };
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            genRun.run();
+        }
+        long genNs = timeIterations(genRun);
+        double genUs = (genNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        double genPerCmd = genUs / commands.length;
+
+        // Reflection path — full startup per iteration
+        ThrowingRunnable reflRun = () -> {
+            for (String cmd : commands) {
+                MutableCommandRegistryImpl<CommandInvocation> registry = new MutableCommandRegistryImpl<>();
+                registry.addCommand((CommandContainer<CommandInvocation>) REFLECTION_CREATE.invoke(containerBuilder,
+                        new org.aesh.command.jbang.JBangCommand()));
+                CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                        .commandRegistry(registry).build();
+                runtime.executeCommand(cmd);
+            }
+        };
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            reflRun.run();
+        }
+        long reflNs = timeIterations(reflRun);
+        double reflUs = (reflNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        double reflPerCmd = reflUs / commands.length;
+
+        double speedup = reflUs / genUs;
+
+        System.out.printf("  %d commands, %d iterations%n", commands.length, MEASURED_ITERATIONS);
+        System.out.printf("%14s | %14s | Speedup%n", "Generated (us)", "Reflection (us)");
+        System.out.println("-".repeat(14) + "-|-" + "-".repeat(14) + "-|--------");
+        System.out.printf("%14.1f | %14.1f | %5.2fx  (total per iteration)%n", genUs, reflUs, speedup);
+        System.out.printf("%14.1f | %14.1f | %5.2fx  (per command)%n", genPerCmd, reflPerCmd, speedup);
     }
 
     public void runJBangLikeParseExecuteBenchmark() throws Exception {
