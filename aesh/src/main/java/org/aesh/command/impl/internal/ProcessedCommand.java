@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.DocFormat;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.parser.CompleteStatus;
@@ -752,6 +753,32 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Returns the {@link DocFormat} requested via {@code --help=<format>}, or null
+     * if no doc format was specified (plain {@code --help} or unknown value).
+     * <p>
+     * Accepts both enum names ({@code skill}, {@code markdown}, {@code asciidoc})
+     * and short aliases ({@code md}, {@code adoc}).
+     */
+    public DocFormat getHelpDocFormat() {
+        ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");
+        if (helpOption == null)
+            return null;
+        for (String val : helpOption.getValues()) {
+            // Try exact enum match first (e.g., SKILL, MARKDOWN, ASCIIDOC)
+            try {
+                return DocFormat.valueOf(val.toUpperCase());
+            } catch (IllegalArgumentException ignored) {
+            }
+            // Try short aliases by extension (e.g., md, adoc)
+            for (DocFormat f : DocFormat.values()) {
+                if (f.extension().equalsIgnoreCase(val))
+                    return f;
+            }
+        }
+        return null;
     }
 
     private void doGenerateVersion() {

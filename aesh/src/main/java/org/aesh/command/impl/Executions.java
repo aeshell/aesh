@@ -32,6 +32,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandLifecycle;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.DocFormat;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
 import org.aesh.command.container.CommandContainer;
@@ -66,6 +67,7 @@ import org.aesh.parser.ParsedLine;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.selector.Selector;
 import org.aesh.terminal.formatting.TerminalString;
+import org.aesh.util.doc.DocumentationGenerator;
 
 /**
  *
@@ -224,7 +226,18 @@ class Executions {
                 //if the generated help option is set, we "execute" it instead of normal execution
                 if (cmd.generateHelp() && cmd.isGenerateHelpOptionSet()) {
                     T invocation = getCommandInvocation();
-                    invocation.println(invocation.getHelpInfo());
+                    DocFormat helpFormat = cmd.getHelpDocFormat();
+                    if (helpFormat != null) {
+                        // Generate formatted documentation for the parsed (sub)command
+                        CommandLineParser<?> parsedParser = commandContainer.getParser().parsedCommand();
+                        String doc = DocumentationGenerator.builder()
+                                .parser(parsedParser)
+                                .format(helpFormat)
+                                .generateSingle();
+                        invocation.println(doc);
+                    } else {
+                        invocation.println(invocation.getHelpInfo());
+                    }
                     result = CommandResult.SUCCESS;
                 }
                 //if the generated help option is set, we "execute" it instead of normal execution
