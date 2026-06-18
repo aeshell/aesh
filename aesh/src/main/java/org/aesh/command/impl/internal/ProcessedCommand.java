@@ -761,6 +761,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * <p>
      * Accepts both enum names ({@code skill}, {@code markdown}, {@code asciidoc})
      * and short aliases ({@code md}, {@code adoc}).
+     *
+     * @since 3.15
      */
     public DocFormat getHelpDocFormat() {
         ProcessedOption helpOption = findLongOptionNoActivatorCheck("help");

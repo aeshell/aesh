@@ -29,6 +29,7 @@ package org.aesh.command;
  * {@link java.util.concurrent.CountDownLatch} or similar synchronization.
  *
  * @author Aesh team
+ * @since 3.15
  */
 @FunctionalInterface
 public interface CommandExecutionListener {

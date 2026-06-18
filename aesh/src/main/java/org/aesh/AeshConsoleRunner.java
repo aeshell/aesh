@@ -143,6 +143,7 @@ public class AeshConsoleRunner {
      *
      * @param listener the listener
      * @return this builder
+     * @since 3.15
      */
     public AeshConsoleRunner commandExecutionListener(CommandExecutionListener listener) {
         if (settings == null)
@@ -158,6 +159,7 @@ public class AeshConsoleRunner {
      *
      * @param supplier the prompt supplier
      * @return this builder
+     * @since 3.15
      */
     public AeshConsoleRunner promptSupplier(Supplier<Prompt> supplier) {
         if (settings == null)

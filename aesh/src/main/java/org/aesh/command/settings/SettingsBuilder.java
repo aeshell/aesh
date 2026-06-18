@@ -316,11 +316,17 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * @since 3.15
+     */
     public SettingsBuilder<CI> promptSupplier(Supplier<Prompt> supplier) {
         settings.setPromptSupplier(supplier);
         return this;
     }
 
+    /**
+     * @since 3.15
+     */
     public SettingsBuilder<CI> commandExecutionListener(CommandExecutionListener listener) {
         settings.setCommandExecutionListener(listener);
         return this;

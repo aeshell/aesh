@@ -233,6 +233,7 @@ public interface Shell {
      * In non-interactive mode (runtime runner), this is a no-op.
      *
      * @param text the text to print above the prompt
+     * @since 3.15
      */
     default void printAbove(String text) {
         Connection conn = connection();
@@ -271,6 +272,7 @@ public interface Shell {
      *
      * @param priority the display priority (lower = further from prompt)
      * @return a StatusLine that can be updated or closed, or null if not supported
+     * @since 3.15
      */
     default StatusLine registerStatusLine(int priority) {
         Connection conn = connection();

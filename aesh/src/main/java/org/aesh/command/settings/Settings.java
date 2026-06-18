@@ -326,11 +326,13 @@ public interface Settings<CI extends CommandInvocation>
      * If set, takes precedence over a static prompt.
      *
      * @param supplier the prompt supplier, or null to use static prompt
+     * @since 3.15
      */
     void setPromptSupplier(Supplier<Prompt> supplier);
 
     /**
      * @return the prompt supplier, or null if using static prompt
+     * @since 3.15
      */
     Supplier<Prompt> promptSupplier();
 
@@ -338,11 +340,13 @@ public interface Settings<CI extends CommandInvocation>
      * Set a listener that is called after each command finishes execution.
      *
      * @param listener the listener, or null to remove
+     * @since 3.15
      */
     void setCommandExecutionListener(CommandExecutionListener listener);
 
     /**
      * @return the command execution listener, or null
+     * @since 3.15
      */
     CommandExecutionListener commandExecutionListener();
 

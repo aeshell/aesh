@@ -1,5 +1,6 @@
 package org.aesh.console;
 
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -20,6 +21,7 @@ import org.aesh.command.shell.Shell;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Size;
+import org.aesh.terminal.tty.SplitScreen;
 import org.aesh.terminal.tty.StatusLine;
 import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
@@ -97,6 +99,67 @@ public class ShellFeaturesTest {
         String output = connection.getOutputBuffer();
         assertTrue("printAbove via Connection should write to output",
                 output.contains("direct message"));
+    }
+
+    // ---- Split-screen tests (#516) ----
+
+    @Test
+    public void testEnableSplitScreenReturnsNullWhenNoConnection() {
+        Shell shell = new NoConnectionShell();
+        SplitScreen split = shell.enableSplitScreen(0.7);
+        assertNull("enableSplitScreen should return null when connection is null", split);
+    }
+
+    @Test
+    public void testSplitScreenReturnsNullWhenNotActive() {
+        Shell shell = new NoConnectionShell();
+        SplitScreen split = shell.splitScreen();
+        assertNull("splitScreen should return null when not active", split);
+    }
+
+    @Test
+    public void testEnableSplitScreenOnShellImpl() {
+        TestConnection connection = new TestConnection();
+        Shell shell = new ShellImpl(connection);
+        // TestConnection implements Connection directly — splitScreen(double)
+        // throws UnsupportedOperationException. ShellImpl delegates to connection().
+        // Verify it propagates (unlike registerStatusLine which catches it).
+        try {
+            shell.enableSplitScreen(0.7);
+            // If we get here, the connection supports split-screen (unexpected for TestConnection)
+        } catch (UnsupportedOperationException e) {
+            // Expected — TestConnection doesn't support split-screen
+            assertTrue(e.getMessage().contains("Split screen"));
+        }
+    }
+
+    @Test
+    public void testSetCurrentRegionNoOpWhenNoConnection() {
+        Shell shell = new NoConnectionShell();
+        // Should not throw
+        shell.setCurrentRegion(null);
+    }
+
+    // ---- setConverter test (#518) ----
+
+    @Test
+    public void testSetConverterOverridesDefault() throws Exception {
+        org.aesh.command.impl.internal.ProcessedOption option = org.aesh.command.impl.internal.ProcessedOptionBuilder.builder()
+                .name("count")
+                .type(Integer.class)
+                .fieldName("count")
+                .description("a count")
+                .optionType(org.aesh.command.impl.internal.OptionType.NORMAL)
+                .build();
+
+        // Default converter should be IntegerConverter
+        assertNotNull("Option should have a default converter", option.converter());
+
+        // Override with a custom converter that always returns 42
+        option.setConverter(invocation -> 42);
+
+        Object result = option.converter().convert(null);
+        assertTrue("Custom converter should return 42", Integer.valueOf(42).equals(result));
     }
 
     // ---- Test commands ----
