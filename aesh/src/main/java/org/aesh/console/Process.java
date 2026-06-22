@@ -91,8 +91,8 @@ public class Process extends Thread implements Consumer<Signal> {
             execution.setResult(CommandResult.FAILURE);
             conn.write(e.getMessage() + Config.getLineSeparator());
         } catch (InterruptedException e) {
-            // Ctlr-C interrupt
-            execution.setResult(CommandResult.FAILURE);
+            // Ctrl-C interrupt
+            execution.setResult(CommandResult.INTERRUPTED);
         } catch (Exception e) {
             execution.setResult(CommandResult.FAILURE);
             conn.write(e.getMessage() + Config.getLineSeparator());

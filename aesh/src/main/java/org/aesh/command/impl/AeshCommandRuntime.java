@@ -268,7 +268,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             if (exec.getResultHandler() != null) {
-                exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, ex);
+                exec.getResultHandler().onValidationFailure(CommandResult.INTERRUPTED, ex);
             }
             throw ex;
         } catch (Exception e) {

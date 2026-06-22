@@ -21,31 +21,58 @@
 package org.aesh.command;
 
 /**
- * The result of a command execution
+ * The result of a command execution, aligned with POSIX exit code conventions.
+ * <p>
+ * POSIX defines exit codes as 0-255:
+ * <ul>
+ * <li>0 — success</li>
+ * <li>1 — general error</li>
+ * <li>2 — misuse of shell command (e.g., invalid arguments)</li>
+ * <li>127 — command not found</li>
+ * <li>128+N — killed by signal N (e.g., 130 = SIGINT/Ctrl-C)</li>
+ * </ul>
  *
- * @author Aesh team
  * @author Aesh team
  */
 public class CommandResult {
+
+    /** Successful execution (exit code 0). */
     public static final CommandResult SUCCESS = new CommandResult(0);
-    public static final CommandResult FAILURE = new CommandResult(-1);
+
+    /** General failure (exit code 1). */
+    public static final CommandResult FAILURE = new CommandResult(1);
+
+    /** Invalid arguments or usage error (exit code 2). Equivalent to Bash EX_USAGE. */
+    public static final CommandResult USAGE_ERROR = new CommandResult(2);
+
+    /** Command not found (exit code 127). */
+    public static final CommandResult COMMAND_NOT_FOUND = new CommandResult(127);
+
+    /** Interrupted by signal, e.g., Ctrl-C / SIGINT (exit code 130 = 128 + 2). */
+    public static final CommandResult INTERRUPTED = new CommandResult(130);
 
     private final int result;
 
     /**
-     * Converts the given result integer into a {@link CommandResult}
+     * Converts the given result integer into a {@link CommandResult}.
      *
-     * @param result
-     * @return {@link CommandResult#SUCCESS} if result == 0, {@link CommandResult#FAILURE} if result == -1 or a new instance if
-     *         different from -1 and 0
+     * @param result the exit code
+     * @return a shared constant for well-known codes, or a new instance for custom codes
      */
     public static CommandResult valueOf(final int result) {
-        if (result == 0) {
-            return SUCCESS;
-        } else if (result == -1) {
-            return FAILURE;
-        } else {
-            return new CommandResult(result);
+        switch (result) {
+            case 0:
+                return SUCCESS;
+            case 1:
+                return FAILURE;
+            case 2:
+                return USAGE_ERROR;
+            case 127:
+                return COMMAND_NOT_FOUND;
+            case 130:
+                return INTERRUPTED;
+            default:
+                return new CommandResult(result);
         }
     }
 
@@ -53,7 +80,27 @@ public class CommandResult {
         this.result = result;
     }
 
+    /**
+     * Returns the raw result value.
+     *
+     * @return the exit code
+     */
     public int getResultValue() {
+        return result;
+    }
+
+    /**
+     * Returns the exit code clamped to the POSIX range 0-255, suitable for
+     * use with {@code System.exit()}.
+     *
+     * @return the exit code in the range 0-255
+     * @since 3.16
+     */
+    public int getExitCode() {
+        if (result < 0)
+            return 1;
+        if (result > 255)
+            return 255;
         return result;
     }
 
@@ -85,5 +132,10 @@ public class CommandResult {
         if (result != other.result)
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "CommandResult{" + result + "}";
     }
 }

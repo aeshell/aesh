@@ -265,7 +265,7 @@ class Executions {
                 throw ex;
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                result = CommandResult.FAILURE;
+                result = CommandResult.INTERRUPTED;
                 throw ex;
             } catch (Exception e) {
                 result = CommandResult.FAILURE;
