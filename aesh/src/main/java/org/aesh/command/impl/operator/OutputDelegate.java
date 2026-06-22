@@ -30,8 +30,8 @@ import org.aesh.terminal.utils.Parser;
  */
 public abstract class OutputDelegate {
 
-    private BufferedWriter writer;
-    private IOException exception;
+    protected BufferedWriter writer;
+    protected IOException exception;
 
     protected OutputDelegate() {
     }

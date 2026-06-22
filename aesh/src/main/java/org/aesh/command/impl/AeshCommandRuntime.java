@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,6 +49,7 @@ import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -218,35 +222,125 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         Execution exec;
         CommandResult result = null;
         while ((exec = executor.getNextExecution()) != null) {
-            try {
-                result = exec.execute();
-            } catch (CommandException cmd) {
-                if (exec.getResultHandler() != null) {
-                    exec.getResultHandler().onExecutionFailure(CommandResult.FAILURE, cmd);
-                }
-                throw cmd;
-            } catch (CommandValidatorException | CommandLineParserException e) {
-                if (exec.getResultHandler() != null) {
-                    exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
-                }
-                throw e;
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                if (exec.getResultHandler() != null) {
-                    exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, ex);
-                }
-                throw ex;
-            } catch (Exception e) {
-                if (exec.getResultHandler() != null) {
-                    exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
-                }
-                throw new RuntimeException(e);
+            // Collect pipe chain: sequence of executions where all except the last
+            // use a PipeOperator as their executable
+            List<Execution> pipeChain = new ArrayList<>();
+            pipeChain.add(exec);
+            while (exec.getExecutable() instanceof PipeOperator) {
+                Execution next = executor.getNextExecution();
+                if (next == null)
+                    break;
+                pipeChain.add(next);
+                exec = next;
+            }
+
+            if (pipeChain.size() == 1) {
+                // No pipe — execute sequentially (original path)
+                result = executeSingle(pipeChain.get(0));
+            } else {
+                // Pipe chain — run stages concurrently
+                result = executePipeChain(pipeChain);
             }
         }
         if (result != null)
             return result;
         else
             return CommandResult.FAILURE;
+    }
+
+    /**
+     * Execute a single non-piped command.
+     */
+    private CommandResult executeSingle(Execution exec) throws CommandException,
+            CommandValidatorException, CommandLineParserException, InterruptedException {
+        try {
+            return exec.execute();
+        } catch (CommandException cmd) {
+            if (exec.getResultHandler() != null) {
+                exec.getResultHandler().onExecutionFailure(CommandResult.FAILURE, cmd);
+            }
+            throw cmd;
+        } catch (CommandValidatorException | CommandLineParserException e) {
+            if (exec.getResultHandler() != null) {
+                exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
+            }
+            throw e;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            if (exec.getResultHandler() != null) {
+                exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, ex);
+            }
+            throw ex;
+        } catch (Exception e) {
+            if (exec.getResultHandler() != null) {
+                exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Execute a pipe chain concurrently.
+     * <p>
+     * All stages except the last are submitted to a thread pool. The last stage
+     * runs on the calling thread. The result of the last stage in the pipeline
+     * is returned (matching Unix pipe semantics where the exit code is from the
+     * last command).
+     * <p>
+     * If an upstream command fails, its output stream is closed, causing the
+     * downstream command to receive EOF on its stdin. If a downstream command
+     * finishes early (e.g., {@code head}), the upstream command's write will
+     * get an IOException (pipe broken) which is suppressed like SIGPIPE.
+     */
+    @SuppressWarnings("unchecked")
+    private CommandResult executePipeChain(List<Execution> chain) throws CommandException,
+            CommandValidatorException, CommandLineParserException, InterruptedException {
+        // Run all stages except the last in background threads
+        ExecutorService threadPool = Executors.newFixedThreadPool(chain.size() - 1, r -> {
+            Thread t = new Thread(r, "aesh-pipe-" + System.nanoTime());
+            t.setDaemon(true);
+            return t;
+        });
+
+        List<Future<?>> futures = new ArrayList<>(chain.size() - 1);
+        try {
+            // Submit upstream stages to thread pool
+            for (int i = 0; i < chain.size() - 1; i++) {
+                Execution stage = chain.get(i);
+                futures.add(threadPool.submit(() -> {
+                    try {
+                        stage.execute();
+                    } catch (Exception e) {
+                        // Pipe broken exceptions from upstream are expected when
+                        // downstream finishes early (SIGPIPE-like behavior).
+                        // Other exceptions are stored but not propagated — the
+                        // pipeline result comes from the last stage.
+                        if (!(e.getCause() instanceof IOException)) {
+                            stage.setResult(CommandResult.FAILURE);
+                        }
+                    }
+                }));
+            }
+
+            // Run the last stage on the calling thread
+            Execution lastStage = chain.get(chain.size() - 1);
+            CommandResult result = executeSingle(lastStage);
+
+            // Wait for upstream stages to complete
+            for (Future<?> future : futures) {
+                try {
+                    future.get();
+                } catch (java.util.concurrent.ExecutionException e) {
+                    // Upstream failure — log but don't propagate
+                    // (Unix pipes return the last command's exit code)
+                    LOGGER.log(Level.FINE, "Upstream pipe stage failed", e.getCause());
+                }
+            }
+
+            return result;
+        } finally {
+            threadPool.shutdownNow();
+        }
     }
 
     @Override

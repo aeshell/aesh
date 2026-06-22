@@ -23,24 +23,53 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /**
+ * Manages input redirection from a file.
+ * <p>
+ * The stream is opened lazily on first {@link #read()} call and cached
+ * for subsequent calls. Call {@link #close()} to release the underlying
+ * file handle.
+ *
  * @author Aesh team
  */
 public class InputDelegate {
 
-    private String path;
+    private final String path;
+    private BufferedInputStream cachedStream;
 
     InputDelegate(String path) {
         this.path = path;
     }
 
+    /**
+     * Returns the input stream for the redirected file.
+     * Opens the file on first call, returns the cached stream on subsequent calls.
+     *
+     * @return the input stream, or null if the file does not exist
+     */
     public BufferedInputStream read() {
+        if (cachedStream != null)
+            return cachedStream;
         try {
-            return new BufferedInputStream(new FileInputStream(new File(path)));
+            cachedStream = new BufferedInputStream(new FileInputStream(new File(path)));
+            return cachedStream;
         } catch (FileNotFoundException e) {
             return null;
         }
     }
 
+    /**
+     * Close the underlying stream if open.
+     */
+    public void close() {
+        if (cachedStream != null) {
+            try {
+                cachedStream.close();
+            } catch (IOException ignored) {
+            }
+            cachedStream = null;
+        }
+    }
 }

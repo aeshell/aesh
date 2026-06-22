@@ -19,7 +19,6 @@
  */
 package org.aesh.command.impl;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -280,12 +279,7 @@ class Executions {
                     }
                 }
                 if (invocationConfiguration.getInputRedirection() != null) {
-                    try {
-                        BufferedInputStream in = invocationConfiguration.getInputRedirection().read();
-                        if (in != null)
-                            in.close();
-                    } catch (IOException ignored) {
-                    }
+                    invocationConfiguration.getInputRedirection().close();
                 }
             }
             return result;

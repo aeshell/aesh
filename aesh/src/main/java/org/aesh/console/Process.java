@@ -19,6 +19,7 @@
  */
 package org.aesh.console;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,6 +48,7 @@ public class Process extends Thread implements Consumer<Signal> {
     private final String commandLine;
     private final CommandExecutionListener executionListener;
     private volatile boolean running;
+    private List<Thread> upstreamPipeThreads;
 
     private static final Logger LOGGER = LoggerUtil.getLogger(Process.class.getName());
     private int pid;
@@ -118,5 +120,20 @@ public class Process extends Thread implements Consumer<Signal> {
 
     public int pid() {
         return pid;
+    }
+
+    /**
+     * Set the upstream pipe threads that should be waited on when this process finishes.
+     * Used by {@link ProcessManager} when running pipe chains concurrently.
+     */
+    void setUpstreamPipeThreads(List<Thread> threads) {
+        this.upstreamPipeThreads = threads;
+    }
+
+    /**
+     * Get the upstream pipe threads, or null if this is not the last stage of a pipe chain.
+     */
+    List<Thread> getUpstreamPipeThreads() {
+        return upstreamPipeThreads;
     }
 }
