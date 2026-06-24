@@ -714,7 +714,14 @@ public class AeshRuntimeRunner {
     }
 
     static ShellType detectShell() {
-        // Check shell-specific environment variables first
+        // PSModulePath is set by PowerShell on all platforms — check it first.
+        // On macOS/Linux, CLI tools are typically launched via a bash wrapper
+        // script which sets BASH_VERSION in the environment. If we checked
+        // BASH_VERSION first, we'd misdetect PowerShell as bash (#537).
+        if (System.getenv("PSModulePath") != null)
+            return ShellType.PWSH;
+
+        // Check shell-specific environment variables
         if (System.getenv("FISH_VERSION") != null)
             return ShellType.FISH;
         if (System.getenv("ZSH_VERSION") != null)
@@ -725,9 +732,6 @@ public class AeshRuntimeRunner {
         // Fall back to $SHELL
         String shell = System.getenv("SHELL");
         if (shell == null || shell.isEmpty()) {
-            // No $SHELL — check if running inside PowerShell (last resort)
-            if (System.getenv("PSModulePath") != null)
-                return ShellType.PWSH;
             return null;
         }
         if (shell.contains("fish"))
