@@ -228,16 +228,8 @@ public class AeshRuntimeRunner {
             // Build a map of subcommand/option names to descriptions for richer output
             java.util.Map<String, String> descriptions = buildCompletionDescriptions(commandRegistry, commandName);
 
-            // For dynamic shell completion, filter out option candidates when the
-            // cursor is at a positional argument position (no - prefix typed).
-            // This lets the shell provide its default file completion instead.
-            boolean cursorAtPositional = partialLine.isEmpty()
-                    || (!partialLine.endsWith("-") && (partialLine.endsWith(" ") || !partialLine.contains("-")));
             java.util.List<org.aesh.terminal.formatting.TerminalString> candidates = completeOperation
                     .getCompletionCandidates();
-            if (cursorAtPositional) {
-                candidates.removeIf(c -> c.getCharacters().trim().startsWith("-"));
-            }
 
             // Sort candidates alphabetically for consistent shell completion (#497)
             candidates.sort((a, b) -> a.getCharacters().trim().compareToIgnoreCase(b.getCharacters().trim()));
@@ -252,9 +244,16 @@ public class AeshRuntimeRunner {
                 }
             }
 
-            // When no candidates and at a positional position, emit file/dir sentinel
-            // based on the current argument's completeFallback setting (#494)
-            if (candidates.isEmpty() && cursorAtPositional) {
+            // Emit file/dir sentinel when the current positional argument supports
+            // file completion. The sentinel is emitted alongside other candidates
+            // (options, subcommands) so the shell script can merge file completion
+            // with other suggestions (#539).
+            // Only emit when the cursor is at a position where a positional argument
+            // could be typed (not in the middle of an option value).
+            boolean atPotentialPositional = partialLine.isEmpty()
+                    || partialLine.endsWith(" ")
+                    || (!partialLine.contains("-") && !partialLine.contains("="));
+            if (atPotentialPositional) {
                 org.aesh.command.option.CompletionFallback fallback = resolvePositionalFallback(
                         commandRegistry, commandName);
                 if (fallback == org.aesh.command.option.CompletionFallback.FILES) {

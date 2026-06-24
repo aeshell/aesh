@@ -1131,17 +1131,21 @@ public class AeshRuntimeRunnerTest {
     }
 
     @Test
-    public void testDynamicComplete_PositionalShowsArgumentNotOptions() {
-        // Bug #443.1: at a positional argument position, should not list options
+    public void testDynamicComplete_PositionalShowsOptionsAndFileSentinel() {
+        // After --verbose and a space, the cursor is at a position where both
+        // options and positional arguments are valid. The completion engine
+        // offers options, and the file sentinel is emitted for file-type arguments.
+        // Shell scripts merge both into the completion menu (#539).
         String output = captureStdout(() -> AeshRuntimeRunner.builder()
                 .command(DeployCommand.class)
                 .dynamicComplete(true)
                 .args("--verbose", "")
                 .execute());
 
-        // After --verbose and a space, cursor is at the argument position
-        // Should NOT list --env, --cds etc. as the primary completion
-        assertFalse("Should not list --env at argument position", output.contains("--env"));
+        // Options should be available alongside file completion
+        assertTrue("Should list --env as a completion candidate", output.contains("--env"));
+        assertTrue("Should emit __aesh_file__ for file argument fallback",
+                output.contains("__aesh_file__"));
     }
 
     @Test
