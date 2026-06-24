@@ -1,5 +1,6 @@
 package org.aesh.command.completer;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -13,22 +14,20 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Comprehensive tests for the dynamic completion output via --aesh-complete.
  * <p>
  * Each test verifies the actual stdout output that shell completion scripts
- * consume. This is the contract between aesh and the shell — any change
+ * consume. This is the contract between aesh and the shell -- any change
  * here directly affects tab completion behavior in all shells.
  */
 public class DynamicCompletionTest {
 
-    // ========== Simple command tests ==========
+    // ========== Simple command: empty and prefix tests ==========
 
     @Test
-    @Ignore("Bug #539: cursorAtPositional filter removes options at empty input position")
     public void testSimpleCommand_EmptyInput_ShowsOptions() {
         String output = complete(SimpleCmd.class, "");
         assertTrue("Should show --name option", output.contains("--name"));
@@ -51,8 +50,37 @@ public class DynamicCompletionTest {
     @Test
     public void testSimpleCommand_ShortOption_ShowsOptions() {
         String output = complete(SimpleCmd.class, "-");
-        // After a single dash, should show short options or long options
         assertTrue("Should show completion candidates", output.length() > 0);
+    }
+
+    // ========== Simple command: option value transitions ==========
+
+    @Test
+    public void testSimpleCommand_AfterValueOption_ShowsValueOrOptions() {
+        // After --name (which takes a value) and a space, the engine should
+        // either offer value completions or show remaining options
+        String output = complete(SimpleCmd.class, "--name", "");
+        // --name has no completer/allowedValues, so no value candidates
+        // The engine should fall back to showing remaining options
+        assertTrue("Should have some output after value-taking option",
+                output.length() > 0);
+    }
+
+    @Test
+    public void testSimpleCommand_AfterCompleteOptionValue_ShowsRemainingOptions() {
+        // After --name value, should show remaining options (--verbose, --help)
+        String output = complete(SimpleCmd.class, "--name", "alice", "");
+        assertTrue("Should show remaining options after name is set",
+                output.contains("--verbose"));
+        assertFalse("Should NOT show --name again (already used)",
+                output.contains("--name"));
+    }
+
+    @Test
+    public void testSimpleCommand_AfterBooleanOption_ShowsRemainingOptions() {
+        // After --verbose (boolean, no value), should show remaining options
+        String output = complete(SimpleCmd.class, "--verbose", "--");
+        assertTrue("Should show --name after --verbose", output.contains("--name"));
     }
 
     // ========== Group command tests ==========
@@ -71,10 +99,8 @@ public class DynamicCompletionTest {
     }
 
     @Test
-    @Ignore("Bug #539: cursorAtPositional filter removes options after subcommand name")
     public void testGroupCommand_SubcommandWithSpace_ShowsSubcommandOptions() {
-        // This is the key scenario: "app run <tab>"
-        // Should show run's options, not just files
+        // Key scenario: "app run <tab>" — should show run's options
         String output = complete(AppGroup.class, "run", "");
         assertTrue("Should show --debug option for 'run' subcommand: got [" + output.trim() + "]",
                 output.contains("--debug") || output.contains("debug"));
@@ -89,27 +115,32 @@ public class DynamicCompletionTest {
     @Test
     public void testGroupCommand_SubcommandOptionValue_ShowsAllowedValues() {
         String output = complete(AppGroup.class, "build", "--target", "");
-        // target has allowedValues = {debug, release}
         assertTrue("Should show 'debug' as allowed value", output.contains("debug"));
         assertTrue("Should show 'release' as allowed value", output.contains("release"));
     }
 
     @Test
     public void testGroupCommand_RootOptions_Shown() {
-        // Root-level options (like --verbose on the group) should be shown
-        // when no subcommand is typed yet
         String output = complete(AppGroup.class, "--");
         assertTrue("Should show root --verbose option", output.contains("--verbose"));
     }
 
     @Test
     public void testGroupCommand_SubcommandHelp_Shows() {
-        // generateHelp=true should add --help to subcommands
         String output = complete(AppGroup.class, "run", "--h");
         assertTrue("Should complete --help for subcommand", output.contains("help"));
     }
 
-    // ========== Argument completion tests ==========
+    @Test
+    public void testGroupCommand_UnknownSubcommand_NoError() {
+        // Unknown subcommand prefix should not crash, just return no/few candidates
+        String output = complete(AppGroup.class, "xyz");
+        // Should not throw, output may be empty or contain error info
+        // The important thing is it doesn't crash
+        assertTrue("Should handle unknown subcommand gracefully", true);
+    }
+
+    // ========== Option value tests ==========
 
     @Test
     public void testOptionWithAllowedValues_ShowsValues() {
@@ -136,7 +167,6 @@ public class DynamicCompletionTest {
     @Test
     public void testNoFileSentinel_WhenOptionIsBeingTyped() {
         String output = complete(FileCmd.class, "--");
-        // When typing options, should not emit file sentinel
         assertFalse("Should NOT emit __aesh_file__ when typing option prefix",
                 output.contains("__aesh_file__"));
     }
@@ -157,7 +187,6 @@ public class DynamicCompletionTest {
     }
 
     @Test
-    @Ignore("Bug #539: cursorAtPositional filter removes options after subcommand name")
     public void testAeshCompleteFlag_SubcommandOptions() {
         // "app run <tab>" via the --aesh-complete flag
         String output = completeViaFlag(AppGroup.class, "run", "");
@@ -165,12 +194,23 @@ public class DynamicCompletionTest {
                 output.contains("--debug") || output.contains("debug"));
     }
 
+    @Test
+    public void testAeshCompleteFlag_MatchesDynamicCompleteAPI() {
+        // Both paths should produce equivalent output
+        String apiOutput = complete(AppGroup.class, "");
+        String flagOutput = completeViaFlag(AppGroup.class, "");
+        // Both should contain subcommands
+        assertEquals("Flag and API paths should produce same subcommand set",
+                apiOutput.contains("run"), flagOutput.contains("run"));
+        assertEquals("Flag and API paths should produce same subcommand set",
+                apiOutput.contains("build"), flagOutput.contains("build"));
+    }
+
     // ========== Description tests ==========
 
     @Test
     public void testDescriptions_IncludedInOutput() {
         String output = complete(SimpleCmd.class, "--");
-        // Descriptions are tab-separated: "value\tdescription"
         assertTrue("Should include tab-separated descriptions",
                 output.contains("\t"));
     }
@@ -185,11 +225,22 @@ public class DynamicCompletionTest {
                 ExecutionTracker.executed);
     }
 
+    // ========== Nested group tests ==========
+
+    @Test
+    public void testNestedGroup_MidLevel_ShowsLeafSubcommands() {
+        String output = complete(TopGroup.class, "mid", "");
+        assertTrue("Should show 'leaf' subcommand", output.contains("leaf"));
+    }
+
+    @Test
+    public void testNestedGroup_LeafLevel_ShowsOptions() {
+        String output = complete(TopGroup.class, "mid", "leaf", "--");
+        assertTrue("Should show leaf's --file option", output.contains("--file"));
+    }
+
     // ========== Helpers ==========
 
-    /**
-     * Run dynamic completion via the programmatic API (.dynamicComplete(true)).
-     */
     private static String complete(Class<? extends Command> cmdClass, String... tokens) {
         return captureStdout(() -> AeshRuntimeRunner.builder()
                 .command(cmdClass)
@@ -198,11 +249,7 @@ public class DynamicCompletionTest {
                 .execute());
     }
 
-    /**
-     * Run dynamic completion via the --aesh-complete flag path (how shells invoke it).
-     */
     private static String completeViaFlag(Class<? extends Command> cmdClass, String... tokens) {
-        // Build args: --aesh-complete -- token1 token2 ...
         String[] args = new String[tokens.length + 2];
         args[0] = "--aesh-complete";
         args[1] = "--";
@@ -295,11 +342,8 @@ public class DynamicCompletionTest {
         }
     }
 
-    @CommandDefinition(name = "filecmd", description = "File command")
+    @CommandDefinition(name = "filecmd", description = "File command", generateHelp = true)
     public static class FileCmd implements Command<CommandInvocation> {
-        @Option(shortName = 'o', description = "Output format")
-        private String output;
-
         @Argument(description = "Input file")
         private java.io.File input;
 
@@ -319,6 +363,33 @@ public class DynamicCompletionTest {
         @Override
         public CommandResult execute(CommandInvocation ci) {
             executed = true;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "top", description = "Top level", groupCommands = { MidGroup.class })
+    public static class TopGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mid", description = "Mid level", groupCommands = { LeafCmd.class })
+    public static class MidGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "leaf", description = "Leaf command", generateHelp = true)
+    public static class LeafCmd implements Command<CommandInvocation> {
+        @Option(description = "File path")
+        private String file;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
             return CommandResult.SUCCESS;
         }
     }

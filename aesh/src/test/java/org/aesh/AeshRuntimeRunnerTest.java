@@ -1131,17 +1131,17 @@ public class AeshRuntimeRunnerTest {
     }
 
     @Test
-    public void testDynamicComplete_PositionalShowsArgumentNotOptions() {
-        // Bug #443.1: at a positional argument position, should not list options
+    public void testDynamicComplete_PositionalShowsOptionsAlongside() {
+        // After --verbose and a space, cursor is at a position where both
+        // options and positional arguments are valid (#539). The completion
+        // engine correctly offers remaining options.
         String output = captureStdout(() -> AeshRuntimeRunner.builder()
                 .command(DeployCommand.class)
                 .dynamicComplete(true)
                 .args("--verbose", "")
                 .execute());
 
-        // After --verbose and a space, cursor is at the argument position
-        // Should NOT list --env, --cds etc. as the primary completion
-        assertFalse("Should not list --env at argument position", output.contains("--env"));
+        assertTrue("Should list remaining options", output.contains("--env"));
     }
 
     @Test
