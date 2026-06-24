@@ -16,6 +16,7 @@
 package org.aesh.util.completer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -545,8 +546,11 @@ public class ShellCompletionGeneratorTest {
         assertTrue("Should have PowerShell comment header", out.contains("# PowerShell completion for mycli"));
         assertTrue("Should use Register-ArgumentCompleter", out.contains("Register-ArgumentCompleter"));
         assertTrue("Should use -Native flag", out.contains("-Native"));
-        assertTrue("Should use -CommandName", out.contains("-CommandName mycli"));
-        assertTrue("Should contain option names", out.contains("--verbose"));
+        assertTrue("Should use quoted -CommandName", out.contains("-CommandName 'mycli'"));
+        assertTrue("Should contain long option names", out.contains("--verbose"));
+        assertTrue("Should contain short option names", out.contains("-v"));
+        assertTrue("Should contain output option", out.contains("--output"));
+        assertTrue("Should contain short name for output", out.contains("-o"));
     }
 
     @Test
@@ -556,6 +560,8 @@ public class ShellCompletionGeneratorTest {
         assertTrue("Should contain subcommand names", out.contains("commit"));
         assertTrue("Should contain subcommand names", out.contains("push"));
         assertTrue("Should use CompletionResult", out.contains("CompletionResult"));
+        // Should use CommandElements for proper tokenization
+        assertTrue("Should use CommandElements", out.contains("CommandElements"));
     }
 
     @Test
@@ -565,11 +571,16 @@ public class ShellCompletionGeneratorTest {
         assertTrue("Should have PowerShell header", out.contains("# Dynamic PowerShell completion"));
         assertTrue("Should use Register-ArgumentCompleter", out.contains("Register-ArgumentCompleter"));
         assertTrue("Should use -Native flag", out.contains("-Native"));
+        assertTrue("Should use quoted CommandName", out.contains("'mycli'"));
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
         assertTrue("Should handle __aesh_file__ sentinel", out.contains("__aesh_file__"));
         assertTrue("Should handle __aesh_dir__ sentinel", out.contains("__aesh_dir__"));
         assertTrue("Should use CompletionResult", out.contains("CompletionResult"));
         assertTrue("Should pass descriptions as tooltips", out.contains("$desc"));
+        // Should use CommandElements for proper tokenization
+        assertTrue("Should use CommandElements for tokenization", out.contains("CommandElements"));
+        assertFalse("Should NOT use ToString().Split() for tokenization",
+                out.contains("ToString().Split"));
     }
 
     @Test
@@ -581,10 +592,62 @@ public class ShellCompletionGeneratorTest {
     }
 
     @Test
+    public void testPwshDynamicQuotedProgramName() {
+        String out = generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli");
+
+        // Program name should be quoted for safety
+        assertTrue("Should quote program name in & invocation", out.contains("& 'mycli'"));
+    }
+
+    @Test
     public void testPwshOneShotDynamic() throws CommandLineParserException {
         String out = ShellCompletionGenerator.generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli");
 
         assertTrue("Should contain Register-ArgumentCompleter", out.contains("Register-ArgumentCompleter"));
         assertTrue("Should call --aesh-complete", out.contains("--aesh-complete"));
+    }
+
+    @Test
+    public void testPwshOptionAliases() {
+        String out = generate(ShellType.PWSH, AliasCmd.class, "runner");
+
+        assertTrue("Should contain primary name", out.contains("--enableassertions"));
+        assertTrue("Should contain alias", out.contains("--ea"));
+    }
+
+    @Test
+    public void testPwshNegatableOption() {
+        String out = generate(ShellType.PWSH, NegatableCmd.class, "app");
+
+        assertTrue("Should contain --verbose", out.contains("--verbose"));
+        assertTrue("Should contain negated form", out.contains("--no-verbose"));
+    }
+
+    @Test
+    public void testPwshFileOption() {
+        String out = generate(ShellType.PWSH, FileCmd.class, "fileapp");
+
+        assertTrue("Should contain config option", out.contains("--config"));
+        assertTrue("Should contain short name", out.contains("-c"));
+        // File argument should use Get-ChildItem
+        assertTrue("Should have file completion for argument", out.contains("Get-ChildItem"));
+    }
+
+    @Test
+    public void testPwshPropertyOptionSkipped() {
+        // Property options (@OptionGroup) should be skipped
+        String out = generate(ShellType.PWSH, SimpleCmd.class, "mycli");
+
+        // SimpleCmd has no property options, so nothing to skip — verify it doesn't crash
+        assertNotNull(out);
+        assertTrue(out.contains("Register-ArgumentCompleter"));
+    }
+
+    @Test
+    public void testPwshConsistentLineEndings() {
+        String out = generate(ShellType.PWSH, SimpleCmd.class, "mycli");
+
+        // Should use \n not \r\n regardless of platform
+        assertFalse("Should not contain \\r\\n line endings", out.contains("\r\n"));
     }
 }

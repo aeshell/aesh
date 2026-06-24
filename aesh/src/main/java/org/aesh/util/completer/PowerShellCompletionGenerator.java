@@ -17,6 +17,7 @@
  */
 package org.aesh.util.completer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -35,7 +36,7 @@ import org.aesh.command.invocation.CommandInvocation;
  */
 class PowerShellCompletionGenerator implements ShellCompletionGenerator {
 
-    private static final String NL = System.lineSeparator();
+    private static final String NL = "\n";
 
     @Override
     public String generate(CommandLineParser<? extends CommandInvocation> parser, String programName) {
@@ -44,7 +45,8 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
         out.append("# Add this to your $PROFILE or source it: . ").append(programName).append("_complete.ps1").append(NL);
         out.append(NL);
 
-        out.append("Register-ArgumentCompleter -Native -CommandName ").append(programName);
+        out.append("Register-ArgumentCompleter -Native -CommandName '")
+                .append(escapePwsh(programName)).append("'");
         out.append(" -ScriptBlock {").append(NL);
         out.append("    param($wordToComplete, $commandAst, $cursorPosition)").append(NL);
         out.append(NL);
@@ -66,16 +68,29 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
 
         out.append("    $candidates = @()").append(NL);
 
-        // Options
         ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
-        List<ProcessedOption> options = cmd.getOptions();
-        for (ProcessedOption opt : options) {
-            String name = opt.name() != null && !opt.name().isEmpty() ? "--" + opt.name() : "-" + opt.shortName();
-            String desc = escapePwsh(ProcessedCommand.resolveOptionDesc(cmd, opt, programName, parentName));
-            out.append("    if ('").append(name).append("' -like \"$wordToComplete*\") {").append(NL);
-            out.append("        $candidates += [System.Management.Automation.CompletionResult]::new(");
-            out.append("'").append(name).append("', '").append(name).append("', 'ParameterValue', '").append(desc).append("')");
-            out.append(NL).append("    }").append(NL);
+        appendOptionCompletions(out, cmd, programName, parentName, "    ");
+
+        // Arguments
+        if (cmd.hasArgument() || cmd.hasArguments()) {
+            ProcessedOption arg = cmd.hasArguments() ? cmd.getArguments() : cmd.getArgument();
+            if (arg.isTypeAssignableByResourcesOrFile()) {
+                out.append("    # File argument completion").append(NL);
+                out.append("    if (-not $wordToComplete.StartsWith('-')) {").append(NL);
+                out.append("        Get-ChildItem -Path \"$wordToComplete*\" -ErrorAction SilentlyContinue |").append(NL);
+                out.append("            ForEach-Object { $candidates += [System.Management.Automation.CompletionResult]::new(");
+                out.append("$_.Name, $_.Name, 'ProviderItem', $_.FullName) }").append(NL);
+                out.append("    }").append(NL);
+            } else if (arg.hasAllowedValues() || arg.hasDefaultValue()) {
+                List<String> vals = new ArrayList<>();
+                if (arg.hasAllowedValues())
+                    vals.addAll(arg.getAllowedValues());
+                else
+                    vals.addAll(arg.getDefaultValues());
+                for (String v : vals) {
+                    appendCandidate(out, v, v, "    ");
+                }
+            }
         }
 
         out.append("    $candidates").append(NL);
@@ -84,41 +99,51 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
     private void generateGroupCompletion(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser, String programName) {
 
-        out.append("    $tokens = $commandAst.ToString().Split(' ', [StringSplitOptions]::RemoveEmptyEntries)").append(NL);
+        out.append("    $elems = $commandAst.CommandElements").append(NL);
         out.append("    $candidates = @()").append(NL);
         out.append(NL);
 
         // Subcommands at position 1
-        out.append("    if ($tokens.Length -le 1 -or ($tokens.Length -eq 2 -and -not $commandAst.ToString().EndsWith(' '))) {")
+        out.append("    if ($elems.Count -le 1 -or ($elems.Count -eq 2 -and -not $commandAst.ToString().EndsWith(' '))) {")
                 .append(NL);
+
+        // Also offer root-level options
+        appendOptionCompletions(out, parser.getProcessedCommand(), programName, null, "        ");
+
         for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
             String name = child.getProcessedCommand().name();
             String desc = escapePwsh(ProcessedCommand.resolveDescription(
                     child.getProcessedCommand(), child.getProcessedCommand().description(),
                     programName, programName));
-            out.append("        if ('").append(name).append("' -like \"$wordToComplete*\") {").append(NL);
-            out.append("            $candidates += [System.Management.Automation.CompletionResult]::new(");
-            out.append("'").append(name).append("', '").append(name).append("', 'ParameterValue', '").append(desc).append("')");
-            out.append(NL).append("        }").append(NL);
+            appendCandidate(out, name, desc, "        ");
         }
         out.append("    } else {").append(NL);
 
         // Options for each subcommand
-        out.append("        $sub = $tokens[1]").append(NL);
+        out.append("        $sub = $elems[1].ToString()").append(NL);
         out.append("        switch ($sub) {").append(NL);
         for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
             String childName = child.getProcessedCommand().name();
-            out.append("            '").append(childName).append("' {").append(NL);
-            for (ProcessedOption opt : child.getProcessedCommand().getOptions()) {
-                String optName = opt.name() != null && !opt.name().isEmpty() ? "--" + opt.name() : "-" + opt.shortName();
-                String desc = escapePwsh(ProcessedCommand.resolveOptionDesc(
-                        child.getProcessedCommand(), opt, programName, programName));
-                out.append("                if ('").append(optName).append("' -like \"$wordToComplete*\") {").append(NL);
-                out.append("                    $candidates += [System.Management.Automation.CompletionResult]::new(");
-                out.append("'").append(optName).append("', '").append(optName).append("', 'ParameterValue', '").append(desc)
-                        .append("')");
-                out.append(NL).append("                }").append(NL);
+            out.append("            '").append(escapePwsh(childName)).append("' {").append(NL);
+            appendOptionCompletions(out, child.getProcessedCommand(),
+                    programName, programName, "                ");
+
+            // Child arguments
+            ProcessedCommand<?, ?> childCmd = child.getProcessedCommand();
+            if (childCmd.hasArgument() || childCmd.hasArguments()) {
+                ProcessedOption arg = childCmd.hasArguments() ? childCmd.getArguments() : childCmd.getArgument();
+                if (arg.isTypeAssignableByResourcesOrFile()) {
+                    out.append("                # File argument completion").append(NL);
+                    out.append("                if (-not $wordToComplete.StartsWith('-')) {").append(NL);
+                    out.append("                    Get-ChildItem -Path \"$wordToComplete*\" -ErrorAction SilentlyContinue |")
+                            .append(NL);
+                    out.append(
+                            "                        ForEach-Object { $candidates += [System.Management.Automation.CompletionResult]::new(");
+                    out.append("$_.Name, $_.Name, 'ProviderItem', $_.FullName) }").append(NL);
+                    out.append("                }").append(NL);
+                }
             }
+
             out.append("            }").append(NL);
         }
         out.append("        }").append(NL);
@@ -126,23 +151,76 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
         out.append("    $candidates").append(NL);
     }
 
+    /**
+     * Emit completion candidates for all options on the given command.
+     * Handles property filtering, aliases, short names, negatable options,
+     * and value completion.
+     */
+    private void appendOptionCompletions(StringBuilder out, ProcessedCommand<?, ?> cmd,
+            String programName, String parentName, String indent) {
+        for (ProcessedOption opt : cmd.getOptions()) {
+            if (opt.isProperty())
+                continue;
+
+            String desc = escapePwsh(ProcessedCommand.resolveOptionDesc(cmd, opt, programName, parentName));
+            if (desc.isEmpty())
+                desc = opt.name();
+
+            // Primary long name
+            String longName = "--" + opt.name();
+            appendCandidate(out, longName, desc, indent);
+
+            // Short name
+            if (opt.shortName() != null && !opt.shortName().isEmpty()) {
+                String shortName = "-" + opt.shortName();
+                appendCandidate(out, shortName, desc, indent);
+            }
+
+            // Aliases
+            for (String alias : opt.getAliases()) {
+                appendCandidate(out, "--" + alias, desc, indent);
+            }
+
+            // Negatable
+            if (opt.isNegatable() && opt.getNegatedName() != null) {
+                appendCandidate(out, "--" + opt.getNegatedName(), "Disable " + opt.name(), indent);
+            }
+        }
+    }
+
+    /**
+     * Emit a single CompletionResult candidate with -like filtering.
+     */
+    private void appendCandidate(StringBuilder out, String name, String desc, String indent) {
+        out.append(indent).append("if ('").append(escapePwsh(name))
+                .append("' -like \"$wordToComplete*\") {").append(NL);
+        out.append(indent).append("    $candidates += [System.Management.Automation.CompletionResult]::new(");
+        out.append("'").append(escapePwsh(name)).append("', '").append(escapePwsh(name))
+                .append("', 'ParameterValue', '").append(escapePwsh(desc)).append("')");
+        out.append(NL).append(indent).append("}").append(NL);
+    }
+
     @Override
     public String generateDynamic(CommandLineParser<? extends CommandInvocation> parser, String programName) {
+        String escaped = escapePwsh(programName);
         return "# Dynamic PowerShell completion for " + programName + " \u2014 generated by Aesh." + NL +
                 "# Add this to your $PROFILE or source it: . " + programName + "_complete.ps1" + NL +
                 NL +
-                "Register-ArgumentCompleter -Native -CommandName " + programName + " -ScriptBlock {" + NL +
+                "Register-ArgumentCompleter -Native -CommandName '" + escaped + "' -ScriptBlock {" + NL +
                 "    param($wordToComplete, $commandAst, $cursorPosition)" + NL +
                 NL +
-                "    $tokens = $commandAst.ToString().Split(' ', [StringSplitOptions]::RemoveEmptyEntries)" + NL +
-                "    $cmdArgs = if ($tokens.Length -gt 1) { $tokens[1..($tokens.Length - 1)] } else { @() }" + NL +
+                "    $elems = $commandAst.CommandElements" + NL +
+                "    $cmdArgs = @()" + NL +
+                "    for ($i = 1; $i -lt $elems.Count; $i++) {" + NL +
+                "        $cmdArgs += $elems[$i].ToString()" + NL +
+                "    }" + NL +
                 NL +
                 "    # Detect trailing space for subcommand context" + NL +
                 "    if ($commandAst.ToString().EndsWith(' ')) {" + NL +
                 "        $cmdArgs += ''" + NL +
                 "    }" + NL +
                 NL +
-                "    & " + programName + " --aesh-complete -- @cmdArgs 2>$null | ForEach-Object {" + NL +
+                "    & '" + escaped + "' --aesh-complete -- @cmdArgs 2>$null | ForEach-Object {" + NL +
                 "        $parts = $_ -split \"`t\", 2" + NL +
                 "        $text = $parts[0].Trim()" + NL +
                 "        if ($text -eq '__aesh_file__') {" + NL +

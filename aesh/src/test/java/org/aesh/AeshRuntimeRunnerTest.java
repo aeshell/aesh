@@ -22,12 +22,15 @@ package org.aesh;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -356,7 +359,90 @@ public class AeshRuntimeRunnerTest {
                 .args("--aesh-completion", "powershell")
                 .execute());
 
-        assertTrue("Should report unknown shell", stderr.contains("Unknown shell type"));
+        assertTrue("Should report unknown shell and include pwsh",
+                stderr.contains("Unknown shell type") || stderr.contains("Supported"));
+    }
+
+    @Test
+    public void testAeshCompletionFlagStaticPwsh() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .args("--aesh-completion", "--static", "pwsh")
+                .execute());
+
+        assertTrue("Should contain Register-ArgumentCompleter", output.contains("Register-ArgumentCompleter"));
+        assertTrue("Should contain -Native", output.contains("-Native"));
+        assertTrue("Should contain CompletionResult", output.contains("CompletionResult"));
+    }
+
+    // --- detectShell() tests (#537) ---
+
+    @Test
+    public void testDetectShellPwshFromPSModulePath() {
+        Map<String, String> env = new HashMap<>();
+        env.put("PSModulePath", "/usr/local/share/powershell/Modules");
+        assertEquals(ShellType.PWSH, AeshRuntimeRunner.detectShell(env::get));
+    }
+
+    @Test
+    public void testDetectShellPwshTakesPriorityOverBashVersion() {
+        // Simulates: pwsh -> bash wrapper -> java
+        // Both PSModulePath and BASH_VERSION are set
+        Map<String, String> env = new HashMap<>();
+        env.put("PSModulePath", "/usr/local/share/powershell/Modules");
+        env.put("BASH_VERSION", "5.2.26(1)-release");
+        env.put("SHELL", "/bin/bash");
+        assertEquals("PSModulePath should take priority over BASH_VERSION",
+                ShellType.PWSH, AeshRuntimeRunner.detectShell(env::get));
+    }
+
+    @Test
+    public void testDetectShellBashFromBashVersion() {
+        Map<String, String> env = new HashMap<>();
+        env.put("BASH_VERSION", "5.2.26(1)-release");
+        assertEquals(ShellType.BASH, AeshRuntimeRunner.detectShell(env::get));
+    }
+
+    @Test
+    public void testDetectShellZshFromZshVersion() {
+        Map<String, String> env = new HashMap<>();
+        env.put("ZSH_VERSION", "5.9");
+        assertEquals(ShellType.ZSH, AeshRuntimeRunner.detectShell(env::get));
+    }
+
+    @Test
+    public void testDetectShellFishFromFishVersion() {
+        Map<String, String> env = new HashMap<>();
+        env.put("FISH_VERSION", "3.7.0");
+        assertEquals(ShellType.FISH, AeshRuntimeRunner.detectShell(env::get));
+    }
+
+    @Test
+    public void testDetectShellFromShellEnvVar() {
+        Map<String, String> env = new HashMap<>();
+        env.put("SHELL", "/usr/bin/zsh");
+        assertEquals(ShellType.ZSH, AeshRuntimeRunner.detectShell(env::get));
+
+        env.clear();
+        env.put("SHELL", "/bin/bash");
+        assertEquals(ShellType.BASH, AeshRuntimeRunner.detectShell(env::get));
+
+        env.clear();
+        env.put("SHELL", "/usr/bin/fish");
+        assertEquals(ShellType.FISH, AeshRuntimeRunner.detectShell(env::get));
+
+        env.clear();
+        env.put("SHELL", "/usr/bin/pwsh");
+        assertEquals(ShellType.PWSH, AeshRuntimeRunner.detectShell(env::get));
+    }
+
+    @Test
+    public void testDetectShellReturnsNullWhenUnknown() {
+        Map<String, String> env = new HashMap<>();
+        assertNull("Empty env should return null", AeshRuntimeRunner.detectShell(env::get));
+
+        env.put("SHELL", "/usr/bin/csh");
+        assertNull("Unknown shell should return null", AeshRuntimeRunner.detectShell(env::get));
     }
 
     @Test

@@ -505,7 +505,7 @@ public class AeshRuntimeRunner {
                     shellType = ShellType.valueOf(args[i].toUpperCase());
                 } catch (IllegalArgumentException e) {
                     System.err.println("Unknown shell type: " + args[i]
-                            + ". Supported: bash, zsh, fish");
+                            + ". Supported: bash, zsh, fish, pwsh");
                     return CommandResult.FAILURE;
                 }
             }
@@ -516,7 +516,7 @@ public class AeshRuntimeRunner {
             shellType = detectShell();
             if (shellType == null) {
                 System.err.println("Could not detect shell type. Specify explicitly: "
-                        + "--aesh-completion bash|zsh|fish");
+                        + "--aesh-completion bash|zsh|fish|pwsh");
                 return CommandResult.FAILURE;
             }
         }
@@ -649,7 +649,7 @@ public class AeshRuntimeRunner {
     private static boolean doInstallCompletion(CommandLineParser<?> parser, String programName) throws Exception {
         ShellType shellType = detectShell();
         if (shellType == null) {
-            System.err.println("Could not detect shell type. Use --aesh-completion bash|zsh|fish instead.");
+            System.err.println("Could not detect shell type. Use --aesh-completion bash|zsh|fish|pwsh instead.");
             return false;
         }
 
@@ -714,23 +714,34 @@ public class AeshRuntimeRunner {
     }
 
     static ShellType detectShell() {
+        return detectShell(System.getenv()::get);
+    }
+
+    /**
+     * Detect the current shell type from environment variables.
+     * Accepts an env lookup function for testability.
+     *
+     * @param envLookup function that returns the value of an environment variable, or null
+     * @return the detected shell type, or null if unknown
+     */
+    static ShellType detectShell(java.util.function.Function<String, String> envLookup) {
         // PSModulePath is set by PowerShell on all platforms — check it first.
         // On macOS/Linux, CLI tools are typically launched via a bash wrapper
         // script which sets BASH_VERSION in the environment. If we checked
         // BASH_VERSION first, we'd misdetect PowerShell as bash (#537).
-        if (System.getenv("PSModulePath") != null)
+        if (envLookup.apply("PSModulePath") != null)
             return ShellType.PWSH;
 
         // Check shell-specific environment variables
-        if (System.getenv("FISH_VERSION") != null)
+        if (envLookup.apply("FISH_VERSION") != null)
             return ShellType.FISH;
-        if (System.getenv("ZSH_VERSION") != null)
+        if (envLookup.apply("ZSH_VERSION") != null)
             return ShellType.ZSH;
-        if (System.getenv("BASH_VERSION") != null)
+        if (envLookup.apply("BASH_VERSION") != null)
             return ShellType.BASH;
 
         // Fall back to $SHELL
-        String shell = System.getenv("SHELL");
+        String shell = envLookup.apply("SHELL");
         if (shell == null || shell.isEmpty()) {
             return null;
         }
