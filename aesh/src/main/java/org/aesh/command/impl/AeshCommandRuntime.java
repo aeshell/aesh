@@ -227,11 +227,17 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             List<Execution> pipeChain = new ArrayList<>();
             pipeChain.add(exec);
             while (exec.getExecutable() instanceof PipeOperator) {
+                // Set preliminary result so Executor.getNextExecution() advances
+                exec.setResult(CommandResult.SUCCESS);
                 Execution next = executor.getNextExecution();
                 if (next == null)
                     break;
                 pipeChain.add(next);
                 exec = next;
+            }
+            // Clear preliminary results — actual execution will set them
+            for (int i = 0; i < pipeChain.size() - 1; i++) {
+                pipeChain.get(i).setResult(null);
             }
 
             if (pipeChain.size() == 1) {
@@ -311,13 +317,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     try {
                         stage.execute();
                     } catch (Exception e) {
-                        // Pipe broken exceptions from upstream are expected when
-                        // downstream finishes early (SIGPIPE-like behavior).
-                        // Other exceptions are stored but not propagated — the
-                        // pipeline result comes from the last stage.
-                        if (!(e.getCause() instanceof IOException)) {
-                            stage.setResult(CommandResult.FAILURE);
-                        }
+                        // Upstream failures are logged but not propagated — the
+                        // pipeline result comes from the last stage (Unix semantics).
+                        // Pipe broken / IOException from downstream closing early
+                        // is expected (SIGPIPE-like behavior).
+                        stage.setResult(CommandResult.FAILURE);
                     }
                 }));
             }

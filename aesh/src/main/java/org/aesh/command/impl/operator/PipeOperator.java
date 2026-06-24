@@ -142,10 +142,12 @@ public class PipeOperator extends EndOperator implements
         public void close() throws IOException {
             if (!closed) {
                 closed = true;
-                try {
-                    queue.put(EOF);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                // Use offer instead of put — if the queue is full and we're
+                // interrupted, offer returns false without blocking. Clear
+                // the queue first to make room for the EOF sentinel.
+                if (!queue.offer(EOF)) {
+                    queue.clear();
+                    queue.offer(EOF);
                 }
             }
         }
@@ -158,7 +160,8 @@ public class PipeOperator extends EndOperator implements
     private class QueueInputStream extends InputStream {
         private byte[] currentChunk;
         private int pos;
-        private boolean eof;
+        private volatile boolean eof;
+        private volatile boolean closed;
 
         @Override
         public int read() throws IOException {
@@ -169,7 +172,7 @@ public class PipeOperator extends EndOperator implements
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
-            if (eof)
+            if (eof || closed)
                 return -1;
             while (currentChunk == null || pos >= currentChunk.length) {
                 try {
@@ -178,7 +181,7 @@ public class PipeOperator extends EndOperator implements
                     Thread.currentThread().interrupt();
                     return -1;
                 }
-                if (currentChunk == EOF) {
+                if (currentChunk == EOF || closed) {
                     eof = true;
                     return -1;
                 }
@@ -193,10 +196,19 @@ public class PipeOperator extends EndOperator implements
 
         @Override
         public int available() {
-            if (eof)
+            if (eof || closed)
                 return 0;
             int chunkAvail = currentChunk != null ? currentChunk.length - pos : 0;
             return chunkAvail + (queue.isEmpty() ? 0 : 1);
+        }
+
+        @Override
+        public void close() {
+            closed = true;
+            // Drain the queue so upstream's put() unblocks
+            queue.clear();
+            // Put EOF so any blocked take() returns
+            queue.offer(EOF);
         }
     }
 
