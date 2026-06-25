@@ -17,6 +17,8 @@
  */
 package org.aesh.command.metadata;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
@@ -109,6 +111,66 @@ public class MetadataProviderRegistryTest {
         CommandMetadataProvider<?> first = MetadataProviderRegistry.getProvider(UnknownCommand.class);
         CommandMetadataProvider<?> second = MetadataProviderRegistry.getProvider(UnknownCommand.class);
         assertSame("Cached result should be same object reference", first, second);
+    }
+
+    // --- register() API tests (#540) ---
+
+    @Test
+    public void testRegisterExplicitly() {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(RegisterTestCommand.class.getName())) {
+                return new StubProvider();
+            }
+            return null;
+        });
+
+        CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(RegisterTestCommand.class);
+        assertNotNull("Explicitly registered provider should be found", provider);
+        assertEquals("register-test", provider.commandName());
+        MetadataProviderRegistry.reset();
+    }
+
+    @Test
+    public void testRegisterNull() {
+        // Should not throw
+        MetadataProviderRegistry.register(null);
+    }
+
+    @CommandDefinition(name = "register-test", description = "Test for explicit registration")
+    public static class RegisterTestCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static class StubProvider implements CommandMetadataProvider<RegisterTestCommand> {
+        public Class<RegisterTestCommand> commandType() {
+            return RegisterTestCommand.class;
+        }
+
+        public RegisterTestCommand newInstance() {
+            return new RegisterTestCommand();
+        }
+
+        public org.aesh.command.impl.internal.ProcessedCommand buildProcessedCommand(
+                RegisterTestCommand instance) {
+            return null;
+        }
+
+        public boolean isGroupCommand() {
+            return false;
+        }
+
+        public Class[] groupCommandClasses() {
+            return new Class[0];
+        }
+
+        public String commandName() {
+            return "register-test";
+        }
     }
 
     // --- Test command classes (no generated provider) ---

@@ -439,6 +439,23 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
             messager.printMessage(Diagnostic.Kind.ERROR,
                     "Failed to write ServiceLoader file: " + e.getMessage());
         }
+
+        // Also write META-INF/aesh/registry — a plain-text resource file that
+        // MetadataProviderRegistry reads via ClassLoader.getResources() without
+        // needing ServiceLoader. This enables native-image builds with
+        // -H:-UseServiceLoaderFeature (#540).
+        try {
+            javax.tools.FileObject registryFile = filer.createResource(
+                    javax.tools.StandardLocation.CLASS_OUTPUT, "",
+                    "META-INF/aesh/registry");
+            try (Writer writer = registryFile.openWriter()) {
+                writer.write(fullRegistryName);
+                writer.write("\n");
+            }
+        } catch (IOException e) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "Failed to write registry resource file: " + e.getMessage());
+        }
     }
 
     private void writeNativeImageConfigs() {
@@ -454,13 +471,15 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         // Always write resource-config.json (ServiceLoader descriptor must be included)
         writeResourceConfig(configDir);
 
-        // Only write reflect-config.json if there are private fields
-        if (!reflectConfigEntries.isEmpty()) {
-            writeReflectConfig(configDir);
-        }
+        // Always write reflect-config.json — the registry class must be registered
+        // for reflective instantiation so ServiceLoader works with -H:-UseServiceLoaderFeature (#540)
+        writeReflectConfig(configDir);
     }
 
     private void writeReflectConfig(String configDir) {
+        String pkg = registryPackage != null ? registryPackage : "";
+        String fullRegistryName = pkg.isEmpty() ? "_AeshMetadataRegistry" : pkg + "._AeshMetadataRegistry";
+
         try {
             javax.tools.FileObject file = filer.createResource(
                     javax.tools.StandardLocation.CLASS_OUTPUT, "",
@@ -468,6 +487,16 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
             try (Writer writer = file.openWriter()) {
                 writer.write("[\n");
                 int classIdx = 0;
+
+                // Register the generated _AeshMetadataRegistry for reflective
+                // instantiation so ServiceLoader works with -H:-UseServiceLoaderFeature (#540)
+                writer.write("  {\n");
+                writer.write("    \"name\": \"" + fullRegistryName + "\",\n");
+                writer.write("    \"methods\": [{\"name\": \"<init>\", \"parameterTypes\": []}]\n");
+                writer.write("  }");
+                classIdx++;
+
+                // Register private fields that need reflective write access
                 for (Map.Entry<String, Set<String>> entry : reflectConfigEntries.entrySet()) {
                     if (classIdx > 0)
                         writer.write(",\n");
@@ -502,7 +531,8 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
                 writer.write("{\n");
                 writer.write("  \"resources\": {\n");
                 writer.write("    \"includes\": [\n");
-                writer.write("      {\"pattern\": \"META-INF/services/org.aesh.command.metadata.MetadataRegistry\"}\n");
+                writer.write("      {\"pattern\": \"META-INF/services/org.aesh.command.metadata.MetadataRegistry\"},\n");
+                writer.write("      {\"pattern\": \"META-INF/aesh/registry\"}\n");
                 writer.write("    ]\n");
                 writer.write("  }\n");
                 writer.write("}\n");

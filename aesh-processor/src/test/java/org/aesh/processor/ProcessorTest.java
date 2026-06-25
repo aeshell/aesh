@@ -2124,16 +2124,23 @@ public class ProcessorTest {
     }
 
     @Test
-    public void testNoReflectConfigForPublicFields() throws Exception {
-        // ExclusiveCommand has all public fields — should NOT generate reflect-config.json
+    public void testReflectConfigForPublicFieldsContainsRegistryOnly() throws Exception {
+        // ExclusiveCommand has all public fields — reflect-config.json should still
+        // be generated but only contain the _AeshMetadataRegistry class (#540),
+        // not any command field entries
         CompilationResult result = compileWithProcessor(
                 new InMemorySource("test.ExclusiveCommand", EXCLUSIVE_WITH_SOURCE));
         assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
 
         Path reflectConfig = result.outputDir.resolve(
                 "META-INF/native-image/org.aesh/aesh-generated/reflect-config.json");
-        assertFalse("reflect-config.json should NOT exist when all fields are public",
+        assertTrue("reflect-config.json should exist (for registry class)",
                 Files.exists(reflectConfig));
+        String content = new String(Files.readAllBytes(reflectConfig));
+        assertTrue("Should contain _AeshMetadataRegistry",
+                content.contains("_AeshMetadataRegistry"));
+        assertFalse("Should NOT contain ExclusiveCommand field entries",
+                content.contains("ExclusiveCommand"));
     }
 
     @Test
@@ -2149,6 +2156,36 @@ public class ProcessorTest {
         String json = new String(Files.readAllBytes(resourceConfig), StandardCharsets.UTF_8);
         assertTrue("Should reference MetadataRegistry service file",
                 json.contains("org.aesh.command.metadata.MetadataRegistry"));
+    }
+
+    @Test
+    public void testRegistryResourceFileGenerated() throws Exception {
+        // META-INF/aesh/registry should be generated alongside the ServiceLoader file (#540)
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ExclusiveCommand", EXCLUSIVE_WITH_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Path registryFile = result.outputDir.resolve("META-INF/aesh/registry");
+        assertTrue("META-INF/aesh/registry should exist", Files.exists(registryFile));
+
+        String content = new String(Files.readAllBytes(registryFile), StandardCharsets.UTF_8).trim();
+        assertTrue("Should contain _AeshMetadataRegistry FQCN",
+                content.contains("_AeshMetadataRegistry"));
+        assertEquals("Should contain the test package registry",
+                "test._AeshMetadataRegistry", content);
+    }
+
+    @Test
+    public void testResourceConfigIncludesRegistryResource() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ExclusiveCommand", EXCLUSIVE_WITH_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Path resourceConfig = result.outputDir.resolve(
+                "META-INF/native-image/org.aesh/aesh-generated/resource-config.json");
+        String json = new String(Files.readAllBytes(resourceConfig), StandardCharsets.UTF_8);
+        assertTrue("Should reference registry resource file",
+                json.contains("META-INF/aesh/registry"));
     }
 
     @Test

@@ -17,7 +17,12 @@
  */
 package org.aesh.command.metadata;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.ServiceLoader;
 
@@ -95,6 +100,38 @@ public final class MetadataProviderRegistry {
     }
 
     /**
+     * Explicitly register a {@link MetadataRegistry} instance.
+     * <p>
+     * This is useful for:
+     * <ul>
+     * <li>Native images built with {@code -H:-UseServiceLoaderFeature}</li>
+     * <li>Frameworks (Quarkus, Spring) that manage component lifecycle</li>
+     * <li>Testing with mock registries</li>
+     * </ul>
+     * <p>
+     * Registered instances are consulted alongside (and before) registries
+     * discovered via {@link java.util.ServiceLoader}.
+     *
+     * @param registry the registry to register
+     * @since 3.16
+     */
+    public static void register(MetadataRegistry registry) {
+        if (registry == null)
+            return;
+        synchronized (MetadataProviderRegistry.class) {
+            // Ensure getRegistries() has loaded the ServiceLoader-based registries first,
+            // then add the manual registration alongside them
+            List<MetadataRegistry> current = getRegistries();
+            if (!current.contains(registry)) {
+                // Create a new list to avoid ConcurrentModificationException
+                List<MetadataRegistry> updated = new ArrayList<>(current);
+                updated.add(registry);
+                registries = updated;
+            }
+        }
+    }
+
+    /**
      * Look up a provider for the given command class.
      * <p>
      * On first call for a given class, queries all discovered
@@ -132,12 +169,47 @@ public final class MetadataProviderRegistry {
         return result;
     }
 
+    private static final String REGISTRY_RESOURCE = "META-INF/aesh/registry";
+
     private static List<MetadataRegistry> loadRegistries() {
         List<MetadataRegistry> list = new ArrayList<>();
-        ServiceLoader<MetadataRegistry> loader = ServiceLoader.load(MetadataRegistry.class);
-        for (MetadataRegistry registry : loader) {
-            list.add(registry);
+
+        // 1. Try resource-file discovery (works without ServiceLoader and
+        //    without -H:+UseServiceLoaderFeature in native-image, #540)
+        try {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            if (cl == null)
+                cl = MetadataProviderRegistry.class.getClassLoader();
+            Enumeration<URL> resources = cl.getResources(REGISTRY_RESOURCE);
+            while (resources.hasMoreElements()) {
+                try (BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(resources.nextElement().openStream()))) {
+                    String className;
+                    while ((className = reader.readLine()) != null) {
+                        className = className.trim();
+                        if (className.isEmpty() || className.startsWith("#"))
+                            continue;
+                        try {
+                            Class<?> cls = cl.loadClass(className);
+                            list.add((MetadataRegistry) cls.getDeclaredConstructor().newInstance());
+                        } catch (Exception ignored) {
+                            // Class not found or not instantiable — skip
+                        }
+                    }
+                } catch (IOException ignored) {
+                }
+            }
+        } catch (IOException ignored) {
         }
+
+        // 2. Fall back to ServiceLoader (backward compatible)
+        if (list.isEmpty()) {
+            ServiceLoader<MetadataRegistry> loader = ServiceLoader.load(MetadataRegistry.class);
+            for (MetadataRegistry registry : loader) {
+                list.add(registry);
+            }
+        }
+
         return list;
     }
 
