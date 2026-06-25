@@ -58,6 +58,13 @@ public class AeshOptionParser implements OptionParser {
                         //this might happen if we have an option at the "end" that doesn't accept values
                         return;
                     }
+                    // Defensive: if status is still Java null after doParse(),
+                    // neither ACTIVE nor NULL matched — nothing was processed
+                    // and the word was not consumed. Break to prevent infinite
+                    // loop rather than spinning on the same unconsumed word (#541).
+                    if (status == null) {
+                        break;
+                    }
                 }
                 //we have something like: --foo --bar eg, two options after another
                 else {
@@ -209,6 +216,7 @@ public class AeshOptionParser implements OptionParser {
 
     private void processList(ProcessedOption currOption, String rest) {
         if (rest.length() > 1 && rest.startsWith("=")) {
+            // Handle =value syntax: -R=-Xmx4G or --runtime-option=-Xmx4G
             if (rest.indexOf(currOption.getValueSeparator()) > -1) {
                 for (String value : rest.substring(1).split(Pattern.quote(String.valueOf(currOption.getValueSeparator())))) {
                     currOption.addValue(value.trim());
@@ -217,7 +225,19 @@ public class AeshOptionParser implements OptionParser {
                     currOption.setEndsWithSeparator(true);
             } else
                 currOption.addValue(rest.substring(1));
-            //commandLine.addOption(currOption);
+            status = Status.NULL;
+        } else if (rest.length() > 0 && !currOption.isLongNameUsed()) {
+            // Handle attached value without = for short options: -R-Xmx4G (#541)
+            // Matches the behavior of non-LIST options in processOption() lines 142-146
+            if (rest.indexOf(currOption.getValueSeparator()) > -1) {
+                for (String value : rest.split(Pattern.quote(String.valueOf(currOption.getValueSeparator())))) {
+                    currOption.addValue(value.trim());
+                }
+                if (rest.endsWith(String.valueOf(currOption.getValueSeparator())))
+                    currOption.setEndsWithSeparator(true);
+            } else {
+                currOption.addValue(rest);
+            }
             status = Status.NULL;
         }
     }
