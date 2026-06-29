@@ -25,7 +25,7 @@
    <parent>
        <groupId>org.aesh</groupId>
        <artifactId>aesh-all</artifactId>
-       <version>3.16.1</version>
+       <version>3.17-dev</version>
    </parent>
 
    <artifactId>aesh-bom</artifactId>
