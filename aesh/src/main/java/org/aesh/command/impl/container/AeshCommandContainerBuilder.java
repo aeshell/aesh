@@ -88,9 +88,22 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         AeshCommandLineParser<CI> parser = new AeshCommandLineParser<>(processedCommand);
         AeshCommandContainer<CI> container = new AeshCommandContainer<>(parser);
 
-        if (provider.isGroupCommand()) {
+        boolean isGroup = provider.isGroupCommand() || command instanceof GroupCommand;
+        if (isGroup) {
             // Set child resolver so lazy children use the same builder (#517)
             setChildResolverFromBuilder(parser);
+            // Add static subcommands from annotation groupCommands={...}
+            if (provider.isGroupCommand()) {
+                for (Class<? extends Command> groupClazz : provider.groupCommandClasses()) {
+                    String childName = getCommandName(groupClazz);
+                    if (childName != null) {
+                        addLazyChildWithAliases(container, childName, groupClazz);
+                    } else {
+                        container.addChild(create(groupClazz));
+                    }
+                }
+            }
+            // Add dynamic subcommands from GroupCommand.getCommands() (#542)
             if (command instanceof GroupCommand) {
                 List<Command<CI>> commands = ((GroupCommand<CI>) command).getCommands();
                 if (commands != null) {
@@ -104,15 +117,6 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         container.addChild(sub);
                     }
                 }
-            } else {
-                for (Class<? extends Command> groupClazz : provider.groupCommandClasses()) {
-                    String childName = getCommandName(groupClazz);
-                    if (childName != null) {
-                        addLazyChildWithAliases(container, childName, groupClazz);
-                    } else {
-                        container.addChild(create(groupClazz));
-                    }
-                }
             }
         }
 
@@ -123,7 +127,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         Class<Command<CI>> clazz = (Class<Command<CI>>) commandObject.getClass();
         CommandDefinition command = clazz.getAnnotation(CommandDefinition.class);
         if (command != null) {
-            boolean isGroup = command.groupCommands().length > 0;
+            boolean hasStaticGroup = command.groupCommands().length > 0;
+            boolean isGroup = hasStaticGroup || commandObject instanceof GroupCommand;
             ProcessedCommand<Command<CI>, CI> processedCommand = ProcessedCommandBuilder.<Command<CI>, CI> builder()
                     .name(command.name())
                     .activator(command.activator())
@@ -154,6 +159,19 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 setChildResolverFromBuilder(groupParser);
                 AeshCommandContainer<CI> groupContainer = new AeshCommandContainer<>(groupParser);
 
+                // Add static subcommands from annotation groupCommands={...}
+                if (hasStaticGroup) {
+                    for (Class<? extends Command> groupClazz : command.groupCommands()) {
+                        String childName = getCommandName(groupClazz);
+                        if (childName != null) {
+                            addLazyChildWithAliases(groupContainer, childName, groupClazz);
+                        } else {
+                            Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
+                            groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
+                        }
+                    }
+                }
+                // Add dynamic subcommands from GroupCommand.getCommands() (#542)
                 if (commandObject instanceof GroupCommand) {
                     List<Command<CI>> commands = ((GroupCommand<CI>) commandObject).getCommands();
                     if (commands != null) {
@@ -165,16 +183,6 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     if (parsedCommands != null) {
                         for (CommandContainer<CI> sub : parsedCommands) {
                             groupContainer.addChild(sub);
-                        }
-                    }
-                } else {
-                    for (Class<? extends Command> groupClazz : command.groupCommands()) {
-                        String childName = getCommandName(groupClazz);
-                        if (childName != null) {
-                            addLazyChildWithAliases(groupContainer, childName, groupClazz);
-                        } else {
-                            Command<CI> groupInstance = (Command<CI>) ReflectionUtil.newInstance(groupClazz);
-                            groupContainer.addChild(doGenerateCommandLineParser(groupInstance));
                         }
                     }
                 }

@@ -290,9 +290,9 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         }
         String fullMetadataName = packageName.isEmpty() ? metadataClassName : packageName + "." + metadataClassName;
 
-        // Check if @CommandDefinition has groupCommands via annotation mirror
-        // (direct access triggers MirroredTypesException at compile time)
-        boolean isGroup = hasGroupCommands(commandElement);
+        // A command is a group if it declares groupCommands={...} in the annotation
+        // OR if it implements the GroupCommand interface (#542)
+        boolean isGroup = hasGroupCommands(commandElement) || implementsGroupCommand(commandElement);
 
         List<VariableElement> fields = collectFields(commandElement);
 
@@ -331,6 +331,29 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
                         return !values.isEmpty();
                     }
                 }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if the given type element implements {@code org.aesh.command.GroupCommand},
+     * either directly or through its supertypes.
+     */
+    private boolean implementsGroupCommand(TypeElement element) {
+        String groupCommandName = "org.aesh.command.GroupCommand";
+        for (TypeMirror iface : element.getInterfaces()) {
+            // Check raw type name (strip generics)
+            String ifaceName = typeUtils.erasure(iface).toString();
+            if (ifaceName.equals(groupCommandName))
+                return true;
+        }
+        // Check superclass hierarchy
+        TypeMirror superclass = element.getSuperclass();
+        if (superclass.getKind() != javax.lang.model.type.TypeKind.NONE) {
+            Element superElement = typeUtils.asElement(superclass);
+            if (superElement instanceof TypeElement) {
+                return implementsGroupCommand((TypeElement) superElement);
             }
         }
         return false;

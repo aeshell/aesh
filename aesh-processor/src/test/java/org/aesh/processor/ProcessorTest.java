@@ -446,6 +446,132 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: GroupCommand interface detection (#542) ---
+
+    private static final String GROUP_COMMAND_INTERFACE_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "import java.util.Collections;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.GroupCommand;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"dynamic-group\", description = \"Dynamic group\")\n" +
+            "public class DynamicGroupCommand implements GroupCommand<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public List<Command<CommandInvocation>> getCommands() {\n" +
+            "        return Collections.emptyList();\n" +
+            "    }\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testGroupCommandInterfaceDetected() throws Exception {
+        // A command implementing GroupCommand (no groupCommands={} in annotation)
+        // should still be detected as a group command by the processor (#542)
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.DynamicGroupCommand", GROUP_COMMAND_INTERFACE_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> metadataClass = result.classLoader.loadClass("test.DynamicGroupCommand_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+
+        assertTrue("Should be detected as a group command via GroupCommand interface",
+                provider.isGroupCommand());
+        // groupCommandClasses() should be empty (no static subcommands in annotation)
+        assertEquals("No static group commands", 0, provider.groupCommandClasses().length);
+    }
+
+    private static final String COMBINED_GROUP_INTERFACE_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "import java.util.Collections;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.GroupCommand;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"combined\", description = \"Combined group\",\n" +
+            "        groupCommands = {test.SubCommand1.class})\n" +
+            "public class CombinedGroupCommand implements GroupCommand<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public List<Command<CommandInvocation>> getCommands() {\n" +
+            "        return Collections.emptyList();\n" +
+            "    }\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testGroupCommandInterfaceWithStaticGroupCommands() throws Exception {
+        // Combined: GroupCommand interface AND groupCommands={} in annotation (#542)
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SubCommand1", SUB_COMMAND1_SOURCE),
+                new InMemorySource("test.CombinedGroupCommand", COMBINED_GROUP_INTERFACE_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> metadataClass = result.classLoader.loadClass("test.CombinedGroupCommand_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+
+        assertTrue("Should be a group command (both interface and annotation)",
+                provider.isGroupCommand());
+        assertEquals("Should have 1 static subcommand from annotation",
+                1, provider.groupCommandClasses().length);
+    }
+
+    private static final String INHERITED_GROUP_INTERFACE_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "import java.util.Collections;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.GroupCommand;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "public abstract class BaseGroupCommand implements GroupCommand<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public List<Command<CommandInvocation>> getCommands() {\n" +
+            "        return Collections.emptyList();\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String CONCRETE_GROUP_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"inherited\", description = \"Inherited group\")\n" +
+            "public class InheritedGroupCommand extends BaseGroupCommand {\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testGroupCommandInterfaceInherited() throws Exception {
+        // GroupCommand implemented via superclass, not directly (#542)
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.BaseGroupCommand", INHERITED_GROUP_INTERFACE_SOURCE),
+                new InMemorySource("test.InheritedGroupCommand", CONCRETE_GROUP_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> metadataClass = result.classLoader.loadClass("test.InheritedGroupCommand_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+
+        assertTrue("Should detect GroupCommand via superclass",
+                provider.isGroupCommand());
+    }
+
     // --- Test: @Mixin support ---
 
     private static final String LOGGING_MIXIN_SOURCE = "package test;\n" +
