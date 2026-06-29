@@ -231,12 +231,12 @@ public class AeshCommandPipelineTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             try {
                 java.io.InputStream stdin = commandInvocation.getStdin();
-                if (stdin != null && stdin.available() > 0) {
+                if (stdin != null) {
                     counter++;
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
+                    assertEquals("hello", reader.readLine());
+                    assertEquals("aesh", reader.readLine());
                 }
-                BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
-                assertEquals("hello", reader.readLine());
-                assertEquals("aesh", reader.readLine());
             } catch (IOException ex) {
                 throw new CommandException(ex);
             }
