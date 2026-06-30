@@ -91,7 +91,10 @@ public class Process extends Thread implements Consumer<Signal> {
             execution.setResult(CommandResult.FAILURE);
             conn.write(e.getMessage() + Config.getLineSeparator());
         } catch (InterruptedException e) {
-            // Ctrl-C interrupt
+            // Ctrl-C interrupt — clear the interrupt flag so the finally block
+            // (which re-enters readline) doesn't see a stale interrupt when
+            // forking processes like 'stty size' for terminal dimensions.
+            Thread.interrupted();
             execution.setResult(CommandResult.INTERRUPTED);
         } catch (Exception e) {
             execution.setResult(CommandResult.FAILURE);
