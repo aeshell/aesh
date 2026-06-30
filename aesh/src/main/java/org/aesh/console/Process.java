@@ -69,7 +69,7 @@ public class Process extends Thread implements Consumer<Signal> {
             case INT:
                 if (running) {
                     // Ctrl-C interrupt : we use Thread interrupts to signal the command to stop
-                    LOGGER.info("got interrupted in Task");
+                    LOGGER.fine("got interrupted in Task");
                     interrupt();
                 }
         }
