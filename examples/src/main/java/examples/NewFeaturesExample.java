@@ -158,14 +158,14 @@ public class NewFeaturesExample {
 
         @Option(shortName = 't', description = "Build target (e.g., debug, release, lib)",
                 defaultValue = "debug")
-        private String target;
+        String target;
 
         @Option(description = "Clean before building")
-        private boolean clean;
+        boolean clean;
 
         @Option(shortName = 'j', description = "Number of parallel jobs",
                 defaultValue = "4")
-        private int jobs;
+        int jobs;
 
         @Override
         public CommandResult execute(CommandInvocation ci) throws CommandException, InterruptedException {
@@ -188,13 +188,13 @@ public class NewFeaturesExample {
         @Option(shortName = 'e', description = "Target environment",
                 defaultValue = "dev",
                 allowedValues = {"dev", "staging", "prod"})
-        private String environment;
+        String environment;
 
         @Option(description = "Skip confirmation prompt")
-        private boolean force;
+        boolean force;
 
         @Argument(description = "Artifact to deploy (default: current build)")
-        private String artifact;
+        String artifact;
 
         @Override
         public CommandResult execute(CommandInvocation ci) throws CommandException, InterruptedException {
@@ -216,11 +216,11 @@ public class NewFeaturesExample {
 
         @Option(shortName = 'm', description = "Notification message",
                 defaultValue = "This is a notification!")
-        private String message;
+        String message;
 
         @Option(shortName = 'r', description = "Repeat N times (one per second)",
                 defaultValue = "1")
-        private int repeat;
+        int repeat;
 
         @Override
         public CommandResult execute(CommandInvocation ci) throws CommandException, InterruptedException {
@@ -258,10 +258,10 @@ public class NewFeaturesExample {
         private static volatile StatusLine currentStatus;
 
         @Option(shortName = 'm', description = "Status message to display")
-        private String message;
+        String message;
 
         @Option(description = "Clear the status line")
-        private boolean clear;
+        boolean clear;
 
         @Override
         public CommandResult execute(CommandInvocation ci) throws CommandException {
@@ -302,8 +302,8 @@ public class NewFeaturesExample {
             description = "Sleep for a number of seconds (useful for testing duration display)")
     public static class SleepCommand implements Command<CommandInvocation> {
 
-        @Option(shortName = 's', description = "Seconds to sleep", defaultValue = "2")
-        private int seconds;
+        @Argument(description = "Seconds to sleep", defaultValue = "2")
+        int seconds;
 
         @Override
         public CommandResult execute(CommandInvocation ci) throws CommandException, InterruptedException {
@@ -332,10 +332,10 @@ public class NewFeaturesExample {
     public static class AppBuildCommand implements Command<CommandInvocation> {
 
         @Option(shortName = 't', description = "Build target", defaultValue = "debug")
-        private String target;
+        String target;
 
         @Option(description = "Enable optimizations")
-        private boolean optimize;
+        boolean optimize;
 
         @Override
         public CommandResult execute(CommandInvocation ci) throws CommandException, InterruptedException {
@@ -354,10 +354,10 @@ public class NewFeaturesExample {
         @Option(shortName = 'e', description = "Target environment",
                 defaultValue = "dev",
                 allowedValues = {"dev", "staging", "prod"})
-        private String env;
+        String env;
 
         @Option(description = "Deploy version tag")
-        private String version;
+        String version;
 
         @Override
         public CommandResult execute(CommandInvocation ci) throws CommandException, InterruptedException {

@@ -1,0 +1,227 @@
+{
+  "reflection": [
+    {
+      "type": "examples.NewFeaturesExample$AppBuildCommand",
+      "fields": [
+        {
+          "name": "optimize"
+        },
+        {
+          "name": "target"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "examples.NewFeaturesExample$AppDeployCommand",
+      "fields": [
+        {
+          "name": "env"
+        },
+        {
+          "name": "version"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "examples.NewFeaturesExample$AppGroupCommand",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "examples.NewFeaturesExample$BuildCommand",
+      "fields": [
+        {
+          "name": "clean"
+        },
+        {
+          "name": "jobs"
+        },
+        {
+          "name": "target"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "examples.NewFeaturesExample$DeployCommand",
+      "fields": [
+        {
+          "name": "artifact"
+        },
+        {
+          "name": "environment"
+        },
+        {
+          "name": "force"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "examples.NewFeaturesExample$NotifyCommand",
+      "fields": [
+        {
+          "name": "message"
+        },
+        {
+          "name": "repeat"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "examples.NewFeaturesExample$SleepCommand",
+      "fields": [
+        {
+          "name": "seconds"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "examples.NewFeaturesExample$StatusCommand",
+      "fields": [
+        {
+          "name": "clear"
+        },
+        {
+          "name": "message"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "java.lang.Object"
+    },
+    {
+      "type": "org.aesh.AeshConsoleRunner$ExitCommand",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.aesh.command.alias.AliasCommand",
+      "fields": [
+        {
+          "name": "arguments"
+        },
+        {
+          "name": "print"
+        }
+      ]
+    },
+    {
+      "type": "org.aesh.command.alias.UnAliasCommand",
+      "fields": [
+        {
+          "name": "arguments"
+        }
+      ]
+    },
+    {
+      "type": "org.aesh.command.export.ExportCommand",
+      "fields": [
+        {
+          "name": "arguments"
+        }
+      ]
+    },
+    {
+      "type": "org.aesh.command.internal.InternalCommandMetadataRegistry",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.aesh.terminal.tty.impl.FfmPty"
+    },
+    {
+      "type": "org.aesh.terminal.tty.provider.CygwinTerminalProvider"
+    },
+    {
+      "type": "org.aesh.terminal.tty.provider.ExecPtyTerminalProvider"
+    },
+    {
+      "type": "org.aesh.terminal.tty.provider.FfmTerminalProvider"
+    },
+    {
+      "type": "org.aesh.terminal.tty.provider.WinSysTerminalProvider"
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData"
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData_en"
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData_en_US"
+    },
+    {
+      "type": "sun.util.resources.cldr.CalendarData"
+    }
+  ],
+  "resources": [
+    {
+      "glob": "META-INF/aesh/registry"
+    },
+    {
+      "glob": "META-INF/services/java.time.zone.ZoneRulesProvider"
+    },
+    {
+      "glob": "META-INF/services/org.aesh.terminal.provider.TerminalProvider"
+    },
+    {
+      "glob": "org/aesh/terminal/utils/ansi_caps.src"
+    },
+    {
+      "glob": "org/aesh/terminal/utils/screen-256color_caps.src"
+    }
+  ]
+}
