@@ -713,13 +713,51 @@ public class AeshRuntimeRunner {
         return true;
     }
 
-    static ShellType detectShell() {
-        return detectShell(System.getenv()::get);
+    /**
+     * Detect the current shell type from environment variables.
+     * <p>
+     * Checks {@code PSModulePath} first (PowerShell sets this reliably on all
+     * platforms), then {@code FISH_VERSION}, {@code ZSH_VERSION},
+     * {@code BASH_VERSION}, and falls back to {@code $SHELL}.
+     *
+     * @return the detected shell type, or null if unknown
+     * @since 3.16
+     */
+    public static ShellType detectShell() {
+        // PSModulePath is set by PowerShell on all platforms — check it first.
+        // On macOS/Linux, CLI tools are typically launched via a bash wrapper
+        // script which sets BASH_VERSION in the environment. If we checked
+        // BASH_VERSION first, we'd misdetect PowerShell as bash (#537).
+        if (System.getenv("PSModulePath") != null)
+            return ShellType.PWSH;
+
+        // Check shell-specific environment variables
+        if (System.getenv("FISH_VERSION") != null)
+            return ShellType.FISH;
+        if (System.getenv("ZSH_VERSION") != null)
+            return ShellType.ZSH;
+        if (System.getenv("BASH_VERSION") != null)
+            return ShellType.BASH;
+
+        // Fall back to $SHELL
+        String shell = System.getenv("SHELL");
+        if (shell == null || shell.isEmpty())
+            return null;
+        if (shell.contains("fish"))
+            return ShellType.FISH;
+        if (shell.contains("zsh"))
+            return ShellType.ZSH;
+        if (shell.contains("bash"))
+            return ShellType.BASH;
+        if (shell.contains("pwsh") || shell.contains("powershell"))
+            return ShellType.PWSH;
+        return null;
     }
 
     /**
-     * Detect the current shell type from environment variables.
-     * Accepts an env lookup function for testability.
+     * Detect the current shell type using a custom environment lookup.
+     * Package-private — for testing only. Avoids lambda/method-reference
+     * allocation on the production path.
      *
      * @param envLookup function that returns the value of an environment variable, or null
      * @return the detected shell type, or null if unknown
