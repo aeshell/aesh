@@ -27,8 +27,16 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.impl.internal.FieldAccessor;
+import org.aesh.command.impl.internal.OptionType;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.converter.CLConverterManager;
 import org.aesh.readline.alias.AliasManager;
 
 /**
@@ -77,6 +85,60 @@ public class UnAliasCommand implements Command<CommandInvocation> {
                     completerInvocation
                             .addAllCompleterValues(manager.findAllMatchingNames(completerInvocation.getGivenCompleteValue()));
             }
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static final class Metadata implements CommandMetadataProvider<UnAliasCommand> {
+        private static final FieldAccessor ARGS_ACCESSOR = new FieldAccessor() {
+            public void set(Object inst, Object val) {
+                ((UnAliasCommand) inst).arguments = (List<String>) val;
+            }
+
+            public Object get(Object inst) {
+                return ((UnAliasCommand) inst).arguments;
+            }
+        };
+
+        public Class<UnAliasCommand> commandType() {
+            return UnAliasCommand.class;
+        }
+
+        public UnAliasCommand newInstance() {
+            throw new UnsupportedOperationException("UnAliasCommand requires AliasManager");
+        }
+
+        public boolean isGroupCommand() {
+            return false;
+        }
+
+        public Class<? extends Command>[] groupCommandClasses() {
+            return new Class[0];
+        }
+
+        public String commandName() {
+            return "unalias";
+        }
+
+        public ProcessedCommand buildProcessedCommand(UnAliasCommand instance) throws CommandLineParserException {
+            ProcessedOption argsOpt = ProcessedOption.createDirect(
+                    null, "arguments", "",
+                    String.class, "arguments", OptionType.ARGUMENTS,
+                    CLConverterManager.getInstance().getConverter(String.class),
+                    ARGS_ACCESSOR);
+            argsOpt.setFieldResetter(inst -> ((UnAliasCommand) inst).arguments = null);
+            argsOpt.setCompleter(new AliasCompletor());
+
+            ProcessedCommand pc = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())
+                    .name("unalias")
+                    .description("remove an alias")
+                    .command(instance)
+                    .generateHelp(false)
+                    .disableParsing(false)
+                    .create();
+
+            pc.setArguments(argsOpt);
+            return pc;
         }
     }
 }

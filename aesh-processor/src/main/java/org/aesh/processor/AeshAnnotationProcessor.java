@@ -221,6 +221,17 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     }
 
     private void validateField(VariableElement field) {
+        if (field.getModifiers().contains(Modifier.PRIVATE)
+                && (hasAeshAnnotation(field)
+                        || field.getAnnotation(org.aesh.command.option.Mixin.class) != null
+                        || field.getAnnotation(org.aesh.command.option.ParentCommand.class) != null)) {
+            messager.printMessage(Diagnostic.Kind.WARNING,
+                    "Private field '" + field.getSimpleName()
+                            + "' requires reflective access at runtime. "
+                            + "Consider using package-private visibility for reflection-free "
+                            + "access from the generated metadata class.",
+                    field);
+        }
         if (field.getAnnotation(org.aesh.command.option.OptionList.class) != null) {
             TypeMirror collectionType = elementUtils
                     .getTypeElement(Collection.class.getCanonicalName()).asType();

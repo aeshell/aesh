@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -128,6 +129,7 @@ public class ProcessedOption {
     protected FieldAccessor fieldAccessor;
     protected Object initialValue;
     protected boolean initialValueCaptured;
+    protected Supplier<Object> initialValueFactory;
     private String mixinFieldName;
     private Field cachedField;
     private Class<?> cachedFieldClass;
@@ -299,6 +301,10 @@ public class ProcessedOption {
 
     public void setOptionalValue(boolean optionalValue) {
         this.optionalValue = optionalValue;
+    }
+
+    public void setInitialValueFactory(Supplier<Object> factory) {
+        this.initialValueFactory = factory;
     }
 
     /**

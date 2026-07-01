@@ -75,17 +75,21 @@ public final class GeneratedProcessedOption extends ProcessedOption {
     @Override
     protected void restoreInitialValue(Object instance) {
         Object val = initialValue;
-        if (initialValue instanceof Collection) {
-            try {
-                val = initialValue.getClass().getDeclaredConstructor().newInstance();
-            } catch (ReflectiveOperationException e) {
-                val = new ArrayList<>();
-            }
-        } else if (initialValue instanceof Map) {
-            try {
-                val = initialValue.getClass().getDeclaredConstructor().newInstance();
-            } catch (ReflectiveOperationException e) {
-                val = new HashMap<>();
+        if (initialValue instanceof Collection || initialValue instanceof Map) {
+            if (initialValueFactory != null) {
+                val = initialValueFactory.get();
+            } else if (initialValue instanceof Collection) {
+                try {
+                    val = initialValue.getClass().getDeclaredConstructor().newInstance();
+                } catch (ReflectiveOperationException | LinkageError e) {
+                    val = new ArrayList<>();
+                }
+            } else {
+                try {
+                    val = initialValue.getClass().getDeclaredConstructor().newInstance();
+                } catch (ReflectiveOperationException | LinkageError e) {
+                    val = new HashMap<>();
+                }
             }
         }
         fieldAccessor.set(instance, val);

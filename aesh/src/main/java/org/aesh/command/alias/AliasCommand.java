@@ -19,6 +19,7 @@
  */
 package org.aesh.command.alias;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,9 +29,17 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
+import org.aesh.command.impl.internal.FieldAccessor;
+import org.aesh.command.impl.internal.OptionType;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.converter.CLConverterManager;
 import org.aesh.readline.alias.AliasManager;
 
 /**
@@ -84,6 +93,82 @@ public class AliasCommand implements Command<CommandInvocation> {
                     completerInvocation
                             .addAllCompleterValues(manager.findAllMatchingNames(completerInvocation.getGivenCompleteValue()));
             }
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static final class Metadata implements CommandMetadataProvider<AliasCommand> {
+        private static final FieldAccessor PRINT_ACCESSOR = new FieldAccessor() {
+            public void set(Object inst, Object val) {
+                ((AliasCommand) inst).print = val != null && (Boolean) val;
+            }
+
+            public Object get(Object inst) {
+                return ((AliasCommand) inst).print;
+            }
+        };
+        private static final FieldAccessor ARGS_ACCESSOR = new FieldAccessor() {
+            public void set(Object inst, Object val) {
+                ((AliasCommand) inst).arguments = (List<String>) val;
+            }
+
+            public Object get(Object inst) {
+                return ((AliasCommand) inst).arguments;
+            }
+        };
+
+        public Class<AliasCommand> commandType() {
+            return AliasCommand.class;
+        }
+
+        public AliasCommand newInstance() {
+            throw new UnsupportedOperationException("AliasCommand requires AliasManager");
+        }
+
+        public boolean isGroupCommand() {
+            return false;
+        }
+
+        public Class<? extends Command>[] groupCommandClasses() {
+            return new Class[0];
+        }
+
+        public String commandName() {
+            return "alias";
+        }
+
+        public String[] commandAliases() {
+            return new String[] { "unalias" };
+        }
+
+        public ProcessedCommand buildProcessedCommand(AliasCommand instance) throws CommandLineParserException {
+            ProcessedOption printOpt = ProcessedOption.createDirect(
+                    "p", "print", "display help information",
+                    Boolean.class, "print", OptionType.BOOLEAN,
+                    CLConverterManager.getInstance().getConverter(Boolean.class),
+                    PRINT_ACCESSOR);
+            printOpt.setFieldResetter(inst -> ((AliasCommand) inst).print = false);
+
+            ProcessedOption argsOpt = ProcessedOption.createDirect(
+                    null, "arguments", "",
+                    String.class, "arguments", OptionType.ARGUMENTS,
+                    CLConverterManager.getInstance().getConverter(String.class),
+                    ARGS_ACCESSOR);
+            argsOpt.setFieldResetter(inst -> ((AliasCommand) inst).arguments = null);
+            argsOpt.setCompleter(new AliasCompletor());
+
+            ProcessedCommand pc = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())
+                    .name("alias")
+                    .aliases(Arrays.asList("unalias"))
+                    .description("")
+                    .command(instance)
+                    .generateHelp(false)
+                    .disableParsing(false)
+                    .create();
+
+            pc.addOption(printOpt);
+            pc.setArguments(argsOpt);
+            return pc;
         }
     }
 }
