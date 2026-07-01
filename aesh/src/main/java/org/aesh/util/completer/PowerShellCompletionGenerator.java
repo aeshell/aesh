@@ -103,8 +103,10 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
         out.append("    $candidates = @()").append(NL);
         out.append(NL);
 
-        // Subcommands at position 1
-        out.append("    if ($elems.Count -le 1 -or ($elems.Count -eq 2 -and -not $commandAst.ToString().EndsWith(' '))) {")
+        // Subcommands at position 1 — use cursorPosition to detect trailing space
+        // because $commandAst.ToString() strips trailing whitespace (#544)
+        out.append(
+                "    if ($elems.Count -le 1 -or ($elems.Count -eq 2 -and $cursorPosition -le $commandAst.ToString().Length)) {")
                 .append(NL);
 
         // Also offer root-level options
@@ -215,8 +217,10 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
                 "        $cmdArgs += $elems[$i].ToString()" + NL +
                 "    }" + NL +
                 NL +
-                "    # Detect trailing space for subcommand context" + NL +
-                "    if ($commandAst.ToString().EndsWith(' ')) {" + NL +
+                "    # Detect trailing space: cursor is past the end of the AST text." + NL +
+                "    # $commandAst.ToString() strips trailing whitespace, so EndsWith(' ')" + NL +
+                "    # does not work reliably (#544). Use cursorPosition instead." + NL +
+                "    if ($cursorPosition -gt $commandAst.ToString().Length) {" + NL +
                 "        $cmdArgs += ''" + NL +
                 "    }" + NL +
                 NL +

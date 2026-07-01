@@ -587,7 +587,8 @@ public class ShellCompletionGeneratorTest {
     public void testPwshDynamicTrailingSpace() {
         String out = generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli");
 
-        assertTrue("Should detect trailing space", out.contains("EndsWith(' ')"));
+        assertTrue("Should detect trailing space via cursorPosition",
+                out.contains("$cursorPosition -gt $commandAst.ToString().Length"));
         assertTrue("Should append empty token for trailing space", out.contains("$cmdArgs += ''"));
     }
 
@@ -649,5 +650,30 @@ public class ShellCompletionGeneratorTest {
 
         // Should use \n not \r\n regardless of platform
         assertFalse("Should not contain \\r\\n line endings", out.contains("\r\n"));
+    }
+
+    @Test
+    public void testPwshDynamicUseCursorPositionNotEndsWith() {
+        // #544: $commandAst.ToString() strips trailing whitespace, so
+        // EndsWith(' ') doesn't detect trailing spaces reliably.
+        // Must use $cursorPosition instead.
+        String out = generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli");
+
+        // The if-condition should use cursorPosition, not EndsWith
+        assertFalse("Should NOT use EndsWith(' ') as an if-condition",
+                out.contains("if ($commandAst.ToString().EndsWith(' '))"));
+        assertTrue("Should use cursorPosition for trailing space detection",
+                out.contains("$cursorPosition -gt $commandAst.ToString().Length"));
+    }
+
+    @Test
+    public void testPwshStaticGroupUseCursorPositionNotEndsWith() {
+        // #544: static group completion should also use cursorPosition
+        String out = generate(ShellType.PWSH, GroupCmd.class, "myapp");
+
+        assertFalse("Should NOT use EndsWith(' ') in static group completion",
+                out.contains("EndsWith(' ')"));
+        assertTrue("Should use cursorPosition in static group completion",
+                out.contains("$cursorPosition"));
     }
 }
