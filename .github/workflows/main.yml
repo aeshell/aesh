@@ -41,8 +41,11 @@ jobs:
         run: mvn package -Pexamples -pl examples -DskipTests
       - name: Build native image
         run: |
+          # Use the shaded fat jar (exclude -javadoc, -sources, -tests JARs)
+          JAR=$(ls examples/target/aesh-examples-*.jar | grep -v javadoc | grep -v sources | grep -v tests | head -1)
+          echo "Using JAR: $JAR"
           native-image \
-            -cp examples/target/aesh-examples-*.jar \
+            -cp "$JAR" \
             examples.NewFeaturesExample \
             -o /tmp/aesh-native-test \
             --no-fallback -march=compatibility
