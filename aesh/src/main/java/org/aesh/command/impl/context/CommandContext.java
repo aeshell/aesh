@@ -451,18 +451,15 @@ public class CommandContext {
         }
 
         private void cacheFieldValues() {
-            // Cache all option and argument values for quick access
             ProcessedCommand<?, ?> pc = parser.getProcessedCommand();
 
             for (ProcessedOption opt : pc.getOptions()) {
-                Object value = getFieldValueByReflection(opt.getFieldName());
+                Object value = getOptionValue(opt);
                 if (value != null) {
                     cachedValues.put(opt.getFieldName(), value);
-                    // Also cache by option name for convenience
                     if (opt.name() != null && !opt.name().isEmpty()) {
                         cachedValues.put(opt.name(), value);
                     }
-                    // Track inherited options separately
                     if (opt.isInherited()) {
                         inheritedValues.put(opt.getFieldName(), value);
                         inheritedOptions.put(opt.getFieldName(), opt);
@@ -473,13 +470,11 @@ public class CommandContext {
                 }
             }
 
-            // Cache singular arguments
             for (ProcessedOption arg : pc.getArgumentOptions()) {
-                Object value = getFieldValueByReflection(arg.getFieldName());
+                Object value = getOptionValue(arg);
                 if (value != null) {
                     cachedValues.put(arg.getFieldName(), value);
                     cachedValues.put("_argument", value);
-                    // Track inherited argument
                     if (arg.isInherited()) {
                         inheritedValues.put(arg.getFieldName(), value);
                         inheritedOptions.put(arg.getFieldName(), arg);
@@ -487,9 +482,8 @@ public class CommandContext {
                 }
             }
 
-            // Cache arguments (list)
             if (pc.getArguments() != null) {
-                Object value = getFieldValueByReflection(pc.getArguments().getFieldName());
+                Object value = getOptionValue(pc.getArguments());
                 if (value != null) {
                     cachedValues.put(pc.getArguments().getFieldName(), value);
                     cachedValues.put("_arguments", value);
@@ -497,15 +491,18 @@ public class CommandContext {
             }
         }
 
-        private Object getFieldValueByReflection(String fieldName) {
+        private Object getOptionValue(ProcessedOption opt) {
+            if (opt.getFieldAccessor() != null) {
+                return opt.getFieldAccessor().get(command);
+            }
             try {
-                Field field = findField(command.getClass(), fieldName);
+                Field field = findField(command.getClass(), opt.getFieldName());
                 if (field != null) {
                     field.setAccessible(true);
                     return field.get(command);
                 }
             } catch (IllegalAccessException e) {
-                // Ignore, return null
+                // Ignore
             }
             return null;
         }
@@ -541,21 +538,40 @@ public class CommandContext {
             return command;
         }
 
-        /**
-         * Restore cached values back to the command instance.
-         * This is needed because parsing may reset the command's fields.
-         */
         private void restoreCachedValues() {
-            for (Map.Entry<String, Object> entry : cachedValues.entrySet()) {
-                try {
-                    Field field = findField(command.getClass(), entry.getKey());
-                    if (field != null) {
-                        field.setAccessible(true);
-                        field.set(command, entry.getValue());
-                    }
-                } catch (IllegalAccessException e) {
-                    // Ignore, continue with other fields
+            ProcessedCommand<?, ?> pc = parser.getProcessedCommand();
+            restoreOption(pc.getOptions());
+            restoreOption(pc.getArgumentOptions());
+            if (pc.getArguments() != null) {
+                Object value = cachedValues.get(pc.getArguments().getFieldName());
+                if (value != null) {
+                    setOptionValue(pc.getArguments(), value);
                 }
+            }
+        }
+
+        private void restoreOption(List<ProcessedOption> options) {
+            for (ProcessedOption opt : options) {
+                Object value = cachedValues.get(opt.getFieldName());
+                if (value != null) {
+                    setOptionValue(opt, value);
+                }
+            }
+        }
+
+        private void setOptionValue(ProcessedOption opt, Object value) {
+            if (opt.getFieldAccessor() != null) {
+                opt.getFieldAccessor().set(command, value);
+                return;
+            }
+            try {
+                Field field = findField(command.getClass(), opt.getFieldName());
+                if (field != null) {
+                    field.setAccessible(true);
+                    field.set(command, value);
+                }
+            } catch (IllegalAccessException e) {
+                // Ignore
             }
         }
 

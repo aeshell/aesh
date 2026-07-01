@@ -25,8 +25,16 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.impl.internal.FieldAccessor;
+import org.aesh.command.impl.internal.OptionType;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshCommandInvocation;
+import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.converter.CLConverterManager;
 
 /**
  * @author Aesh team
@@ -57,4 +65,56 @@ public class ExportCommand implements Command<AeshCommandInvocation> {
         return CommandResult.SUCCESS;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static final class Metadata implements CommandMetadataProvider<ExportCommand> {
+        private static final FieldAccessor ARGS_ACCESSOR = new FieldAccessor() {
+            public void set(Object inst, Object val) {
+                ((ExportCommand) inst).arguments = (List<String>) val;
+            }
+
+            public Object get(Object inst) {
+                return ((ExportCommand) inst).arguments;
+            }
+        };
+
+        public Class<ExportCommand> commandType() {
+            return ExportCommand.class;
+        }
+
+        public ExportCommand newInstance() {
+            throw new UnsupportedOperationException("ExportCommand requires ExportManager");
+        }
+
+        public boolean isGroupCommand() {
+            return false;
+        }
+
+        public Class<? extends Command>[] groupCommandClasses() {
+            return new Class[0];
+        }
+
+        public String commandName() {
+            return "export";
+        }
+
+        public ProcessedCommand buildProcessedCommand(ExportCommand instance) throws CommandLineParserException {
+            ProcessedOption argsOpt = ProcessedOption.createDirect(
+                    null, "arguments", "",
+                    String.class, "arguments", OptionType.ARGUMENTS,
+                    CLConverterManager.getInstance().getConverter(String.class),
+                    ARGS_ACCESSOR);
+            argsOpt.setFieldResetter(inst -> ((ExportCommand) inst).arguments = null);
+
+            ProcessedCommand pc = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())
+                    .name("export")
+                    .description("")
+                    .command(instance)
+                    .generateHelp(false)
+                    .disableParsing(false)
+                    .create();
+
+            pc.setArguments(argsOpt);
+            return pc;
+        }
+    }
 }

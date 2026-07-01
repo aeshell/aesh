@@ -586,6 +586,7 @@ final class CodeGenerator {
         sb.append(", new Accessor(").append(accIdx).append("));\n");
         sb.append("            ").append(var).append(".setValueSeparator(").append(charLiteral(ol.valueSeparator()))
                 .append(");\n");
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (ol.required())
@@ -647,6 +648,7 @@ final class CodeGenerator {
         emitConverterExpression(sb, field, "converter", elementUtils, valueType);
         sb.append(", new Accessor(").append(accIdx).append("));\n");
         sb.append("            ").append(var).append(".setValueSeparator(',');\n");
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (og.required())
@@ -694,6 +696,7 @@ final class CodeGenerator {
         sb.append("                    ");
         emitConverterExpression(sb, field, "converter", elementUtils, elementType);
         sb.append(", new Accessor(").append(accIdx).append("));\n");
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (a.required())
@@ -809,6 +812,10 @@ final class CodeGenerator {
 
         // set method
         sb.append("        public void set(Object inst, Object val) {\n");
+        boolean setNeedsTry = hasPrivateFields(infos) || (parentInfo != null && parentInfo.isPrivate);
+        if (setNeedsTry) {
+            sb.append("          try {\n");
+        }
         sb.append("            switch (idx) {\n");
         for (FieldAccessorInfo info : infos) {
             sb.append("                case ").append(info.index).append(": ");
@@ -817,10 +824,10 @@ final class CodeGenerator {
                         .append(" = val != null && (Boolean) val;");
             } else if (info.mixinFieldName != null) {
                 if (info.isPrivate) {
-                    sb.append("try { Object m = ").append(fieldConstantName(info.mixinFieldName))
+                    sb.append("{ Object m = ").append(fieldConstantName(info.mixinFieldName))
                             .append(".get(inst); if (m != null) ")
                             .append(fieldConstantName(info.mixinFieldName, info.fieldName))
-                            .append(".set(m, val); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+                            .append(".set(m, val); }");
                 } else {
                     sb.append("if (((").append(info.commandSimpleName).append(") inst).")
                             .append(info.mixinFieldName).append(" != null) ((")
@@ -830,8 +837,7 @@ final class CodeGenerator {
                 }
             } else {
                 if (info.isPrivate) {
-                    sb.append("try { ").append(fieldConstantName(info.fieldName))
-                            .append(".set(inst, val); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+                    sb.append(fieldConstantName(info.fieldName)).append(".set(inst, val);");
                 } else {
                     sb.append("((").append(info.commandSimpleName).append(") inst).")
                             .append(info.fieldName).append(" = (").append(info.fieldType).append(") val;");
@@ -840,10 +846,17 @@ final class CodeGenerator {
             sb.append(" break;\n");
         }
         sb.append("            }\n");
+        if (setNeedsTry) {
+            sb.append("          } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
+        }
         sb.append("        }\n\n");
 
         // get method
         sb.append("        public Object get(Object inst) {\n");
+        boolean getNeedsTry = hasPrivateFields(infos);
+        if (getNeedsTry) {
+            sb.append("          try {\n");
+        }
         sb.append("            switch (idx) {\n");
         for (FieldAccessorInfo info : infos) {
             sb.append("                case ").append(info.index).append(": ");
@@ -851,10 +864,10 @@ final class CodeGenerator {
                 sb.append("return this.").append(info.fieldName).append(";");
             } else if (info.mixinFieldName != null) {
                 if (info.isPrivate) {
-                    sb.append("try { Object m = ").append(fieldConstantName(info.mixinFieldName))
+                    sb.append("{ Object m = ").append(fieldConstantName(info.mixinFieldName))
                             .append(".get(inst); return m != null ? ")
                             .append(fieldConstantName(info.mixinFieldName, info.fieldName))
-                            .append(".get(m) : null; } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+                            .append(".get(m) : null; }");
                 } else {
                     sb.append("return ((").append(info.commandSimpleName).append(") inst).")
                             .append(info.mixinFieldName).append(" != null ? ((")
@@ -863,8 +876,7 @@ final class CodeGenerator {
                 }
             } else {
                 if (info.isPrivate) {
-                    sb.append("try { return ").append(fieldConstantName(info.fieldName))
-                            .append(".get(inst); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+                    sb.append("return ").append(fieldConstantName(info.fieldName)).append(".get(inst);");
                 } else {
                     sb.append("return ((").append(info.commandSimpleName).append(") inst).")
                             .append(info.fieldName).append(";");
@@ -874,6 +886,9 @@ final class CodeGenerator {
         }
         sb.append("                default: return null;\n");
         sb.append("            }\n");
+        if (getNeedsTry) {
+            sb.append("          } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
+        }
         sb.append("        }\n\n");
 
         // accept method (BiConsumer for parent command injection)
@@ -882,8 +897,8 @@ final class CodeGenerator {
         if (parentInfo != null) {
             if (parentInfo.isPrivate) {
                 sb.append("            try { ").append(fieldConstantName(parentInfo.fieldName))
-                        .append(".set(cmd, parent); }\n");
-                sb.append("            catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
+                        .append(".set(cmd, parent);")
+                        .append(" } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
             } else {
                 sb.append("            ((").append(commandSimpleName).append(") cmd).").append(parentInfo.fieldName)
                         .append(" = (").append(parentInfo.fieldType).append(") parent;\n");
@@ -1020,6 +1035,14 @@ final class CodeGenerator {
         // the Accessor's accept() is a no-op, which prevents the reflection
         // fallback in Executions.injectParentCommand() from scanning getDeclaredFields()
         sb.append("        processedCommand.setParentCommandInjector(Accessor.PARENT_INJECTOR);\n\n");
+    }
+
+    private static boolean hasPrivateFields(List<FieldAccessorInfo> infos) {
+        for (FieldAccessorInfo info : infos) {
+            if (info.isPrivate && !info.synthetic)
+                return true;
+        }
+        return false;
     }
 
     private static boolean isPrivateField(VariableElement field) {
@@ -1332,6 +1355,50 @@ final class CodeGenerator {
             }
         }
         return new String[0];
+    }
+
+    /**
+     * Emit a setInitialValueFactory() call that creates an empty collection/map
+     * of the declared field type, avoiding reflection at runtime.
+     */
+    private static void emitInitialValueFactory(StringBuilder sb, String var,
+            TypeMirror fieldType, Types typeUtils) {
+        TypeMirror effectiveType = fieldType;
+        if (isOptionalType(effectiveType))
+            effectiveType = unwrapOptionalTypeMirror(effectiveType);
+        String erasedName = typeUtils.erasure(effectiveType).toString();
+        String factoryExpr = collectionFactoryExpression(erasedName);
+        if (factoryExpr != null) {
+            sb.append("            ").append(var)
+                    .append(".setInitialValueFactory(").append(factoryExpr).append(");\n");
+        }
+    }
+
+    private static String collectionFactoryExpression(String erasedTypeName) {
+        switch (erasedTypeName) {
+            case "java.util.ArrayList":
+            case "java.util.List":
+            case "java.util.Collection":
+                return "java.util.ArrayList::new";
+            case "java.util.LinkedList":
+                return "java.util.LinkedList::new";
+            case "java.util.HashSet":
+            case "java.util.Set":
+                return "java.util.HashSet::new";
+            case "java.util.LinkedHashSet":
+                return "java.util.LinkedHashSet::new";
+            case "java.util.TreeSet":
+                return "java.util.TreeSet::new";
+            case "java.util.HashMap":
+            case "java.util.Map":
+                return "java.util.HashMap::new";
+            case "java.util.LinkedHashMap":
+                return "java.util.LinkedHashMap::new";
+            case "java.util.TreeMap":
+                return "java.util.TreeMap::new";
+            default:
+                return null;
+        }
     }
 
     // --- Type utility methods ---
