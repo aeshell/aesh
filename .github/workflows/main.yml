@@ -1,6 +1,10 @@
-name: Java CI
+name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
 
 jobs:
   build:
@@ -14,5 +18,41 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
-      - name: Build with Maven
+      - name: Build and test
         run: mvn clean install
+      - name: Verify benchmark compiles
+        run: mvn compile -Pbenchmark -pl benchmark
+
+  native-test:
+    runs-on: ubuntu-latest
+    name: native-image smoke test
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+          cache: maven
+      - name: Build aesh
+        run: mvn clean install -DskipTests
+      - name: Build examples
+        run: mvn package -Pexamples -pl examples -DskipTests
+      - name: Build native image
+        run: |
+          native-image \
+            -cp examples/target/aesh-examples-*.jar \
+            examples.NewFeaturesExample \
+            -o /tmp/aesh-native-test \
+            --no-fallback -march=compatibility
+      - name: Smoke test native image
+        run: |
+          OUTPUT=$(printf 'build --target release\nsleep 1\nexit\n' | \
+            timeout 15 /tmp/aesh-native-test 2>&1)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "Build complete" || \
+            (echo "FAIL: 'Build complete' not found" && exit 1)
+          echo "$OUTPUT" | grep -q "Done" || \
+            (echo "FAIL: 'Done' not found (sleep command)" && exit 1)
+          echo "Native smoke test PASSED"
