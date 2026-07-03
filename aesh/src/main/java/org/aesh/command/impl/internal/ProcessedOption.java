@@ -1033,9 +1033,10 @@ public class ProcessedOption {
     public List<TerminalString> getRenderedAliasNamesWithDashes() {
         if (aliases.isEmpty())
             return Collections.emptyList();
+        String prefix = acceptNameWithoutDashes ? "" : "--";
         List<TerminalString> result = new ArrayList<>(aliases.size());
         for (String alias : aliases) {
-            String text = "--" + alias;
+            String text = prefix + alias;
             if (renderer == null || !ansiMode)
                 result.add(new TerminalString(text, true));
             else
@@ -1096,13 +1097,14 @@ public class ProcessedOption {
         if (name != null) {
             if (sb.toString().trim().length() > 0)
                 sb.append(", ");
+            String dashPrefix = acceptNameWithoutDashes ? "" : "--";
             if (negatable) {
                 sb.append("--[").append(negationPrefix).append("]").append(name);
             } else {
-                sb.append("--").append(name);
+                sb.append(dashPrefix).append(name);
             }
             for (String alias : aliases) {
-                sb.append(", --").append(alias);
+                sb.append(", ").append(dashPrefix).append(alias);
             }
         }
         String placeholder = getValuePlaceholder();
@@ -1146,13 +1148,14 @@ public class ProcessedOption {
         if (name != null && name.length() > 0) {
             if (shortName != null)
                 sb.append(", ");
+            String dashPrefix = acceptNameWithoutDashes ? "" : "--";
             if (negatable) {
                 sb.append("--[").append(negationPrefix).append("]").append(name);
             } else {
-                sb.append("--").append(name);
+                sb.append(dashPrefix).append(name);
             }
             for (String alias : aliases) {
-                sb.append(", --").append(alias);
+                sb.append(", ").append(dashPrefix).append(alias);
             }
         }
         // End option name styling

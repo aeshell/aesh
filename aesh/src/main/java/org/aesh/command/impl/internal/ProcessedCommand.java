@@ -642,11 +642,35 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     && o.getValues().size() == 0
                     && o.isActivated(parsedCommand())) {
                 if (o.name().startsWith(name)) {
-                    names.add(o.getRenderedNameWithDashes());
+                    names.add(new TerminalString("--" + o.name(), true));
                 }
-                for (TerminalString alias : o.getRenderedAliasNamesWithDashes()) {
-                    if (alias.getCharacters().startsWith(name)) {
-                        names.add(alias);
+                for (String alias : o.getAliases()) {
+                    if (alias.startsWith(name)) {
+                        names.add(new TerminalString("--" + alias, true));
+                    }
+                }
+            }
+        }
+        return names;
+    }
+
+    /**
+     * Find bare option names matching the prefix, WITHOUT dashes.
+     * Used for completion when the user types a bare prefix (e.g., "st" → "staging").
+     */
+    public List<TerminalString> findPossibleBareLongNames(String name) {
+        List<ProcessedOption> opts = getDisplayOptions();
+        List<TerminalString> names = new ArrayList<>(opts.size());
+        for (ProcessedOption o : opts) {
+            if (o.name() != null && o.acceptNameWithoutDashes()
+                    && o.getValues().size() == 0
+                    && o.isActivated(parsedCommand())) {
+                if (o.name().startsWith(name)) {
+                    names.add(new TerminalString(o.name(), true));
+                }
+                for (String alias : o.getAliases()) {
+                    if (alias.startsWith(name)) {
+                        names.add(new TerminalString(alias, true));
                     }
                 }
             }
@@ -840,7 +864,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     !o.isLongNameUsed() && o.getValues().size() == 0) ||
                     (o.name().startsWith(name) && o.getValues().size() == 0)) &&
                     o.isActivated(parsedCommand()))
-                names.add(o.getRenderedNameWithDashes());
+                // Always use -- prefix here: user explicitly typed "--"
+                names.add(new TerminalString("--" + o.name(), true));
             // Check aliases
             if (o.getValues().size() == 0 && o.isActivated(parsedCommand())) {
                 for (String alias : o.getAliases()) {
@@ -1215,11 +1240,13 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             }
 
             // For negatable options, use --[no-]name format
+            // For bare options (acceptNameWithoutDashes), omit -- prefix
             String optName;
+            String dashPrefix = o.acceptNameWithoutDashes() ? "" : "--";
             if (o.isNegatable()) {
                 optName = "--[" + o.getNegationPrefix() + "]" + o.name();
             } else {
-                optName = o.shortName() != null ? "-" + o.shortName() : "--" + o.name();
+                optName = o.shortName() != null ? "-" + o.shortName() : dashPrefix + o.name();
             }
             // Apply yellow styling to option name
             String styledOptName = ansi ? ANSI.YELLOW_TEXT + optName + ANSI.RESET : optName;
@@ -1232,10 +1259,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     ProcessedOption exOpt = findLongOptionNoActivatorCheck(exName);
                     if (exOpt != null) {
                         String exOptName;
+                        String exDashPrefix = exOpt.acceptNameWithoutDashes() ? "" : "--";
                         if (exOpt.isNegatable()) {
                             exOptName = "--[" + exOpt.getNegationPrefix() + "]" + exOpt.name();
                         } else {
-                            exOptName = exOpt.shortName() != null ? "-" + exOpt.shortName() : "--" + exOpt.name();
+                            exOptName = exOpt.shortName() != null ? "-" + exOpt.shortName() : exDashPrefix + exOpt.name();
                         }
                         String styledEx = ansi ? ANSI.YELLOW_TEXT + exOptName + ANSI.RESET : exOptName;
                         exclusive.append(" | ").append(styledEx);

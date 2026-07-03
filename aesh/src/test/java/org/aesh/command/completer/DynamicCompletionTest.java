@@ -239,6 +239,31 @@ public class DynamicCompletionTest {
         assertTrue("Should show leaf's --file option", output.contains("--file"));
     }
 
+    // ========== Bare option dynamic completion ==========
+
+    @Test
+    public void testBareOption_EmptyInput_ShowsBareAndDashed() {
+        String output = complete(BareDeployCmd.class, "");
+        // Bare options should appear without --
+        assertTrue("Should show 'staging' (bare)", output.contains("staging"));
+        assertTrue("Should show 'production' (bare)", output.contains("production"));
+        // Normal options should appear with --
+        assertTrue("Should show '--env' (dashed)", output.contains("--env"));
+    }
+
+    @Test
+    public void testBareOption_BarePrefix_ShowsBareMatch() {
+        String output = complete(BareDeployCmd.class, "st");
+        assertTrue("Should show 'staging'", output.contains("staging"));
+        assertFalse("Should NOT show '--staging'", output.contains("--staging"));
+    }
+
+    @Test
+    public void testBareOption_DashedPrefix_ShowsDashedMatch() {
+        String output = complete(BareDeployCmd.class, "--st");
+        assertTrue("Should show '--staging'", output.contains("--staging"));
+    }
+
     // ========== Helpers ==========
 
     private static String complete(Class<? extends Command> cmdClass, String... tokens) {
@@ -387,6 +412,25 @@ public class DynamicCompletionTest {
     public static class LeafCmd implements Command<CommandInvocation> {
         @Option(description = "File path")
         private String file;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ========== Bare option command ==========
+
+    @CommandDefinition(name = "deploy", description = "Deploy command", generateHelp = true)
+    public static class BareDeployCmd implements Command<CommandInvocation> {
+        @Option(name = "staging", acceptNameWithoutDashes = true, hasValue = false, description = "Deploy to staging")
+        private boolean staging;
+
+        @Option(name = "production", acceptNameWithoutDashes = true, hasValue = false, description = "Deploy to production")
+        private boolean production;
+
+        @Option(name = "env", description = "Environment")
+        private String env;
 
         @Override
         public CommandResult execute(CommandInvocation ci) {

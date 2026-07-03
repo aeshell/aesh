@@ -282,13 +282,24 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
 
     private void doListOptions(AeshCompleteOperation completeOperation, String value) {
         List<TerminalString> optionNamesWithDash;
-        if (value.length() < 3)
+        if (value.length() > 0 && !value.startsWith("-")) {
+            // Bare option prefix (e.g. "st" → "staging") — filter to matching bare options
+            List<TerminalString> bareMatches = parser.getProcessedCommand().findPossibleBareLongNames(value);
+            if (!bareMatches.isEmpty()) {
+                optionNamesWithDash = bareMatches;
+            } else {
+                // No bare matches — show all options
+                optionNamesWithDash = parser.getProcessedCommand().getOptionLongNamesWithDash();
+            }
+        } else if (value.equals("--"))
+            // User explicitly typed "--" — show all options with -- prefix
+            optionNamesWithDash = parser.getProcessedCommand().findPossibleLongNamesWithDash("");
+        else if (value.length() < 3)
             optionNamesWithDash = parser.getProcessedCommand().getOptionLongNamesWithDash();
         else if (value.startsWith("--"))
             optionNamesWithDash = parser.getProcessedCommand().findPossibleLongNamesWithDash(value.substring(2));
         else
-            // Handle bare long name prefix
-            optionNamesWithDash = parser.getProcessedCommand().findPossibleBareLongNamesWithDash(value);
+            optionNamesWithDash = parser.getProcessedCommand().findPossibleBareLongNames(value);
 
         // Add inherited options from parent parsers
         addInheritedOptions(optionNamesWithDash, value);
