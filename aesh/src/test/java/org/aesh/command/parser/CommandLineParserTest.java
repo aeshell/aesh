@@ -1358,6 +1358,169 @@ public class CommandLineParserTest {
         assertEquals("Should use annotation fallbackValue", "4004", cmd.debug);
     }
 
+    // --- Tests: DefaultValueProvider with OptionList / valueSeparator (#551) ---
+
+    @Test
+    public void testDvpOptionListCommaSeparator() throws Exception {
+        // Provider returns "a,b,c" for a comma-separated OptionList → 3 elements
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DvpListCommand<>()).getParser();
+        parser.populateObject("dvplist", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DvpListCommand<?> cmd = (DvpListCommand<?>) parser.getCommand();
+        assertNotNull("deps should not be null", cmd.deps);
+        assertEquals(3, cmd.deps.size());
+        assertEquals("org.foo:bar:1.0", cmd.deps.get(0));
+        assertEquals("org.baz:qux:2.0", cmd.deps.get(1));
+        assertEquals("org.acme:lib:3.0", cmd.deps.get(2));
+    }
+
+    @Test
+    public void testDvpOptionListSemicolonSeparator() throws Exception {
+        // Provider returns "x;y;z" for a semicolon-separated OptionList → 3 elements
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DvpListCommand<>()).getParser();
+        parser.populateObject("dvplist", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DvpListCommand<?> cmd = (DvpListCommand<?>) parser.getCommand();
+        assertNotNull("tags should not be null", cmd.tags);
+        assertEquals(3, cmd.tags.size());
+        assertEquals("alpha", cmd.tags.get(0));
+        assertEquals("beta", cmd.tags.get(1));
+        assertEquals("gamma", cmd.tags.get(2));
+    }
+
+    @Test
+    public void testDvpOptionListPipeSeparator() throws Exception {
+        // Provider returns "a|b|c" for a pipe-separated OptionList → 3 elements
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DvpListCommand<>()).getParser();
+        parser.populateObject("dvplist", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DvpListCommand<?> cmd = (DvpListCommand<?>) parser.getCommand();
+        assertNotNull("paths should not be null", cmd.paths);
+        assertEquals(3, cmd.paths.size());
+        assertEquals("/usr/bin", cmd.paths.get(0));
+        assertEquals("/usr/local/bin", cmd.paths.get(1));
+        assertEquals("/home/user/bin", cmd.paths.get(2));
+    }
+
+    @Test
+    public void testDvpOptionListSingleValue() throws Exception {
+        // Provider returns "only" (no separator) → single element
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DvpListCommand<>()).getParser();
+        parser.populateObject("dvplist", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DvpListCommand<?> cmd = (DvpListCommand<?>) parser.getCommand();
+        assertNotNull("single should not be null", cmd.single);
+        assertEquals(1, cmd.single.size());
+        assertEquals("only-one", cmd.single.get(0));
+    }
+
+    @Test
+    public void testDvpOptionListWhitespaceTrimming() throws Exception {
+        // Provider returns "a , b , c" → values should be trimmed
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DvpListCommand<>()).getParser();
+        parser.populateObject("dvplist", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DvpListCommand<?> cmd = (DvpListCommand<?>) parser.getCommand();
+        assertNotNull("spaced should not be null", cmd.spaced);
+        assertEquals(3, cmd.spaced.size());
+        assertEquals("one", cmd.spaced.get(0));
+        assertEquals("two", cmd.spaced.get(1));
+        assertEquals("three", cmd.spaced.get(2));
+    }
+
+    @Test
+    public void testDvpOptionListUserOverride() throws Exception {
+        // User provides --deps on CLI → DVP not used, CLI value wins
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DvpListCommand<>()).getParser();
+        parser.populateObject("dvplist --deps x,y", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DvpListCommand<?> cmd = (DvpListCommand<?>) parser.getCommand();
+        assertNotNull("deps should not be null", cmd.deps);
+        assertEquals(2, cmd.deps.size());
+        assertEquals("x", cmd.deps.get(0));
+        assertEquals("y", cmd.deps.get(1));
+    }
+
+    @Test
+    public void testDvpOptionListNullFallthrough() throws Exception {
+        // Provider returns null for "nodefault" → field should be null (reset)
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DvpListCommand<>()).getParser();
+        parser.populateObject("dvplist", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DvpListCommand<?> cmd = (DvpListCommand<?>) parser.getCommand();
+        assertNull("nodefault should be null", cmd.nodefault);
+    }
+
+    @Test
+    public void testDvpOptionListStaticDefault() throws Exception {
+        // Provider returns null for "withstatic" → falls through to annotation default
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new DvpListCommand<>()).getParser();
+        parser.populateObject("dvplist", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        DvpListCommand<?> cmd = (DvpListCommand<?>) parser.getCommand();
+        assertNotNull("withstatic should not be null", cmd.withstatic);
+        assertEquals(2, cmd.withstatic.size());
+        assertEquals("static-a", cmd.withstatic.get(0));
+        assertEquals("static-b", cmd.withstatic.get(1));
+    }
+
+    public static class DvpListProvider implements DefaultValueProvider {
+        @Override
+        public String defaultValue(ProcessedOption option) {
+            switch (option.name()) {
+                case "deps":
+                    return "org.foo:bar:1.0,org.baz:qux:2.0,org.acme:lib:3.0";
+                case "tags":
+                    return "alpha;beta;gamma";
+                case "paths":
+                    return "/usr/bin|/usr/local/bin|/home/user/bin";
+                case "single":
+                    return "only-one";
+                case "spaced":
+                    return "one , two , three";
+                default:
+                    return null;
+            }
+        }
+    }
+
+    @CommandDefinition(name = "dvplist", description = "test DVP with OptionList", defaultValueProvider = DvpListProvider.class)
+    public class DvpListCommand<CI extends CommandInvocation> implements Command<CI> {
+        @OptionList(name = "deps", valueSeparator = ',')
+        List<String> deps;
+
+        @OptionList(name = "tags", valueSeparator = ';')
+        List<String> tags;
+
+        @OptionList(name = "paths", valueSeparator = '|')
+        List<String> paths;
+
+        @OptionList(name = "single", valueSeparator = ',')
+        List<String> single;
+
+        @OptionList(name = "spaced", valueSeparator = ',')
+        List<String> spaced;
+
+        @OptionList(name = "nodefault", valueSeparator = ',')
+        List<String> nodefault;
+
+        @OptionList(name = "withstatic", valueSeparator = ',', defaultValue = { "static-a", "static-b" })
+        List<String> withstatic;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     @Test
     public void testInheritedOptionPropagation() throws Exception {
         InvocationProviders invocationProviders = new AeshInvocationProviders();

@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
@@ -133,7 +134,16 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
         try {
             String dynamicDefault = dvp.defaultValue(option);
             if (dynamicDefault != null) {
-                option.addValue(dynamicDefault);
+                // For LIST/ARGUMENTS options, split by valueSeparator (same as CLI parsing)
+                if (option.hasMultipleValues()
+                        && dynamicDefault.contains(String.valueOf(option.getValueSeparator()))) {
+                    for (String value : dynamicDefault.split(
+                            Pattern.quote(String.valueOf(option.getValueSeparator())))) {
+                        option.addValue(value.trim());
+                    }
+                } else {
+                    option.addValue(dynamicDefault);
+                }
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
                 return true;
             }
