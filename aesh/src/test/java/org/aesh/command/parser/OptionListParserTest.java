@@ -268,6 +268,90 @@ public class OptionListParserTest {
         assertEquals("true", optionValues(MixedCmd.class, line, "debug").get(0));
     }
 
+    // ========== Conflicting OptionGroup: values starting with dash (#552) ==========
+
+    @Test
+    public void testOptionList_DashValueWithConflictingOptionGroup_LongName() throws Exception {
+        // --runtime-option -Dstdout.encoding=UTF-8 should be consumed as a value of
+        // runtime-option, NOT matched as the -D OptionGroup (jbang #2587)
+        List<String> vals = optionValues(JBangLikeCmd.class,
+                "test --runtime-option -Dstdout.encoding=UTF-8", "runtime-option");
+        assertEquals(1, vals.size());
+        assertEquals("-Dstdout.encoding=UTF-8", vals.get(0));
+    }
+
+    @Test
+    public void testOptionList_DashValueWithConflictingOptionGroup_ShortName() throws Exception {
+        // -R -Dstdout.encoding=UTF-8 — same scenario with short name
+        List<String> vals = optionValues(JBangLikeCmd.class,
+                "test -R -Dstdout.encoding=UTF-8", "runtime-option");
+        assertEquals(1, vals.size());
+        assertEquals("-Dstdout.encoding=UTF-8", vals.get(0));
+    }
+
+    @Test
+    public void testOptionList_DashValueWithConflictingOptionGroup_Multiple() throws Exception {
+        // Multiple -R values that look like -D options
+        List<String> vals = optionValues(JBangLikeCmd.class,
+                "test -R -Dstdout.encoding=UTF-8 -R -Dpython.console.encoding=UTF-8",
+                "runtime-option");
+        assertEquals(2, vals.size());
+        assertEquals("-Dstdout.encoding=UTF-8", vals.get(0));
+        assertEquals("-Dpython.console.encoding=UTF-8", vals.get(1));
+    }
+
+    @Test
+    public void testOptionList_DashValueWithConflictingOptionGroup_Equals() throws Exception {
+        // Equals syntax should still work
+        List<String> vals = optionValues(JBangLikeCmd.class,
+                "test --runtime-option=-Dstdout.encoding=UTF-8", "runtime-option");
+        assertEquals(1, vals.size());
+        assertEquals("-Dstdout.encoding=UTF-8", vals.get(0));
+    }
+
+    @Test
+    public void testOptionList_DashValueWithConflictingOptionGroup_Attached() throws Exception {
+        // Attached short name syntax should still work
+        List<String> vals = optionValues(JBangLikeCmd.class,
+                "test -R-Dstdout.encoding=UTF-8", "runtime-option");
+        assertEquals(1, vals.size());
+        assertEquals("-Dstdout.encoding=UTF-8", vals.get(0));
+    }
+
+    @Test
+    public void testOptionList_DashValueDoesNotBreakOptionGroup() throws Exception {
+        // -D used directly (not as value of -R) should still work as OptionGroup
+        Map<String, String> props = propertyValues(JBangLikeCmd.class,
+                "test -Dfoo=bar", "define");
+        assertEquals(1, props.size());
+        assertEquals("bar", props.get("foo"));
+    }
+
+    @Test
+    public void testOptionList_MixedDashValueAndOptionGroup() throws Exception {
+        // Both -R and -D used in same command line
+        List<String> runtimeOpts = optionValues(JBangLikeCmd.class,
+                "test -R -Xmx4G -Dfoo=bar", "runtime-option");
+        assertEquals(1, runtimeOpts.size());
+        assertEquals("-Xmx4G", runtimeOpts.get(0));
+
+        Map<String, String> props = propertyValues(JBangLikeCmd.class,
+                "test -R -Xmx4G -Dfoo=bar", "define");
+        assertEquals(1, props.size());
+        assertEquals("bar", props.get("foo"));
+    }
+
+    @Test
+    public void testOptionList_DashValueWithVerboseFlag() throws Exception {
+        // -R with dash value, followed by a boolean flag
+        List<String> vals = optionValues(JBangLikeCmd.class,
+                "test -R -Xmx4G --verbose", "runtime-option");
+        assertEquals(1, vals.size());
+        assertEquals("-Xmx4G", vals.get(0));
+        assertEquals("true", optionValues(JBangLikeCmd.class,
+                "test -R -Xmx4G --verbose", "verbose").get(0));
+    }
+
     // ========== Helpers ==========
 
     @SuppressWarnings("rawtypes")
@@ -381,6 +465,27 @@ public class OptionListParserTest {
         public boolean debug;
         @OptionGroup(shortName = 'D', name = "define")
         public Map<String, String> properties;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // Command with OptionList AND OptionGroup(-D) — reproduces jbang #2587
+    @CommandDefinition(name = "test", description = "OptionList with conflicting OptionGroup")
+    public static class JBangLikeCmd implements Command<CommandInvocation> {
+        @OptionList(shortName = 'R', name = "runtime-option")
+        public List<String> runtimeOptions;
+
+        @OptionGroup(shortName = 'D', name = "define")
+        public Map<String, String> properties;
+
+        @Option(hasValue = false)
+        public boolean verbose;
+
+        @Argument(description = "Script file")
+        public String script;
 
         @Override
         public CommandResult execute(CommandInvocation ci) {

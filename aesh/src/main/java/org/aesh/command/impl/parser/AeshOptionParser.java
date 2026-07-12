@@ -51,7 +51,16 @@ public class AeshOptionParser implements OptionParser {
             }
             while (status != Status.NULL && parsedLineIterator.hasNextWord()) {
                 String word = parsedLineIterator.peekWord();
-                ProcessedOption nextOption = option.parent().searchAllOptions(word);
+                // For OptionList with non-space separator in ACTIVE status (expecting
+                // a value), skip the option lookup and consume the next word as a value.
+                // OptionList values commonly start with '-' (e.g. -Xmx4G, -Dfoo=bar) and
+                // would otherwise be misidentified as other options via prefix matching.
+                // Space-separated OptionLists still check searchAllOptions to know when to
+                // stop collecting values (#552).
+                ProcessedOption nextOption = (status == Status.ACTIVE
+                        && option.hasMultipleValues() && option.getValueSeparator() != ' ')
+                                ? null
+                                : option.parent().searchAllOptions(word);
                 if (nextOption == null) {
                     doParse(parsedLineIterator, option);
                     if (status == null && !option.hasValue()) {
