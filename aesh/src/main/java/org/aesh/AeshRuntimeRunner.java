@@ -26,6 +26,7 @@ import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.DefaultValueProvider;
@@ -54,6 +55,7 @@ public class AeshRuntimeRunner {
     private ShellType dynamicCompletionShellType;
     private String completionProgramName;
     private boolean dynamicComplete;
+    private CommandNotFoundHandler commandNotFoundHandler;
 
     private AeshRuntimeRunner() {
     }
@@ -124,6 +126,16 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    /**
+     * Set a handler for command-not-found errors.
+     * The handler receives the command line and a {@code Consumer<String>}
+     * for writing output (backed by {@code System.err} in this runner).
+     */
+    public AeshRuntimeRunner commandNotFoundHandler(CommandNotFoundHandler handler) {
+        this.commandNotFoundHandler = handler;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
         CommandRegistry commandRegistry = registryBuilder.create();
@@ -151,15 +163,25 @@ public class AeshRuntimeRunner {
         if (dynamicComplete)
             return performDynamicCompletion(commandRegistry);
 
-        CommandRuntime runtime = AeshCommandRuntimeBuilder.builder()
-                .commandRegistry(commandRegistry).build();
+        AeshCommandRuntimeBuilder runtimeBuilder = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(commandRegistry);
+        if (commandNotFoundHandler != null)
+            runtimeBuilder.commandNotFoundHandler(commandNotFoundHandler);
+        CommandRuntime runtime = runtimeBuilder.build();
 
         String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();
 
         try {
             return runtime.executeCommand(commandName, args);
         } catch (CommandNotFoundException e) {
-            System.err.println("Command not found: " + commandName);
+            if (commandNotFoundHandler != null) {
+                String fullLine = commandName + (args != null && args.length > 0
+                        ? " " + String.join(" ", args)
+                        : "");
+                commandNotFoundHandler.handleCommandNotFound(fullLine, System.err::println);
+            } else {
+                System.err.println("Command not found: " + commandName);
+            }
             return CommandResult.COMMAND_NOT_FOUND;
         } catch (CommandLineParserException | OptionValidatorException e) {
             showHelp(runtime, commandName, args, e);

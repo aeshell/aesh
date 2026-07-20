@@ -19,12 +19,20 @@
  */
 package org.aesh.command;
 
-import org.aesh.command.shell.Shell;
+import java.util.function.Consumer;
 
 /**
+ * Handler invoked when a command is not found.
+ * <p>
+ * The {@code output} consumer writes a line of text to the appropriate
+ * destination (terminal, stderr, etc.) without requiring a {@code Shell}
+ * dependency, making this interface usable in both interactive and
+ * non-interactive contexts.
+ *
  * @author Aesh team
  */
+@FunctionalInterface
 public interface CommandNotFoundHandler {
 
-    void handleCommandNotFound(String line, Shell shell);
+    void handleCommandNotFound(String line, Consumer<String> output);
 }

@@ -40,7 +40,6 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
-import org.aesh.command.shell.Shell;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
@@ -222,7 +221,7 @@ public class AeshScriptTest {
         }
 
         @Override
-        public void handleCommandNotFound(String line, Shell shell) {
+        public void handleCommandNotFound(String line, java.util.function.Consumer<String> output) {
             failed = true;
             failedString = line;
         }

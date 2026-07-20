@@ -2193,5 +2193,56 @@ public class AeshRuntimeRunnerTest {
             return CommandResult.SUCCESS;
         }
     }
+    // ========== CommandNotFoundHandler tests (#557) ==========
 
+    @Test
+    public void testCommandNotFoundHandlerOnRuntime() throws Exception {
+        // Test handler via AeshCommandRuntimeBuilder — the handler should be called
+        // when a command is not found in the registry
+        final java.util.concurrent.atomic.AtomicReference<String> capturedLine = new java.util.concurrent.atomic.AtomicReference<>();
+
+        org.aesh.command.registry.CommandRegistry<CommandInvocation> registry = org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                .<CommandInvocation> builder()
+                .command(GroupCmd.class)
+                .create();
+
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(registry)
+                .commandNotFoundHandler((line, output) -> {
+                    capturedLine.set(line);
+                    output.accept("Custom: " + line);
+                })
+                .build();
+
+        try {
+            runtime.executeCommand("nonexistent");
+        } catch (org.aesh.command.CommandNotFoundException e) {
+            // expected — handler is called then exception is re-thrown
+        }
+
+        assertNotNull("Handler should have been called", capturedLine.get());
+        assertTrue("Line should contain 'nonexistent'",
+                capturedLine.get().contains("nonexistent"));
+    }
+
+    @Test
+    public void testCommandNotFoundHandlerOnRuntimeRunner() {
+        // Test that the builder method exists and wires through —
+        // the handler is passed to AeshCommandRuntime but in AeshRuntimeRunner
+        // the top-level command always exists, so the handler is available
+        // for subcommand dispatching via the runtime
+        final java.util.concurrent.atomic.AtomicBoolean handlerAvailable = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+        // This should not throw — builder method should work
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(GroupCmd.class)
+                .commandNotFoundHandler((line, output) -> {
+                    handlerAvailable.set(true);
+                })
+                .args("sub", "--value", "test")
+                .execute();
+
+        assertEquals(CommandResult.SUCCESS, result);
+    }
 }
