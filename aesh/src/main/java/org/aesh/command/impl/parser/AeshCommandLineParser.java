@@ -575,7 +575,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         else {
                             processedCommand
                                     .addParserException(new CommandLineParserException("'" + command + " " + iterator.peekWord()
-                                            + "' is not part of the " + command + " commands. See 'help " + command + "'."));
+                                            + "' is not part of the " + command + " commands. See '" + command + " --help'."));
                             if (mode == Mode.COMPLETION) {
                                 parsedCommand = true;
                                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.INVALID_INPUT, ""));
