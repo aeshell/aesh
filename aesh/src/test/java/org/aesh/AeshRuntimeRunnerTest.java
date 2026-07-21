@@ -2245,4 +2245,120 @@ public class AeshRuntimeRunnerTest {
 
         assertEquals(CommandResult.SUCCESS, result);
     }
+
+    // ========== Group command --help tests (#558) ==========
+
+    @Test
+    public void testGroupCommand_RootHelp() {
+        // root --help should work cleanly
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream origErr = System.err;
+        System.setErr(new PrintStream(err));
+        try {
+            CommandResult result = AeshRuntimeRunner.builder()
+                    .command(NestedGroupRoot.class)
+                    .args("--help")
+                    .execute();
+
+            String stderr = err.toString();
+            assertFalse("Should not contain 'unknown' error: " + stderr,
+                    stderr.contains("unknown"));
+            assertEquals("Should return SUCCESS", CommandResult.SUCCESS, result);
+        } finally {
+            System.setErr(origErr);
+        }
+    }
+
+    @Test
+    public void testGroupCommand_NestedGroupHelp() {
+        // root mid --help — this is the reported bug (#558)
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream origErr = System.err;
+        System.setErr(new PrintStream(err));
+        try {
+            CommandResult result = AeshRuntimeRunner.builder()
+                    .command(NestedGroupRoot.class)
+                    .args("mid", "--help")
+                    .execute();
+
+            String stderr = err.toString();
+            assertFalse("Should not contain 'unknown' error: " + stderr,
+                    stderr.contains("unknown"));
+            assertEquals("Should return SUCCESS", CommandResult.SUCCESS, result);
+        } finally {
+            System.setErr(origErr);
+        }
+    }
+
+    @Test
+    public void testGroupCommand_LeafHelp() {
+        // root mid leaf --help should work cleanly
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream origErr = System.err;
+        System.setErr(new PrintStream(err));
+        try {
+            CommandResult result = AeshRuntimeRunner.builder()
+                    .command(NestedGroupRoot.class)
+                    .args("mid", "leaf", "--help")
+                    .execute();
+
+            String stderr = err.toString();
+            assertFalse("Should not contain 'unknown' error: " + stderr,
+                    stderr.contains("unknown"));
+            assertEquals("Should return SUCCESS", CommandResult.SUCCESS, result);
+        } finally {
+            System.setErr(origErr);
+        }
+    }
+
+    @Test
+    public void testGroupCommand_NestedGroupShortHelp() {
+        // root mid -h — short help flag
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream origErr = System.err;
+        System.setErr(new PrintStream(err));
+        try {
+            CommandResult result = AeshRuntimeRunner.builder()
+                    .command(NestedGroupRoot.class)
+                    .args("mid", "-h")
+                    .execute();
+
+            String stderr = err.toString();
+            assertFalse("Should not contain 'unknown' error: " + stderr,
+                    stderr.contains("unknown"));
+            assertEquals("Should return SUCCESS", CommandResult.SUCCESS, result);
+        } finally {
+            System.setErr(origErr);
+        }
+    }
+
+    // Test commands for #558
+
+    @CommandDefinition(name = "root558", description = "Root command", generateHelp = true, groupCommands = {
+            MidGroupCmd558.class })
+    public static class NestedGroupRoot implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "mid", description = "Mid-level group", generateHelp = true, groupCommands = { LeafCmd558.class })
+    public static class MidGroupCmd558 implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "leaf", description = "Leaf command", generateHelp = true)
+    public static class LeafCmd558 implements Command<CommandInvocation> {
+        @Option(name = "value", description = "A value")
+        private String value;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
 }

@@ -759,6 +759,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             helpOption.setDeclarationOrder(optionDeclarationCounter++);
             options.add(helpOption);
             helpOption.setParent(this);
+            // The findOption() call above may have triggered buildLookupMaps()
+            // before the help option was added. Invalidate so --help is found
+            // via longNameMap during parsing (#558).
+            invalidateLookupMaps();
         }
     }
 
@@ -818,6 +822,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             versionOption.setDeclarationOrder(optionDeclarationCounter++);
             options.add(versionOption);
             versionOption.setParent(this);
+            // Same as doGenerateHelp(): the findOption() call above may have
+            // triggered buildLookupMaps() before the version option was added.
+            invalidateLookupMaps();
         }
     }
 
