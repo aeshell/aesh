@@ -19,7 +19,10 @@
  */
 package org.aesh.command.invocation;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
@@ -58,6 +61,8 @@ public class AeshCommandInvocationServiceTest {
                 .command(new BarCommand())
                 .create();
 
+        CountDownLatch latch = new CountDownLatch(1);
+
         Settings<FooCommandInvocation> settings = SettingsBuilder
                 .<FooCommandInvocation> builder()
                 .commandRegistry(registry)
@@ -65,17 +70,17 @@ public class AeshCommandInvocationServiceTest {
                 .logging(true)
                 .commandRegistry(registry)
                 .commandInvocationProvider(new FooCommandInvocationProvider())
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("bar" + Config.getLineSeparator());
+        assertTrue("Command should complete within 5 seconds", latch.await(5, TimeUnit.SECONDS));
 
-        connection.clearOutputBuffer();
-        Thread.sleep(100);
-        connection.assertBuffer("FOO" + Config.getLineSeparator());
-        //assertTrue( byteArrayOutputStream.toString().contains("FOO") );
+        assertTrue("Output should contain FOO",
+                connection.getOutputBuffer().contains("FOO"));
         console.stop();
     }
 
