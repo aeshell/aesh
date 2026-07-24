@@ -441,7 +441,15 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             read(conn, readline);
         } catch (IllegalArgumentException | OptionValidatorException | CommandValidatorException
                 | CommandLineParserException e) {
-            conn.write(e.getMessage() + Config.getLineSeparator());
+            if (e instanceof org.aesh.command.parser.SubcommandNotFoundException
+                    && settings.commandNotFoundHandler() != null) {
+                org.aesh.command.parser.SubcommandNotFoundException snfe = (org.aesh.command.parser.SubcommandNotFoundException) e;
+                settings.commandNotFoundHandler().handleCommandNotFound(line,
+                        msg -> conn.write(msg + Config.getLineSeparator()),
+                        snfe.getUnknownSubcommand(), snfe.getAvailableSubcommands());
+            } else {
+                conn.write(e.getMessage() + Config.getLineSeparator());
+            }
             read(conn, readline);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);

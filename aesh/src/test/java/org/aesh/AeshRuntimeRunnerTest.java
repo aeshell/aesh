@@ -2476,4 +2476,127 @@ public class AeshRuntimeRunnerTest {
         assertTrue("Should contain 'grp'", capturedAvailable.get().contains("grp"));
         assertTrue("Should contain 'root558'", capturedAvailable.get().contains("root558"));
     }
+
+    // ========== Subcommand not-found handler tests (#562) ==========
+
+    @Test
+    public void testSubcommandNotFound_HandlerReceivesChildNames() {
+        final java.util.concurrent.atomic.AtomicReference<String> capturedUnknown = new java.util.concurrent.atomic.AtomicReference<>();
+        final java.util.concurrent.atomic.AtomicReference<java.util.Collection<String>> capturedAvailable = new java.util.concurrent.atomic.AtomicReference<>();
+
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(NestedGroupRoot.class)
+                .commandNotFoundHandler(new org.aesh.command.CommandNotFoundHandler() {
+                    @Override
+                    public void handleCommandNotFound(String line,
+                            java.util.function.Consumer<String> output) {
+                    }
+
+                    @Override
+                    public void handleCommandNotFound(String line,
+                            java.util.function.Consumer<String> output,
+                            String unknownCommand,
+                            java.util.Collection<String> availableCommands) {
+                        capturedUnknown.set(unknownCommand);
+                        capturedAvailable.set(availableCommands);
+                    }
+                })
+                .args("bogus")
+                .execute();
+
+        assertEquals(CommandResult.USAGE_ERROR, result);
+        assertEquals("bogus", capturedUnknown.get());
+        assertNotNull("Available subcommands should not be null", capturedAvailable.get());
+        assertTrue("Should contain 'mid'", capturedAvailable.get().contains("mid"));
+    }
+
+    @Test
+    public void testSubcommandNotFound_DeepNested_HandlerReceivesCorrectChildren() {
+        final java.util.concurrent.atomic.AtomicReference<String> capturedUnknown = new java.util.concurrent.atomic.AtomicReference<>();
+        final java.util.concurrent.atomic.AtomicReference<java.util.Collection<String>> capturedAvailable = new java.util.concurrent.atomic.AtomicReference<>();
+
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(NestedGroupRoot.class)
+                .commandNotFoundHandler(new org.aesh.command.CommandNotFoundHandler() {
+                    @Override
+                    public void handleCommandNotFound(String line,
+                            java.util.function.Consumer<String> output) {
+                    }
+
+                    @Override
+                    public void handleCommandNotFound(String line,
+                            java.util.function.Consumer<String> output,
+                            String unknownCommand,
+                            java.util.Collection<String> availableCommands) {
+                        capturedUnknown.set(unknownCommand);
+                        capturedAvailable.set(availableCommands);
+                    }
+                })
+                .args("mid", "bogusleaf")
+                .execute();
+
+        assertEquals(CommandResult.USAGE_ERROR, result);
+        assertEquals("bogusleaf", capturedUnknown.get());
+        assertNotNull(capturedAvailable.get());
+        assertTrue("Should contain 'leaf'", capturedAvailable.get().contains("leaf"));
+    }
+
+    @Test
+    public void testSubcommandNotFound_ErrorMessageIncludesAvailable() {
+        // Even without a handler, the error message should list available subcommands
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream origErr = System.err;
+        System.setErr(new PrintStream(err));
+        try {
+            CommandResult result = AeshRuntimeRunner.builder()
+                    .command(NestedGroupRoot.class)
+                    .args("bogus")
+                    .execute();
+
+            assertEquals(CommandResult.USAGE_ERROR, result);
+            String stderr = err.toString();
+            assertTrue("Should mention 'bogus'", stderr.contains("bogus"));
+            assertTrue("Should list available subcommand 'mid'", stderr.contains("mid"));
+        } finally {
+            System.setErr(origErr);
+        }
+    }
+
+    @Test
+    public void testSubcommandNotFound_SimpleHandlerBackwardCompat() {
+        // A simple lambda handler (no enhanced method) still works
+        final java.util.concurrent.atomic.AtomicReference<String> capturedLine = new java.util.concurrent.atomic.AtomicReference<>();
+
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(NestedGroupRoot.class)
+                .commandNotFoundHandler((line, output) -> capturedLine.set(line))
+                .args("bogus")
+                .execute();
+
+        assertEquals(CommandResult.USAGE_ERROR, result);
+        assertNotNull("Simple handler should have been called", capturedLine.get());
+        assertTrue("Line should contain 'bogus'", capturedLine.get().contains("bogus"));
+    }
+
+    @Test
+    public void testSubcommandNotFound_NoHandlerShowsHelp() {
+        // Without a handler, showHelp should still be called (the error message + help output)
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream origErr = System.err;
+        System.setErr(new PrintStream(err));
+        try {
+            CommandResult result = AeshRuntimeRunner.builder()
+                    .command(NestedGroupRoot.class)
+                    .args("bogus")
+                    .execute();
+
+            assertEquals(CommandResult.USAGE_ERROR, result);
+            String stderr = err.toString();
+            // Should contain both the error message and help output
+            assertTrue("Should contain error about 'bogus'", stderr.contains("bogus"));
+            assertTrue("Should contain help with 'mid' subcommand", stderr.contains("mid"));
+        } finally {
+            System.setErr(origErr);
+        }
+    }
 }

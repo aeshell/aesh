@@ -86,6 +86,13 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
                 && !getParser().getProcessedCommand().hasOptionWithOverrideRequired()) {
             throw getParser().getProcessedCommand().parserExceptions().get(0);
         }
+        // Also check child parsers for SubcommandNotFoundException (#562).
+        // When a nested group command receives an invalid subcommand, the
+        // exception is stored on the child parser's ProcessedCommand, not the root's.
+        CommandLineParserException childException = findChildParserException(getParser());
+        if (childException != null) {
+            throw childException;
+        }
 
         if (getParser().parsedCommand() == null) {
             throw new CommandLineParserException("Command and/or sub-command is not valid!");
@@ -124,6 +131,27 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
         CommandResult result = getParser().parsedCommand().getCommand().execute(commandInvocation);
 
         return new CommandContainerResult(getParser().parsedCommand().getProcessedCommand().resultHandler(), result);
+    }
+
+    /**
+     * Walk the child parser tree looking for a parser exception.
+     * This catches SubcommandNotFoundException stored on nested group parsers
+     * that wouldn't be found by checking only the root parser's exceptions.
+     */
+    private CommandLineParserException findChildParserException(CommandLineParser<CI> parser) {
+        if (!parser.isGroupCommand())
+            return null;
+        for (CommandLineParser<CI> child : parser.getAllChildParsers()) {
+            if (child.getProcessedCommand().parserExceptions().size() > 0
+                    && !child.getProcessedCommand().hasOptionWithOverrideRequired()) {
+                return child.getProcessedCommand().parserExceptions().get(0);
+            }
+            // Recurse into deeper levels
+            CommandLineParserException nested = findChildParserException(child);
+            if (nested != null)
+                return nested;
+        }
+        return null;
     }
 
     @Override

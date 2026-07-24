@@ -47,6 +47,7 @@ import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.MutuallyExclusiveOptionException;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.parser.RequiredOptionException;
+import org.aesh.command.parser.SubcommandNotFoundException;
 import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
@@ -573,9 +574,22 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                 iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-"))
                             doParse(iterator, mode);
                         else {
+                            // Collect available child names for "did you mean?" (#562)
+                            java.util.List<String> childNames = new java.util.ArrayList<>();
+                            if (childParsers != null) {
+                                for (CommandLineParser<CI> child : childParsers) {
+                                    childNames.add(child.getProcessedCommand().name());
+                                }
+                            }
+                            if (lazyChildClasses != null) {
+                                for (String name : lazyChildClasses.keySet()) {
+                                    if (!childNames.contains(name))
+                                        childNames.add(name);
+                                }
+                            }
                             processedCommand
-                                    .addParserException(new CommandLineParserException("'" + command + " " + iterator.peekWord()
-                                            + "' is not part of the " + command + " commands. See '" + command + " --help'."));
+                                    .addParserException(new SubcommandNotFoundException(
+                                            command, iterator.peekWord(), childNames));
                             if (mode == Mode.COMPLETION) {
                                 parsedCommand = true;
                                 processedCommand.setCompleteStatus(new CompleteStatus(CompleteStatus.Status.INVALID_INPUT, ""));

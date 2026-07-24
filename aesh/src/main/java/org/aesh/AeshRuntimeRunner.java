@@ -185,6 +185,16 @@ public class AeshRuntimeRunner {
             }
             return CommandResult.COMMAND_NOT_FOUND;
         } catch (CommandLineParserException | OptionValidatorException e) {
+            // For subcommand-not-found, call the handler first for "did you mean?"
+            if (e instanceof org.aesh.command.parser.SubcommandNotFoundException
+                    && commandNotFoundHandler != null) {
+                org.aesh.command.parser.SubcommandNotFoundException snfe = (org.aesh.command.parser.SubcommandNotFoundException) e;
+                String fullLine = commandName + (args != null && args.length > 0
+                        ? " " + String.join(" ", args)
+                        : "");
+                commandNotFoundHandler.handleCommandNotFound(fullLine, System.err::println,
+                        snfe.getUnknownSubcommand(), snfe.getAvailableSubcommands());
+            }
             showHelp(runtime, commandName, args, e);
             return CommandResult.USAGE_ERROR;
         } catch (CommandException | CommandValidatorException e) {
