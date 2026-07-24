@@ -380,6 +380,50 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: SubcommandNotFoundException with processor-generated group commands (#562) ---
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testSubcommandNotFoundWithGeneratedMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SubCommand1", SUB_COMMAND1_SOURCE),
+                new InMemorySource("test.SubCommand2", SUB_COMMAND2_SOURCE),
+                new InMemorySource("test.GroupTestCommand", GROUP_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        // Build container and runtime — same as AeshRuntimeRunner would
+        Class commandClass = result.classLoader.loadClass("test.GroupTestCommand");
+        org.aesh.command.container.CommandContainer container = new AeshCommandContainerBuilder().create(commandClass);
+
+        assertTrue("Parser should be a group command", container.getParser().isGroupCommand());
+
+        org.aesh.command.impl.registry.MutableCommandRegistryImpl registry = new org.aesh.command.impl.registry.MutableCommandRegistryImpl<>();
+        registry.addCommand(container);
+
+        org.aesh.command.CommandRuntime runtime = org.aesh.command.AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry)
+                .build();
+
+        // Execute a line with an invalid subcommand — should throw SubcommandNotFoundException
+        try {
+            runtime.executeCommand("group bogus");
+            assertTrue("Should have thrown", false);
+        } catch (org.aesh.command.parser.SubcommandNotFoundException snfe) {
+            assertEquals("bogus", snfe.getUnknownSubcommand());
+            assertEquals("group", snfe.getParentCommand());
+            assertNotNull(snfe.getAvailableSubcommands());
+            assertTrue("Should contain 'sub1'", snfe.getAvailableSubcommands().contains("sub1"));
+            assertTrue("Should contain 'sub2'", snfe.getAvailableSubcommands().contains("sub2"));
+            assertTrue("Message should mention available subcommands",
+                    snfe.getMessage().contains("sub1"));
+        } catch (org.aesh.command.parser.CommandLineParserException e) {
+            assertTrue("Expected SubcommandNotFoundException but got "
+                    + e.getClass().getName() + ": " + e.getMessage(), false);
+        } catch (Exception e) {
+            assertTrue("Unexpected exception: " + e.getClass().getName() + ": " + e.getMessage(),
+                    false);
+        }
+    }
+
     // --- Test: Unified @CommandDefinition with groupCommands (#474) ---
 
     private static final String UNIFIED_SUB_SOURCE = "package test;\n" +
