@@ -19,6 +19,7 @@
  */
 package org.aesh.command;
 
+import java.util.Collection;
 import java.util.function.Consumer;
 
 /**
@@ -28,6 +29,11 @@ import java.util.function.Consumer;
  * destination (terminal, stderr, etc.) without requiring a {@code Shell}
  * dependency, making this interface usable in both interactive and
  * non-interactive contexts.
+ * <p>
+ * Override the enhanced
+ * {@link #handleCommandNotFound(String, Consumer, String, Collection)}
+ * method to receive the unknown command name and the list of available
+ * commands for "did you mean?" suggestions.
  *
  * @author Aesh team
  */
@@ -35,4 +41,23 @@ import java.util.function.Consumer;
 public interface CommandNotFoundHandler {
 
     void handleCommandNotFound(String line, Consumer<String> output);
+
+    /**
+     * Enhanced callback that also receives the unknown command name and the
+     * commands that were available at the level where the failure occurred.
+     * <p>
+     * The default implementation delegates to the simple
+     * {@link #handleCommandNotFound(String, Consumer)} method, preserving
+     * backward compatibility. Override this method to implement intelligent
+     * suggestions (e.g., Levenshtein-based "did you mean?" hints).
+     *
+     * @param line the full command line that was entered
+     * @param output consumer for writing output lines
+     * @param unknownCommand the specific command token that was not found
+     * @param availableCommands the command names that were valid at the failure point
+     */
+    default void handleCommandNotFound(String line, Consumer<String> output,
+            String unknownCommand, Collection<String> availableCommands) {
+        handleCommandNotFound(line, output);
+    }
 }

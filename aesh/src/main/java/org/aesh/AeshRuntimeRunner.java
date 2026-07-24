@@ -178,7 +178,8 @@ public class AeshRuntimeRunner {
                 String fullLine = commandName + (args != null && args.length > 0
                         ? " " + String.join(" ", args)
                         : "");
-                commandNotFoundHandler.handleCommandNotFound(fullLine, System.err::println);
+                commandNotFoundHandler.handleCommandNotFound(fullLine, System.err::println,
+                        e.getCommandName(), commandRegistry.getAllCommandNames());
             } else {
                 System.err.println("Command not found: " + commandName);
             }

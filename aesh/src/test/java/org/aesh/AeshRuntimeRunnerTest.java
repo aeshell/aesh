@@ -2361,4 +2361,119 @@ public class AeshRuntimeRunnerTest {
             return CommandResult.SUCCESS;
         }
     }
+
+    // ========== Enhanced CommandNotFoundHandler tests (#561) ==========
+
+    @Test
+    public void testEnhancedHandlerReceivesUnknownCommandAndAvailableCommands() throws Exception {
+        final java.util.concurrent.atomic.AtomicReference<String> capturedUnknown = new java.util.concurrent.atomic.AtomicReference<>();
+        final java.util.concurrent.atomic.AtomicReference<java.util.Collection<String>> capturedAvailable = new java.util.concurrent.atomic.AtomicReference<>();
+
+        org.aesh.command.registry.CommandRegistry<CommandInvocation> registry = org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                .<CommandInvocation> builder()
+                .command(GroupCmd.class)
+                .create();
+
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(registry)
+                .commandNotFoundHandler(new org.aesh.command.CommandNotFoundHandler() {
+                    @Override
+                    public void handleCommandNotFound(String line,
+                            java.util.function.Consumer<String> output) {
+                        // should not be called when enhanced method is overridden
+                    }
+
+                    @Override
+                    public void handleCommandNotFound(String line,
+                            java.util.function.Consumer<String> output,
+                            String unknownCommand,
+                            java.util.Collection<String> availableCommands) {
+                        capturedUnknown.set(unknownCommand);
+                        capturedAvailable.set(availableCommands);
+                    }
+                })
+                .build();
+
+        try {
+            runtime.executeCommand("boguscmd");
+        } catch (org.aesh.command.CommandNotFoundException e) {
+            // expected
+        }
+
+        assertEquals("boguscmd", capturedUnknown.get());
+        assertNotNull("Available commands should not be null", capturedAvailable.get());
+        assertTrue("Available commands should contain 'grp'",
+                capturedAvailable.get().contains("grp"));
+    }
+
+    @Test
+    public void testSimpleHandlerStillWorksWithEnhancedCallSite() throws Exception {
+        // A lambda handler (simple signature) should still work —
+        // the enhanced default method delegates to the simple one
+        final java.util.concurrent.atomic.AtomicReference<String> capturedLine = new java.util.concurrent.atomic.AtomicReference<>();
+
+        org.aesh.command.registry.CommandRegistry<CommandInvocation> registry = org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                .<CommandInvocation> builder()
+                .command(GroupCmd.class)
+                .create();
+
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(registry)
+                .commandNotFoundHandler((line, output) -> capturedLine.set(line))
+                .build();
+
+        try {
+            runtime.executeCommand("typo");
+        } catch (org.aesh.command.CommandNotFoundException e) {
+            // expected
+        }
+
+        assertNotNull("Simple handler should have been called", capturedLine.get());
+        assertTrue("Line should contain 'typo'", capturedLine.get().contains("typo"));
+    }
+
+    @Test
+    public void testEnhancedHandlerWithMultipleRegisteredCommands() throws Exception {
+        final java.util.concurrent.atomic.AtomicReference<String> capturedUnknown = new java.util.concurrent.atomic.AtomicReference<>();
+        final java.util.concurrent.atomic.AtomicReference<java.util.Collection<String>> capturedAvailable = new java.util.concurrent.atomic.AtomicReference<>();
+
+        org.aesh.command.registry.CommandRegistry<CommandInvocation> registry = org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                .<CommandInvocation> builder()
+                .command(GroupCmd.class)
+                .command(NestedGroupRoot.class)
+                .create();
+
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(registry)
+                .commandNotFoundHandler(new org.aesh.command.CommandNotFoundHandler() {
+                    @Override
+                    public void handleCommandNotFound(String line,
+                            java.util.function.Consumer<String> output) {
+                    }
+
+                    @Override
+                    public void handleCommandNotFound(String line,
+                            java.util.function.Consumer<String> output,
+                            String unknownCommand,
+                            java.util.Collection<String> availableCommands) {
+                        capturedUnknown.set(unknownCommand);
+                        capturedAvailable.set(availableCommands);
+                    }
+                })
+                .build();
+
+        try {
+            runtime.executeCommand("alis");
+        } catch (org.aesh.command.CommandNotFoundException e) {
+            // expected
+        }
+
+        assertEquals("alis", capturedUnknown.get());
+        assertNotNull(capturedAvailable.get());
+        assertTrue("Should contain 'grp'", capturedAvailable.get().contains("grp"));
+        assertTrue("Should contain 'root558'", capturedAvailable.get().contains("root558"));
+    }
 }

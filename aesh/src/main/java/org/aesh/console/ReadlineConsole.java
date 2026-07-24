@@ -432,7 +432,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         } catch (CommandNotFoundException cnfe) {
             if (settings.commandNotFoundHandler() != null) {
                 settings.commandNotFoundHandler().handleCommandNotFound(line,
-                        msg -> conn.write(msg + Config.getLineSeparator()));
+                        msg -> conn.write(msg + Config.getLineSeparator()),
+                        cnfe.getCommandName(),
+                        settings.commandRegistry().getAllCommandNames());
             } else {
                 conn.write(cnfe.getMessage() + Config.getLineSeparator());
             }
