@@ -3099,6 +3099,7 @@ public class ProcessorTest {
         assertEquals("disableParsing", reflectionPC.disableParsing(), generatedPC.disableParsing());
         assertEquals("stopAtFirstPositional", reflectionPC.stopAtFirstPositional(), generatedPC.stopAtFirstPositional());
         assertEquals("sortOptions", reflectionPC.sortOptions(), generatedPC.sortOptions());
+        assertEquals("completeFallback", reflectionPC.getCompleteFallback(), generatedPC.getCompleteFallback());
         assertEquals("helpUrl",
                 reflectionPC.helpUrl() != null ? reflectionPC.helpUrl() : "",
                 generatedPC.helpUrl() != null ? generatedPC.helpUrl() : "");

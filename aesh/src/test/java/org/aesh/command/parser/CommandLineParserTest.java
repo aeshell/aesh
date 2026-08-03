@@ -4173,4 +4173,119 @@ public class CommandLineParserTest {
         assertEquals("Literal default should be unchanged", "hello", cmd.value);
     }
 
+    // --- Tests: Command-level completeFallback (#565) ---
+
+    @Test
+    public void testCommandLevelCompleteFallbackNone() throws Exception {
+        // Command sets NONE — String options should get NONE instead of FILES
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CmdFallbackNone<>()).getParser();
+        ProcessedOption nameOpt = parser.getProcessedCommand().findLongOptionNoActivatorCheck("name");
+        assertNotNull(nameOpt);
+        assertEquals("String option should get NONE from command-level",
+                org.aesh.command.option.CompletionFallback.NONE, nameOpt.getCompleteFallback());
+    }
+
+    @Test
+    public void testCommandLevelCompleteFallbackNoneOnArgument() throws Exception {
+        // Command sets NONE — Argument should also get NONE
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CmdFallbackNone<>()).getParser();
+        ProcessedOption arg = parser.getProcessedCommand().getArgument();
+        assertNotNull(arg);
+        assertEquals("Argument should get NONE from command-level",
+                org.aesh.command.option.CompletionFallback.NONE, arg.getCompleteFallback());
+    }
+
+    @Test
+    public void testOptionOverridesCommandFallback() throws Exception {
+        // Option explicitly sets FILES — should override command NONE
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CmdFallbackNone<>()).getParser();
+        ProcessedOption fileOpt = parser.getProcessedCommand().findLongOptionNoActivatorCheck("file");
+        assertNotNull(fileOpt);
+        assertEquals("Option-level FILES should override command-level NONE",
+                org.aesh.command.option.CompletionFallback.FILES, fileOpt.getCompleteFallback());
+    }
+
+    @Test
+    public void testDefaultCommandFallbackPreservesTypeHeuristic() throws Exception {
+        // Command with DEFAULT (no override) — String should still get FILES (POSIX default)
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CmdFallbackDefault<>()).getParser();
+        ProcessedOption nameOpt = parser.getProcessedCommand().findLongOptionNoActivatorCheck("name");
+        assertNotNull(nameOpt);
+        assertEquals("String should get FILES when command is DEFAULT",
+                org.aesh.command.option.CompletionFallback.FILES, nameOpt.getCompleteFallback());
+    }
+
+    @Test
+    public void testCommandFallbackDirectories() throws Exception {
+        // Command sets DIRECTORIES — String option should get DIRECTORIES
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CmdFallbackDirs<>()).getParser();
+        ProcessedOption pathOpt = parser.getProcessedCommand().findLongOptionNoActivatorCheck("path");
+        assertNotNull(pathOpt);
+        assertEquals("String option should get DIRECTORIES from command-level",
+                org.aesh.command.option.CompletionFallback.DIRECTORIES, pathOpt.getCompleteFallback());
+    }
+
+    @Test
+    public void testCommandFallbackOnEnumOption() throws Exception {
+        // Command sets NONE — Enum option was already NONE from type heuristic, should stay NONE
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new CmdFallbackNone<>()).getParser();
+        ProcessedOption enumOpt = parser.getProcessedCommand().findLongOptionNoActivatorCheck("color");
+        assertNotNull(enumOpt);
+        assertEquals("Enum option should be NONE",
+                org.aesh.command.option.CompletionFallback.NONE, enumOpt.getCompleteFallback());
+    }
+
+    enum TestColor {
+        RED,
+        GREEN,
+        BLUE
+    }
+
+    @CommandDefinition(name = "cfbnone", description = "test", completeFallback = org.aesh.command.option.CompletionFallback.NONE)
+    public class CmdFallbackNone<CI extends CommandInvocation> implements Command<CI> {
+        @Option
+        String name;
+
+        @Option(completeFallback = org.aesh.command.option.CompletionFallback.FILES)
+        String file;
+
+        @Option
+        TestColor color;
+
+        @Argument
+        String target;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "cfbdefault", description = "test")
+    public class CmdFallbackDefault<CI extends CommandInvocation> implements Command<CI> {
+        @Option
+        String name;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "cfbdirs", description = "test", completeFallback = org.aesh.command.option.CompletionFallback.DIRECTORIES)
+    public class CmdFallbackDirs<CI extends CommandInvocation> implements Command<CI> {
+        @Option
+        String path;
+
+        @Override
+        public CommandResult execute(CI ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
 }

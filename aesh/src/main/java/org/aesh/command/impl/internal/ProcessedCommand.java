@@ -65,6 +65,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean disableParsing;
     private final boolean stopAtFirstPositional;
     private final boolean sortOptions;
+    private org.aesh.command.option.CompletionFallback completeFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
     private boolean generateHelp;
@@ -357,6 +358,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean sortOptions() {
         return sortOptions;
+    }
+
+    public org.aesh.command.option.CompletionFallback getCompleteFallback() {
+        return completeFallback;
+    }
+
+    public void setCompleteFallback(org.aesh.command.option.CompletionFallback completeFallback) {
+        this.completeFallback = completeFallback;
     }
 
     public boolean hasInheritedOptions() {

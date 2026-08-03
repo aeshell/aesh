@@ -146,6 +146,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .helpUrl(command.helpUrl())
                     .create();
 
+            processedCommand.setCompleteFallback(command.completeFallback());
             processCommand(processedCommand, clazz);
             validatePositionalIndexes(processedCommand);
             if (command.helpGroup().length() > 0)
@@ -289,7 +290,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .inherited(o.inherited())
                             .descriptionUrl(o.descriptionUrl())
                             .url(o.url())
-                            .completeFallback(o.completeFallback())
+                            .completeFallback(resolveEffectiveFallback(
+                                    o.completeFallback(), processedCommand))
                             .aliases(o.aliases())
                             .helpGroup(o.helpGroup())
                             .exclusiveWith(o.exclusiveWith())
@@ -440,7 +442,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .activator(a.activator())
                     .parser(a.parser())
                     .url(a.url())
-                    .completeFallback(a.completeFallback())
+                    .completeFallback(resolveEffectiveFallback(
+                            a.completeFallback(), processedCommand))
                     .mixinFieldName(mixinFieldName)
                     .build());
         } else if ((arg = field.getAnnotation(Argument.class)) != null) {
@@ -478,7 +481,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                             .overrideRequired(arg.overrideRequired())
                             .inherited(arg.inherited())
                             .url(arg.url())
-                            .completeFallback(arg.completeFallback())
+                            .completeFallback(resolveEffectiveFallback(
+                                    arg.completeFallback(), processedCommand))
                             .mixinFieldName(mixinFieldName)
                             .build());
         } else if (field.getAnnotation(Mixin.class) != null) {
@@ -540,6 +544,20 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 container.addLazyChild(alias, clazz);
             }
         }
+    }
+
+    /**
+     * Resolve the effective CompletionFallback for an option/argument.
+     * If the option-level value is DEFAULT, use the command-level value instead.
+     * If both are DEFAULT, the type-based heuristic in ProcessedOptionBuilder.build()
+     * will apply as usual.
+     */
+    private static org.aesh.command.option.CompletionFallback resolveEffectiveFallback(
+            org.aesh.command.option.CompletionFallback optionLevel,
+            ProcessedCommand<?, ?> processedCommand) {
+        if (optionLevel != org.aesh.command.option.CompletionFallback.DEFAULT)
+            return optionLevel;
+        return processedCommand.getCompleteFallback();
     }
 
     @SuppressWarnings("unchecked")

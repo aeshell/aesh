@@ -1,7 +1,7 @@
 package org.aesh.command.jbang;
 
-import org.aesh.command.CommandResult;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
 

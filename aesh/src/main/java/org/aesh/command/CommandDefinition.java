@@ -166,6 +166,21 @@ public @interface CommandDefinition {
     boolean sortOptions() default false;
 
     /**
+     * Default completion fallback for all options and arguments in this command.
+     * Individual options can still override with their own {@code completeFallback}.
+     * <p>
+     * When set to a value other than {@code DEFAULT}, it replaces the type-based
+     * heuristic (String/File/Path -> FILES) for options that don't declare their own.
+     * <p>
+     * Example: set to {@code NONE} to suppress file completion on all String options:
+     *
+     * <pre>
+     * {@literal @}CommandDefinition(name = "myapp", completeFallback = CompletionFallback.NONE)
+     * </pre>
+     */
+    org.aesh.command.option.CompletionFallback completeFallback() default org.aesh.command.option.CompletionFallback.DEFAULT;
+
+    /**
      * Specify subcommands for this command, making it a group command.
      * When non-empty, the command acts as a group command container.
      * <p>
