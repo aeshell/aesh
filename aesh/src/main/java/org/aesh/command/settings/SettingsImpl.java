@@ -110,6 +110,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     private AliasManager aliasManager;
     private Consumer<Void> connectionClosedHandler;
     private SubCommandModeSettings subCommandModeSettings;
+    private boolean enableShellEscape;
 
     SettingsImpl() {
     }
@@ -166,6 +167,7 @@ public class SettingsImpl<CI extends CommandInvocation>
         setAliasManager(baseSettings.aliasManager());
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
         setSubCommandModeSettings(baseSettings.subCommandModeSettings());
+        setEnableShellEscape(baseSettings.enableShellEscape());
     }
 
     public void resetToDefaults() {
@@ -869,5 +871,15 @@ public class SettingsImpl<CI extends CommandInvocation>
     @Override
     public boolean tailTipSuggestions() {
         return tailTipSuggestions;
+    }
+
+    @Override
+    public boolean enableShellEscape() {
+        return enableShellEscape;
+    }
+
+    @Override
+    public void setEnableShellEscape(boolean enable) {
+        this.enableShellEscape = enable;
     }
 }

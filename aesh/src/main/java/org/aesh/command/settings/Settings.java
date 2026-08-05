@@ -356,4 +356,20 @@ public interface Settings<CI extends CommandInvocation>
      * @return the sub-command mode settings
      */
     SubCommandModeSettings subCommandModeSettings();
+
+    /**
+     * Whether the {@code !} prefix is enabled for executing native OS commands
+     * from the REPL. When enabled, input like {@code !ls -la} forks the command
+     * as a native process.
+     * <p>
+     * Disabled by default for security. Only applies to interactive console mode.
+     *
+     * @return true if shell escape is enabled
+     */
+    boolean enableShellEscape();
+
+    /**
+     * Set whether the {@code !} prefix is enabled for native OS commands.
+     */
+    void setEnableShellEscape(boolean enable);
 }

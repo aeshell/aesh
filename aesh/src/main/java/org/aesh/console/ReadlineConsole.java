@@ -396,6 +396,16 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     private void processLine(String line, Connection conn) {
+        // Handle shell escape: !command runs a native OS command (#566)
+        if (settings.enableShellEscape() && line.trim().startsWith("!")) {
+            String nativeCmd = line.trim().substring(1).trim();
+            if (!nativeCmd.isEmpty()) {
+                executeNativeCommand(nativeCmd, conn);
+            }
+            read(conn, readline);
+            return;
+        }
+
         // Handle special commands in sub-command mode
         if (commandContext != null && commandContext.isInSubCommandMode()) {
             // Handle exit command
@@ -632,6 +642,33 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
      */
     public CommandRegistry<?> getCommandRegistry() {
         return commandResolver.getRegistry();
+    }
+
+    /**
+     * Execute a native OS command via the system shell.
+     * Uses {@code sh -c} on Unix/macOS and {@code cmd /c} on Windows.
+     * Output is piped through the connection for remote compatibility.
+     */
+    private void executeNativeCommand(String command, Connection conn) {
+        try {
+            boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+            ProcessBuilder pb = isWindows
+                    ? new ProcessBuilder("cmd", "/c", command)
+                    : new ProcessBuilder("sh", "-c", command);
+            pb.redirectErrorStream(true);
+            java.lang.Process process = pb.start();
+
+            // Read process output and write to connection
+            java.io.InputStream is = process.getInputStream();
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = is.read(buffer)) != -1) {
+                conn.write(new String(buffer, 0, len));
+            }
+            process.waitFor();
+        } catch (Exception e) {
+            conn.write("Shell escape error: " + e.getMessage() + Config.getLineSeparator());
+        }
     }
 
 }

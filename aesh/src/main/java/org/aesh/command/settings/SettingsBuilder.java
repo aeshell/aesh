@@ -342,6 +342,15 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Enable the {@code !} prefix for executing native OS commands from the REPL.
+     * Disabled by default.
+     */
+    public SettingsBuilder<CI> enableShellEscape(boolean enable) {
+        settings.setEnableShellEscape(enable);
+        return this;
+    }
+
     public Settings<CI> build() {
         if (settings.logging())
             LoggerUtil.doLog();

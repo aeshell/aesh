@@ -153,6 +153,18 @@ public class AeshConsoleRunner {
     }
 
     /**
+     * Enable the {@code !} prefix for executing native OS commands from the REPL.
+     * For example, {@code !ls -la} forks {@code ls -la} as a native process.
+     * Disabled by default.
+     */
+    public AeshConsoleRunner enableShellEscape(boolean enable) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setEnableShellEscape(enable);
+        return this;
+    }
+
+    /**
      * Set a dynamic prompt supplier that is called before each readline cycle.
      * Enables prompts that change based on context (git branch, command duration, etc.).
      * Takes precedence over a static prompt set via {@link #prompt(String)} or {@link #prompt(Prompt)}.
