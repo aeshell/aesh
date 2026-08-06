@@ -54,6 +54,10 @@ public class TestConnection implements Connection {
     private Attributes attributes;
 
     private volatile boolean reading = false;
+    // Track stdinHandler changes to detect readline cycle transitions.
+    // When the handler changes, doRead() briefly yields to let the
+    // processing thread drain any buffered input.
+    private volatile boolean handlerChanged = false;
 
     public TestConnection() {
         this(new Size(80, 20), true);
@@ -170,6 +174,7 @@ public class TestConnection implements Connection {
     @Override
     public void setStdinHandler(Consumer<int[]> handler) {
         stdinHandler = handler;
+        handlerChanged = true;
     }
 
     @Override
@@ -211,6 +216,17 @@ public class TestConnection implements Connection {
 
     private void doRead(int[] input) {
         if (reading) {
+            // If the stdinHandler was recently changed (e.g., readline cycle
+            // transition), yield briefly to let the processing thread drain
+            // any buffered input and start the next readline cycle.
+            if (handlerChanged) {
+                handlerChanged = false;
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
             if (stdinHandler != null) {
                 stdinHandler.accept(input);
             } else {
