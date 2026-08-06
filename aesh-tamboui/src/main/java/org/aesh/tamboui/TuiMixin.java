@@ -37,7 +37,7 @@ import dev.tamboui.tui.TuiConfig;
  *     &#64;Mixin
  *     TuiMixin tuiOptions;
  *
- *     @Override
+ *     &#64;Override
  *     protected void runTui(TuiRunner runner, CommandInvocation inv) throws Exception {
  *         runner.run(...);
  *     }
