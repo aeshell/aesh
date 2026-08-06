@@ -106,6 +106,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
 
     private volatile boolean running = false;
+    // Deferred close: set when the connection closes (EOF on pipe) while a
+    // command is still running. Checked in processFinished() to stop the
+    // console after the last command completes (#233 / piped stdin race).
+    private volatile boolean closePending = false;
     private History history;
     private SuggestionProvider suggestionProvider;
 
@@ -221,7 +225,14 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             this.connection = connection;
 
         connection.setCloseHandler((Void t) -> {
-            doStop(false);
+            // Defer stop if a command is still running (e.g., piped stdin EOF
+            // arrives while a command is executing). ProcessManager.processFinished()
+            // will check closePending and stop the console after the command completes.
+            if (processManager.hasActiveProcess()) {
+                closePending = true;
+            } else {
+                doStop(false);
+            }
         });
         if (!settings.isEchoCtrl()) {
             // Do not display ^C

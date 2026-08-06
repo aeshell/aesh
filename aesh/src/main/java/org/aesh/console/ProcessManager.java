@@ -52,6 +52,7 @@ public class ProcessManager {
     private Executor<? extends CommandInvocation> executor;
     private CommandExecutionListener executionListener;
     private String commandLine;
+    private volatile Process activeProcess;
 
     public ProcessManager(Console console) {
         this.console = console;
@@ -59,6 +60,16 @@ public class ProcessManager {
 
     public void setExecutionListener(CommandExecutionListener listener) {
         this.executionListener = listener;
+    }
+
+    /**
+     * Returns true if there is a command process currently executing.
+     * Used by ReadlineConsole to defer connection close on EOF until
+     * the active process completes.
+     */
+    public boolean hasActiveProcess() {
+        Process p = activeProcess;
+        return p != null && p.isAlive();
     }
 
     public void execute(Executor<? extends CommandInvocation> executor, Connection conn, String commandLine) {
@@ -73,6 +84,8 @@ public class ProcessManager {
     }
 
     public void processFinished(Process process) {
+        activeProcess = null;
+
         // Interrupt and wait for any upstream pipe threads to finish.
         // Interrupting is needed because upstream stages may be blocked on
         // PipedOutputStream.write() if the downstream consumer finished early.
@@ -155,10 +168,13 @@ public class ProcessManager {
             Execution<? extends CommandInvocation> lastStage = pipeChain.get(pipeChain.size() - 1);
             Process mainProcess = new Process(this, conn, lastStage, commandLine, executionListener);
             mainProcess.setUpstreamPipeThreads(upstreamThreads);
+            activeProcess = mainProcess;
             mainProcess.start();
         } else {
             // Single command — run normally
-            new Process(this, conn, exec, commandLine, executionListener).start();
+            Process process = new Process(this, conn, exec, commandLine, executionListener);
+            activeProcess = process;
+            process.start();
         }
     }
 }
