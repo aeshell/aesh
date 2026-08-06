@@ -44,6 +44,7 @@
    </licenses>
 
    <properties>
+      <maven.compiler.release>11</maven.compiler.release>
       <maven.compiler.target>11</maven.compiler.target>
       <maven.compiler.source>11</maven.compiler.source>
    </properties>
@@ -86,10 +87,17 @@
       </dependency>
 
       <dependency>
-         <groupId>dev.tamboui</groupId>
-         <artifactId>tamboui-aesh-backend</artifactId>
-         <version>${tamboui.version}</version>
-      </dependency>
+       <groupId>dev.tamboui</groupId>
+          <artifactId>tamboui-aesh-backend</artifactId>
+          <version>${tamboui.version}</version>
+       </dependency>
+
+       <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.13.2</version>
+          <scope>test</scope>
+       </dependency>
    </dependencies>
 
    <build>

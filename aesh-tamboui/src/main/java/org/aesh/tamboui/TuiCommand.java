@@ -97,6 +97,11 @@ public abstract class TuiCommand implements Command<CommandInvocation> {
             TuiConfig.Builder builder = TuiConfig.builder()
                     .backend(backend)
                     .shutdownHook(false); // aesh manages the lifecycle
+            // Apply TuiMixin options if the subclass has one
+            TuiMixin mixin = TuiMixinResolver.findMixin(this);
+            if (mixin != null) {
+                mixin.applyTo(builder);
+            }
             TuiConfig config = configure(builder).build();
             try (TuiRunner runner = TuiRunner.create(config)) {
                 runTui(runner, invocation);

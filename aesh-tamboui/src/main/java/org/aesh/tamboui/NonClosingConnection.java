@@ -64,8 +64,8 @@ class NonClosingConnection implements Connection {
     }
 
     @Override
-    public Consumer<Size> getSizeHandler() {
-        return delegate.getSizeHandler();
+    public Consumer<Size> sizeHandler() {
+        return delegate.sizeHandler();
     }
 
     @Override
@@ -74,8 +74,8 @@ class NonClosingConnection implements Connection {
     }
 
     @Override
-    public Consumer<Signal> getSignalHandler() {
-        return delegate.getSignalHandler();
+    public Consumer<Signal> signalHandler() {
+        return delegate.signalHandler();
     }
 
     @Override
@@ -84,8 +84,8 @@ class NonClosingConnection implements Connection {
     }
 
     @Override
-    public Consumer<int[]> getStdinHandler() {
-        return delegate.getStdinHandler();
+    public Consumer<int[]> stdinHandler() {
+        return delegate.stdinHandler();
     }
 
     @Override
@@ -104,8 +104,8 @@ class NonClosingConnection implements Connection {
     }
 
     @Override
-    public Consumer<Void> getCloseHandler() {
-        return delegate.getCloseHandler();
+    public Consumer<Void> closeHandler() {
+        return delegate.closeHandler();
     }
 
     @Override
@@ -131,8 +131,8 @@ class NonClosingConnection implements Connection {
     }
 
     @Override
-    public Attributes getAttributes() {
-        return delegate.getAttributes();
+    public Attributes attributes() {
+        return delegate.attributes();
     }
 
     @Override

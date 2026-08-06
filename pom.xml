@@ -39,10 +39,8 @@
         <module>aesh</module>
         <module>aesh-processor</module>
         <module>aesh-charts</module>
+        <module>aesh-tamboui</module>
     </modules>
-
-    <!-- aesh-tamboui is in a profile since it requires tamboui snapshot dependencies -->
-    <!-- Build with: mvn compile -Ptamboui -->
 
     <!-- Licenses -->
     <licenses>
@@ -353,12 +351,7 @@
           <module>examples</module>
         </modules>
       </profile>
-      <profile>
-        <id>tamboui</id>
-        <modules>
-          <module>aesh-tamboui</module>
-        </modules>
-      </profile>
+
     </profiles>
 
 </project>
