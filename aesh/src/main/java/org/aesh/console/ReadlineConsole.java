@@ -224,6 +224,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         if (this.connection == null)
             this.connection = connection;
 
+        // Initialize processManager before the close handler so it is never
+        // null when the handler fires (#570).
+        processManager = new ProcessManager(this);
+        processManager.setExecutionListener(settings.commandExecutionListener());
+
         connection.setCloseHandler((Void t) -> {
             // Defer stop if a command is still running (e.g., piped stdin EOF
             // arrives while a command is executing). ProcessManager.processFinished()
@@ -266,8 +271,6 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         this.runtime = generateRuntime();
         read(this.connection, readline);
-        processManager = new ProcessManager(this);
-        processManager.setExecutionListener(settings.commandExecutionListener());
         this.connection.openBlocking();
     }
 
