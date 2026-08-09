@@ -35,8 +35,10 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.parser.SubcommandNotFoundException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
+import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
@@ -56,6 +58,7 @@ public class AeshRuntimeRunner {
     private String completionProgramName;
     private boolean dynamicComplete;
     private CommandNotFoundHandler commandNotFoundHandler;
+    private Shell shell;
 
     private AeshRuntimeRunner() {
     }
@@ -136,6 +139,16 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    /**
+     * Set a custom Shell for command execution.
+     * When not set, a lazy Shell is created that initializes a
+     * TerminalConnection on first access to size() or connection().
+     */
+    public AeshRuntimeRunner shell(Shell shell) {
+        this.shell = shell;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
         CommandRegistry commandRegistry = registryBuilder.create();
@@ -163,8 +176,15 @@ public class AeshRuntimeRunner {
         if (dynamicComplete)
             return performDynamicCompletion(commandRegistry);
 
+        // Create a lazy Shell if none was provided — only initializes
+        // TerminalConnection when size() or connection() is actually called.
+        Shell effectiveShell = this.shell != null
+                ? this.shell
+                : new LazyTerminalShell();
+
         AeshCommandRuntimeBuilder runtimeBuilder = AeshCommandRuntimeBuilder.builder()
-                .commandRegistry(commandRegistry);
+                .commandRegistry(commandRegistry)
+                .shell(effectiveShell);
         if (commandNotFoundHandler != null)
             runtimeBuilder.commandNotFoundHandler(commandNotFoundHandler);
         CommandRuntime runtime = runtimeBuilder.build();
@@ -186,9 +206,9 @@ public class AeshRuntimeRunner {
             return CommandResult.COMMAND_NOT_FOUND;
         } catch (CommandLineParserException | OptionValidatorException e) {
             // For subcommand-not-found, call the handler first for "did you mean?"
-            if (e instanceof org.aesh.command.parser.SubcommandNotFoundException
+            if (e instanceof SubcommandNotFoundException
                     && commandNotFoundHandler != null) {
-                org.aesh.command.parser.SubcommandNotFoundException snfe = (org.aesh.command.parser.SubcommandNotFoundException) e;
+                SubcommandNotFoundException snfe = (SubcommandNotFoundException) e;
                 String fullLine = commandName + (args != null && args.length > 0
                         ? " " + String.join(" ", args)
                         : "");
@@ -206,6 +226,12 @@ public class AeshRuntimeRunner {
         } catch (IOException e) {
             System.err.println(e.getMessage());
             return CommandResult.FAILURE;
+        } finally {
+            // Close the lazy shell to restore terminal attributes if a
+            // TerminalConnection was initialized during command execution
+            if (effectiveShell instanceof LazyTerminalShell) {
+                ((LazyTerminalShell) effectiveShell).close();
+            }
         }
     }
 
