@@ -600,6 +600,38 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 }
             }
             runtime.complete(completeOperation);
+
+            // If no candidates found, try alias expansion (#572).
+            // Expand the alias in the buffer and re-run completion against the
+            // expanded form, then adjust offsets for the original buffer.
+            if (completeOperation.getCompletionCandidates().isEmpty() && aliasManager != null) {
+                String buffer = completeOperation.getBuffer();
+                java.util.Optional<String> expanded = aliasManager.getAliasName(buffer);
+                if (expanded.isPresent() && !expanded.get().equals(buffer)) {
+                    String expandedBuffer = expanded.get();
+                    int lengthDiff = expandedBuffer.length() - buffer.length();
+
+                    AeshCompleteOperation expandedOp = new AeshCompleteOperation(
+                            context, expandedBuffer,
+                            completeOperation.getCursor() + lengthDiff);
+
+                    runtime.complete(expandedOp);
+
+                    if (!expandedOp.getCompletionCandidates().isEmpty()) {
+                        completeOperation.addCompletionCandidatesTerminalString(
+                                expandedOp.getCompletionCandidates());
+                        completeOperation.setIgnoreOffset(expandedOp.isIgnoreOffset());
+                        completeOperation.setIgnoreStartsWith(expandedOp.isIgnoreStartsWith());
+                        completeOperation.setAppendSeparator(expandedOp.isAppendSeparator());
+                        completeOperation.setSeparator(expandedOp.getSeparator());
+
+                        int newOffset = expandedOp.getOffset() - lengthDiff;
+                        if (newOffset >= 0) {
+                            completeOperation.setOffset(newOffset);
+                        }
+                    }
+                }
+            }
         }
     }
 
