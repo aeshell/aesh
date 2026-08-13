@@ -3074,6 +3074,93 @@ public class ProcessorTest {
                 result.classLoader.loadClass("test.CascadeCommand_AeshMetadata"));
     }
 
+    // --- Test: Mixed annotation + programmatic options with processor-generated metadata ---
+
+    private static final String MIXED_OPT_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"mixed\", description = \"Mixed options\", generateHelp = true)\n" +
+            "public class MixedOptCmd implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"name\", shortName = 'n', description = \"Name\")\n" +
+            "    String name;\n" +
+            "\n" +
+            "    @Option(name = \"verbose\", shortName = 'v', hasValue = false, description = \"Verbose\")\n" +
+            "    boolean verbose;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMixedAnnotationAndProgrammaticOptionsWithProcessor() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.MixedOptCmd", MIXED_OPT_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        // Build via generated provider (processor path)
+        Class commandClass = result.classLoader.loadClass("test.MixedOptCmd");
+        org.aesh.command.container.CommandContainer container = new AeshCommandContainerBuilder().create(commandClass);
+
+        ProcessedCommand pc = container.getParser().getProcessedCommand();
+
+        // Verify annotation-defined options exist
+        assertNotNull("Should have --name", pc.findLongOptionNoActivatorCheck("name"));
+        assertNotNull("Should have --verbose", pc.findLongOptionNoActivatorCheck("verbose"));
+
+        // Add a dynamic option AFTER processor-built construction
+        pc.addOption(
+                org.aesh.command.impl.internal.ProcessedOptionBuilder.builder()
+                        .shortName('d')
+                        .name("dynamic")
+                        .type(String.class)
+                        .description("Dynamically added option")
+                        .build());
+
+        // All three options should be findable
+        assertNotNull("--name should still be found", pc.findLongOptionNoActivatorCheck("name"));
+        assertNotNull("--verbose should still be found", pc.findLongOptionNoActivatorCheck("verbose"));
+        assertNotNull("--dynamic should be found", pc.findLongOptionNoActivatorCheck("dynamic"));
+
+        // Parse a command line with both annotation-defined and dynamic options
+        container.getParser().parse("mixed --name Alice --dynamic hello");
+        if (container.getParser().getProcessedCommand().parserExceptions().size() > 0)
+            throw (Exception) container.getParser().getProcessedCommand().parserExceptions().get(0);
+
+        assertEquals("Alice", pc.findLongOptionNoActivatorCheck("name").getValue());
+        assertEquals("hello", pc.findLongOptionNoActivatorCheck("dynamic").getValue());
+
+        // Verify help includes all options
+        String help = container.getParser().printHelp();
+        assertTrue("Help should include --name", help.contains("--name"));
+        assertTrue("Help should include --verbose", help.contains("--verbose"));
+        assertTrue("Help should include --dynamic", help.contains("--dynamic"));
+
+        // Verify completion includes all options
+        org.aesh.command.invocation.InvocationProviders ip = org.aesh.command.settings.SettingsBuilder.builder().build()
+                .invocationProviders();
+        org.aesh.complete.AeshCompleteOperation co = new org.aesh.complete.AeshCompleteOperation(
+                new org.aesh.console.DefaultAeshContext(), "mixed --", 8);
+        container.getParser().complete(co, ip);
+
+        boolean hasName = false, hasDynamic = false;
+        for (String c : co.getFormattedCompletionCandidates()) {
+            if (c.contains("name"))
+                hasName = true;
+            if (c.contains("dynamic"))
+                hasDynamic = true;
+        }
+        assertTrue("Completion should include --name", hasName);
+        assertTrue("Completion should include --dynamic", hasDynamic);
+    }
+
     // --- Equivalence assertion ---
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
