@@ -99,7 +99,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private final AeshContext context;
     private Readline readline;
     private CommandRuntime<? extends CommandInvocation> runtime;
-    private ProcessManager processManager;
+    private final ProcessManager processManager;
     private ExportManager exportManager;
     private final List<Function<String, Optional<String>>> preProcessors = new ArrayList<>();
 
@@ -177,6 +177,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         context = new DefaultAeshContext(exportManager);
 
+        processManager = new ProcessManager(this);
+        processManager.setExecutionListener(settings.commandExecutionListener());
     }
 
     public void start() throws IOException {
@@ -223,11 +225,6 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     public void accept(Connection connection) {
         if (this.connection == null)
             this.connection = connection;
-
-        // Initialize processManager before the close handler so it is never
-        // null when the handler fires (#570).
-        processManager = new ProcessManager(this);
-        processManager.setExecutionListener(settings.commandExecutionListener());
 
         connection.setCloseHandler((Void t) -> {
             // Defer stop if a command is still running (e.g., piped stdin EOF
