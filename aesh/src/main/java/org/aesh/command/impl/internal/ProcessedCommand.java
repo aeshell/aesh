@@ -204,6 +204,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             for (ProcessedOption argOpt : this.argumentOptions)
                 argOpt.captureInitialValue(command);
         }
+
+        // Eagerly build lookup maps now that all options (including help/version)
+        // are added. This eliminates the lazy-init null check on every
+        // findOption/findLongOption call during parsing (#573).
+        buildLookupMaps();
     }
 
     public List<ProcessedOption> getOptions() {
@@ -804,8 +809,16 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     private void doGenerateHelp() {
-        //only generate a help option if there is no other option already called help
-        if (findOption("help") == null) {
+        // Use direct scan instead of findOption("help") to avoid triggering
+        // buildLookupMaps() during construction (#573)
+        boolean hasHelp = false;
+        for (ProcessedOption opt : options) {
+            if ("h".equals(opt.shortName())) {
+                hasHelp = true;
+                break;
+            }
+        }
+        if (!hasHelp) {
             ProcessedOption helpOption = ProcessedOption.createDirect(
                     "h", "help", "Display this help and exit",
                     Boolean.class, "generatedHelp", OptionType.BOOLEAN,
@@ -814,10 +827,6 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             helpOption.setDeclarationOrder(optionDeclarationCounter++);
             options.add(helpOption);
             helpOption.setParent(this);
-            // The findOption() call above may have triggered buildLookupMaps()
-            // before the help option was added. Invalidate so --help is found
-            // via longNameMap during parsing (#558).
-            invalidateLookupMaps();
         }
     }
 
@@ -867,8 +876,16 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     private void doGenerateVersion() {
-        //only generate a version option if there is no other option already called version
-        if (findOption("version") == null) {
+        // Use direct scan instead of findOption("version") to avoid triggering
+        // buildLookupMaps() during construction (#573)
+        boolean hasVersion = false;
+        for (ProcessedOption opt : options) {
+            if ("v".equals(opt.shortName())) {
+                hasVersion = true;
+                break;
+            }
+        }
+        if (!hasVersion) {
             ProcessedOption versionOption = ProcessedOption.createDirect(
                     "v", "version", "Displays version information of the command",
                     Boolean.class, "generatedVersion", OptionType.BOOLEAN,
@@ -877,9 +894,6 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             versionOption.setDeclarationOrder(optionDeclarationCounter++);
             options.add(versionOption);
             versionOption.setParent(this);
-            // Same as doGenerateHelp(): the findOption() call above may have
-            // triggered buildLookupMaps() before the version option was added.
-            invalidateLookupMaps();
         }
     }
 
