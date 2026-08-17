@@ -118,6 +118,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     }
                 }
             }
+            // Eagerly resolve lazy children so the cost is paid at construction
+            // time rather than on the first executeCommand() call (#577)
+            parser.getAllChildParsers();
         }
 
         return container;
@@ -187,6 +190,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         }
                     }
                 }
+                // Eagerly resolve lazy children so the cost is paid at construction
+                // time rather than on the first executeCommand() call (#577)
+                groupParser.getAllChildParsers();
                 return groupContainer;
             }
 
