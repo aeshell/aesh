@@ -211,6 +211,17 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         buildLookupMaps();
     }
 
+    /**
+     * Ensure the options list has room for at least the given number of options.
+     * Called by ProcessedCommandBuilder when the generated code knows the exact
+     * option count at compile time, avoiding ArrayList resizing (#575).
+     */
+    public void ensureOptionCapacity(int capacity) {
+        if (options instanceof ArrayList) {
+            ((ArrayList<ProcessedOption>) options).ensureCapacity(capacity);
+        }
+    }
+
     public List<ProcessedOption> getOptions() {
         return options;
     }

@@ -63,6 +63,57 @@ final class CodeGenerator {
     private CodeGenerator() {
     }
 
+    /**
+     * Count the number of options (Option, OptionList, OptionGroup) that will be
+     * added to the ProcessedCommand, including those from Mixin fields.
+     * Used to pre-size the options ArrayList (#575).
+     */
+    private static int countOptions(List<VariableElement> fields, Elements elementUtils, Types typeUtils) {
+        int count = 0;
+        for (VariableElement field : fields) {
+            if (field.getAnnotation(Option.class) != null
+                    || field.getAnnotation(OptionList.class) != null
+                    || field.getAnnotation(OptionGroup.class) != null) {
+                count++;
+            } else if (field.getAnnotation(Mixin.class) != null) {
+                TypeMirror mixinType = field.asType();
+                if (mixinType instanceof DeclaredType) {
+                    TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
+                    count += countMixinOptions(mixinElement);
+                }
+            }
+        }
+        return count;
+    }
+
+    private static int countMixinOptions(TypeElement typeElement) {
+        int count = 0;
+        for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
+            if (enclosed instanceof VariableElement) {
+                VariableElement field = (VariableElement) enclosed;
+                if (field.getAnnotation(Option.class) != null
+                        || field.getAnnotation(OptionList.class) != null
+                        || field.getAnnotation(OptionGroup.class) != null) {
+                    count++;
+                } else if (field.getAnnotation(Mixin.class) != null) {
+                    TypeMirror mixinType = field.asType();
+                    if (mixinType instanceof DeclaredType) {
+                        count += countMixinOptions((TypeElement) ((DeclaredType) mixinType).asElement());
+                    }
+                }
+            }
+        }
+        // Recurse into superclass
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() != javax.lang.model.type.TypeKind.NONE
+                && !superclass.toString().equals("java.lang.Object")) {
+            if (superclass instanceof DeclaredType) {
+                count += countMixinOptions((TypeElement) ((DeclaredType) superclass).asElement());
+            }
+        }
+        return count;
+    }
+
     static String generate(
             String packageName, String simpleName, String metadataClassName,
             String qualifiedCommandName, TypeElement commandElement,
@@ -290,6 +341,14 @@ final class CodeGenerator {
         sb.append("                .version(\"\")\n");
         String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);
         sb.append("                .helpUrl(").append(stringLiteral(helpUrl != null ? helpUrl : "")).append(")\n");
+
+        // Pre-count options so the ArrayList is pre-sized, avoiding resizing (#575)
+        int optionCount = countOptions(fields, elementUtils, typeUtils);
+        if (generateHelp)
+            optionCount++;
+        if (version != null && !version.isEmpty())
+            optionCount++;
+        sb.append("                .optionCapacity(").append(optionCount).append(")\n");
 
         sb.append("                .create();\n\n");
 

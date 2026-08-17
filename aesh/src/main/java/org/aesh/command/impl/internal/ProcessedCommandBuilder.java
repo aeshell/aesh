@@ -62,6 +62,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private String version;
     private String helpUrl;
     private boolean sortOptions;
+    private int optionCapacity = -1;
 
     private ProcessedCommandBuilder() {
         options = new ArrayList<>();
@@ -131,6 +132,16 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     public ProcessedCommandBuilder<C, CI> sortOptions(boolean sortOptions) {
         this.sortOptions = sortOptions;
+        return this;
+    }
+
+    /**
+     * Pre-size the internal options list to the given capacity.
+     * Used by generated (annotation-processor) code which knows the exact
+     * option count at compile time, avoiding ArrayList resizing (#575).
+     */
+    public ProcessedCommandBuilder<C, CI> optionCapacity(int capacity) {
+        this.optionCapacity = capacity;
         return this;
     }
 
@@ -228,8 +239,11 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         if (name == null || name.length() < 1)
             throw new CommandLineParserException("The parameter name must be defined");
 
-        return new ProcessedCommand<>(name, aliases, command, description, validator,
+        ProcessedCommand<C, CI> pc = new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
                 helpUrl, stopAtFirstPositional, defaultValueProvider, sortOptions);
+        if (optionCapacity > 0)
+            pc.ensureOptionCapacity(optionCapacity);
+        return pc;
     }
 }
