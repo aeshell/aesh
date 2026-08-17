@@ -94,12 +94,26 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             setChildResolverFromBuilder(parser);
             // Add static subcommands from annotation groupCommands={...}
             if (provider.isGroupCommand()) {
-                for (Class<? extends Command> groupClazz : provider.groupCommandClasses()) {
-                    String childName = getCommandName(groupClazz);
-                    if (childName != null) {
-                        addLazyChildWithAliases(container, childName, groupClazz);
-                    } else {
-                        container.addChild(create(groupClazz));
+                Class<? extends Command>[] childClasses = provider.groupCommandClasses();
+                String[][] namesAndAliases = provider.groupCommandNamesAndAliases();
+                if (namesAndAliases != null && namesAndAliases.length == childClasses.length) {
+                    // Fast path: names/aliases pre-computed by the annotation processor (#575)
+                    for (int i = 0; i < childClasses.length; i++) {
+                        String[] entry = namesAndAliases[i];
+                        container.addLazyChild(entry[0], childClasses[i]);
+                        for (int j = 1; j < entry.length; j++) {
+                            container.addLazyChild(entry[j], childClasses[i]);
+                        }
+                    }
+                } else {
+                    // Fallback: runtime lookup (non-generated commands, cross-module groups)
+                    for (Class<? extends Command> groupClazz : childClasses) {
+                        String childName = getCommandName(groupClazz);
+                        if (childName != null) {
+                            addLazyChildWithAliases(container, childName, groupClazz);
+                        } else {
+                            container.addChild(create(groupClazz));
+                        }
                     }
                 }
             }

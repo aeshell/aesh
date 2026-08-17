@@ -86,4 +86,19 @@ public interface CommandMetadataProvider<C extends Command> {
     default String[] commandAliases() {
         return new String[0];
     }
+
+    /**
+     * Returns child command names paired with their aliases for group commands.
+     * Each entry is {@code {primaryName, alias1, alias2, ...}}, index-aligned
+     * with {@link #groupCommandClasses()}.
+     * <p>
+     * When available, this avoids per-child {@link MetadataProviderRegistry#getProvider}
+     * lookups during lazy child registration (#575).
+     *
+     * @return names and aliases per child, or {@code null} if not available
+     *         (falls back to runtime lookup)
+     */
+    default String[][] groupCommandNamesAndAliases() {
+        return null;
+    }
 }
