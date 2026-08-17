@@ -87,6 +87,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private int optionDeclarationCounter;
     private List<ProcessedOption> cachedPositionalOrder;
     private boolean hasInheritedOptions;
+    private boolean dirty;
     private ParsedCommand cachedParsedCommand;
 
     // Lazy-built lookup maps for O(1) option search (built on first lookup, invalidated on add)
@@ -738,6 +739,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public void clear() {
+        if (!dirty) {
+            // Even when not dirty, re-resolve deferred ${...} variable references
+            // in default/fallback values so that system property changes between
+            // construction and first parse are picked up (#520)
+            resolveVariableReferences();
+            return;
+        }
+        dirty = false;
         clearOptions();
         if (arguments != null)
             arguments.clear();
@@ -749,6 +758,43 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         else
             parserExceptions = Collections.emptyList();
         completeStatus = null;
+    }
+
+    /**
+     * Re-resolve ${...} variable references in default and fallback values
+     * without clearing parsed state. This is the lightweight path used when
+     * the command has not been parsed yet (dirty == false) but system
+     * properties may have changed since construction.
+     * <p>
+     * Uses the {@code options} field directly (not {@link #getOptions()})
+     * to avoid triggering dynamic option provider calls in MapProcessedCommand.
+     */
+    private void resolveVariableReferences() {
+        for (ProcessedOption opt : options) {
+            opt.resolveVariables();
+        }
+        if (arguments != null)
+            arguments.resolveVariables();
+        for (ProcessedOption argOpt : argumentOptions)
+            argOpt.resolveVariables();
+    }
+
+    /**
+     * Mark this command as dirty, indicating that parse state has been modified
+     * and {@link #clear()} should perform a full reset on the next call.
+     * Called by the parser after clear() to ensure subsequent parses
+     * properly reset state (#576).
+     */
+    public void markDirty() {
+        dirty = true;
+    }
+
+    /**
+     * Returns whether this command has been parsed (dirty) since last clear.
+     * Visible for testing (#576).
+     */
+    public boolean isDirty() {
+        return dirty;
     }
 
     protected void clearOptions() {

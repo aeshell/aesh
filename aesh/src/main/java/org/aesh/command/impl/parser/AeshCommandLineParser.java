@@ -558,6 +558,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public void parse(ParsedLineIterator iterator, Mode mode) {
         clear();
+        // Mark as dirty so the next clear() call performs a full reset (#576)
+        processedCommand.markDirty();
         Command<CI> cmd = processedCommand.getCommand();
         if (mode != Mode.COMPLETION && cmd instanceof CommandLifecycle) {
             ((CommandLifecycle) cmd).beforeParse();

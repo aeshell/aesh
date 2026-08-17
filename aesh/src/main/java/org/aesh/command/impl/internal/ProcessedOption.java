@@ -994,8 +994,16 @@ public class ProcessedOption {
         cursorOption = false;
         cursorValue = false;
         negatedByUser = false;
-        // Re-resolve variable references from raw templates (#520)
-        // so that env var changes between parse cycles are picked up
+        resolveVariables();
+    }
+
+    /**
+     * Re-resolve {@code ${...}} variable references from raw templates (#520)
+     * so that env var / system property changes between parse cycles are picked up.
+     * Extracted from {@link #clear()} so it can also be called independently
+     * when only variable re-resolution is needed without clearing parsed state (#576).
+     */
+    public void resolveVariables() {
         if (rawDefaultValues != null) {
             defaultValues = PropertiesLookup.checkForSystemVariables(rawDefaultValues);
             variableDefaultResolved = checkVariableResolved(rawDefaultValues);
