@@ -133,6 +133,7 @@ public class ProcessedOption {
     private String mixinFieldName;
     private Field cachedField;
     private Class<?> cachedFieldClass;
+    private AeshConverterInvocation cachedConverterInvocation;
 
     public ProcessedOption(char shortName, String name, String description,
             String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -1220,9 +1221,15 @@ public class ProcessedOption {
                     + "' for option '" + getDisplayName()
                     + "'. Allowed values: " + String.join(", ", allowedValues));
         }
+        // Reuse cached AeshConverterInvocation to avoid per-value allocation (#579)
+        if (cachedConverterInvocation == null) {
+            cachedConverterInvocation = new AeshConverterInvocation(inputValue, aeshContext);
+        } else {
+            cachedConverterInvocation.reset(inputValue, aeshContext);
+        }
         Object result = converter.convert(
                 invocationProviders.getConverterProvider().enhanceConverterInvocation(
-                        new AeshConverterInvocation(inputValue, aeshContext)));
+                        cachedConverterInvocation));
         if (validator != null && doValidation) {
             validator.validate(invocationProviders.getValidatorProvider().enhanceValidatorInvocation(
                     new AeshValidatorInvocation(result, command, aeshContext)));

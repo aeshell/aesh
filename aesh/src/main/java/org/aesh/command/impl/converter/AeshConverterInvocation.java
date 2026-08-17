@@ -28,10 +28,19 @@ import org.aesh.console.AeshContext;
  */
 public class AeshConverterInvocation implements ConverterInvocation {
 
-    private final String input;
-    private final AeshContext aeshContext;
+    private String input;
+    private AeshContext aeshContext;
 
     public AeshConverterInvocation(String input, AeshContext aeshContext) {
+        this.input = input;
+        this.aeshContext = aeshContext;
+    }
+
+    /**
+     * Reset this invocation for reuse with new input and context.
+     * Avoids allocating a new instance per value conversion (#579).
+     */
+    public void reset(String input, AeshContext aeshContext) {
         this.input = input;
         this.aeshContext = aeshContext;
     }
