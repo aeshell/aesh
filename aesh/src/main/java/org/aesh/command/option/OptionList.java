@@ -95,6 +95,12 @@ public @interface OptionList {
      */
     boolean askIfNotSet() default false;
 
+    /**
+     * If true, the option can be specified without the leading dashes.
+     * For example, {@code items=a,b,c} instead of {@code --items=a,b,c}.
+     */
+    boolean acceptNameWithoutDashes() default false;
+
     SelectorType selector() default SelectorType.NO_OP;
 
     /**
@@ -161,6 +167,29 @@ public @interface OptionList {
     String[] allowedValues() default {};
 
     /**
+     * If true and this option is set, required-option validation is skipped
+     * for all other options (e.g., a {@code --help} equivalent that is a list).
+     */
+    boolean overrideRequired() default false;
+
+    /**
+     * If true, this option is inherited by subcommands in a group command.
+     */
+    boolean inherited() default false;
+
+    /**
+     * URL to documentation for this option's description.
+     * When the terminal supports hyperlinks, the description is rendered as a link.
+     */
+    String descriptionUrl() default "";
+
+    /**
+     * If true, the option value is treated as a URL and rendered as a
+     * hyperlink in terminals that support OSC 8.
+     */
+    boolean url() default false;
+
+    /**
      * Controls how this option appears in help output and tab completion.
      * BRIEF (default) = always shown, FULL = only with --help=all, HIDDEN = never shown.
      */
@@ -171,4 +200,10 @@ public @interface OptionList {
      * Lower values appear first when rendering help output.
      */
     int order() default Integer.MAX_VALUE;
+
+    /**
+     * Controls shell completion fallback behavior when no custom completer is set.
+     * DEFAULT defers to the command-level setting or type-based heuristic.
+     */
+    CompletionFallback completeFallback() default CompletionFallback.DEFAULT;
 }

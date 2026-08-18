@@ -537,9 +537,11 @@ final class CodeGenerator {
             generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils, accessorInfos,
                     commandFallback);
         } else if (ol != null) {
-            generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils, accessorInfos);
+            generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils, accessorInfos,
+                    commandFallback);
         } else if (og != null) {
-            generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils, accessorInfos);
+            generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils, accessorInfos,
+                    commandFallback);
         } else if (args != null) {
             generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils, accessorInfos,
                     commandFallback);
@@ -696,7 +698,8 @@ final class CodeGenerator {
     }
 
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
-            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
+            org.aesh.command.option.CompletionFallback commandFallback) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType);
@@ -731,6 +734,8 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (ol.askIfNotSet())
             sb.append("            ").append(var).append(".setAskIfNotSet(true);\n");
+        if (ol.acceptNameWithoutDashes())
+            sb.append("            ").append(var).append(".setAcceptNameWithoutDashes(true);\n");
         if (ol.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(ol.defaultValue())).append("));\n");
@@ -739,9 +744,19 @@ final class CodeGenerator {
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
         emitParserSetter(sb, var, field, "parser", elementUtils);
+        if (ol.overrideRequired())
+            sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
+        if (ol.inherited())
+            sb.append("            ").append(var).append(".setInherited(true);\n");
+        if (!ol.descriptionUrl().isEmpty())
+            sb.append("            ").append(var).append(".setDescriptionUrl(").append(stringLiteral(ol.descriptionUrl()))
+                    .append(");\n");
+        if (ol.url())
+            sb.append("            ").append(var).append(".setIsUrl(true);\n");
         if (ol.selector() != org.aesh.selector.SelectorType.NO_OP)
             sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(ol.selector()))
                     .append(");\n");
+        emitCompleteFallbackSetter(sb, var, ol.completeFallback(), field, typeUtils, commandFallback);
         emitAliasesSetter(sb, var, ol.aliases());
         emitHelpGroupSetter(sb, var, ol.helpGroup());
         emitExclusiveWithSetter(sb, var, ol.exclusiveWith());
@@ -757,7 +772,8 @@ final class CodeGenerator {
     }
 
     private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
-            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos) {
+            String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
+            org.aesh.command.option.CompletionFallback commandFallback) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType);
@@ -793,6 +809,8 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (og.askIfNotSet())
             sb.append("            ").append(var).append(".setAskIfNotSet(true);\n");
+        if (og.acceptNameWithoutDashes())
+            sb.append("            ").append(var).append(".setAcceptNameWithoutDashes(true);\n");
         if (og.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(og.defaultValue())).append("));\n");
@@ -801,6 +819,23 @@ final class CodeGenerator {
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
         emitParserSetter(sb, var, field, "parser", elementUtils);
+        if (og.overrideRequired())
+            sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
+        if (og.inherited())
+            sb.append("            ").append(var).append(".setInherited(true);\n");
+        if (!og.descriptionUrl().isEmpty())
+            sb.append("            ").append(var).append(".setDescriptionUrl(").append(stringLiteral(og.descriptionUrl()))
+                    .append(");\n");
+        if (og.url())
+            sb.append("            ").append(var).append(".setIsUrl(true);\n");
+        if (og.selector() != org.aesh.selector.SelectorType.NO_OP)
+            sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(og.selector()))
+                    .append(");\n");
+        emitCompleteFallbackSetter(sb, var, og.completeFallback(), field, typeUtils, commandFallback);
+        emitAliasesSetter(sb, var, og.aliases());
+        emitHelpGroupSetter(sb, var, og.helpGroup());
+        emitExclusiveWithSetter(sb, var, og.exclusiveWith());
+        emitAllowedValuesSetter(sb, var, og.allowedValues());
         emitVisibilitySetter(sb, var, og.visibility());
         if (og.order() != Integer.MAX_VALUE)
             sb.append("            ").append(var).append(".setOrder(").append(og.order()).append(");\n");

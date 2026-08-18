@@ -38,6 +38,7 @@ import org.aesh.command.impl.validator.NullValidator;
 import org.aesh.command.parser.OptionParser;
 import org.aesh.command.renderer.OptionRenderer;
 import org.aesh.command.validator.OptionValidator;
+import org.aesh.selector.SelectorType;
 
 /**
  * A command line option group
@@ -94,6 +95,13 @@ public @interface OptionGroup {
     boolean askIfNotSet() default false;
 
     /**
+     * If true, the option can be specified without the leading dashes.
+     */
+    boolean acceptNameWithoutDashes() default false;
+
+    SelectorType selector() default SelectorType.NO_OP;
+
+    /**
      * Define a converter if the field is a type thats not java.lang and other
      * common types, eg: File,++
      * See ClConverterManager for whats added by default
@@ -127,6 +135,48 @@ public @interface OptionGroup {
     Class<? extends OptionParser> parser() default AeshOptionParser.class;
 
     /**
+     * If true and this option is set, required-option validation is skipped
+     * for all other options.
+     */
+    boolean overrideRequired() default false;
+
+    /**
+     * If true, this option is inherited by subcommands in a group command.
+     */
+    boolean inherited() default false;
+
+    /**
+     * URL to documentation for this option's description.
+     */
+    String descriptionUrl() default "";
+
+    /**
+     * If true, the option value is treated as a URL and rendered as a
+     * hyperlink in terminals that support OSC 8.
+     */
+    boolean url() default false;
+
+    /**
+     * Alternative long names for this option.
+     */
+    String[] aliases() default {};
+
+    /**
+     * Optional heading under which this option appears in help output.
+     */
+    String helpGroup() default "";
+
+    /**
+     * Names of options that are mutually exclusive with this one.
+     */
+    String[] exclusiveWith() default {};
+
+    /**
+     * Restricts values to a fixed set of valid strings.
+     */
+    String[] allowedValues() default {};
+
+    /**
      * Controls how this option appears in help output and tab completion.
      * BRIEF (default) = always shown, FULL = only with --help=all, HIDDEN = never shown.
      */
@@ -137,4 +187,9 @@ public @interface OptionGroup {
      * Lower values appear first when rendering help output.
      */
     int order() default Integer.MAX_VALUE;
+
+    /**
+     * Controls shell completion fallback behavior when no custom completer is set.
+     */
+    CompletionFallback completeFallback() default CompletionFallback.DEFAULT;
 }
