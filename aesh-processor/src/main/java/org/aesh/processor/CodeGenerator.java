@@ -793,7 +793,11 @@ final class CodeGenerator {
         if (ol.selector() != org.aesh.selector.SelectorType.NO_OP)
             sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(ol.selector()))
                     .append(");\n");
-        emitCompleteFallbackSetter(sb, var, ol.completeFallback(), field, typeUtils, commandFallback);
+        {
+            TypeMirror elemMirror = getGenericTypeArgumentMirror(effectiveType, 0);
+            emitCompleteFallbackSetter(sb, var, ol.completeFallback(), elemMirror != null ? elemMirror : effectiveType,
+                    typeUtils, commandFallback);
+        }
         emitAliasesSetter(sb, var, ol.aliases());
         emitHelpGroupSetter(sb, var, ol.helpGroup());
         emitExclusiveWithSetter(sb, var, ol.exclusiveWith());
@@ -868,7 +872,11 @@ final class CodeGenerator {
         if (og.selector() != org.aesh.selector.SelectorType.NO_OP)
             sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(og.selector()))
                     .append(");\n");
-        emitCompleteFallbackSetter(sb, var, og.completeFallback(), field, typeUtils, commandFallback);
+        {
+            TypeMirror valMirror = getGenericTypeArgumentMirror(effectiveType, 1);
+            emitCompleteFallbackSetter(sb, var, og.completeFallback(), valMirror != null ? valMirror : effectiveType, typeUtils,
+                    commandFallback);
+        }
         emitAliasesSetter(sb, var, og.aliases());
         emitHelpGroupSetter(sb, var, og.helpGroup());
         emitExclusiveWithSetter(sb, var, og.exclusiveWith());
@@ -935,7 +943,11 @@ final class CodeGenerator {
         emitParserSetter(sb, var, field, "parser", elementUtils);
         if (a.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
-        emitCompleteFallbackSetter(sb, var, a.completeFallback(), field, typeUtils, commandFallback);
+        {
+            TypeMirror elemMirror = getGenericTypeArgumentMirror(effectiveType, 0);
+            emitCompleteFallbackSetter(sb, var, a.completeFallback(), elemMirror != null ? elemMirror : effectiveType,
+                    typeUtils, commandFallback);
+        }
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
@@ -1193,6 +1205,21 @@ final class CodeGenerator {
     private static void emitCompleteFallbackSetter(StringBuilder sb, String var,
             org.aesh.command.option.CompletionFallback value, VariableElement field, Types typeUtils,
             org.aesh.command.option.CompletionFallback commandFallback) {
+        // Delegate to the TypeMirror overload using the field's effective type
+        TypeMirror fieldType = field.asType();
+        if (isOptionalType(fieldType))
+            fieldType = unwrapOptionalTypeMirror(fieldType);
+        emitCompleteFallbackSetter(sb, var, value, fieldType, typeUtils, commandFallback);
+    }
+
+    /**
+     * Overload that accepts the effective TypeMirror directly. Used by
+     * OptionList/Arguments where the relevant type is the element type,
+     * not the collection type.
+     */
+    private static void emitCompleteFallbackSetter(StringBuilder sb, String var,
+            org.aesh.command.option.CompletionFallback value, TypeMirror effectiveType, Types typeUtils,
+            org.aesh.command.option.CompletionFallback commandFallback) {
         org.aesh.command.option.CompletionFallback resolved = value;
         if (resolved == org.aesh.command.option.CompletionFallback.DEFAULT
                 && commandFallback != org.aesh.command.option.CompletionFallback.DEFAULT) {
@@ -1200,10 +1227,8 @@ final class CodeGenerator {
             resolved = commandFallback;
         }
         if (resolved == org.aesh.command.option.CompletionFallback.DEFAULT) {
-            // Resolve DEFAULT based on field type
-            TypeMirror fieldType = field.asType();
-            if (isOptionalType(fieldType))
-                fieldType = unwrapOptionalTypeMirror(fieldType);
+            // Resolve DEFAULT based on effective type
+            TypeMirror fieldType = effectiveType;
             if (fieldType.getKind() == TypeKind.DECLARED) {
                 javax.lang.model.element.Element element = typeUtils.asElement(fieldType);
                 if (element != null && element.getKind() == javax.lang.model.element.ElementKind.ENUM) {
@@ -1694,6 +1719,20 @@ final class CodeGenerator {
             default:
                 return typeUtils.erasure(type).toString();
         }
+    }
+
+    /**
+     * Get the TypeMirror of a generic type argument. Returns null if not resolvable.
+     */
+    private static TypeMirror getGenericTypeArgumentMirror(TypeMirror type, int index) {
+        if (type instanceof DeclaredType) {
+            DeclaredType declaredType = (DeclaredType) type;
+            List<? extends TypeMirror> typeArgs = declaredType.getTypeArguments();
+            if (typeArgs.size() > index) {
+                return typeArgs.get(index);
+            }
+        }
+        return null;
     }
 
     private static String getGenericTypeArgument(TypeMirror type, int index, Types typeUtils) {

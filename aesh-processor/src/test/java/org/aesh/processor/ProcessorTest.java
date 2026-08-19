@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -3248,6 +3249,9 @@ public class ProcessorTest {
                     rOpt.getDescriptionUrl() != null ? rOpt.getDescriptionUrl() : "",
                     gOpt.getDescriptionUrl() != null ? gOpt.getDescriptionUrl() : "");
             assertEquals("Option isUrl for " + rOpt.name(), rOpt.isUrl(), gOpt.isUrl());
+            assertEquals("Option selectorType for " + rOpt.name(), rOpt.selectorType(), gOpt.selectorType());
+            assertEquals("Option completeFallback for " + rOpt.name(),
+                    rOpt.getCompleteFallback(), gOpt.getCompleteFallback());
             // Compare callbacks: both should be non-null or both null
             assertCallbackEquivalence("converter", rOpt.name(), rOpt.converter(), gOpt.converter());
             assertCallbackEquivalence("completer", rOpt.name(), rOpt.completer(), gOpt.completer());
@@ -3334,6 +3338,8 @@ public class ProcessorTest {
         assertEquals(label + " isUrl", rOpt.isUrl(), gOpt.isUrl());
         assertEquals(label + " askIfNotSet", rOpt.askIfNotSet(), gOpt.askIfNotSet());
         assertEquals(label + " mixinFieldName", rOpt.getMixinFieldName(), gOpt.getMixinFieldName());
+        assertEquals(label + " selectorType", rOpt.selectorType(), gOpt.selectorType());
+        assertEquals(label + " completeFallback", rOpt.getCompleteFallback(), gOpt.getCompleteFallback());
         assertCallbackEquivalence("converter", label, rOpt.converter(), gOpt.converter());
         assertCallbackEquivalence("completer", label, rOpt.completer(), gOpt.completer());
         assertCallbackEquivalence("validator", label, rOpt.validator(), gOpt.validator());
@@ -3488,5 +3494,329 @@ public class ProcessorTest {
         assertTrue("allowedValues should contain 'debug'", levelOpt.getAllowedValues().contains("debug"));
         assertTrue("allowedValues should contain 'error'", levelOpt.getAllowedValues().contains("error"));
         assertNotNull("completer should be set for enum option on generated path", levelOpt.completer());
+    }
+
+    // ========== Issue #592: End-to-end parsing tests on generated path ==========
+
+    // --- OptionList parsing ---
+    private static final String OPTIONLIST_PARSE_SOURCE = "package test;\n" +
+            "import java.util.List;\n" +
+            "import org.aesh.command.Command;\nimport org.aesh.command.CommandDefinition;\nimport org.aesh.command.CommandResult;\n"
+            +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "@CommandDefinition(name = \"listcmd\", description = \"\")\n" +
+            "public class ListParseCmd implements Command<CommandInvocation> {\n" +
+            "    @OptionList(name = \"items\", valueSeparator = ',')\n" +
+            "    public List<String> items;\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testOptionListParsingOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ListParseCmd", OPTIONLIST_PARSE_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.ListParseCmd");
+        Class<?> metaClass = result.classLoader.loadClass("test.ListParseCmd_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metaClass.getDeclaredConstructor().newInstance();
+        Command instance = (Command) cmdClass.getDeclaredConstructor().newInstance();
+        ProcessedCommand pc = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                pc);
+        parser.populateObject("listcmd --items a,b,c",
+                new org.aesh.command.impl.invocation.AeshInvocationProviders(), null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+        java.lang.reflect.Field f = cmdClass.getDeclaredField("items");
+        f.setAccessible(true);
+        List<?> items = (List<?>) f.get(instance);
+        assertNotNull("items should be populated", items);
+        assertEquals("items should have 3 elements", 3, items.size());
+        assertEquals("a", items.get(0).toString());
+        assertEquals("b", items.get(1).toString());
+        assertEquals("c", items.get(2).toString());
+    }
+
+    // --- OptionGroup parsing ---
+    private static final String OPTIONGROUP_PARSE_SOURCE = "package test;\n" +
+            "import java.util.Map;\n" +
+            "import org.aesh.command.Command;\nimport org.aesh.command.CommandDefinition;\nimport org.aesh.command.CommandResult;\n"
+            +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.OptionGroup;\n" +
+            "@CommandDefinition(name = \"grpcmd\", description = \"\")\n" +
+            "public class GroupParseCmd implements Command<CommandInvocation> {\n" +
+            "    @OptionGroup(shortName = 'D')\n" +
+            "    public Map<String, String> props;\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testOptionGroupParsingOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.GroupParseCmd", OPTIONGROUP_PARSE_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.GroupParseCmd");
+        Class<?> metaClass = result.classLoader.loadClass("test.GroupParseCmd_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metaClass.getDeclaredConstructor().newInstance();
+        Command instance = (Command) cmdClass.getDeclaredConstructor().newInstance();
+        ProcessedCommand pc = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                pc);
+        parser.populateObject("grpcmd -Dkey1=val1 -Dkey2=val2",
+                new org.aesh.command.impl.invocation.AeshInvocationProviders(), null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+        java.lang.reflect.Field f = cmdClass.getDeclaredField("props");
+        f.setAccessible(true);
+        Map<?, ?> props = (Map<?, ?>) f.get(instance);
+        assertNotNull("props should be populated", props);
+        assertEquals("val1", props.get("key1"));
+        assertEquals("val2", props.get("key2"));
+    }
+
+    // --- Negatable option parsing ---
+    private static final String NEGATABLE_PARSE_SOURCE = "package test;\n" +
+            "import org.aesh.command.Command;\nimport org.aesh.command.CommandDefinition;\nimport org.aesh.command.CommandResult;\n"
+            +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "@CommandDefinition(name = \"negcmd\", description = \"\")\n" +
+            "public class NegatableParseCmd implements Command<CommandInvocation> {\n" +
+            "    @Option(hasValue = false, negatable = true)\n" +
+            "    public boolean verbose;\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testNegatableParsingOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.NegatableParseCmd", NEGATABLE_PARSE_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.NegatableParseCmd");
+        Class<?> metaClass = result.classLoader.loadClass("test.NegatableParseCmd_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metaClass.getDeclaredConstructor().newInstance();
+        Command instance = (Command) cmdClass.getDeclaredConstructor().newInstance();
+        ProcessedCommand pc = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                pc);
+        parser.populateObject("negcmd --no-verbose",
+                new org.aesh.command.impl.invocation.AeshInvocationProviders(), null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+        java.lang.reflect.Field f = cmdClass.getDeclaredField("verbose");
+        f.setAccessible(true);
+        assertEquals("--no-verbose should set field to false", false, f.getBoolean(instance));
+    }
+
+    // --- Option alias parsing ---
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testOptionAliasParsingOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.AliasCommand", ALIAS_OPTION_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.AliasCommand");
+        Class<?> metaClass = result.classLoader.loadClass("test.AliasCommand_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metaClass.getDeclaredConstructor().newInstance();
+        Command instance = (Command) cmdClass.getDeclaredConstructor().newInstance();
+        ProcessedCommand pc = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                pc);
+        parser.populateObject("aliascmd --ea",
+                new org.aesh.command.impl.invocation.AeshInvocationProviders(), null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+        java.lang.reflect.Field f = cmdClass.getDeclaredField("enableAssertions");
+        f.setAccessible(true);
+        assertTrue("--ea alias should set enableAssertions to true", f.getBoolean(instance));
+    }
+
+    // --- ExclusiveWith rejection ---
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testExclusiveWithRejectionOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ExclusiveCommand", EXCLUSIVE_WITH_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.ExclusiveCommand");
+        org.aesh.command.container.CommandContainer container = new AeshCommandContainerBuilder().create(cmdClass);
+        org.aesh.command.impl.registry.MutableCommandRegistryImpl registry = new org.aesh.command.impl.registry.MutableCommandRegistryImpl<>();
+        registry.addCommand(container);
+        org.aesh.command.CommandRuntime runtime = org.aesh.command.AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+        try {
+            runtime.executeCommand("excl --json --xml");
+            assertTrue("Should have thrown MutuallyExclusiveOptionException", false);
+        } catch (org.aesh.command.parser.MutuallyExclusiveOptionException e) {
+            assertTrue("Message should mention json and xml",
+                    e.getMessage().contains("json") && e.getMessage().contains("xml"));
+        }
+    }
+
+    // --- descriptionUrl and url attribute test ---
+    private static final String URL_ATTR_SOURCE = "package test;\n" +
+            "import org.aesh.command.Command;\nimport org.aesh.command.CommandDefinition;\nimport org.aesh.command.CommandResult;\n"
+            +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "@CommandDefinition(name = \"urlcmd\", description = \"\", helpUrl = \"https://example.com/docs\")\n" +
+            "public class UrlAttrCmd implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"endpoint\", url = true, descriptionUrl = \"https://docs.example.com\")\n" +
+            "    public String endpoint;\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    public void testDescriptionUrlAndHelpUrl() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.UrlAttrCmd", URL_ATTR_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.UrlAttrCmd");
+        Class<?> metaClass = result.classLoader.loadClass("test.UrlAttrCmd_AeshMetadata");
+        assertEquivalence(cmdClass, metaClass);
+
+        // Verify non-default values
+        CommandMetadataProvider provider = (CommandMetadataProvider) metaClass.getDeclaredConstructor().newInstance();
+        ProcessedCommand pc = provider.buildProcessedCommand(provider.newInstance());
+        assertEquals("helpUrl", "https://example.com/docs", pc.helpUrl());
+        ProcessedOption opt = pc.findLongOptionNoActivatorCheck("endpoint");
+        assertNotNull(opt);
+        assertTrue("url should be true", opt.isUrl());
+        assertEquals("descriptionUrl", "https://docs.example.com", opt.getDescriptionUrl());
+    }
+
+    // --- Command-level completeFallback ---
+    private static final String CMD_FALLBACK_SOURCE = "package test;\n" +
+            "import org.aesh.command.Command;\nimport org.aesh.command.CommandDefinition;\nimport org.aesh.command.CommandResult;\n"
+            +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.CompletionFallback;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "@CommandDefinition(name = \"cmdfb\", description = \"\", completeFallback = CompletionFallback.NONE)\n" +
+            "public class CmdFallbackCmd implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"name\")\n" +
+            "    public String name;\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    public void testCommandLevelCompleteFallback() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CmdFallbackCmd", CMD_FALLBACK_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.CmdFallbackCmd");
+        Class<?> metaClass = result.classLoader.loadClass("test.CmdFallbackCmd_AeshMetadata");
+        assertEquivalence(cmdClass, metaClass);
+    }
+
+    // --- Private mixin assertEquivalence ---
+    @Test
+    public void testPrivateMixinEquivalence() throws Exception {
+        String privateMixinSource = "package test;\n" +
+                "import org.aesh.command.option.Option;\n" +
+                "public class LoggingMixinPrivate {\n" +
+                "    @Option(hasValue = false, description = \"Verbose\")\n" +
+                "    private boolean verbose;\n" +
+                "}\n";
+        String privateMixinCmdSource = "package test;\n" +
+                "import org.aesh.command.Command;\nimport org.aesh.command.CommandDefinition;\nimport org.aesh.command.CommandResult;\n"
+                +
+                "import org.aesh.command.invocation.CommandInvocation;\n" +
+                "import org.aesh.command.option.Mixin;\n" +
+                "import org.aesh.command.option.Option;\n" +
+                "@CommandDefinition(name = \"privmixin\", description = \"\")\n" +
+                "public class PrivateMixinCmd implements Command<CommandInvocation> {\n" +
+                "    @Mixin\n" +
+                "    private LoggingMixinPrivate logging;\n" +
+                "    @Option\n" +
+                "    private String name;\n" +
+                "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+                "}\n";
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.LoggingMixinPrivate", privateMixinSource),
+                new InMemorySource("test.PrivateMixinCmd", privateMixinCmdSource));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.PrivateMixinCmd");
+        Class<?> metaClass = result.classLoader.loadClass("test.PrivateMixinCmd_AeshMetadata");
+        assertEquivalence(cmdClass, metaClass);
+    }
+
+    // --- StopAtFirstPositional parsing ---
+    private static final String STOP_PARSE_SOURCE = "package test;\n" +
+            "import java.util.List;\n" +
+            "import org.aesh.command.Command;\nimport org.aesh.command.CommandDefinition;\nimport org.aesh.command.CommandResult;\n"
+            +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.Arguments;\n" +
+            "@CommandDefinition(name = \"stopcmd\", description = \"\", stopAtFirstPositional = true)\n" +
+            "public class StopParseCmd implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"opt\")\n" +
+            "    public String opt;\n" +
+            "    @Arguments\n" +
+            "    public List<String> args;\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testStopAtFirstPositionalOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.StopParseCmd", STOP_PARSE_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.StopParseCmd");
+        Class<?> metaClass = result.classLoader.loadClass("test.StopParseCmd_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metaClass.getDeclaredConstructor().newInstance();
+        Command instance = (Command) cmdClass.getDeclaredConstructor().newInstance();
+        ProcessedCommand pc = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                pc);
+        parser.populateObject("stopcmd --opt val arg1 --notanoption",
+                new org.aesh.command.impl.invocation.AeshInvocationProviders(), null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+        java.lang.reflect.Field optF = cmdClass.getDeclaredField("opt");
+        optF.setAccessible(true);
+        assertEquals("--opt should be parsed", "val", optF.get(instance));
+        java.lang.reflect.Field argsF = cmdClass.getDeclaredField("args");
+        argsF.setAccessible(true);
+        List<?> args = (List<?>) argsF.get(instance);
+        assertNotNull("args should be populated", args);
+        assertTrue("args should contain arg1", args.contains("arg1"));
+        assertTrue("--notanoption should be treated as positional", args.contains("--notanoption"));
+    }
+
+    // --- AllowedValues rejection ---
+    private static final String ALLOWED_PARSE_SOURCE = "package test;\n" +
+            "import org.aesh.command.Command;\nimport org.aesh.command.CommandDefinition;\nimport org.aesh.command.CommandResult;\n"
+            +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "@CommandDefinition(name = \"modecmd\", description = \"\")\n" +
+            "public class AllowedParseCmd implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"mode\", allowedValues = {\"fast\", \"safe\"})\n" +
+            "    public String mode;\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testAllowedValuesRejectionOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.AllowedParseCmd", ALLOWED_PARSE_SOURCE));
+        assertTrue("Compilation should succeed", result.success);
+        Class<?> cmdClass = result.classLoader.loadClass("test.AllowedParseCmd");
+        org.aesh.command.container.CommandContainer container = new AeshCommandContainerBuilder().create(cmdClass);
+        org.aesh.command.impl.registry.MutableCommandRegistryImpl registry = new org.aesh.command.impl.registry.MutableCommandRegistryImpl<>();
+        registry.addCommand(container);
+        org.aesh.command.CommandRuntime runtime = org.aesh.command.AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+        try {
+            runtime.executeCommand("modecmd --mode invalid");
+            assertTrue("Should have thrown for invalid allowedValue", false);
+        } catch (Exception e) {
+            assertTrue("Should mention allowed values",
+                    e.getMessage().contains("Allowed values") || e.getMessage().contains("allowed"));
+        }
     }
 }
