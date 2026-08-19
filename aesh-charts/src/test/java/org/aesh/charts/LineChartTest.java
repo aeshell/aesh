@@ -179,6 +179,65 @@ public class LineChartTest {
     }
 
     @Test
+    public void testExplicitXRange() {
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i <= 10; i++) {
+            series.add(i, i * 3);
+        }
+
+        LineChart chart = LineChart.builder()
+                .width(40).height(10)
+                .xRange(0, 10)
+                .build();
+        chart.addSeries(series);
+
+        String rendered = chart.render();
+        // X-axis should show 0 and 10 as bounds
+        assertTrue("Should contain X min tick '0'", rendered.contains("0"));
+        assertTrue("Should contain X max tick '10'", rendered.contains("10"));
+        // Should NOT contain values beyond the explicit range
+        assertFalse("Should not extend beyond 10", rendered.contains("12"));
+    }
+
+    @Test
+    public void testExplicitYRange() {
+        DataSeries series = new DataSeries("data");
+        series.add(0, 35);
+        series.add(5, 38);
+        series.add(10, 32);
+
+        LineChart chart = LineChart.builder()
+                .width(40).height(10)
+                .yRange(30, 40)
+                .build();
+        chart.addSeries(series);
+
+        String rendered = chart.render();
+        // Y-axis should show 30 and 40 as bounds
+        assertTrue("Should contain Y min '30'",
+                rendered.contains("30"));
+        assertTrue("Should contain Y max '40'",
+                rendered.contains("40"));
+    }
+
+    @Test
+    public void testYMinAnchoredAtZero() {
+        DataSeries series = new DataSeries("data");
+        series.add(0, 50);
+        series.add(1, 80);
+
+        LineChart chart = LineChart.builder()
+                .width(40).height(10)
+                .yMin(0)
+                .build();
+        chart.addSeries(series);
+
+        String rendered = chart.render();
+        // Y-axis should start at 0
+        assertTrue("Y-axis should include 0", rendered.contains("0"));
+    }
+
+    @Test
     public void testNoTitleByDefault() {
         DataSeries series = new DataSeries("data");
         series.add(0, 0);

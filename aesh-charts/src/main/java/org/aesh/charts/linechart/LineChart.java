@@ -47,6 +47,7 @@ public class LineChart {
     private final Scale yScale;
     private final Function<Double, String> xTickFormatter;
     private final Function<Double, String> yTickFormatter;
+    private final Double xRangeMin, xRangeMax, yRangeMin, yRangeMax;
     private final List<DataSeries> seriesList = new ArrayList<>();
     private final List<Marker> markers = new ArrayList<>();
     private final List<HorizontalLine> horizontalLines = new ArrayList<>();
@@ -67,6 +68,10 @@ public class LineChart {
         this.yScale = builder.yScale;
         this.xTickFormatter = builder.xTickFormatter;
         this.yTickFormatter = builder.yTickFormatter;
+        this.xRangeMin = builder.xRangeMin;
+        this.xRangeMax = builder.xRangeMax;
+        this.yRangeMin = builder.yRangeMin;
+        this.yRangeMax = builder.yRangeMax;
         this.showLegend = builder.showLegend;
     }
 
@@ -154,6 +159,11 @@ public class LineChart {
             yMax = Math.max(yMax, m.y());
         }
         yAxis.autoRange(yMin, yMax);
+        // Apply explicit Y bounds if set, overriding auto-range (#590)
+        if (yRangeMin != null)
+            yAxis.min(yRangeMin);
+        if (yRangeMax != null)
+            yAxis.max(yRangeMax);
 
         // Compute X-axis range
         Axis xAxis = new Axis().scale(xScale);
@@ -167,6 +177,11 @@ public class LineChart {
             xMax = Math.max(xMax, s.xMax());
         }
         xAxis.autoRange(xMin, xMax);
+        // Apply explicit X bounds if set, overriding auto-range (#590)
+        if (xRangeMin != null)
+            xAxis.min(xRangeMin);
+        if (xRangeMax != null)
+            xAxis.max(xRangeMax);
 
         // Layout: title (1 line) + legend (1 line) + plot area + x-axis (2-3 lines)
         int yAxisWidth = yAxis.labelWidth();
@@ -441,6 +456,7 @@ public class LineChart {
         private Scale yScale = Scale.LINEAR;
         private Function<Double, String> xTickFormatter;
         private Function<Double, String> yTickFormatter;
+        private Double xRangeMin, xRangeMax, yRangeMin, yRangeMax;
         private boolean showLegend = true;
 
         public Builder width(int width) {
@@ -501,6 +517,44 @@ public class LineChart {
          */
         public Builder yTickFormatter(Function<Double, String> formatter) {
             this.yTickFormatter = formatter;
+            return this;
+        }
+
+        /** Set explicit X-axis bounds, overriding auto-range (#590). */
+        public Builder xRange(double min, double max) {
+            this.xRangeMin = min;
+            this.xRangeMax = max;
+            return this;
+        }
+
+        /** Set explicit Y-axis bounds, overriding auto-range (#590). */
+        public Builder yRange(double min, double max) {
+            this.yRangeMin = min;
+            this.yRangeMax = max;
+            return this;
+        }
+
+        /** Set only the X-axis minimum, auto-range the maximum. */
+        public Builder xMin(double min) {
+            this.xRangeMin = min;
+            return this;
+        }
+
+        /** Set only the X-axis maximum, auto-range the minimum. */
+        public Builder xMax(double max) {
+            this.xRangeMax = max;
+            return this;
+        }
+
+        /** Set only the Y-axis minimum, auto-range the maximum. */
+        public Builder yMin(double min) {
+            this.yRangeMin = min;
+            return this;
+        }
+
+        /** Set only the Y-axis maximum, auto-range the minimum. */
+        public Builder yMax(double max) {
+            this.yRangeMax = max;
             return this;
         }
 
