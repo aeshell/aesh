@@ -369,11 +369,14 @@ public class LineChart {
         char symbol = style == ChartStyle.ASCII ? 'X' : marker.symbol();
         canvas.set(cellX, cellY, symbol, marker.color());
 
-        // Draw label above the marker if there's room
+        // Draw label above the marker if there's room; otherwise below
         String label = marker.label();
         if (label != null && !label.isEmpty()) {
             int labelY = cellY - 1;
-            if (labelY >= plotTop) {
+            if (labelY < plotTop) {
+                labelY = cellY + 1; // fallback: below the marker
+            }
+            if (labelY >= plotTop && labelY <= plotBottom) {
                 int labelX = cellX - label.length() / 2;
                 if (labelX < plotLeft)
                     labelX = plotLeft;
