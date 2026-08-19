@@ -1,5 +1,7 @@
 package org.aesh.charts.axis;
 
+import java.util.function.Function;
+
 import org.aesh.charts.canvas.Canvas;
 import org.aesh.charts.common.ChartStyle;
 import org.aesh.charts.common.Scale;
@@ -15,6 +17,7 @@ public class Axis {
     private Scale scale = Scale.LINEAR;
     private int tickCount = 5;
     private String formatPattern;
+    private Function<Double, String> tickFormatter;
 
     public Axis() {
     }
@@ -46,6 +49,18 @@ public class Axis {
 
     public Axis format(String pattern) {
         this.formatPattern = pattern;
+        return this;
+    }
+
+    /**
+     * Set a custom tick label formatter. Takes priority over {@link #format(String)}.
+     * Use this to map numeric tick values to arbitrary label strings (#589).
+     *
+     * @param formatter function that converts a tick value to a label string
+     * @return this axis for fluent chaining
+     */
+    public Axis tickFormatter(Function<Double, String> formatter) {
+        this.tickFormatter = formatter;
         return this;
     }
 
@@ -134,6 +149,9 @@ public class Axis {
      * Format a tick value as a label string.
      */
     public String formatTick(double value) {
+        if (tickFormatter != null) {
+            return tickFormatter.apply(value);
+        }
         if (formatPattern != null) {
             return String.format(formatPattern, value);
         }

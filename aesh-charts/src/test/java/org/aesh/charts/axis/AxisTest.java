@@ -135,6 +135,37 @@ public class AxisTest {
     }
 
     @Test
+    public void testTickFormatterOverridesDefault() {
+        Axis axis = new Axis().tickCount(3);
+        axis.autoRange(0, 100);
+
+        // Default format (value < 1 uses %.2f, value >= 1 uses %.1f)
+        assertEquals("0.00", axis.formatTick(0));
+        assertEquals("50.0", axis.formatTick(50));
+
+        // Custom formatter
+        axis.tickFormatter(v -> "item-" + v.intValue());
+        assertEquals("item-0", axis.formatTick(0));
+        assertEquals("item-50", axis.formatTick(50));
+        assertEquals("item-100", axis.formatTick(100));
+    }
+
+    @Test
+    public void testTickFormatterAffectsLabelWidth() {
+        Axis axis = new Axis().tickCount(3);
+        axis.autoRange(0, 10);
+
+        int defaultWidth = axis.labelWidth();
+
+        // Set a formatter that produces wider labels
+        axis.tickFormatter(v -> "category-" + v.intValue());
+        int customWidth = axis.labelWidth();
+
+        assertTrue("Custom formatter with wider labels should increase labelWidth",
+                customWidth > defaultWidth);
+    }
+
+    @Test
     public void testNiceNum() {
         // Ceiling mode (round=false)
         assertEquals(1.0, Axis.niceNum(0.7, false), 0.001);

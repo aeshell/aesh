@@ -138,6 +138,47 @@ public class LineChartTest {
     }
 
     @Test
+    public void testXTickFormatter() {
+        String[] labels = { "Mon", "Tue", "Wed", "Thu", "Fri" };
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i < labels.length; i++) {
+            series.add(i, (i + 1) * 10);
+        }
+
+        LineChart chart = LineChart.builder()
+                .width(50)
+                .height(10)
+                .xTickFormatter(x -> {
+                    int idx = (int) Math.round(x);
+                    return idx >= 0 && idx < labels.length ? labels[idx] : "";
+                })
+                .build();
+        chart.addSeries(series);
+
+        String rendered = chart.render();
+        assertTrue("Should contain custom X label 'Mon'", rendered.contains("Mon"));
+        assertTrue("Should contain custom X label 'Fri'", rendered.contains("Fri"));
+    }
+
+    @Test
+    public void testYTickFormatter() {
+        DataSeries series = new DataSeries("data");
+        series.add(0, 25);
+        series.add(1, 75);
+
+        LineChart chart = LineChart.builder()
+                .width(40)
+                .height(10)
+                .yTickFormatter(y -> String.format("%.0f%%", y))
+                .build();
+        chart.addSeries(series);
+
+        String rendered = chart.render();
+        // Y-axis labels should have % suffix
+        assertTrue("Should contain percentage format", rendered.contains("%"));
+    }
+
+    @Test
     public void testNoTitleByDefault() {
         DataSeries series = new DataSeries("data");
         series.add(0, 0);

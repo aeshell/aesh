@@ -2,6 +2,7 @@ package org.aesh.charts.linechart;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.aesh.charts.axis.Axis;
@@ -44,6 +45,8 @@ public class LineChart {
     private final String yLabel;
     private final Scale xScale;
     private final Scale yScale;
+    private final Function<Double, String> xTickFormatter;
+    private final Function<Double, String> yTickFormatter;
     private final List<DataSeries> seriesList = new ArrayList<>();
     private final List<Marker> markers = new ArrayList<>();
     private final List<HorizontalLine> horizontalLines = new ArrayList<>();
@@ -62,6 +65,8 @@ public class LineChart {
         this.yLabel = builder.yLabel;
         this.xScale = builder.xScale;
         this.yScale = builder.yScale;
+        this.xTickFormatter = builder.xTickFormatter;
+        this.yTickFormatter = builder.yTickFormatter;
         this.showLegend = builder.showLegend;
     }
 
@@ -132,6 +137,8 @@ public class LineChart {
         Axis yAxis = new Axis().scale(yScale);
         if (yLabel != null)
             yAxis.label(yLabel);
+        if (yTickFormatter != null)
+            yAxis.tickFormatter(yTickFormatter);
         double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
         for (DataSeries s : seriesList) {
             yMin = Math.min(yMin, s.yMin());
@@ -152,6 +159,8 @@ public class LineChart {
         Axis xAxis = new Axis().scale(xScale);
         if (xLabel != null)
             xAxis.label(xLabel);
+        if (xTickFormatter != null)
+            xAxis.tickFormatter(xTickFormatter);
         double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
         for (DataSeries s : seriesList) {
             xMin = Math.min(xMin, s.xMin());
@@ -430,6 +439,8 @@ public class LineChart {
         private String yLabel;
         private Scale xScale = Scale.LINEAR;
         private Scale yScale = Scale.LINEAR;
+        private Function<Double, String> xTickFormatter;
+        private Function<Double, String> yTickFormatter;
         private boolean showLegend = true;
 
         public Builder width(int width) {
@@ -472,6 +483,24 @@ public class LineChart {
 
         public Builder yScale(Scale scale) {
             this.yScale = scale;
+            return this;
+        }
+
+        /**
+         * Set a custom X-axis tick label formatter.
+         * Maps numeric tick values to arbitrary label strings (#589).
+         */
+        public Builder xTickFormatter(Function<Double, String> formatter) {
+            this.xTickFormatter = formatter;
+            return this;
+        }
+
+        /**
+         * Set a custom Y-axis tick label formatter.
+         * Maps numeric tick values to arbitrary label strings (#589).
+         */
+        public Builder yTickFormatter(Function<Double, String> formatter) {
+            this.yTickFormatter = formatter;
             return this;
         }
 
