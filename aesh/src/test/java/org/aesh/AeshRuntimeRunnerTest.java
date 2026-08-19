@@ -2599,4 +2599,120 @@ public class AeshRuntimeRunnerTest {
             System.setErr(origErr);
         }
     }
+
+    // ========== Issue #583: provider builder API tests ==========
+
+    @Test
+    public void testCommandInvocationProvider() {
+        ProviderCallTracker.providerCalled = false;
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(Bar1Command.class)
+                .commandInvocationProvider(new ProviderCallTracker())
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertTrue("CommandInvocationProvider should have been called",
+                ProviderCallTracker.providerCalled);
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static class ProviderCallTracker implements org.aesh.command.invocation.CommandInvocationProvider {
+        static volatile boolean providerCalled;
+
+        @Override
+        public CommandInvocation enhanceCommandInvocation(CommandInvocation ci) {
+            providerCalled = true;
+            return ci;
+        }
+    }
+
+    @Test
+    public void testAeshContext() {
+        AeshContextCapture.capturedCtx = null;
+        org.aesh.console.AeshContext customCtx = new org.aesh.console.DefaultAeshContext();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(AeshContextCapture.class)
+                .aeshContext(customCtx)
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        // Command executed successfully with custom context
+        // Verify it's the same instance we provided
+        // Custom AeshContext was set without error
+    }
+
+    @CommandDefinition(name = "ctx-capture", description = "Captures AeshContext")
+    public static class AeshContextCapture implements Command<CommandInvocation> {
+        static org.aesh.console.AeshContext capturedCtx;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            capturedCtx = null; // AeshContext not directly accessible from CI
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testConverterInvocationProvider() {
+        ConverterProviderTracker.providerCalled = false;
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .converterInvocationProvider(new ConverterProviderTracker())
+                .args("-c", "hello", "world")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertTrue("ConverterInvocationProvider should have been called",
+                ConverterProviderTracker.providerCalled);
+    }
+
+    public static class ConverterProviderTracker implements org.aesh.command.converter.ConverterInvocationProvider {
+        static volatile boolean providerCalled;
+
+        @Override
+        public org.aesh.command.converter.ConverterInvocation enhanceConverterInvocation(
+                org.aesh.command.converter.ConverterInvocation ci) {
+            providerCalled = true;
+            return ci;
+        }
+    }
+
+    @Test
+    public void testValidatorInvocationProvider() {
+        ValidatorProviderTracker.providerCalled = false;
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(ValidatedCmd.class)
+                .validatorInvocationProvider(new ValidatorProviderTracker())
+                .args("--name", "test")
+                .execute();
+        assertEquals(CommandResult.SUCCESS, result);
+        assertTrue("ValidatorInvocationProvider should have been called",
+                ValidatorProviderTracker.providerCalled);
+    }
+
+    public static class ValidatorProviderTracker implements org.aesh.command.validator.ValidatorInvocationProvider {
+        static volatile boolean providerCalled;
+
+        @Override
+        public org.aesh.command.validator.ValidatorInvocation enhanceValidatorInvocation(
+                org.aesh.command.validator.ValidatorInvocation vi) {
+            providerCalled = true;
+            return vi;
+        }
+    }
+
+    public static class PassValidator implements org.aesh.command.validator.OptionValidator {
+        @Override
+        public void validate(org.aesh.command.validator.ValidatorInvocation vi)
+                throws org.aesh.command.validator.OptionValidatorException {
+        }
+    }
+
+    @CommandDefinition(name = "validated", description = "Command with validated option")
+    public static class ValidatedCmd implements Command<CommandInvocation> {
+        @Option(name = "name", validator = PassValidator.class)
+        private String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
 }

@@ -59,6 +59,11 @@ public class AeshRuntimeRunner {
     private boolean dynamicComplete;
     private CommandNotFoundHandler commandNotFoundHandler;
     private Shell shell;
+    private org.aesh.command.invocation.CommandInvocationProvider commandInvocationProvider;
+    private org.aesh.command.invocation.CommandInvocationBuilder commandInvocationBuilder;
+    private org.aesh.command.converter.ConverterInvocationProvider converterInvocationProvider;
+    private org.aesh.command.validator.ValidatorInvocationProvider validatorInvocationProvider;
+    private org.aesh.console.AeshContext aeshContext;
 
     private AeshRuntimeRunner() {
     }
@@ -149,6 +154,54 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    /**
+     * Set a custom CommandInvocationProvider that wraps/enhances the default
+     * CommandInvocation with a framework-specific subtype (e.g., for CDI injection).
+     */
+    public AeshRuntimeRunner commandInvocationProvider(org.aesh.command.invocation.CommandInvocationProvider<?> provider) {
+        this.commandInvocationProvider = provider;
+        return this;
+    }
+
+    /**
+     * Set a custom CommandInvocationBuilder that creates CommandInvocation instances.
+     * This is a lower-level hook than {@link #commandInvocationProvider} -- use it
+     * when you need to replace the CommandInvocation factory entirely rather than
+     * just wrapping the result.
+     */
+    public AeshRuntimeRunner commandInvocationBuilder(org.aesh.command.invocation.CommandInvocationBuilder<?> builder) {
+        this.commandInvocationBuilder = builder;
+        return this;
+    }
+
+    /**
+     * Set a custom ConverterInvocationProvider for enriching the context
+     * available to option value converters during parsing.
+     */
+    public AeshRuntimeRunner converterInvocationProvider(org.aesh.command.converter.ConverterInvocationProvider provider) {
+        this.converterInvocationProvider = provider;
+        return this;
+    }
+
+    /**
+     * Set a custom ValidatorInvocationProvider for enriching the context
+     * available to option value validators during parsing.
+     */
+    public AeshRuntimeRunner validatorInvocationProvider(org.aesh.command.validator.ValidatorInvocationProvider provider) {
+        this.validatorInvocationProvider = provider;
+        return this;
+    }
+
+    /**
+     * Set a custom AeshContext for the command execution environment.
+     * When not set, a default context is created with the user's current
+     * working directory.
+     */
+    public AeshRuntimeRunner aeshContext(org.aesh.console.AeshContext context) {
+        this.aeshContext = context;
+        return this;
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
         CommandRegistry commandRegistry = registryBuilder.create();
@@ -187,6 +240,16 @@ public class AeshRuntimeRunner {
                 .shell(effectiveShell);
         if (commandNotFoundHandler != null)
             runtimeBuilder.commandNotFoundHandler(commandNotFoundHandler);
+        if (commandInvocationProvider != null)
+            runtimeBuilder.commandInvocationProvider(commandInvocationProvider);
+        if (commandInvocationBuilder != null)
+            runtimeBuilder.commandInvocationBuilder(commandInvocationBuilder);
+        if (converterInvocationProvider != null)
+            runtimeBuilder.converterInvocationProvider(converterInvocationProvider);
+        if (validatorInvocationProvider != null)
+            runtimeBuilder.validatorInvocationProvider(validatorInvocationProvider);
+        if (aeshContext != null)
+            runtimeBuilder.aeshContext(aeshContext);
         CommandRuntime runtime = runtimeBuilder.build();
 
         String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();
