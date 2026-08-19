@@ -3440,4 +3440,53 @@ public class ProcessorTest {
             return code;
         }
     }
+
+    // ========== Issue #591: enum option tests ==========
+
+    private static final String ENUM_SOURCE = "package test;\n" +
+            "\n" +
+            "public enum LogLevel { DEBUG, INFO, WARN, ERROR }\n";
+
+    private static final String ENUM_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"enumcmd\", description = \"Enum option test\")\n" +
+            "public class EnumCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"level\", description = \"Log level\")\n" +
+            "    public LogLevel level;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testEnumOptionEquivalence() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.LogLevel", ENUM_SOURCE),
+                new InMemorySource("test.EnumCommand", ENUM_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.EnumCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.EnumCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+
+        // Additionally verify that allowedValues are populated on the generated path
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.getDeclaredConstructor().newInstance();
+        ProcessedCommand genCmd = provider.buildProcessedCommand(provider.newInstance());
+        ProcessedOption levelOpt = genCmd.findLongOptionNoActivatorCheck("level");
+        assertNotNull("level option should exist on generated path", levelOpt);
+        assertEquals("allowedValues should have 4 entries for enum", 4, levelOpt.getAllowedValues().size());
+        assertTrue("allowedValues should contain 'debug'", levelOpt.getAllowedValues().contains("debug"));
+        assertTrue("allowedValues should contain 'error'", levelOpt.getAllowedValues().contains("error"));
+        assertNotNull("completer should be set for enum option on generated path", levelOpt.completer());
+    }
 }

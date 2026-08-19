@@ -86,6 +86,35 @@ final class CodeGenerator {
         return count;
     }
 
+    /**
+     * If the given type is an enum, returns its constant names (lowercased).
+     * Returns null if the type is not an enum or constants cannot be resolved.
+     * Used to auto-populate allowedValues at compile time (#591).
+     */
+    private static String[] getEnumConstantNames(TypeMirror fieldType, Types typeUtils) {
+        if (fieldType.getKind() != TypeKind.DECLARED)
+            return null;
+        javax.lang.model.element.Element element = typeUtils.asElement(fieldType);
+        if (element == null || element.getKind() != javax.lang.model.element.ElementKind.ENUM)
+            return null;
+        TypeElement enumElement = (TypeElement) element;
+        List<String> constants = new ArrayList<>();
+        for (javax.lang.model.element.Element enclosed : enumElement.getEnclosedElements()) {
+            if (enclosed.getKind() == javax.lang.model.element.ElementKind.ENUM_CONSTANT) {
+                constants.add(enclosed.getSimpleName().toString().toLowerCase());
+            }
+        }
+        return constants.toArray(new String[0]);
+    }
+
+    /**
+     * Check if a field has a custom converter (not the default NullConverter).
+     */
+    private static boolean hasCustomConverter(VariableElement field, Elements elementUtils) {
+        String className = getFieldAnnotationClassValue(field, "converter", elementUtils);
+        return className != null && !className.equals(NULL_CONVERTER);
+    }
+
     private static int countMixinOptions(TypeElement typeElement) {
         int count = 0;
         for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
@@ -636,7 +665,7 @@ final class CodeGenerator {
         sb.append("                    ").append(fieldType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", ").append(optionType).append(",\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, fieldType);
+        emitConverterExpression(sb, field, "converter", elementUtils, fieldType, effectiveType, typeUtils);
         sb.append(", new Accessor(").append(accIdx).append("));\n");
         // Non-default setters
         if (isOptionalWrapped)
@@ -686,7 +715,15 @@ final class CodeGenerator {
         emitAliasesSetter(sb, var, o.aliases());
         emitHelpGroupSetter(sb, var, o.helpGroup());
         emitExclusiveWithSetter(sb, var, o.exclusiveWith());
-        emitAllowedValuesSetter(sb, var, o.allowedValues());
+        // Auto-populate allowedValues for enum types at compile time (#591).
+        // Skip when a custom converter is set (per #584).
+        String[] allowedVals = o.allowedValues();
+        if (allowedVals.length == 0 && !hasCustomConverter(field, elementUtils)) {
+            String[] enumConstants = getEnumConstantNames(effectiveType, typeUtils);
+            if (enumConstants != null)
+                allowedVals = enumConstants;
+        }
+        emitAllowedValuesSetter(sb, var, allowedVals);
         emitVisibilitySetter(sb, var, o.visibility());
         if (o.order() != Integer.MAX_VALUE)
             sb.append("            ").append(var).append(".setOrder(").append(o.order()).append(");\n");
@@ -1093,6 +1130,26 @@ final class CodeGenerator {
             sb.append("new ").append(className).append("()");
         } else {
             sb.append("CONVERTER_").append(converterConstantSuffix(fieldType));
+        }
+    }
+
+    /**
+     * Variant of emitConverterExpression that can emit an EnumConverter directly
+     * for enum types, avoiding the runtime CLConverterManager lookup (#591).
+     */
+    private static void emitConverterExpression(StringBuilder sb, VariableElement field,
+            String attributeName, Elements elementUtils, String fieldType, TypeMirror effectiveType, Types typeUtils) {
+        String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
+        if (className != null && !className.equals(NULL_CONVERTER)) {
+            sb.append("new ").append(className).append("()");
+        } else {
+            // Check if the type is an enum -- emit EnumConverter directly (#591)
+            String[] enumConstants = getEnumConstantNames(effectiveType, typeUtils);
+            if (enumConstants != null) {
+                sb.append("new org.aesh.command.impl.converter.EnumConverter(").append(fieldType).append(".class)");
+            } else {
+                sb.append("CONVERTER_").append(converterConstantSuffix(fieldType));
+            }
         }
     }
 
