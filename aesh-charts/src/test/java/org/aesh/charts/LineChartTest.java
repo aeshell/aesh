@@ -113,4 +113,46 @@ public class LineChartTest {
     private static void assertEquals(double expected, double actual, double delta) {
         org.junit.Assert.assertEquals(expected, actual, delta);
     }
+
+    @Test
+    public void testTitleRendered() {
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i <= 10; i++) {
+            series.add(i, i * 2);
+        }
+
+        LineChart chart = LineChart.builder()
+                .title("My Chart Title")
+                .width(40)
+                .height(12)
+                .build();
+        chart.addSeries(series);
+
+        String rendered = chart.render();
+        assertTrue("Rendered output should contain the title",
+                rendered.contains("My Chart Title"));
+        // Title should be on the first line
+        String firstLine = rendered.split("\n")[0];
+        assertTrue("Title should be on the first line",
+                firstLine.contains("My Chart Title"));
+    }
+
+    @Test
+    public void testNoTitleByDefault() {
+        DataSeries series = new DataSeries("data");
+        series.add(0, 0);
+        series.add(1, 1);
+
+        LineChart chart = LineChart.builder()
+                .width(40)
+                .height(10)
+                .build();
+        chart.addSeries(series);
+
+        String rendered = chart.render();
+        // Without a title, the first line should not be empty padding
+        String firstLine = rendered.split("\n")[0];
+        assertFalse("First line should not be blank without title",
+                firstLine.trim().isEmpty());
+    }
 }

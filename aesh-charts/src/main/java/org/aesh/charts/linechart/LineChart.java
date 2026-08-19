@@ -39,6 +39,7 @@ public class LineChart {
     private final int width;
     private final int height;
     private final ChartStyle style;
+    private final String title;
     private final String xLabel;
     private final String yLabel;
     private final Scale xScale;
@@ -56,6 +57,7 @@ public class LineChart {
         this.width = builder.width;
         this.height = builder.height;
         this.style = builder.style;
+        this.title = builder.title;
         this.xLabel = builder.xLabel;
         this.yLabel = builder.yLabel;
         this.xScale = builder.xScale;
@@ -157,21 +159,30 @@ public class LineChart {
         }
         xAxis.autoRange(xMin, xMax);
 
-        // Layout: legend (1 line) + plot area + x-axis (2 lines: ticks + label)
+        // Layout: title (1 line) + legend (1 line) + plot area + x-axis (2-3 lines)
         int yAxisWidth = yAxis.labelWidth();
         int plotWidth = width - yAxisWidth - 1;
+        int titleHeight = (title != null && !title.isEmpty()) ? 1 : 0;
         int legendHeight = (showLegend && seriesList.size() > 1) ? 1 : 0;
         int xAxisHeight = 2 + (xLabel != null ? 1 : 0);
-        int plotHeight = height - legendHeight - xAxisHeight;
+        int plotHeight = height - titleHeight - legendHeight - xAxisHeight;
         if (plotWidth < 5 || plotHeight < 3)
             return "Chart too small";
 
         int totalHeight = height;
         Canvas canvas = new Canvas(width, totalHeight, style == ChartStyle.BRAILLE);
 
+        // Render title centered at the top (#588)
+        if (title != null && !title.isEmpty()) {
+            int titleStart = (width - title.length()) / 2;
+            if (titleStart < 0)
+                titleStart = 0;
+            canvas.writeString(titleStart, 0, title);
+        }
+
         int plotLeft = yAxisWidth + 1;
         int plotRight = plotLeft + plotWidth - 1;
-        int plotTop = legendHeight;
+        int plotTop = titleHeight + legendHeight;
         int plotBottom = plotTop + plotHeight - 1;
 
         // Draw axes
@@ -203,8 +214,8 @@ public class LineChart {
             int legendX = plotLeft + (plotWidth - stripAnsi(legend).length()) / 2;
             if (legendX < 0)
                 legendX = 0;
-            // Write legend character by character to preserve ANSI codes
-            canvas.writeString(legendX, 0, legend);
+            // Write legend below title (if present), otherwise at row 0
+            canvas.writeString(legendX, titleHeight, legend);
         }
 
         return canvas.render();
@@ -414,6 +425,7 @@ public class LineChart {
         private int width = 60;
         private int height = 15;
         private ChartStyle style = ChartStyle.UNICODE;
+        private String title;
         private String xLabel;
         private String yLabel;
         private Scale xScale = Scale.LINEAR;
@@ -432,6 +444,14 @@ public class LineChart {
 
         public Builder style(ChartStyle style) {
             this.style = style;
+            return this;
+        }
+
+        /**
+         * Set the chart title, rendered centered above the plot area.
+         */
+        public Builder title(String title) {
+            this.title = title;
             return this;
         }
 
