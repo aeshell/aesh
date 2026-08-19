@@ -517,9 +517,13 @@ public class ProcessedOptionBuilder {
             throw new OptionParserException("Option '" + name + "' is marked as optionalValue but does not accept values");
         }
 
-        // Auto-populate allowedValues for enum types when not explicitly set.
-        // This enables both validation (in doConvert) and completion consistency.
-        if (allowedValues.isEmpty() && type != null && type.isEnum()) {
+        // Auto-populate allowedValues for enum types when not explicitly set
+        // and no custom converter is provided (#584). When a custom converter
+        // is set, the user defines the accepted input domain — auto-populated
+        // enum constant names would incorrectly reject valid custom inputs.
+        if (allowedValues.isEmpty() && type != null && type.isEnum()
+                && (converter == null
+                        || converter instanceof org.aesh.command.impl.converter.EnumConverter)) {
             allowedValues = new java.util.ArrayList<>();
             for (Object constant : type.getEnumConstants())
                 allowedValues.add(((Enum<?>) constant).name().toLowerCase());
