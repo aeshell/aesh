@@ -79,6 +79,41 @@ public class AxisTest {
     }
 
     @Test
+    public void testLabelWidthWithoutLabel() {
+        Axis axis = new Axis().tickCount(5);
+        axis.autoRange(0, 100);
+        int widthNoLabel = axis.labelWidth();
+
+        axis.label("CPU %");
+        int widthWithLabel = axis.labelWidth();
+
+        assertTrue("labelWidth with label should be larger",
+                widthWithLabel > widthNoLabel);
+        assertEquals("label should add 2 chars (column + gap)",
+                widthNoLabel + 2, widthWithLabel);
+    }
+
+    @Test
+    public void testYAxisLabelRendered() {
+        Axis axis = new Axis().tickCount(3);
+        axis.autoRange(0, 100);
+        axis.label("Val");
+
+        // Create a canvas large enough to hold the axis
+        org.aesh.charts.canvas.Canvas canvas = new org.aesh.charts.canvas.Canvas(20, 10, false);
+        org.aesh.charts.common.ChartStyle style = org.aesh.charts.common.ChartStyle.UNICODE;
+
+        int x = axis.labelWidth();
+        axis.drawYAxis(canvas, x, 0, 9, style);
+
+        // The label "Val" should appear vertically in the rendered output
+        String rendered = canvas.render();
+        assertTrue("Rendered output should contain 'V'", rendered.contains("V"));
+        assertTrue("Rendered output should contain 'a'", rendered.contains("a"));
+        assertTrue("Rendered output should contain 'l'", rendered.contains("l"));
+    }
+
+    @Test
     public void testNiceNum() {
         // Ceiling mode (round=false)
         assertEquals(1.0, Axis.niceNum(0.7, false), 0.001);

@@ -147,14 +147,19 @@ public class Axis {
     }
 
     /**
-     * Compute the width needed for Y-axis labels (max label width + 1 for tick mark).
+     * Compute the width needed for Y-axis labels, tick mark, and optional
+     * vertical label text.
      */
     public int labelWidth() {
         int maxWidth = 0;
         for (double tick : tickValues()) {
             maxWidth = Math.max(maxWidth, formatTick(tick).length());
         }
-        return maxWidth + 1; // +1 for tick mark
+        int width = maxWidth + 1; // +1 for tick mark
+        if (label != null && label.length() > 0) {
+            width += 2; // +1 for label column + 1 for gap (#586)
+        }
+        return width;
     }
 
     /**
@@ -185,15 +190,14 @@ public class Axis {
             }
         }
 
-        // Draw label vertically if provided
+        // Draw label vertically if provided.
+        // Position at column 0 (leftmost), centered vertically (#586).
         if (label != null && label.length() > 0) {
-            int labelX = x - labelWidth - 1;
-            if (labelX >= 0) {
-                int labelY = yTop + (height - label.length()) / 2;
-                for (int i = 0; i < label.length() && labelY + i <= yBottom; i++) {
-                    if (labelY + i >= yTop) {
-                        canvas.set(labelX, labelY + i, label.charAt(i));
-                    }
+            int labelX = 0;
+            int labelY = yTop + (height - label.length()) / 2;
+            for (int i = 0; i < label.length() && labelY + i <= yBottom; i++) {
+                if (labelY + i >= yTop) {
+                    canvas.set(labelX, labelY + i, label.charAt(i));
                 }
             }
         }
