@@ -66,20 +66,25 @@ public class Axis {
     }
 
     /**
-     * Auto-set min/max from data range with padding.
+     * Auto-set min/max from data range, rounding to nice tick-aligned bounds.
+     * Uses a "nice number" algorithm that picks tick intervals from
+     * {1, 2, 2.5, 5, 10} * 10^n, then aligns min/max to those intervals.
+     * This produces tight, readable axis bounds like 0-20 or 0-25 instead
+     * of excessive padding like -1 to 30 (#585).
      */
     public void autoRange(double dataMin, double dataMax) {
         if (dataMin == dataMax) {
             this.min = dataMin - 1;
             this.max = dataMax + 1;
-        } else {
-            double padding = (dataMax - dataMin) * 0.05;
-            this.min = dataMin - padding;
-            this.max = dataMax + padding;
+            return;
         }
-        // Round to nice numbers
-        this.min = niceFloor(this.min);
-        this.max = niceCeil(this.max);
+        double range = dataMax - dataMin;
+        // Compute a nice tick interval for the desired number of ticks
+        double roughInterval = range / (tickCount - 1);
+        double niceInterval = niceNum(roughInterval, false);
+        // Align min/max to the tick interval
+        this.min = Math.floor(dataMin / niceInterval) * niceInterval;
+        this.max = Math.ceil(dataMax / niceInterval) * niceInterval;
     }
 
     /**
@@ -231,17 +236,42 @@ public class Axis {
         }
     }
 
-    private static double niceFloor(double value) {
+    /**
+     * Compute a "nice" number close to the given value.
+     * If {@code round} is true, rounds to the nearest nice number;
+     * otherwise, takes the ceiling (next larger nice number).
+     * <p>
+     * Nice numbers are 1, 2, 2.5, 5, 10 multiplied by a power of 10.
+     * This is the standard algorithm used by Heckbert (Graphics Gems, 1990)
+     * for readable axis tick intervals.
+     */
+    static double niceNum(double value, boolean round) {
         if (value == 0)
             return 0;
-        double magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(value))));
-        return Math.floor(value / magnitude) * magnitude;
-    }
-
-    private static double niceCeil(double value) {
-        if (value == 0)
-            return 0;
-        double magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(value))));
-        return Math.ceil(value / magnitude) * magnitude;
+        double sign = value < 0 ? -1 : 1;
+        value = Math.abs(value);
+        double exponent = Math.floor(Math.log10(value));
+        double fraction = value / Math.pow(10, exponent);
+        double nice;
+        if (round) {
+            if (fraction < 1.5)
+                nice = 1;
+            else if (fraction < 3)
+                nice = 2;
+            else if (fraction < 7)
+                nice = 5;
+            else
+                nice = 10;
+        } else {
+            if (fraction <= 1)
+                nice = 1;
+            else if (fraction <= 2)
+                nice = 2;
+            else if (fraction <= 5)
+                nice = 5;
+            else
+                nice = 10;
+        }
+        return sign * nice * Math.pow(10, exponent);
     }
 }
