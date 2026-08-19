@@ -114,6 +114,27 @@ public class AxisTest {
     }
 
     @Test
+    public void testXAxisLastTickLabelNotClipped() {
+        Axis axis = new Axis().tickCount(5);
+        axis.autoRange(0, 20);
+
+        // Create a canvas where the right edge is tight
+        int canvasWidth = 30;
+        org.aesh.charts.canvas.Canvas canvas = new org.aesh.charts.canvas.Canvas(canvasWidth, 4, false);
+        org.aesh.charts.common.ChartStyle style = org.aesh.charts.common.ChartStyle.UNICODE;
+
+        axis.drawXAxis(canvas, 0, canvasWidth - 1, 0, style);
+
+        String rendered = canvas.render();
+        // The last tick label "20.0" should be fully visible, not clipped
+        assertTrue("Last tick label '20.0' should be fully rendered",
+                rendered.contains("20.0"));
+        // First tick label should also be present
+        assertTrue("First tick label '0.0' should be rendered",
+                rendered.contains("0.0"));
+    }
+
+    @Test
     public void testNiceNum() {
         // Ceiling mode (round=false)
         assertEquals(1.0, Axis.niceNum(0.7, false), 0.001);

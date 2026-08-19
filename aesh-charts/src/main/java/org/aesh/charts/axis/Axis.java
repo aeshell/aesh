@@ -225,6 +225,10 @@ public class Axis {
                 canvas.set(tickX, y, style.teeUp());
                 String tickLabel = formatTick(ticks[i]);
                 int labelStart = tickX - tickLabel.length() / 2;
+                // Clamp: don't let label extend beyond canvas right edge (#587)
+                if (labelStart + tickLabel.length() > canvas.width()) {
+                    labelStart = canvas.width() - tickLabel.length();
+                }
                 if (labelStart >= 0 && y + 1 < canvas.height()) {
                     canvas.writeString(labelStart, y + 1, tickLabel);
                 }
