@@ -73,6 +73,8 @@ public class LineChart {
         this.yRangeMin = builder.yRangeMin;
         this.yRangeMax = builder.yRangeMax;
         this.showLegend = builder.showLegend;
+        if (builder.viewportSize > 0)
+            this.viewportSize = builder.viewportSize;
     }
 
     public static Builder builder() {
@@ -116,7 +118,9 @@ public class LineChart {
     public void scrollRight(int amount) {
         if (viewportStart < 0)
             viewportStart = computeAutoViewportStart();
-        viewportStart += amount;
+        int maxSize = seriesList.stream().mapToInt(DataSeries::size).max().orElse(0);
+        int maxStart = Math.max(0, maxSize - (viewportSize > 0 ? viewportSize : maxSize));
+        viewportStart = Math.min(viewportStart + amount, maxStart);
     }
 
     public void scrollToStart() {
@@ -176,12 +180,61 @@ public class LineChart {
             xMin = Math.min(xMin, s.xMin());
             xMax = Math.max(xMax, s.xMax());
         }
+
+        // Apply viewport to narrow the X range to the visible window (#594)
+        if (viewportSize > 0 && !seriesList.isEmpty()) {
+            int maxDataSize = seriesList.stream().mapToInt(DataSeries::size).max().orElse(0);
+            int effectiveStart = viewportStart >= 0
+                    ? viewportStart
+                    : Math.max(0, maxDataSize - viewportSize);
+            int effectiveEnd = Math.min(effectiveStart + viewportSize, maxDataSize);
+            if (effectiveStart < maxDataSize && effectiveEnd > effectiveStart) {
+                DataSeries ref = seriesList.get(0);
+                xMin = ref.xAt(Math.min(effectiveStart, ref.size() - 1));
+                xMax = ref.xAt(Math.min(effectiveEnd - 1, ref.size() - 1));
+            }
+        }
+
         xAxis.autoRange(xMin, xMax);
         // Apply explicit X bounds if set, overriding auto-range (#590)
         if (xRangeMin != null)
             xAxis.min(xRangeMin);
         if (xRangeMax != null)
             xAxis.max(xRangeMax);
+
+        // When viewport is active, recompute Y range from visible data only (#594)
+        if (viewportSize > 0) {
+            yMin = Double.MAX_VALUE;
+            yMax = -Double.MAX_VALUE;
+            for (DataSeries s : seriesList) {
+                for (int i = 0; i < s.size(); i++) {
+                    double x = s.xAt(i);
+                    if (x >= xAxis.min() && x <= xAxis.max()) {
+                        yMin = Math.min(yMin, s.yAt(i));
+                        yMax = Math.max(yMax, s.yAt(i));
+                    }
+                }
+            }
+            for (HorizontalLine hl : horizontalLines) {
+                yMin = Math.min(yMin, hl.yValue());
+                yMax = Math.max(yMax, hl.yValue());
+            }
+            for (Marker m : markers) {
+                if (m.x() >= xAxis.min() && m.x() <= xAxis.max()) {
+                    yMin = Math.min(yMin, m.y());
+                    yMax = Math.max(yMax, m.y());
+                }
+            }
+            if (yMin == Double.MAX_VALUE) {
+                yMin = 0;
+                yMax = 1;
+            }
+            yAxis.autoRange(yMin, yMax);
+            if (yRangeMin != null)
+                yAxis.min(yRangeMin);
+            if (yRangeMax != null)
+                yAxis.max(yRangeMax);
+        }
 
         // Layout: title (1 line) + legend (1 line) + plot area + x-axis (2-3 lines)
         int yAxisWidth = yAxis.labelWidth();
@@ -438,8 +491,11 @@ public class LineChart {
     }
 
     private int computeAutoViewportStart() {
-        // Default: show all data
-        return 0;
+        if (viewportSize <= 0)
+            return 0;
+        // Auto mode: show the latest data points
+        int maxSize = seriesList.stream().mapToInt(DataSeries::size).max().orElse(0);
+        return Math.max(0, maxSize - viewportSize);
     }
 
     private static String stripAnsi(String s) {
@@ -460,6 +516,7 @@ public class LineChart {
         private Function<Double, String> xTickFormatter;
         private Function<Double, String> yTickFormatter;
         private Double xRangeMin, xRangeMax, yRangeMin, yRangeMax;
+        private int viewportSize = -1;
         private boolean showLegend = true;
 
         public Builder width(int width) {
@@ -558,6 +615,16 @@ public class LineChart {
         /** Set only the Y-axis maximum, auto-range the minimum. */
         public Builder yMax(double max) {
             this.yRangeMax = max;
+            return this;
+        }
+
+        /**
+         * Set the number of data points visible at a time.
+         * When set, enables viewport scrolling via scrollLeft/scrollRight.
+         * Default shows all data points (#594).
+         */
+        public Builder viewportSize(int size) {
+            this.viewportSize = size;
             return this;
         }
 

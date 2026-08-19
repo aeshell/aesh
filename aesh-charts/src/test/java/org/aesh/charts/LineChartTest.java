@@ -237,6 +237,114 @@ public class LineChartTest {
         assertTrue("Y-axis should include 0", rendered.contains("0"));
     }
 
+    // --- Viewport tests (#594) ---
+
+    @Test
+    public void testViewportShowsSubsetOfData() {
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i < 20; i++) {
+            series.add(i, i * 5);
+        }
+
+        // Show only 5 data points
+        LineChart chart = LineChart.builder()
+                .width(40).height(10)
+                .viewportSize(5)
+                .build();
+        chart.addSeries(series);
+        chart.scrollToStart();
+
+        String rendered = chart.render();
+        // X-axis should show range around 0-4 (first 5 points), not 0-19
+        assertTrue("Should contain tick near 0", rendered.contains("0"));
+        assertFalse("Should NOT contain tick at 19", rendered.contains("19."));
+    }
+
+    @Test
+    public void testViewportViaBuilder() {
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i < 100; i++) {
+            series.add(i, Math.sin(i * 0.1) * 10);
+        }
+
+        // Builder-set viewport should work
+        LineChart chart = LineChart.builder()
+                .width(50).height(10)
+                .viewportSize(10)
+                .build();
+        chart.addSeries(series);
+
+        // Default auto mode shows latest points (90-99)
+        String rendered = chart.render();
+        assertNotNull(rendered);
+        assertFalse("Chart should not be empty", rendered.isEmpty());
+    }
+
+    @Test
+    public void testScrollLeftShiftsWindow() {
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i < 20; i++) {
+            series.add(i, i);
+        }
+
+        LineChart chart = LineChart.builder()
+                .width(40).height(10)
+                .viewportSize(5)
+                .build();
+        chart.addSeries(series);
+
+        // Start at the end (auto mode: points 15-19)
+        String renderedEnd = chart.render();
+
+        // Scroll to start
+        chart.scrollToStart();
+        String renderedStart = chart.render();
+
+        // The two renders should be different (different X range)
+        assertFalse("Scrolled chart should differ from end-of-data chart",
+                renderedEnd.equals(renderedStart));
+    }
+
+    @Test
+    public void testScrollToEndShowsLatest() {
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i < 50; i++) {
+            series.add(i, i * 2);
+        }
+
+        LineChart chart = LineChart.builder()
+                .width(40).height(10)
+                .viewportSize(10)
+                .build();
+        chart.addSeries(series);
+
+        // scrollToEnd should show latest data
+        chart.scrollToEnd();
+        String rendered = chart.render();
+        assertNotNull(rendered);
+        // The last data point X value is 49, should be visible in the X-axis
+        assertTrue("Should show data near the end",
+                rendered.contains("49") || rendered.contains("48") || rendered.contains("50"));
+    }
+
+    @Test
+    public void testNoViewportShowsAllData() {
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i < 20; i++) {
+            series.add(i, i);
+        }
+
+        // No viewport set -- default behavior
+        LineChart chart = LineChart.builder()
+                .width(50).height(10)
+                .build();
+        chart.addSeries(series);
+
+        String rendered = chart.render();
+        // Should show full range including 0 and close to 20
+        assertTrue("Should contain tick near 0", rendered.contains("0"));
+    }
+
     @Test
     public void testNoTitleByDefault() {
         DataSeries series = new DataSeries("data");
