@@ -363,4 +363,64 @@ public class LineChartTest {
         assertFalse("First line should not be blank without title",
                 firstLine.trim().isEmpty());
     }
+
+    /**
+     * Regression test for #595: viewport clipping with braille style caused
+     * ArrayIndexOutOfBoundsException in BrailleEncoder.dotBit() when data
+     * points fell outside the visible X range.
+     */
+    @Test
+    public void testBrailleViewportDoesNotThrow() {
+        LineChart chart = LineChart.builder()
+                .width(80).height(20)
+                .style(ChartStyle.BRAILLE)
+                .viewportSize(10)
+                .build();
+
+        DataSeries series = new DataSeries("test");
+        for (int i = 0; i < 21; i++) {
+            series.add(i, 35.0 + Math.random() * 0.1);
+        }
+        chart.addSeries(series);
+
+        // Should not throw AIOOBE
+        String output = chart.render();
+        assertNotNull(output);
+        assertFalse(output.isEmpty());
+
+        // Should still contain braille characters in the visible area
+        boolean hasBraille = false;
+        for (char c : output.toCharArray()) {
+            if (c >= 0x2800 && c <= 0x28FF) {
+                hasBraille = true;
+                break;
+            }
+        }
+        assertTrue("Viewport braille chart should contain braille characters", hasBraille);
+    }
+
+    /**
+     * Verify viewport clipping works with standard (non-braille) styles too.
+     * plotStandard() had the same out-of-range issue but was masked by
+     * Canvas.set() bounds checking.
+     */
+    @Test
+    public void testStandardViewportSkipsOutOfRange() {
+        LineChart chart = LineChart.builder()
+                .width(60).height(15)
+                .style(ChartStyle.UNICODE)
+                .viewportSize(5)
+                .build();
+
+        DataSeries series = new DataSeries("test");
+        for (int i = 0; i < 30; i++) {
+            series.add(i, i * 2.0);
+        }
+        chart.addSeries(series);
+        chart.scrollToStart();
+
+        String output = chart.render();
+        assertNotNull(output);
+        assertFalse(output.isEmpty());
+    }
 }

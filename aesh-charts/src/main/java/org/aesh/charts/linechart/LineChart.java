@@ -325,27 +325,47 @@ public class LineChart {
         int subHeight = plotHeight * BrailleEncoder.CELL_HEIGHT;
         String color = series.color();
 
+        // Clip rectangle in sub-pixel coordinates
+        int clipMinX = plotLeft * BrailleEncoder.CELL_WIDTH;
+        int clipMaxX = clipMinX + subWidth - 1;
+        int clipMinY = plotTop * BrailleEncoder.CELL_HEIGHT;
+        int clipMaxY = clipMinY + subHeight - 1;
+
+        int prevSubX = 0, prevSubY = 0;
+        boolean prevValid = false;
+
         for (int i = 0; i < series.size(); i++) {
             double xNorm = xAxis.normalize(series.xAt(i));
             double yNorm = yAxis.normalize(series.yAt(i));
 
-            int subX = plotLeft * BrailleEncoder.CELL_WIDTH + (int) (xNorm * (subWidth - 1));
+            int subX = clipMinX + (int) (xNorm * (subWidth - 1));
             // Y is inverted: top = 0, bottom = max
-            int subY = plotTop * BrailleEncoder.CELL_HEIGHT + (int) ((1.0 - yNorm) * (subHeight - 1));
+            int subY = clipMinY + (int) ((1.0 - yNorm) * (subHeight - 1));
 
-            // Apply line style filtering
-            if (shouldDraw(series.lineStyle(), i)) {
+            boolean inBounds = subX >= clipMinX && subX <= clipMaxX
+                    && subY >= clipMinY && subY <= clipMaxY;
+
+            // Draw the data point dot only if inside the clip area
+            if (inBounds && shouldDraw(series.lineStyle(), i)) {
                 canvas.setBrailleDot(subX, subY, color);
             }
 
-            // Draw line segments between consecutive points
-            if (i > 0) {
-                double prevXNorm = xAxis.normalize(series.xAt(i - 1));
-                double prevYNorm = yAxis.normalize(series.yAt(i - 1));
-                int prevSubX = plotLeft * BrailleEncoder.CELL_WIDTH + (int) (prevXNorm * (subWidth - 1));
-                int prevSubY = plotTop * BrailleEncoder.CELL_HEIGHT + (int) ((1.0 - prevYNorm) * (subHeight - 1));
-                drawBrailleLine(canvas, prevSubX, prevSubY, subX, subY, color, series.lineStyle(), i);
+            // Draw line segments between consecutive points.
+            // Allow segments where one endpoint is outside the clip area so
+            // lines are not cut short at viewport edges. Clamp endpoints to
+            // a margin around the clip rectangle to avoid pathologically long
+            // Bresenham walks for distant off-screen points.
+            if (prevValid) {
+                int x0 = Math.max(clipMinX - subWidth, Math.min(clipMaxX + subWidth, prevSubX));
+                int y0 = Math.max(clipMinY - subHeight, Math.min(clipMaxY + subHeight, prevSubY));
+                int x1 = Math.max(clipMinX - subWidth, Math.min(clipMaxX + subWidth, subX));
+                int y1 = Math.max(clipMinY - subHeight, Math.min(clipMaxY + subHeight, subY));
+                drawBrailleLine(canvas, x0, y0, x1, y1, color, series.lineStyle(), i);
             }
+
+            prevSubX = subX;
+            prevSubY = subY;
+            prevValid = true;
         }
     }
 
@@ -391,6 +411,10 @@ public class LineChart {
 
             double xNorm = xAxis.normalize(series.xAt(i));
             double yNorm = yAxis.normalize(series.yAt(i));
+
+            // Skip data points outside the visible range
+            if (xNorm < 0.0 || xNorm > 1.0 || yNorm < 0.0 || yNorm > 1.0)
+                continue;
 
             int cellX = plotLeft + (int) (xNorm * (plotWidth - 1));
             int cellY = plotTop + (int) ((1.0 - yNorm) * plotHeight);

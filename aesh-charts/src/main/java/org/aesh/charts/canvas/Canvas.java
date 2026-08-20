@@ -128,6 +128,8 @@ public class Canvas {
     public void setBrailleDot(int subX, int subY, String style) {
         if (brailleBits == null)
             return;
+        if (subX < 0 || subY < 0)
+            return;
         int cellX = subX / BrailleEncoder.CELL_WIDTH;
         int cellY = subY / BrailleEncoder.CELL_HEIGHT;
         if (cellX < 0 || cellX >= width || cellY < 0 || cellY >= height)
