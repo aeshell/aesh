@@ -237,8 +237,7 @@ public class HyperlinkTest {
 
     @Test
     public void testPrintHyperlinkFromCommand() throws Exception {
-        // Use TestConnection without stripping ANSI codes to verify hyperlink output
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(HyperlinkOutputCommand.class)

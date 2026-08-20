@@ -21,6 +21,7 @@ package org.aesh.command.impl.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,6 +57,30 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private static final Pattern DESCRIPTION_VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
     private static final char DASH = '-';
     private static final char EQUALS = '=';
+
+    private static final Comparator<ProcessedOption> BY_ORDER = new Comparator<ProcessedOption>() {
+        @Override
+        public int compare(ProcessedOption l, ProcessedOption r) {
+            return Integer.compare(l.getOrder(), r.getOrder());
+        }
+    };
+    private static final Comparator<ProcessedOption> BY_DECLARATION_ORDER = new Comparator<ProcessedOption>() {
+        @Override
+        public int compare(ProcessedOption l, ProcessedOption r) {
+            return Integer.compare(l.getDeclarationOrder(), r.getDeclarationOrder());
+        }
+    };
+    private static final Comparator<ProcessedOption> BY_NAME = new Comparator<ProcessedOption>() {
+        @Override
+        public int compare(ProcessedOption l, ProcessedOption r) {
+            String ln = l.name() != null ? l.name() : "";
+            String rn = r.name() != null ? r.name() : "";
+            return ln.compareTo(rn);
+        }
+    };
+    private static final Comparator<ProcessedOption> SORT_BY_ORDER_NAME = BY_ORDER.thenComparing(BY_NAME)
+            .thenComparing(BY_DECLARATION_ORDER);
+    private static final Comparator<ProcessedOption> SORT_BY_ORDER_ONLY = BY_ORDER.thenComparing(BY_DECLARATION_ORDER);
 
     private final String name;
     private final String description;
@@ -271,23 +296,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public List<ProcessedOption> getDisplayOptions() {
         List<ProcessedOption> display = new ArrayList<>(getOptions());
-        java.util.Comparator<ProcessedOption> byOrder = (left, right) -> {
-            int cmp = Integer.compare(left.getOrder(), right.getOrder());
-            return cmp;
-        };
-        java.util.Comparator<ProcessedOption> byDeclarationOrder = (left, right) -> Integer
-                .compare(left.getDeclarationOrder(), right.getDeclarationOrder());
-
-        if (sortOptions) {
-            java.util.Comparator<ProcessedOption> byName = (left, right) -> {
-                String leftName = left.name() != null ? left.name() : "";
-                String rightName = right.name() != null ? right.name() : "";
-                return leftName.compareTo(rightName);
-            };
-            display.sort(byOrder.thenComparing(byName).thenComparing(byDeclarationOrder));
-        } else {
-            display.sort(byOrder.thenComparing(byDeclarationOrder));
-        }
+        display.sort(sortOptions ? SORT_BY_ORDER_NAME : SORT_BY_ORDER_ONLY);
         return display;
     }
 

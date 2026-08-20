@@ -277,7 +277,7 @@ public class MapCommandTest {
 
     @Test
     public void testExecution() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         // Build dynamic command.
         DynCommand1 cmd = new DynCommand1();
@@ -391,7 +391,7 @@ public class MapCommandTest {
 
     @Test
     public void clearedOptionTest() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         // Build dynamic command.
         DynCommand1 cmd = new DynCommand1();
@@ -442,7 +442,7 @@ public class MapCommandTest {
 
     @Test
     public void optionRetrievalTest() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         // Build dynamic command.
         DynCommand1 cmd = new DynCommand1();

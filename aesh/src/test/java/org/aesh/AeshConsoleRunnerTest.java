@@ -63,7 +63,7 @@ public class AeshConsoleRunnerTest {
 
     @Test(expected = RuntimeException.class)
     public void testNoCommandInSettings() {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder().create();
 

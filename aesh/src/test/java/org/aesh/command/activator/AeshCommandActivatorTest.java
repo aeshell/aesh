@@ -44,7 +44,7 @@ public class AeshCommandActivatorTest {
 
     @Test
     public void testActivatorFail() throws Exception {
-        TestConnection connection = new TestConnection(false);
+        TestConnection connection = new TestConnection();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
