@@ -126,12 +126,13 @@ public class AxisTest {
         axis.drawXAxis(canvas, 0, canvasWidth - 1, 0, style);
 
         String rendered = canvas.render();
-        // The last tick label "20.0" should be fully visible, not clipped
-        assertTrue("Last tick label '20.0' should be fully rendered",
-                rendered.contains("20.0"));
+        // After autoRange, interval-derived precision: range 0-20, interval=5 → 0 decimals (#593)
+        // Last tick label "20" should be fully visible, not clipped
+        assertTrue("Last tick label '20' should be fully rendered",
+                rendered.contains("20"));
         // First tick label should also be present
-        assertTrue("First tick label '0.0' should be rendered",
-                rendered.contains("0.0"));
+        assertTrue("First tick label '0' should be rendered",
+                rendered.contains("0"));
     }
 
     @Test
@@ -139,11 +140,12 @@ public class AxisTest {
         Axis axis = new Axis().tickCount(3);
         axis.autoRange(0, 100);
 
-        // Default format (value < 1 uses %.2f, value >= 1 uses %.1f)
-        assertEquals("0.00", axis.formatTick(0));
-        assertEquals("50.0", axis.formatTick(50));
+        // After autoRange, interval-derived precision applies (#593):
+        // range 0-100, tickCount 3: interval=50, autoDecimalPlaces=0
+        assertEquals("0", axis.formatTick(0));
+        assertEquals("50", axis.formatTick(50));
 
-        // Custom formatter
+        // Custom formatter takes priority over autoDecimalPlaces
         axis.tickFormatter(v -> "item-" + v.intValue());
         assertEquals("item-0", axis.formatTick(0));
         assertEquals("item-50", axis.formatTick(50));
@@ -163,6 +165,119 @@ public class AxisTest {
 
         assertTrue("Custom formatter with wider labels should increase labelWidth",
                 customWidth > defaultWidth);
+    }
+
+    // --- #593: Auto-precision tick formatting for narrow data ranges ---
+
+    @Test
+    public void testNarrowRangeTickPrecision() {
+        // Data range 35.00-35.12: adjacent ticks must not produce duplicate labels
+        Axis axis = new Axis().tickCount(5);
+        axis.autoRange(35.00, 35.12);
+
+        double[] ticks = axis.tickValues();
+        String[] labels = new String[ticks.length];
+        for (int i = 0; i < ticks.length; i++) {
+            labels[i] = axis.formatTick(ticks[i]);
+        }
+
+        // All adjacent labels must be distinct
+        for (int i = 1; i < labels.length; i++) {
+            assertTrue("Adjacent tick labels must differ: labels[" + (i - 1) + "]=\""
+                    + labels[i - 1] + "\" vs labels[" + i + "]=\"" + labels[i] + "\"",
+                    !labels[i - 1].equals(labels[i]));
+        }
+
+        // Labels should show at least 2 decimal places for this interval
+        for (String lbl : labels) {
+            int dot = lbl.indexOf('.');
+            assertTrue("Label should have a decimal point: " + lbl, dot >= 0);
+            int decimals = lbl.length() - dot - 1;
+            assertTrue("Label should have >= 2 decimals for narrow range: " + lbl,
+                    decimals >= 2);
+        }
+    }
+
+    @Test
+    public void testWideRangeTickPrecision() {
+        // Data range 0-1000: tick interval is large, should use 0 decimals
+        Axis axis = new Axis().tickCount(5);
+        axis.autoRange(0, 1000);
+
+        assertEquals("0", axis.formatTick(0));
+        assertEquals("250", axis.formatTick(250));
+        assertEquals("500", axis.formatTick(500));
+        assertEquals("1000", axis.formatTick(1000));
+    }
+
+    @Test
+    public void testMediumRangeTickPrecision() {
+        // Data range 0-2: tick interval ~0.5, should use 1 decimal
+        Axis axis = new Axis().tickCount(5);
+        axis.autoRange(0, 2);
+
+        double[] ticks = axis.tickValues();
+        for (double tick : ticks) {
+            String lbl = axis.formatTick(tick);
+            int dot = lbl.indexOf('.');
+            assertTrue("Label should have a decimal: " + lbl, dot >= 0);
+            int decimals = lbl.length() - dot - 1;
+            assertEquals("Should have exactly 1 decimal for interval ~0.5: " + lbl,
+                    1, decimals);
+        }
+    }
+
+    @Test
+    public void testAutoDecimalDoesNotOverrideCustomFormatter() {
+        Axis axis = new Axis().tickCount(5);
+        axis.autoRange(35.00, 35.12);
+
+        // Custom formatter should take priority over autoDecimalPlaces
+        axis.tickFormatter(v -> String.valueOf(v.intValue()));
+        assertEquals("35", axis.formatTick(35.00));
+        assertEquals("35", axis.formatTick(35.05));
+    }
+
+    @Test
+    public void testAutoDecimalDoesNotOverrideFormatPattern() {
+        Axis axis = new Axis().tickCount(5);
+        axis.autoRange(35.00, 35.12);
+
+        // Explicit format pattern should take priority over autoDecimalPlaces
+        axis.format("%.4f");
+        assertEquals("35.0000", axis.formatTick(35.0));
+        assertEquals("35.0500", axis.formatTick(35.05));
+    }
+
+    @Test
+    public void testManualRangeUsesOldRules() {
+        // When autoRange() is NOT called, old magnitude-based rules apply
+        Axis axis = new Axis().tickCount(5);
+        axis.min(35.00).max(35.15);
+
+        // Value >= 1 should use %.1f (old rule)
+        assertEquals("35.0", axis.formatTick(35.0));
+        assertEquals("35.1", axis.formatTick(35.05));
+    }
+
+    @Test
+    public void testVeryNarrowRangeTickPrecision() {
+        // Data range 100.000-100.003: extremely narrow, needs many decimals
+        Axis axis = new Axis().tickCount(5);
+        axis.autoRange(100.000, 100.003);
+
+        double[] ticks = axis.tickValues();
+        String[] labels = new String[ticks.length];
+        for (int i = 0; i < ticks.length; i++) {
+            labels[i] = axis.formatTick(ticks[i]);
+        }
+
+        // All adjacent labels must be distinct
+        for (int i = 1; i < labels.length; i++) {
+            assertTrue("Adjacent tick labels must differ: labels[" + (i - 1) + "]=\""
+                    + labels[i - 1] + "\" vs labels[" + i + "]=\"" + labels[i] + "\"",
+                    !labels[i - 1].equals(labels[i]));
+        }
     }
 
     @Test

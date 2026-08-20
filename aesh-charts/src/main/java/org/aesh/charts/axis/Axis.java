@@ -18,6 +18,8 @@ public class Axis {
     private int tickCount = 5;
     private String formatPattern;
     private Function<Double, String> tickFormatter;
+    /** Decimal places computed from the tick interval; -1 = use default magnitude-based rules. */
+    private int autoDecimalPlaces = -1;
 
     public Axis() {
     }
@@ -100,6 +102,13 @@ public class Axis {
         // Align min/max to the tick interval
         this.min = Math.floor(dataMin / niceInterval) * niceInterval;
         this.max = Math.ceil(dataMax / niceInterval) * niceInterval;
+
+        // Compute decimal precision from tick interval so adjacent ticks
+        // always produce distinct labels (#593).
+        double interval = (this.max - this.min) / (tickCount - 1);
+        if (interval > 0) {
+            autoDecimalPlaces = Math.max(0, (int) Math.ceil(-Math.log10(interval)));
+        }
     }
 
     /**
@@ -155,6 +164,13 @@ public class Axis {
         if (formatPattern != null) {
             return String.format(formatPattern, value);
         }
+        // Use interval-derived precision when autoRange() has been called (#593).
+        // This ensures adjacent ticks produce distinct labels even when the
+        // tick interval is small relative to the value magnitude.
+        if (autoDecimalPlaces >= 0) {
+            return String.format("%." + autoDecimalPlaces + "f", value);
+        }
+        // Fallback: value-magnitude-based rules for manually set ranges
         if (Math.abs(value) >= 1000) {
             return String.format("%.0f", value);
         } else if (Math.abs(value) >= 1) {
