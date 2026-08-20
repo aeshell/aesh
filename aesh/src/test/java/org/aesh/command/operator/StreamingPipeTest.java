@@ -55,8 +55,7 @@ public class StreamingPipeTest {
 
         // Produce 10000 lines, count them through pipe
         connection.read("large-producer | line-counter" + Config.getLineSeparator());
-        Thread.sleep(2000);
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("lines=10000", 5000);
         assertTrue("Should count 10000 lines, got: " + output,
                 output.contains("lines=10000"));
 
@@ -92,7 +91,7 @@ public class StreamingPipeTest {
         console.start();
 
         connection.read("conc-producer | conc-consumer" + Config.getLineSeparator());
-        Thread.sleep(2000);
+        connection.waitForOutputContaining("drain-complete", 5000);
 
         assertTrue("Consumer should have started before producer finished (concurrent execution)",
                 ConcurrencyConsumerCommand.consumerStartedBeforeProducerFinished.get());
@@ -194,8 +193,7 @@ public class StreamingPipeTest {
 
         // pipe | upper should succeed, then echo should run
         connection.read("pipe | upper && echo" + Config.getLineSeparator());
-        Thread.sleep(500);
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("echo-ran", 5000);
         assertTrue("Echo should have run after successful pipe chain",
                 output.contains("echo-ran"));
 
@@ -244,14 +242,12 @@ public class StreamingPipeTest {
         static final AtomicBoolean producerFinished = new AtomicBoolean(false);
 
         @Override
-        public CommandResult execute(CommandInvocation ci) throws CommandException, InterruptedException {
+        public CommandResult execute(CommandInvocation ci) throws CommandException {
             producerStarted.set(true);
             // Write enough data to fill the pipe buffer, forcing back-pressure
             for (int i = 0; i < 1000; i++) {
                 ci.println("data-" + i);
             }
-            // Small delay to ensure consumer has time to observe concurrent state
-            Thread.sleep(200);
             producerFinished.set(true);
             return CommandResult.SUCCESS;
         }
@@ -263,22 +259,25 @@ public class StreamingPipeTest {
 
         @Override
         public CommandResult execute(CommandInvocation ci) throws CommandException {
-            // Check if producer is still running when we start reading
-            if (ConcurrencyProducerCommand.producerStarted.get()
-                    && !ConcurrencyProducerCommand.producerFinished.get()) {
-                consumerStartedBeforeProducerFinished.set(true);
-            }
             try {
                 java.io.InputStream stdin = ci.getStdin();
                 if (stdin != null) {
                     BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
                     while (reader.readLine() != null) {
-                        // Drain
+                        // Check overlap while actively reading: back-pressure from the
+                        // 16-element blocking queue guarantees the producer is still
+                        // running while the consumer drains data.
+                        if (!consumerStartedBeforeProducerFinished.get()
+                                && ConcurrencyProducerCommand.producerStarted.get()
+                                && !ConcurrencyProducerCommand.producerFinished.get()) {
+                            consumerStartedBeforeProducerFinished.set(true);
+                        }
                     }
                 }
             } catch (IOException e) {
                 // expected
             }
+            ci.println("drain-complete");
             return CommandResult.SUCCESS;
         }
     }
