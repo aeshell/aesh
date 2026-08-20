@@ -360,7 +360,8 @@ public class LineChart {
                 int y0 = Math.max(clipMinY - subHeight, Math.min(clipMaxY + subHeight, prevSubY));
                 int x1 = Math.max(clipMinX - subWidth, Math.min(clipMaxX + subWidth, subX));
                 int y1 = Math.max(clipMinY - subHeight, Math.min(clipMaxY + subHeight, subY));
-                drawBrailleLine(canvas, x0, y0, x1, y1, color, series.lineStyle(), i);
+                drawBrailleLine(canvas, x0, y0, x1, y1, color, series.lineStyle(), i,
+                        clipMinX, clipMinY, clipMaxX, clipMaxY);
             }
 
             prevSubX = subX;
@@ -370,7 +371,8 @@ public class LineChart {
     }
 
     private void drawBrailleLine(Canvas canvas, int x0, int y0, int x1, int y1,
-            String color, LineStyle lineStyle, int pointIndex) {
+            String color, LineStyle lineStyle, int pointIndex,
+            int clipMinX, int clipMinY, int clipMaxX, int clipMaxY) {
         // Bresenham's line algorithm for braille sub-cells
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
@@ -380,7 +382,9 @@ public class LineChart {
         int step = 0;
 
         while (true) {
-            if (shouldDraw(lineStyle, pointIndex + step)) {
+            // Only draw within the plot clip rectangle (#596)
+            if (x0 >= clipMinX && x0 <= clipMaxX && y0 >= clipMinY && y0 <= clipMaxY
+                    && shouldDraw(lineStyle, pointIndex + step)) {
                 canvas.setBrailleDot(x0, y0, color);
             }
             if (x0 == x1 && y0 == y1)

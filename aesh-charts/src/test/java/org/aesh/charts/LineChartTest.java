@@ -423,4 +423,59 @@ public class LineChartTest {
         assertNotNull(output);
         assertFalse(output.isEmpty());
     }
+
+    /**
+     * Regression test for #596: viewport scrolling rendered braille data
+     * left of the Y-axis, corrupting tick labels. Verify that the Y-axis
+     * column area contains no braille characters after rendering.
+     */
+    @Test
+    public void testBrailleViewportDoesNotBleedIntoYAxis() {
+        // Use a Y-label to push the plot area rightward, creating a wide Y-axis zone
+        LineChart chart = LineChart.builder()
+                .width(80).height(20)
+                .style(ChartStyle.BRAILLE)
+                .yLabel("Value")
+                .viewportSize(5)
+                .build();
+
+        DataSeries series = new DataSeries("test");
+        for (int i = 0; i < 30; i++) {
+            series.add(i, i * 3.0);
+        }
+        chart.addSeries(series);
+
+        // Scroll to the middle so off-screen points exist on both sides
+        chart.scrollToStart();
+        chart.scrollRight(10);
+
+        String output = chart.render();
+        assertNotNull(output);
+
+        // The Y-axis area is the leftmost columns. Braille characters
+        // (U+2800-U+28FF) should only appear in the plot area, never
+        // in the Y-axis label/tick columns.
+        String[] lines = output.split("\n");
+        // Y-axis width: find where the vertical axis bar is (first occurrence of the
+        // box-drawing vertical character on a plot line)
+        int yAxisEnd = -1;
+        for (String line : lines) {
+            int idx = line.indexOf('\u2502'); // │ box drawing vertical
+            if (idx >= 0) {
+                yAxisEnd = idx;
+                break;
+            }
+        }
+        // If no vertical bar found, the chart structure is different -- skip the check
+        if (yAxisEnd > 0) {
+            for (String line : lines) {
+                String yAxisArea = line.substring(0, Math.min(yAxisEnd, line.length()));
+                for (char c : yAxisArea.toCharArray()) {
+                    assertFalse("Braille character U+" + Integer.toHexString(c)
+                            + " found in Y-axis area: " + yAxisArea,
+                            c >= 0x2800 && c <= 0x28FF);
+                }
+            }
+        }
+    }
 }
