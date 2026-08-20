@@ -478,4 +478,66 @@ public class LineChartTest {
             }
         }
     }
+
+    /**
+     * Regression test for #597: viewport should show a consistent number
+     * of data points regardless of scroll position. The X-axis range
+     * must not widen due to autoRange nice-number rounding.
+     */
+    @Test
+    public void testViewportConsistentPointCount() {
+        LineChart chart = LineChart.builder()
+                .width(80).height(15)
+                .viewportSize(10)
+                .xTickFormatter(x -> String.valueOf(x.intValue()))
+                .build();
+
+        DataSeries series = new DataSeries("data");
+        for (int i = 0; i < 21; i++) {
+            series.add(i, i * 2.0);
+        }
+        chart.addSeries(series);
+
+        // Render at several scroll positions and verify the X-axis span
+        // covers exactly viewportSize-1 = 9 units (10 points: start to start+9)
+        chart.scrollToStart(); // position 0: points 0-9
+        String r0 = chart.render();
+        assertTrue("Position 0 should show tick '0'", r0.contains("0"));
+        assertTrue("Position 0 should show tick '9'", r0.contains("9"));
+        // Should NOT show tick values beyond the viewport
+        assertFalse("Position 0 should not show '10'",
+                containsTickLabel(r0, "10"));
+
+        chart.scrollRight(5); // position 5: points 5-14
+        String r5 = chart.render();
+        assertTrue("Position 5 should show tick '5'", r5.contains("5"));
+
+        // Render should change between positions (not stuck on same range)
+        assertFalse("Scrolling should change the rendered output",
+                r0.equals(r5));
+    }
+
+    /**
+     * Check if a rendered chart output contains a specific tick label
+     * on the X-axis (bottom lines). Avoids false positives from Y-axis
+     * labels by only checking the last 3 lines.
+     */
+    private static boolean containsTickLabel(String rendered, String label) {
+        String[] lines = rendered.split("\n");
+        // X-axis labels are in the last 2-3 lines
+        for (int i = Math.max(0, lines.length - 3); i < lines.length; i++) {
+            // Check for the label as a standalone token (surrounded by spaces or at edges)
+            String line = lines[i];
+            int idx = line.indexOf(label);
+            while (idx >= 0) {
+                boolean leftOk = idx == 0 || !Character.isDigit(line.charAt(idx - 1));
+                int end = idx + label.length();
+                boolean rightOk = end >= line.length() || !Character.isDigit(line.charAt(end));
+                if (leftOk && rightOk)
+                    return true;
+                idx = line.indexOf(label, idx + 1);
+            }
+        }
+        return false;
+    }
 }

@@ -182,20 +182,35 @@ public class LineChart {
         }
 
         // Apply viewport to narrow the X range to the visible window (#594)
+        boolean viewportActive = false;
         if (viewportSize > 0 && !seriesList.isEmpty()) {
             int maxDataSize = seriesList.stream().mapToInt(DataSeries::size).max().orElse(0);
             int effectiveStart = viewportStart >= 0
                     ? viewportStart
                     : Math.max(0, maxDataSize - viewportSize);
             int effectiveEnd = Math.min(effectiveStart + viewportSize, maxDataSize);
+            // Maintain consistent window size at data boundaries (#597)
+            if (effectiveEnd - effectiveStart < viewportSize && effectiveStart > 0) {
+                effectiveStart = Math.max(0, effectiveEnd - viewportSize);
+            }
             if (effectiveStart < maxDataSize && effectiveEnd > effectiveStart) {
                 DataSeries ref = seriesList.get(0);
                 xMin = ref.xAt(Math.min(effectiveStart, ref.size() - 1));
                 xMax = ref.xAt(Math.min(effectiveEnd - 1, ref.size() - 1));
+                viewportActive = true;
             }
         }
 
         xAxis.autoRange(xMin, xMax);
+        // When viewport is active, clamp the axis range back to the viewport
+        // data bounds so autoRange nice-number rounding does not widen the
+        // visible window and include extra data points (#597)
+        if (viewportActive) {
+            if (xAxis.min() < xMin)
+                xAxis.min(xMin);
+            if (xAxis.max() > xMax)
+                xAxis.max(xMax);
+        }
         // Apply explicit X bounds if set, overriding auto-range (#590)
         if (xRangeMin != null)
             xAxis.min(xRangeMin);
