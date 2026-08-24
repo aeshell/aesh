@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,6 +39,8 @@ import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.option.CompletionFallback;
+import org.aesh.command.option.OptionVisibility;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.populator.CommandPopulator;
@@ -90,7 +93,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean disableParsing;
     private final boolean stopAtFirstPositional;
     private final boolean sortOptions;
-    private org.aesh.command.option.CompletionFallback completeFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
+    private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
     private boolean generateHelp;
@@ -108,7 +111,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
     private CompleteStatus completeStatus;
-    private java.util.function.BiConsumer<Object, Object> parentCommandInjector;
+    private BiConsumer<Object, Object> parentCommandInjector;
     private int optionDeclarationCounter;
     private List<ProcessedOption> cachedPositionalOrder;
     private boolean hasInheritedOptions;
@@ -386,11 +389,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return sortOptions;
     }
 
-    public org.aesh.command.option.CompletionFallback getCompleteFallback() {
+    public CompletionFallback getCompleteFallback() {
         return completeFallback;
     }
 
-    public void setCompleteFallback(org.aesh.command.option.CompletionFallback completeFallback) {
+    public void setCompleteFallback(CompletionFallback completeFallback) {
         this.completeFallback = completeFallback;
     }
 
@@ -499,11 +502,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.helpSectionProvider = helpSectionProvider;
     }
 
-    public void setParentCommandInjector(java.util.function.BiConsumer<Object, Object> injector) {
+    public void setParentCommandInjector(BiConsumer<Object, Object> injector) {
         this.parentCommandInjector = injector;
     }
 
-    public java.util.function.BiConsumer<Object, Object> getParentCommandInjector() {
+    public BiConsumer<Object, Object> getParentCommandInjector() {
         return parentCommandInjector;
     }
 
@@ -930,7 +933,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+            if (o.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             if (o.getValues().size() == 0 &&
                     o.isActivated(parsedCommand()) &&
@@ -952,7 +955,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+            if (o.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             if (isExcludedBySetOption(o))
                 continue;
@@ -1079,9 +1082,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+            if (o.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
-            if (!showAll && o.getVisibility() == org.aesh.command.option.OptionVisibility.FULL)
+            if (!showAll && o.getVisibility() == OptionVisibility.FULL)
                 continue;
             visibleOpts.add(o);
         }
@@ -1237,7 +1240,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (!includeHidden && o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+            if (!includeHidden && o.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             visibleOpts.add(o);
         }
@@ -1269,7 +1272,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<ProcessedOption> remaining = new ArrayList<>();
         for (ProcessedOption o : opts) {
-            if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
+            if (o.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             // Skip options that already have a value
             if (o.getValue() != null || o.getValues().size() > 0)

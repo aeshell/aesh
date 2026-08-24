@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
@@ -34,6 +36,8 @@ import org.aesh.command.impl.converter.NullConverter;
 import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.renderer.NullOptionRenderer;
 import org.aesh.command.impl.validator.NullValidator;
+import org.aesh.command.option.CompletionFallback;
+import org.aesh.command.option.OptionVisibility;
 import org.aesh.command.parser.OptionParser;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.renderer.OptionRenderer;
@@ -84,17 +88,17 @@ public class ProcessedOptionBuilder {
     private String descriptionUrl;
     private boolean isUrl = false;
     private BiConsumer<Object, Object> fieldSetter;
-    private java.util.function.Consumer<Object> fieldResetter;
-    private java.util.function.Function<Object, Object> fieldGetter;
+    private Consumer<Object> fieldResetter;
+    private Function<Object, Object> fieldGetter;
     private FieldAccessor fieldAccessor;
     private String mixinFieldName;
     private List<String> aliases;
     private String helpGroup = "";
     private List<String> exclusiveWith;
     private List<String> allowedValues = java.util.Collections.emptyList();
-    private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
+    private OptionVisibility visibility = OptionVisibility.BRIEF;
     private int order = Integer.MAX_VALUE;
-    private org.aesh.command.option.CompletionFallback completeFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
+    private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
 
     private ProcessedOptionBuilder() {
         defaultValues = java.util.Collections.emptyList();
@@ -384,12 +388,12 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
-    public ProcessedOptionBuilder fieldResetter(java.util.function.Consumer<Object> fieldResetter) {
+    public ProcessedOptionBuilder fieldResetter(Consumer<Object> fieldResetter) {
         this.fieldResetter = fieldResetter;
         return this;
     }
 
-    public ProcessedOptionBuilder fieldGetter(java.util.function.Function<Object, Object> fieldGetter) {
+    public ProcessedOptionBuilder fieldGetter(Function<Object, Object> fieldGetter) {
         this.fieldGetter = fieldGetter;
         return this;
     }
@@ -444,8 +448,8 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
-    public ProcessedOptionBuilder visibility(org.aesh.command.option.OptionVisibility visibility) {
-        this.visibility = visibility != null ? visibility : org.aesh.command.option.OptionVisibility.BRIEF;
+    public ProcessedOptionBuilder visibility(OptionVisibility visibility) {
+        this.visibility = visibility != null ? visibility : OptionVisibility.BRIEF;
         return this;
     }
 
@@ -454,7 +458,7 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
-    public ProcessedOptionBuilder completeFallback(org.aesh.command.option.CompletionFallback completeFallback) {
+    public ProcessedOptionBuilder completeFallback(CompletionFallback completeFallback) {
         this.completeFallback = completeFallback;
         return this;
     }
@@ -555,7 +559,7 @@ public class ProcessedOptionBuilder {
             option.setExclusiveWith(exclusiveWith);
         if (!allowedValues.isEmpty())
             option.setAllowedValues(allowedValues);
-        if (visibility != org.aesh.command.option.OptionVisibility.BRIEF)
+        if (visibility != OptionVisibility.BRIEF)
             option.setVisibility(visibility);
         if (order != Integer.MAX_VALUE)
             option.setOrder(order);
@@ -570,16 +574,16 @@ public class ProcessedOptionBuilder {
         if (index != null && !index.isEmpty())
             option.setIndex(index);
         // Resolve DEFAULT completeFallback based on type
-        if (completeFallback == org.aesh.command.option.CompletionFallback.DEFAULT) {
+        if (completeFallback == CompletionFallback.DEFAULT) {
             if (type != null && type.isEnum()) {
-                option.setCompleteFallback(org.aesh.command.option.CompletionFallback.NONE);
+                option.setCompleteFallback(CompletionFallback.NONE);
             } else if (type != null && (java.io.File.class.isAssignableFrom(type)
                     || java.nio.file.Path.class.isAssignableFrom(type)
                     || org.aesh.io.Resource.class.isAssignableFrom(type)
                     || String.class.isAssignableFrom(type))) {
-                option.setCompleteFallback(org.aesh.command.option.CompletionFallback.FILES);
+                option.setCompleteFallback(CompletionFallback.FILES);
             } else {
-                option.setCompleteFallback(org.aesh.command.option.CompletionFallback.NONE);
+                option.setCompleteFallback(CompletionFallback.NONE);
             }
         } else {
             option.setCompleteFallback(completeFallback);

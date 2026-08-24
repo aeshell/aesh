@@ -98,9 +98,14 @@ public class ExportManager {
         if (variableMatcher.matches()) {
             String name = variableMatcher.group(2);
             String value = variableMatcher.group(3);
-            if (value.contains(String.valueOf(DOLLAR + name))) {
+            // Handle self-reference in both $NAME and ${NAME} forms
+            String dollarName = DOLLAR + name;
+            String bracedName = "${" + name + "}";
+            if (value.contains(dollarName) || value.contains(bracedName)) {
                 String existing = variables.get(name);
-                value = value.replace(String.valueOf(DOLLAR + name), existing != null ? existing : "");
+                String replacement = existing != null ? existing : "";
+                value = value.replace(bracedName, replacement);
+                value = value.replace(dollarName, replacement);
             }
             variables.put(name, value);
             if (listener != null)
@@ -126,9 +131,9 @@ public class ExportManager {
             if (value.indexOf(DOLLAR) == -1)
                 return value;
             else
-                return parseValue(value);
+                return parseValue(value, 0);
         }
-        return parseValue(key);
+        return parseValue(key, 0);
     }
 
     private String getVariable(String key) {
@@ -167,9 +172,14 @@ public class ExportManager {
         return "";
     }
 
-    private String parseValue(String value) {
+    private static final int MAX_PARSE_DEPTH = 10;
+
+    private String parseValue(String value, int depth) {
         if (value == null)
             return null;
+
+        if (depth > MAX_PARSE_DEPTH)
+            return value;
 
         if (value.indexOf(DOLLAR) == -1) {
             return value;
@@ -187,16 +197,16 @@ public class ExportManager {
                 if (group1 != null && containsKey(group1)) {
                     if (group2 != null && group2.indexOf(DOLLAR) > -1) {
                         if (getVariable(group1).indexOf(DOLLAR) == -1)
-                            return getVariable(group1) + parseValue(group2);
+                            return getVariable(group1) + parseValue(group2, depth + 1);
                         else
-                            return parseValue(getVariable(group1)) + parseValue(group2);
+                            return parseValue(getVariable(group1), depth + 1) + parseValue(group2, depth + 1);
 
                     }
 
                     if (getVariable(group1).indexOf(DOLLAR) == -1)
                         return getVariable(group1) + group2;
                     else
-                        return parseValue(getVariable(group1)) + group2;
+                        return parseValue(getVariable(group1), depth + 1) + group2;
                 }
                 return group2;
             }
@@ -215,15 +225,16 @@ public class ExportManager {
             if (group2 != null && containsKey(group2)) {
                 if (group3 != null && group3.indexOf(DOLLAR) > -1) {
                     if (getVariable(group2).indexOf(DOLLAR) == -1)
-                        return parseValue(group1) + getVariable(group2) + parseValue(group3);
+                        return parseValue(group1, depth + 1) + getVariable(group2) + parseValue(group3, depth + 1);
                     else
-                        return parseValue(group1) + parseValue(getVariable(group2)) + parseValue(group3);
+                        return parseValue(group1, depth + 1) + parseValue(getVariable(group2), depth + 1)
+                                + parseValue(group3, depth + 1);
                 }
 
                 if (getVariable(group2).indexOf(DOLLAR) == -1)
-                    return parseValue(group1) + getVariable(group2) + group3;
+                    return parseValue(group1, depth + 1) + getVariable(group2) + group3;
 
-                return parseValue(group1) + parseValue(getVariable(group2)) + group3;
+                return parseValue(group1, depth + 1) + parseValue(getVariable(group2), depth + 1) + group3;
             }
             return group1 + group3;
         }
@@ -233,12 +244,12 @@ public class ExportManager {
     public String listAllVariables() {
         StringBuilder builder = new StringBuilder();
         for (String key : variables.keySet()) {
-            builder.append(key).append('=').append(parseValue(variables.get(key))).append(Config.getLineSeparator());
+            builder.append(key).append('=').append(parseValue(variables.get(key), 0)).append(Config.getLineSeparator());
         }
 
         if (this.exportUsesSystemEnvironment) {
             for (String key : System.getenv().keySet()) {
-                builder.append(key).append('=').append(parseValue(getVariable(key))).append(Config.getLineSeparator());
+                builder.append(key).append('=').append(parseValue(getVariable(key), 0)).append(Config.getLineSeparator());
             }
         }
         return builder.toString();

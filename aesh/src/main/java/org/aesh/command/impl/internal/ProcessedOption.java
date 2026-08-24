@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,6 +48,8 @@ import org.aesh.command.impl.converter.AeshConverterInvocation;
 import org.aesh.command.impl.parser.AeshOptionParser;
 import org.aesh.command.impl.validator.AeshValidatorInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.option.CompletionFallback;
+import org.aesh.command.option.OptionVisibility;
 import org.aesh.command.parser.OptionParser;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.renderer.OptionRenderer;
@@ -119,13 +122,13 @@ public class ProcessedOption {
     private String helpGroup = "";
     private List<String> exclusiveWith = Collections.emptyList();
     private List<String> allowedValues = Collections.emptyList();
-    private org.aesh.command.option.OptionVisibility visibility = org.aesh.command.option.OptionVisibility.BRIEF;
+    private OptionVisibility visibility = OptionVisibility.BRIEF;
     private int order = Integer.MAX_VALUE;
-    private org.aesh.command.option.CompletionFallback completeFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
+    private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private int declarationOrder = Integer.MAX_VALUE;
     private BiConsumer<Object, Object> fieldSetter;
     private Consumer<Object> fieldResetter;
-    private java.util.function.Function<Object, Object> fieldGetter;
+    private Function<Object, Object> fieldGetter;
     protected FieldAccessor fieldAccessor;
     protected Object initialValue;
     protected boolean initialValueCaptured;
@@ -391,11 +394,11 @@ public class ProcessedOption {
         return fieldResetter;
     }
 
-    public void setFieldGetter(java.util.function.Function<Object, Object> fieldGetter) {
+    public void setFieldGetter(Function<Object, Object> fieldGetter) {
         this.fieldGetter = fieldGetter;
     }
 
-    public java.util.function.Function<Object, Object> getFieldGetter() {
+    public Function<Object, Object> getFieldGetter() {
         return fieldGetter;
     }
 
@@ -443,11 +446,11 @@ public class ProcessedOption {
         return allowedValues != null && !allowedValues.isEmpty();
     }
 
-    public void setVisibility(org.aesh.command.option.OptionVisibility visibility) {
-        this.visibility = visibility != null ? visibility : org.aesh.command.option.OptionVisibility.BRIEF;
+    public void setVisibility(OptionVisibility visibility) {
+        this.visibility = visibility != null ? visibility : OptionVisibility.BRIEF;
     }
 
-    public org.aesh.command.option.OptionVisibility getVisibility() {
+    public OptionVisibility getVisibility() {
         return visibility;
     }
 
@@ -455,11 +458,11 @@ public class ProcessedOption {
         this.order = order;
     }
 
-    public org.aesh.command.option.CompletionFallback getCompleteFallback() {
+    public CompletionFallback getCompleteFallback() {
         return completeFallback;
     }
 
-    public void setCompleteFallback(org.aesh.command.option.CompletionFallback completeFallback) {
+    public void setCompleteFallback(CompletionFallback completeFallback) {
         this.completeFallback = completeFallback;
     }
 
@@ -633,7 +636,7 @@ public class ProcessedOption {
         if (type == byte.class)
             return (byte) 0;
         if (type == char.class)
-            return ' ';
+            return '\u0000';
         if (type == float.class)
             return 0.0f;
         if (type == double.class)

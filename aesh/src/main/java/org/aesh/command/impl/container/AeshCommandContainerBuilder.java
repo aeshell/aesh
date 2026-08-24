@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -48,6 +49,7 @@ import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.metadata.MetadataProviderRegistry;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.option.CompletionFallback;
 import org.aesh.command.option.Mixin;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
@@ -549,7 +551,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     }
 
     /** Cached child resolver function to avoid repeated lambda allocation. */
-    private java.util.function.Function<Class<? extends Command>, CommandContainer<CI>> cachedChildResolver;
+    private Function<Class<? extends Command>, CommandContainer<CI>> cachedChildResolver;
 
     /**
      * Set the child resolver on a parser, using a cached function that
@@ -591,10 +593,10 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
      * If both are DEFAULT, the type-based heuristic in ProcessedOptionBuilder.build()
      * will apply as usual.
      */
-    private static org.aesh.command.option.CompletionFallback resolveEffectiveFallback(
-            org.aesh.command.option.CompletionFallback optionLevel,
+    private static CompletionFallback resolveEffectiveFallback(
+            CompletionFallback optionLevel,
             ProcessedCommand<?, ?> processedCommand) {
-        if (optionLevel != org.aesh.command.option.CompletionFallback.DEFAULT)
+        if (optionLevel != CompletionFallback.DEFAULT)
             return optionLevel;
         return processedCommand.getCompleteFallback();
     }
