@@ -223,6 +223,78 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: Empty string defaultValue (#598) ---
+
+    private static final String EMPTY_DEFAULT_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "import org.aesh.command.option.OptionGroup;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import java.util.List;\n" +
+            "import java.util.Map;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"emptydefault\", description = \"Empty default test\")\n" +
+            "public class EmptyDefaultCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"example\", defaultValue = \"\", description = \"empty default\")\n" +
+            "    String example;\n" +
+            "\n" +
+            "    @OptionList(name = \"items\", defaultValue = \"\", description = \"empty list default\")\n" +
+            "    List<String> items;\n" +
+            "\n" +
+            "    @OptionGroup(shortName = 'D', defaultValue = \"\", description = \"empty group default\")\n" +
+            "    Map<String, String> props;\n" +
+            "\n" +
+            "    @Argument(defaultValue = \"\", description = \"empty arg default\")\n" +
+            "    String arg;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testEmptyStringDefaultValue() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.EmptyDefaultCommand", EMPTY_DEFAULT_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.EmptyDefaultCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.EmptyDefaultCommand_AeshMetadata");
+
+        // Verify parity between reflection and generated paths
+        assertEquivalence(commandClass, metadataClass);
+
+        // Verify the generated path stores defaultValues = [""] (not empty list)
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        ProcessedOption exampleOpt = generatedPC.findLongOptionNoActivatorCheck("example");
+        assertNotNull("example option should exist", exampleOpt);
+        assertEquals("example defaultValues should be [\"\"]",
+                java.util.Arrays.asList(""), exampleOpt.getDefaultValues());
+        assertTrue("example hasDefaultValue should be true", exampleOpt.hasDefaultValue());
+
+        // Parse without providing --example, then check the field is "" not null
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        org.aesh.command.invocation.InvocationProviders invProviders = new org.aesh.command.impl.invocation.AeshInvocationProviders();
+        parser.populateObject("emptydefault", invProviders, null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+
+        java.lang.reflect.Field exampleField = commandClass.getDeclaredField("example");
+        exampleField.setAccessible(true);
+        Object exampleVal = exampleField.get(instance);
+        assertNotNull("example field should not be null with defaultValue=\"\"", exampleVal);
+        assertEquals("example field should be empty string", "", exampleVal);
+    }
+
     // --- Test: Command with aliases and version ---
 
     private static final String ALIASED_SOURCE = "package test;\n" +
