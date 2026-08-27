@@ -2715,4 +2715,46 @@ public class AeshRuntimeRunnerTest {
             return CommandResult.SUCCESS;
         }
     }
+
+    // --- Test: Structured execution with special characters (#601) ---
+
+    @Test
+    public void testStructuredExecutionPreservesSpecialChars() {
+        // Argument containing quotes, braces, pipes, and dollar signs
+        String specialArg = ".config.VERSION | split(\".\") | .[0:2] | join(\".\")";
+
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureArgCommand.class)
+                .args(new String[] { "--expr", specialArg })
+                .execute();
+
+        assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
+        assertEquals("Argument should survive pre-tokenized path without mangling",
+                specialArg, CaptureArgCommand.capturedExpr);
+    }
+
+    @Test
+    public void testStructuredExecutionWithSpacesInArgs() {
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CaptureArgCommand.class)
+                .args(new String[] { "--expr", "hello world with spaces" })
+                .execute();
+
+        assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
+        assertEquals("hello world with spaces", CaptureArgCommand.capturedExpr);
+    }
+
+    @CommandDefinition(name = "capture", description = "Captures --expr for test assertion")
+    public static class CaptureArgCommand implements Command<CommandInvocation> {
+        static String capturedExpr;
+
+        @Option(name = "expr", description = "expression to capture")
+        private String expr;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            capturedExpr = expr;
+            return CommandResult.SUCCESS;
+        }
+    }
 }

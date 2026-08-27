@@ -138,6 +138,54 @@ public interface CommandInvocation {
             IOException;
 
     /**
+     * Execute a command with pre-tokenized arguments, bypassing shell-like
+     * string parsing. Arguments are passed directly to the command parser
+     * without quoting or escaping, so special characters ($, ", {, |, etc.)
+     * are preserved as-is.
+     *
+     * @param commandName the command name
+     * @param args the pre-tokenized arguments
+     * @since 3.17
+     */
+    default void executeCommand(String commandName, String... args) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            CommandException,
+            InterruptedException,
+            IOException {
+        StringBuilder sb = new StringBuilder(commandName);
+        if (args != null) {
+            for (String arg : args)
+                sb.append(' ').append(arg);
+        }
+        executeCommand(sb.toString());
+    }
+
+    /**
+     * Build an executor with pre-tokenized arguments, bypassing shell-like
+     * string parsing.
+     *
+     * @param commandName the command name
+     * @param args the pre-tokenized arguments
+     * @return the executor
+     * @since 3.17
+     */
+    default Executor<? extends CommandInvocation> buildExecutor(String commandName, String[] args)
+            throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            IOException {
+        StringBuilder sb = new StringBuilder(commandName);
+        if (args != null) {
+            for (String arg : args)
+                sb.append(' ').append(arg);
+        }
+        return buildExecutor(sb.toString());
+    }
+
+    /**
      * Print a message on console
      *
      * @param msg

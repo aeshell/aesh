@@ -151,6 +151,23 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     @Override
+    public void executeCommand(String commandName, String... args) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            CommandException, InterruptedException, IOException {
+        runtime.executeCommand(commandName, args);
+    }
+
+    @Override
+    public Executor<AeshCommandInvocation> buildExecutor(String commandName, String[] args) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException, IOException {
+        return runtime.buildExecutor(commandName, args);
+    }
+
+    @Override
     public void print(String msg, boolean page) {
         shell.write(msg, page);
     }

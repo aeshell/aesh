@@ -162,6 +162,27 @@ public class DefaultCommandInvocation implements CommandInvocation {
     }
 
     @Override
+    public void executeCommand(String commandName, String... args) throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            CommandException,
+            InterruptedException,
+            IOException {
+        processor.executeCommand(commandName, args);
+    }
+
+    @Override
+    public Executor<? extends CommandInvocation> buildExecutor(String commandName, String[] args)
+            throws CommandNotFoundException,
+            CommandLineParserException,
+            OptionValidatorException,
+            CommandValidatorException,
+            IOException {
+        return processor.buildExecutor(commandName, args);
+    }
+
+    @Override
     public CommandInvocationConfiguration getConfiguration() {
         return config;
     }
