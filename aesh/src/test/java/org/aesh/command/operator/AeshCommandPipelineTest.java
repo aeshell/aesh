@@ -20,10 +20,13 @@
 package org.aesh.command.operator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -48,6 +51,7 @@ public class AeshCommandPipelineTest {
     @Test
     public void testPipeline() throws InterruptedException, IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
 
         FooCommand foo = new FooCommand();
 
@@ -62,6 +66,7 @@ public class AeshCommandPipelineTest {
                 .connection(connection)
                 .enableOperatorParser(true)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .logging(true)
                 .build();
 
@@ -69,11 +74,9 @@ public class AeshCommandPipelineTest {
         console.start();
 
         connection.read("pipe | foo" + Config.getLineSeparator());
-        Thread.sleep(100);
-        assertEquals(1, foo.getCounter());
-
         connection.read("pipe | bar" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
+        assertEquals(1, foo.getCounter());
         connection.assertBufferEndsWith("hello aesh" + Config.getLineSeparator());
         console.stop();
     }
@@ -102,7 +105,7 @@ public class AeshCommandPipelineTest {
         console.start();
 
         connection.read("&&" + Config.getLineSeparator());
-        Thread.sleep(100);
+        connection.waitForOutputContaining("syntax error", 5000);
         connection.assertBufferEndsWith("aesh: syntax error near unexpected token \'&&\'" + Config.getLineSeparator());
         console.stop();
     }
@@ -110,6 +113,7 @@ public class AeshCommandPipelineTest {
     @Test
     public void testGetStdinWithPipe() throws InterruptedException, IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(PipeCommand.class)
@@ -121,6 +125,7 @@ public class AeshCommandPipelineTest {
                 .connection(connection)
                 .enableOperatorParser(true)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .logging(true)
                 .build();
 
@@ -128,7 +133,7 @@ public class AeshCommandPipelineTest {
         console.start();
 
         connection.read("pipe | stdin-reader" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("HELLO AESH" + Config.getLineSeparator());
         console.stop();
     }
@@ -136,6 +141,7 @@ public class AeshCommandPipelineTest {
     @Test
     public void testHasStdinFalseWithoutPipe() throws InterruptedException, IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(HasStdinCheckCommand.class)
@@ -146,6 +152,7 @@ public class AeshCommandPipelineTest {
                 .connection(connection)
                 .enableOperatorParser(true)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .logging(true)
                 .build();
 
@@ -153,7 +160,7 @@ public class AeshCommandPipelineTest {
         console.start();
 
         connection.read("has-stdin" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("hasStdin=false" + Config.getLineSeparator());
         console.stop();
     }
@@ -161,6 +168,7 @@ public class AeshCommandPipelineTest {
     @Test
     public void testHasStdinTrueWithPipe() throws InterruptedException, IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(PipeCommand.class)
@@ -172,6 +180,7 @@ public class AeshCommandPipelineTest {
                 .connection(connection)
                 .enableOperatorParser(true)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .logging(true)
                 .build();
 
@@ -179,7 +188,7 @@ public class AeshCommandPipelineTest {
         console.start();
 
         connection.read("pipe | has-stdin" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("hasStdin=true" + Config.getLineSeparator());
         console.stop();
     }
@@ -187,6 +196,7 @@ public class AeshCommandPipelineTest {
     @Test
     public void testThreeStagePipeline() throws InterruptedException, IOException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(PipeCommand.class)
@@ -199,6 +209,7 @@ public class AeshCommandPipelineTest {
                 .connection(connection)
                 .enableOperatorParser(true)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .logging(true)
                 .build();
 
@@ -207,7 +218,7 @@ public class AeshCommandPipelineTest {
 
         // pipe -> upper -> bar: "hello\naesh" -> "HELLO\nAESH" -> "HELLO AESH"
         connection.read("pipe | upper | bar" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("HELLO AESH" + Config.getLineSeparator());
         console.stop();
     }

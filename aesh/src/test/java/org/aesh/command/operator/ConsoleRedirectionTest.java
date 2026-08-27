@@ -28,6 +28,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.aesh.command.Command;
@@ -64,6 +66,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void endOperator() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(BeforeCommand.class)
@@ -75,13 +78,14 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("before; after" + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertTrue(afterHasBeenCalled);
         console.stop();
     }
@@ -89,6 +93,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void redirectOutOperator() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -99,6 +104,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         final File foo = new File(tempDir.getRoot() + Config.getPathSeparator() + "foo_redirection.txt");
@@ -106,7 +112,7 @@ public class ConsoleRedirectionTest {
         console.start();
 
         connection.read("foo > " + foo.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         console.stop();
 
         //lets make sure that foo has been read
@@ -120,6 +126,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void pipeRedirectOutOperator() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(DisplayCommand.class)
@@ -131,6 +138,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         final File foo = new File(tempDir.getRoot() + Config.getPathSeparator() + "foo_redirection_out.txt");
@@ -138,7 +146,7 @@ public class ConsoleRedirectionTest {
         console.start();
 
         connection.read("display hello_aesh" + " | print > " + foo.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         console.stop();
 
@@ -152,6 +160,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void redirectInOperator() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(BarCommand.class)
@@ -162,6 +171,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         final File foo = new File(tempDir.getRoot() + Config.getPathSeparator() + "foo_redirection_in.txt");
@@ -173,7 +183,7 @@ public class ConsoleRedirectionTest {
         console.start();
 
         connection.read("bar < " + foo.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         connection.assertBufferEndsWith("foo bar" + Config.getLineSeparator());
 
@@ -183,6 +193,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void redirectInAndPipeOperator() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(BarCommand.class)
@@ -194,6 +205,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         final File foo = new File(tempDir.getRoot() + Config.getPathSeparator() + "foo_redirection_in.txt");
@@ -205,7 +217,7 @@ public class ConsoleRedirectionTest {
         console.start();
 
         connection.read("bar < " + foo.getCanonicalPath() + " | man" + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         connection.assertBufferEndsWith("FOO BAR" + Config.getLineSeparator());
 
@@ -215,6 +227,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void redirectInPipeAndRedirectOutOperator() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(BarCommand.class)
@@ -226,6 +239,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         final File fooOut = new File(tempDir.getRoot() + Config.getPathSeparator() + "foo_redirection_out.txt");
@@ -239,7 +253,7 @@ public class ConsoleRedirectionTest {
 
         connection
                 .read("bar < " + foo.getCanonicalPath() + " | man > " + fooOut.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         console.stop();
 
@@ -251,6 +265,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void redirectInAndRedirectOutOperator() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(BarCommand.class)
@@ -261,6 +276,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
         final File fooOut = new File(tempDir.getRoot() + Config.getPathSeparator() + "foo_redirection_out.txt");
         final File foo = new File(tempDir.getRoot() + Config.getPathSeparator() + "foo_redirection_in.txt");
@@ -272,7 +288,7 @@ public class ConsoleRedirectionTest {
         console.start();
 
         connection.read("bar < " + foo.getCanonicalPath() + " > " + fooOut.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         console.stop();
 
@@ -468,6 +484,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void testAppendOutputRedirection() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -478,6 +495,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         final File out = new File(tempDir.getRoot() + Config.getPathSeparator() + "append_test.txt");
@@ -486,10 +504,9 @@ public class ConsoleRedirectionTest {
 
         // First write
         connection.read("foo > " + out.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
         // Append
         connection.read("foo >> " + out.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
 
         console.stop();
 
@@ -506,6 +523,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void testHasStdinWithRedirectIn() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(HasStdinCommand.class)
@@ -516,6 +534,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         final File input = new File(tempDir.getRoot() + Config.getPathSeparator() + "stdin_check.txt");
@@ -527,7 +546,7 @@ public class ConsoleRedirectionTest {
         console.start();
 
         connection.read("has-stdin < " + input.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("hasStdin=true" + Config.getLineSeparator());
 
         console.stop();
@@ -537,6 +556,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void testHasStdinWithoutRedirect() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(HasStdinCommand.class)
@@ -547,13 +567,14 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("has-stdin" + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("hasStdin=false" + Config.getLineSeparator());
 
         console.stop();
@@ -562,6 +583,7 @@ public class ConsoleRedirectionTest {
     @Test
     public void testGetStdinWithRedirectIn() throws Throwable {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(StdinUpperCommand.class)
@@ -572,6 +594,7 @@ public class ConsoleRedirectionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         final File input = new File(tempDir.getRoot() + Config.getPathSeparator() + "upper_input.txt");
@@ -583,7 +606,7 @@ public class ConsoleRedirectionTest {
         console.start();
 
         connection.read("stdin-upper < " + input.getCanonicalPath() + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("HELLO WORLD" + Config.getLineSeparator());
 
         console.stop();

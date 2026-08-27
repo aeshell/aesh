@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
@@ -103,12 +105,13 @@ public class ExecutionsTest {
     public void testEndOperator() throws Exception {
         CounterCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(3);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         connection.read("counter; counter; counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(3, CounterCommand.count);
         console.stop();
     }
@@ -119,12 +122,13 @@ public class ExecutionsTest {
         CounterCommand.reset();
         FailCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(3);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         connection.read("counter; fail; counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         // counter runs twice, fail runs once — all execute regardless
         assertEquals(2, CounterCommand.count);
         assertEquals(1, FailCommand.count);
@@ -137,12 +141,13 @@ public class ExecutionsTest {
     public void testAndOperatorAllSuccess() throws Exception {
         CounterCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(3);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         connection.read("counter && counter && counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(3, CounterCommand.count);
         console.stop();
     }
@@ -152,12 +157,13 @@ public class ExecutionsTest {
         CounterCommand.reset();
         FailCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         connection.read("counter && fail && counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         // First counter runs, fail runs, second counter should NOT run
         assertEquals(1, CounterCommand.count);
         assertEquals(1, FailCommand.count);
@@ -169,12 +175,13 @@ public class ExecutionsTest {
         CounterCommand.reset();
         FailCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         connection.read("fail && counter && counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(0, CounterCommand.count);
         assertEquals(1, FailCommand.count);
         console.stop();
@@ -186,13 +193,14 @@ public class ExecutionsTest {
     public void testOrOperatorFirstSuccess() throws Exception {
         CounterCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         // First succeeds, rest should be skipped
         connection.read("counter || counter || counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(1, CounterCommand.count);
         console.stop();
     }
@@ -202,13 +210,14 @@ public class ExecutionsTest {
         CounterCommand.reset();
         FailCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         // fail runs and fails, then counter runs (success stops the chain)
         connection.read("fail || counter || counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(1, FailCommand.count);
         assertEquals(1, CounterCommand.count);
         console.stop();
@@ -218,12 +227,13 @@ public class ExecutionsTest {
     public void testOrOperatorAllFail() throws Exception {
         FailCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(3);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         connection.read("fail || fail || fail" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(3, FailCommand.count);
         console.stop();
     }
@@ -235,14 +245,15 @@ public class ExecutionsTest {
         CounterCommand.reset();
         FailCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(3);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         // counter(success) && fail(failure) || counter(success)
         // && stops at fail, then || runs counter because fail returned FAILURE
         connection.read("counter && fail || counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(2, CounterCommand.count);
         assertEquals(1, FailCommand.count);
         console.stop();
@@ -253,13 +264,14 @@ public class ExecutionsTest {
     @Test
     public void testPipeOperator() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         // pipe outputs "hello aesh", bar reads it from stdin and prints it
         connection.read("pipe | bar" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("hello aesh" + Config.getLineSeparator());
         console.stop();
     }
@@ -268,13 +280,14 @@ public class ExecutionsTest {
     public void testPipeChain() throws Exception {
         PipeCountCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         // pipe | pipecount — pipecount reads stdin and counts it as 1 invocation
         connection.read("pipe | pipecount" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(1, PipeCountCommand.count);
         console.stop();
     }
@@ -284,13 +297,14 @@ public class ExecutionsTest {
     @Test
     public void testRedirectOut() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         File outFile = new File(tempDir.getRoot(), "redirect_out.txt");
         connection.read("echo --msg redirected > " + outFile.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         console.stop();
 
         List<String> lines = Files.readAllLines(outFile.toPath());
@@ -301,15 +315,15 @@ public class ExecutionsTest {
     @Test
     public void testRedirectAppend() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         File outFile = new File(tempDir.getRoot(), "redirect_append.txt");
         connection.read("echo --msg first > " + outFile.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(100);
         connection.read("echo --msg second >> " + outFile.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         console.stop();
 
         List<String> lines = Files.readAllLines(outFile.toPath());
@@ -321,15 +335,15 @@ public class ExecutionsTest {
     @Test
     public void testRedirectOverwrite() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         File outFile = new File(tempDir.getRoot(), "redirect_overwrite.txt");
         connection.read("echo --msg original > " + outFile.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(100);
         connection.read("echo --msg replaced > " + outFile.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         console.stop();
 
         List<String> lines = Files.readAllLines(outFile.toPath());
@@ -342,13 +356,14 @@ public class ExecutionsTest {
     @Test
     public void testPipeThenRedirect() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         File outFile = new File(tempDir.getRoot(), "pipe_redirect.txt");
         connection.read("pipe | bar > " + outFile.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         console.stop();
 
         List<String> lines = Files.readAllLines(outFile.toPath());
@@ -413,15 +428,16 @@ public class ExecutionsTest {
 
     @Test
     public void testCommandExceptionResultsInFailure() throws Exception {
+        CounterCommand.reset();
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, latch);
         console.start();
 
         // throwcmd throws CommandException, followed by || counter which should run
-        CounterCommand.reset();
         connection.read("throwcmd || counter" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(1, CounterCommand.count);
         console.stop();
     }
@@ -467,15 +483,22 @@ public class ExecutionsTest {
     }
 
     private ReadlineConsole buildConsole(TestConnection connection) throws IOException, CommandRegistryException {
-        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+        return buildConsole(connection, null);
+    }
+
+    private ReadlineConsole buildConsole(TestConnection connection, CountDownLatch latch)
+            throws IOException, CommandRegistryException {
+        SettingsBuilder<CommandInvocation> builder = SettingsBuilder.builder()
                 .commandRegistry(buildRegistry())
                 .enableOperatorParser(true)
                 .connection(connection)
                 .setPersistExport(false)
-                .logging(true)
-                .build();
+                .logging(true);
 
-        ReadlineConsole console = new ReadlineConsole(settings);
+        if (latch != null)
+            builder.commandExecutionListener((line, result, durationMs) -> latch.countDown());
+
+        ReadlineConsole console = new ReadlineConsole(builder.build());
         return console;
     }
 

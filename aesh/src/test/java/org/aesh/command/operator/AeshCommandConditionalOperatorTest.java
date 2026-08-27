@@ -20,11 +20,15 @@
 package org.aesh.command.operator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -52,6 +56,7 @@ public class AeshCommandConditionalOperatorTest {
     @Test
     public void testEnd() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>();
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(SuccessCommand.class)
@@ -64,98 +69,118 @@ public class AeshCommandConditionalOperatorTest {
                 .enableOperatorParser(true)
                 .connection(connection)
                 .setPersistExport(false)
+                .commandExecutionListener((line, result, durationMs) -> {
+                    CountDownLatch l = latchRef.get();
+                    if (l != null)
+                        l.countDown();
+                })
                 .logging(true)
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
+        latchRef.set(new CountDownLatch(1)); // success stops ||
         connection.read("success || success || failure" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(2)); // failure, then success stops ||
         connection.read("failure || success || failure" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("failure0success1");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(3));
         connection.read("failure || failure || success" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("failure0failure1success2");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(3));
         connection.read("failure || failure || failure" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("failure0failure1failure2");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(3));
         connection.read("success && success && success" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0success1success2");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(2)); // success, failure stops &&
         connection.read("success && failure && success" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0failure1");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(1)); // failure stops &&
         connection.read("failure && success && success" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("failure0");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(3)); // all succeed via &&, || not reached
         connection.read("success && success && success || failure || success" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0success1success2");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(5));
         connection.read("success && success && failure || failure || success" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0success1failure2failure3success4");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(4));
         connection.read("failure || failure && success || failure || success" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("failure0failure1failure2success3");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(4));
         connection.read("failure || failure && success && success && failure && success || failure || success"
                 + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("failure0failure1failure2success3");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(4));
         connection.read("success && failure && success && success && failure && success || failure || success"
                 + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0failure1failure2success3");
         reset(connection);
 
+        latchRef.set(new CountDownLatch(6));
         connection.read("success || failure && success && success && failure && success || failure || success"
                 + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0success1success2failure3failure4success5");
         reset(connection);
 
         File tmpDir = File.createTempFile("aeshconditionnaltest", null).getParentFile();
 
+        latchRef.set(new CountDownLatch(6));
         File outFile = new File(tmpDir, "conditional_out.txt");
         connection.read("success || failure && success && success && failure && success || failure || success > "
                 + outFile.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0success1success2failure3failure4");
         List<String> output = Files.readAllLines(outFile.toPath());
         assertEquals("success5", output.get(0));
         Files.delete(outFile.toPath());
         reset(connection);
 
+        latchRef.set(new CountDownLatch(3));
         File outFile2 = new File(tmpDir, "conditional_out2.txt");
         File inFile = new File(tmpDir, "conditional_in.txt");
         connection.read("success < " + inFile.getAbsolutePath() + " && success < "
                 + inFile.getAbsolutePath() + " || success < " + inFile.getAbsolutePath()
                 + " && success > " + outFile2.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue(latchRef.get().await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("success0success1");
         List<String> output2 = Files.readAllLines(outFile2.toPath());
         assertEquals("success2", output2.get(0));
