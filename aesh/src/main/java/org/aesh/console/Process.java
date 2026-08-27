@@ -85,9 +85,11 @@ public class Process extends Thread implements Consumer<Signal> {
         pid = (int) Thread.currentThread().getId();
 
         long startTime = executionListener != null ? System.currentTimeMillis() : 0;
+        Throwable caughtError = null;
         try {
             execution.execute();
         } catch (CommandValidatorException | CommandException | OptionValidatorException | CommandLineParserException e) {
+            caughtError = e;
             execution.setResult(CommandResult.FAILURE);
             conn.write(e.getMessage() + Config.getLineSeparator());
         } catch (InterruptedException e) {
@@ -97,6 +99,7 @@ public class Process extends Thread implements Consumer<Signal> {
             Thread.interrupted();
             execution.setResult(CommandResult.INTERRUPTED);
         } catch (Exception e) {
+            caughtError = e;
             execution.setResult(CommandResult.FAILURE);
             conn.write(e.getMessage() + Config.getLineSeparator());
             LOGGER.log(Level.WARNING, "Uncaught exception when executing the command: " + execution.getCommand().toString(), e);
@@ -110,7 +113,7 @@ public class Process extends Thread implements Consumer<Signal> {
             manager.processFinished(this);
             if (executionListener != null) {
                 try {
-                    executionListener.onCommandComplete(commandLine, execution.getResult(), durationMs);
+                    executionListener.onCommandComplete(commandLine, execution.getResult(), durationMs, caughtError);
                 } catch (Exception e) {
                     LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", e);
                 }

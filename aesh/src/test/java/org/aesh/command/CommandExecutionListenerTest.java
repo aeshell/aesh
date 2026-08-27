@@ -198,6 +198,114 @@ public class CommandExecutionListenerTest {
         connection.read("exit" + Config.getLineSeparator());
     }
 
+    @Test
+    public void testErrorIsPassedToCallback() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<CommandResult> capturedResult = new AtomicReference<>();
+        AtomicReference<Throwable> capturedError = new AtomicReference<>();
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandExecutionListener(new CommandExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                        // should not be called directly when 4-arg is overridden
+                    }
+
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result,
+                            long durationMs, Throwable error) {
+                        capturedResult.set(result);
+                        capturedError.set(error);
+                        latch.countDown();
+                    }
+                })
+                .build();
+
+        AeshConsoleRunner.builder()
+                .settings(settings)
+                .command(ThrowingCommand.class)
+                .addExitCommand()
+                .start();
+
+        connection.read("throwing" + Config.getLineSeparator());
+        assertTrue("Callback should fire within 5 seconds", latch.await(5, TimeUnit.SECONDS));
+
+        assertEquals(CommandResult.FAILURE, capturedResult.get());
+        assertNotNull("Error should not be null for throwing command", capturedError.get());
+        assertTrue("Error message should contain 'boom'",
+                capturedError.get().getMessage().contains("boom"));
+
+        connection.read("exit" + Config.getLineSeparator());
+    }
+
+    @Test
+    public void testSuccessPassesNullError() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<Throwable> capturedError = new AtomicReference<>(new RuntimeException("sentinel"));
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandExecutionListener(new CommandExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                    }
+
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result,
+                            long durationMs, Throwable error) {
+                        capturedError.set(error);
+                        latch.countDown();
+                    }
+                })
+                .build();
+
+        AeshConsoleRunner.builder()
+                .settings(settings)
+                .command(SuccessCommand.class)
+                .addExitCommand()
+                .start();
+
+        connection.read("succeed" + Config.getLineSeparator());
+        assertTrue("Callback should fire within 5 seconds", latch.await(5, TimeUnit.SECONDS));
+
+        assertTrue("Error should be null for successful command", capturedError.get() == null);
+
+        connection.read("exit" + Config.getLineSeparator());
+    }
+
+    @Test
+    public void testExistingLambdaStillWorks() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<CommandResult> capturedResult = new AtomicReference<>();
+
+        // Existing 3-arg lambda should still compile and work via default delegation
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandExecutionListener((line, result, durationMs) -> {
+                    capturedResult.set(result);
+                    latch.countDown();
+                })
+                .build();
+
+        AeshConsoleRunner.builder()
+                .settings(settings)
+                .command(ThrowingCommand.class)
+                .addExitCommand()
+                .start();
+
+        connection.read("throwing" + Config.getLineSeparator());
+        assertTrue("Callback should fire within 5 seconds", latch.await(5, TimeUnit.SECONDS));
+
+        // 3-arg lambda still receives the result, just not the error
+        assertEquals(CommandResult.FAILURE, capturedResult.get());
+
+        connection.read("exit" + Config.getLineSeparator());
+    }
+
     // --- Test commands ---
 
     @CommandDefinition(name = "succeed", description = "Always succeeds")
@@ -214,6 +322,14 @@ public class CommandExecutionListenerTest {
         @Override
         public CommandResult execute(CommandInvocation ci) {
             return CommandResult.FAILURE;
+        }
+    }
+
+    @CommandDefinition(name = "throwing", description = "Throws CommandException")
+    public static class ThrowingCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) throws CommandException {
+            throw new CommandException("boom");
         }
     }
 

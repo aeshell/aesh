@@ -42,4 +42,22 @@ public interface CommandExecutionListener {
      * @param durationMs wall-clock execution time in milliseconds
      */
     void onCommandComplete(String commandLine, CommandResult result, long durationMs);
+
+    /**
+     * Called after a command finishes execution, with the exception that
+     * caused a failure (if any).
+     * <p>
+     * Override this method to access the root cause of command failures.
+     * The default implementation delegates to
+     * {@link #onCommandComplete(String, CommandResult, long)}.
+     *
+     * @param commandLine the full command line that was executed
+     * @param result the {@link CommandResult} (SUCCESS, FAILURE, or custom)
+     * @param durationMs wall-clock execution time in milliseconds
+     * @param error the exception if the command failed with an error, null on success
+     * @since 3.17
+     */
+    default void onCommandComplete(String commandLine, CommandResult result, long durationMs, Throwable error) {
+        onCommandComplete(commandLine, result, durationMs);
+    }
 }
