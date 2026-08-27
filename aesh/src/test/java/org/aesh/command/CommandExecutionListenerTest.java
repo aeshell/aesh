@@ -308,6 +308,120 @@ public class CommandExecutionListenerTest {
         connection.read("exit" + Config.getLineSeparator());
     }
 
+    // --- Tests for pre-Process error listener firing (#605) ---
+
+    @Test
+    public void testListenerFiresForCommandNotFound() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<CommandResult> capturedResult = new AtomicReference<>();
+        AtomicReference<Throwable> capturedError = new AtomicReference<>();
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandExecutionListener(new CommandExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                    }
+
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result,
+                            long durationMs, Throwable error) {
+                        capturedResult.set(result);
+                        capturedError.set(error);
+                        latch.countDown();
+                    }
+                })
+                .build();
+
+        AeshConsoleRunner.builder()
+                .settings(settings)
+                .command(SuccessCommand.class)
+                .addExitCommand()
+                .start();
+
+        // "nonexistent" is not registered — triggers CommandNotFoundException
+        connection.read("nonexistent" + Config.getLineSeparator());
+        assertTrue("Listener should fire for command-not-found", latch.await(5, TimeUnit.SECONDS));
+
+        assertEquals(CommandResult.COMMAND_NOT_FOUND.getResultValue(),
+                capturedResult.get().getResultValue());
+        assertNotNull("Error should be set for command-not-found", capturedError.get());
+        assertTrue("Error should be CommandNotFoundException",
+                capturedError.get() instanceof CommandNotFoundException);
+
+        connection.read("exit" + Config.getLineSeparator());
+    }
+
+    @Test
+    public void testListenerFiresForParseError() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<CommandResult> capturedResult = new AtomicReference<>();
+        AtomicReference<Throwable> capturedError = new AtomicReference<>();
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandExecutionListener(new CommandExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                    }
+
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result,
+                            long durationMs, Throwable error) {
+                        capturedResult.set(result);
+                        capturedError.set(error);
+                        latch.countDown();
+                    }
+                })
+                .build();
+
+        AeshConsoleRunner.builder()
+                .settings(settings)
+                .command(SuccessCommand.class)
+                .addExitCommand()
+                .start();
+
+        // "&&" with no preceding command is a syntax error caught before any Process
+        // is created — hits the pre-Process CommandLineParserException catch
+        connection.read("&& succeed" + Config.getLineSeparator());
+        assertTrue("Listener should fire for parse error", latch.await(5, TimeUnit.SECONDS));
+
+        assertEquals("Syntax error should produce USAGE_ERROR",
+                CommandResult.USAGE_ERROR.getResultValue(),
+                capturedResult.get().getResultValue());
+        assertNotNull("Error should be set for parse error", capturedError.get());
+
+        connection.read("exit" + Config.getLineSeparator());
+    }
+
+    @Test
+    public void testListenerFiresForCommandNotFoundThenContinues() throws Exception {
+        // Verify the console stays functional after listener fires for command-not-found
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2); // one for not-found, one for succeed
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
+                .build();
+
+        AeshConsoleRunner.builder()
+                .settings(settings)
+                .command(SuccessCommand.class)
+                .addExitCommand()
+                .start();
+
+        connection.read("nonexistent" + Config.getLineSeparator());
+        connection.read("succeed" + Config.getLineSeparator());
+        assertTrue("Both events should fire", latch.await(5, TimeUnit.SECONDS));
+        assertTrue("Output should contain command output",
+                connection.getOutputBuffer().contains("success"));
+
+        connection.read("exit" + Config.getLineSeparator());
+    }
+
     // --- Test commands ---
 
     @CommandDefinition(name = "succeed", description = "Always succeeds")

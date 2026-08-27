@@ -70,13 +70,16 @@ public class AeshRuntimeRunnerTest {
 
     @Test
     public void testCommandNotFoundResult() throws Exception {
-        // CommandNotFoundException propagates from CommandRuntime and is mapped to
-        // COMMAND_NOT_FOUND (127) by AeshRuntimeRunner. Verify the constant and that
-        // CommandRuntime throws when the command name is unknown.
+        // Verify CommandResult.COMMAND_NOT_FOUND has the correct POSIX exit code (127)
         assertEquals(127, CommandResult.COMMAND_NOT_FOUND.getResultValue());
         assertEquals(127, CommandResult.COMMAND_NOT_FOUND.getExitCode());
         assertTrue("COMMAND_NOT_FOUND is failure", CommandResult.COMMAND_NOT_FOUND.isFailure());
 
+        // CommandRuntime throws CommandNotFoundException for unknown command names;
+        // AeshRuntimeRunner catches this and returns COMMAND_NOT_FOUND.
+        // AeshRuntimeRunner always selects the registered command name, so
+        // CommandNotFoundException can only come from a race or external manipulation.
+        // We verify the exception is thrown by CommandRuntime directly.
         org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder.builder()
                 .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder.builder()
                         .command(Bar1Command.class)
@@ -87,7 +90,9 @@ public class AeshRuntimeRunnerTest {
             runtime.executeCommand("nonexistent");
             assertTrue("Should have thrown CommandNotFoundException", false);
         } catch (org.aesh.command.CommandNotFoundException e) {
-            // correct — AeshRuntimeRunner maps this to COMMAND_NOT_FOUND (127)
+            // correct — AeshRuntimeRunner maps this to CommandResult.COMMAND_NOT_FOUND (127)
+            // The interactive path (ReadlineConsole) now also fires commandExecutionListener
+            // with COMMAND_NOT_FOUND (#605), verified in CommandExecutionListenerTest
         }
     }
 

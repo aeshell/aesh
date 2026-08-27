@@ -33,7 +33,9 @@ import java.util.logging.Logger;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
+import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundException;
+import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
 import org.aesh.command.alias.AeshAliasManager;
@@ -53,6 +55,7 @@ import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.parser.SubcommandNotFoundException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.registry.MutableCommandRegistry;
@@ -463,22 +466,45 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             } else {
                 conn.write(cnfe.getMessage() + Config.getLineSeparator());
             }
+            fireExecutionListener(line, CommandResult.COMMAND_NOT_FOUND, cnfe);
             read(conn, readline);
         } catch (IllegalArgumentException | OptionValidatorException | CommandValidatorException
                 | CommandLineParserException e) {
-            if (e instanceof org.aesh.command.parser.SubcommandNotFoundException
+            if (e instanceof SubcommandNotFoundException
                     && settings.commandNotFoundHandler() != null) {
-                org.aesh.command.parser.SubcommandNotFoundException snfe = (org.aesh.command.parser.SubcommandNotFoundException) e;
+                SubcommandNotFoundException snfe = (SubcommandNotFoundException) e;
                 settings.commandNotFoundHandler().handleCommandNotFound(line,
                         msg -> conn.write(msg + Config.getLineSeparator()),
                         snfe.getUnknownSubcommand(), snfe.getAvailableSubcommands());
             } else {
                 conn.write(e.getMessage() + Config.getLineSeparator());
             }
+            CommandResult errorResult = (e instanceof SubcommandNotFoundException)
+                    ? CommandResult.COMMAND_NOT_FOUND
+                    : CommandResult.USAGE_ERROR;
+            fireExecutionListener(line, errorResult, e);
             read(conn, readline);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
+            fireExecutionListener(line, CommandResult.FAILURE, e);
             read(conn, readline);
+        }
+    }
+
+    /**
+     * Fire the commandExecutionListener for errors that occur before a Process
+     * is created (CommandNotFoundException, parse errors, unexpected exceptions).
+     * These cases bypass Process.run() so the listener must be fired here to
+     * give consumers a complete view of all command outcomes (#605).
+     */
+    private void fireExecutionListener(String line, CommandResult result, Throwable error) {
+        CommandExecutionListener listener = settings.commandExecutionListener();
+        if (listener != null) {
+            try {
+                listener.onCommandComplete(line, result, 0, error);
+            } catch (Exception ignored) {
+                LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", ignored);
+            }
         }
     }
 
