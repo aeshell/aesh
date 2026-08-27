@@ -104,16 +104,17 @@ public class Process extends Thread implements Consumer<Signal> {
             running = false;
             conn.setSignalHandler(prev);
             conn.setStdinHandler(prevIn);
-            // Fire completion callback before re-entering readline loop
+            long durationMs = System.currentTimeMillis() - startTime;
+            // Re-arm readline before firing the completion callback so
+            // consumers can safely send the next command immediately (#599)
+            manager.processFinished(this);
             if (executionListener != null) {
                 try {
-                    long durationMs = System.currentTimeMillis() - startTime;
                     executionListener.onCommandComplete(commandLine, execution.getResult(), durationMs);
                 } catch (Exception e) {
                     LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", e);
                 }
             }
-            manager.processFinished(this);
         }
     }
 
