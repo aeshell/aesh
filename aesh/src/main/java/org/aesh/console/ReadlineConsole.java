@@ -115,6 +115,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
     private ShellImpl shell;
     private CommandContext commandContext;
+    private Runnable onReadyCallback;
 
     private final EnumMap<ReadlineFlag, Integer> readlineFlags = new EnumMap<>(ReadlineFlag.class);
 
@@ -268,6 +269,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         this.runtime = generateRuntime();
         read(this.connection, readline);
+        // Notify embedders/test frameworks that readline is armed and ready (#603)
+        if (onReadyCallback != null)
+            onReadyCallback.run();
         this.connection.openBlocking();
     }
 
@@ -493,6 +497,19 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     public void setPrompt(String prompt) {
         if (prompt != null)
             this.prompt = new Prompt(prompt);
+    }
+
+    /**
+     * Set a callback that fires once after readline is armed and ready to
+     * accept input, but before the blocking input loop starts.
+     * Intended for test frameworks and embedders that need a reliable
+     * "REPL is ready" signal.
+     *
+     * @param callback the callback to invoke when the console is ready
+     * @since 3.17
+     */
+    public void setOnReadyCallback(Runnable callback) {
+        this.onReadyCallback = callback;
     }
 
     @Override

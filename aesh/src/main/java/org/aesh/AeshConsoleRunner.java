@@ -48,6 +48,7 @@ public class AeshConsoleRunner {
     private Prompt prompt;
     private ReadlineConsole console;
     private Connection connection;
+    private Runnable onReady;
 
     private AeshConsoleRunner() {
     }
@@ -196,6 +197,33 @@ public class AeshConsoleRunner {
         return this;
     }
 
+    /**
+     * Set a callback that fires once after readline is armed and ready to
+     * accept input, but before the blocking input loop starts. Intended for
+     * test frameworks and embedders that need a reliable "REPL is ready"
+     * signal before sending the first command.
+     *
+     * <p>
+     * Example:
+     *
+     * <pre>{@code
+     * CountDownLatch ready = new CountDownLatch(1);
+     * new Thread(() -> AeshConsoleRunner.builder()
+     *         .command(MyCommand.class)
+     *         .onReady(ready::countDown)
+     *         .start()).start();
+     * ready.await(5, TimeUnit.SECONDS); // guaranteed to be armed now
+     * }</pre>
+     *
+     * @param callback the callback to invoke when the console is ready
+     * @return this builder
+     * @since 3.17
+     */
+    public AeshConsoleRunner onReady(Runnable callback) {
+        this.onReady = callback;
+        return this;
+    }
+
     public AeshConsoleRunner addExitCommand() {
         ensureRegistryBuilderInitialized();
         try {
@@ -211,6 +239,8 @@ public class AeshConsoleRunner {
             init();
             if (prompt != null)
                 console.setPrompt(prompt);
+            if (onReady != null)
+                console.setOnReadyCallback(onReady);
             try {
                 console.start();
             } catch (IOException e) {

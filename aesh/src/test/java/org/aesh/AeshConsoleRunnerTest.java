@@ -22,6 +22,9 @@ package org.aesh;
 import static org.aesh.terminal.utils.Config.getLineSeparator;
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
@@ -200,6 +203,34 @@ public class AeshConsoleRunnerTest {
             commandInvocation.println("Hello from Bar2");
             return CommandResult.SUCCESS;
         }
+    }
+
+    @Test
+    public void testOnReadyFiresWhenConsoleIsArmed() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch readyLatch = new CountDownLatch(1);
+        CountDownLatch commandLatch = new CountDownLatch(1);
+
+        // Start the blocking REPL on a background thread
+        Thread replThread = new Thread(() -> AeshConsoleRunner.builder()
+                .connection(connection)
+                .command(HelloCommand.class)
+                .addExitCommand()
+                .commandExecutionListener((line, result, durationMs) -> commandLatch.countDown())
+                .onReady(readyLatch::countDown)
+                .start());
+        replThread.setDaemon(true);
+        replThread.start();
+
+        // onReady must fire before the REPL thread blocks in openBlocking()
+        assertTrue("onReady should fire within 5 seconds", readyLatch.await(5, TimeUnit.SECONDS));
+
+        // Readline is now armed — send a command immediately, no sleep needed
+        connection.read("hello" + getLineSeparator());
+        assertTrue("Command should execute", commandLatch.await(5, TimeUnit.SECONDS));
+        assertTrue("Output should contain greeting", connection.getOutputBuffer().contains("Hello"));
+
+        connection.read("exit" + getLineSeparator());
     }
 
     private static void assertClosedWithin(TestConnection connection, long timeoutMs) throws InterruptedException {
