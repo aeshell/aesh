@@ -49,9 +49,7 @@ public class ShellEscapeTest {
 
         connection.clearOutputBuffer();
         connection.read("!echo hello-from-shell" + Config.getLineSeparator());
-        Thread.sleep(500);
-
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("hello-from-shell", 5000);
         assertTrue("Output should contain native command result, got: " + output,
                 output.contains("hello-from-shell"));
 
@@ -79,9 +77,10 @@ public class ShellEscapeTest {
 
         connection.clearOutputBuffer();
         connection.read("!echo should-not-run" + Config.getLineSeparator());
-        Thread.sleep(200);
-
-        String output = connection.getOutputBuffer();
+        // When disabled, "!echo" becomes a command-not-found error written to output
+        String output = connection.waitForOutputContaining("not found", 5000);
+        if (!output.contains("not found"))
+            output = connection.waitForOutputContaining("not a", 1000);
         // When disabled, "!echo" goes to the command registry which doesn't find it.
         // The error message contains the line, but the native command should NOT have
         // actually executed — verify the output doesn't start with the command result

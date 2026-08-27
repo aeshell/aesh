@@ -20,9 +20,12 @@
 package org.aesh.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -46,6 +49,7 @@ public class AeshCommandResultHandlerTest {
     @Test
     public void testResultHandler() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(4);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -56,26 +60,18 @@ public class AeshCommandResultHandlerTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("foo --foo 1 --name aesh" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(80);
-
         connection.read("foo --foo 1" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(80);
-
         connection.read("foo --fo 1 --name aesh" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(80);
-
         connection.read("foo --foo 1 --exception" + Config.getLineSeparator());
-        //outputStream.flush();
-        Thread.sleep(80);
+
+        assertTrue("All 4 commands should complete", latch.await(5, TimeUnit.SECONDS));
 
     }
 

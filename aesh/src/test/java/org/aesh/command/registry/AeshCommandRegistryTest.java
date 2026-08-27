@@ -103,7 +103,7 @@ public class AeshCommandRegistryTest {
 
         connection.read(completeChar.getFirstValue());
         connection.read(WRITTEN);
-        Thread.sleep(50);
+        connection.waitForOutputContaining(WRITTEN, 5000);
         connection.assertBuffer(WRITTEN);
 
         console.stop();
@@ -169,7 +169,7 @@ public class AeshCommandRegistryTest {
 
         connection.read(completeChar.getFirstValue());
         connection.read(WRITTEN);
-        Thread.sleep(50);
+        connection.waitForOutputContaining(WRITTEN, 5000);
         connection.assertBuffer(WRITTEN);
 
         console.stop();
@@ -234,7 +234,7 @@ public class AeshCommandRegistryTest {
 
         connection.read(completeChar.getFirstValue());
         connection.read(WRITTEN);
-        Thread.sleep(50);
+        connection.waitForOutputContaining(WRITTEN, 5000);
         connection.assertBuffer(WRITTEN);
 
         console.stop();

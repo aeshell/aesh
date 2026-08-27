@@ -35,15 +35,13 @@ public class AeshAliasCompletionTest {
 
         // Define alias: gc = git commit
         connection.read("alias gc='git commit'" + Config.getLineSeparator());
-        Thread.sleep(200);
+        connection.waitForOutputContaining("gc='git commit'", 5000);
         connection.clearOutputBuffer();
 
         // Type "gc --" and tab — should show commit's options
         connection.read("gc --");
         connection.read(completeChar.getFirstValue());
-        Thread.sleep(100);
-
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("all", 5000);
         assertTrue("Should show --all option, got: " + output,
                 output.contains("all"));
         assertTrue("Should show --message option, got: " + output,
@@ -59,15 +57,13 @@ public class AeshAliasCompletionTest {
 
         // Define alias
         connection.read("alias gc='git commit'" + Config.getLineSeparator());
-        Thread.sleep(200);
+        connection.waitForOutputContaining("gc='git commit'", 5000);
         connection.clearOutputBuffer();
 
         // Type "gc --m" and tab — should complete to "--message "
         connection.read("gc --m");
         connection.read(completeChar.getFirstValue());
-        Thread.sleep(100);
-
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("gc --message", 5000);
         assertTrue("Should complete --message, got: " + output,
                 output.contains("gc --message"));
 
@@ -81,15 +77,13 @@ public class AeshAliasCompletionTest {
 
         // Define alias: g = git (group command)
         connection.read("alias g='git'" + Config.getLineSeparator());
-        Thread.sleep(200);
+        connection.waitForOutputContaining("g='git'", 5000);
         connection.clearOutputBuffer();
 
         // Type "g " and tab — should show subcommands
         connection.read("g ");
         connection.read(completeChar.getFirstValue());
-        Thread.sleep(100);
-
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("commit", 5000);
         assertTrue("Should show 'commit' subcommand, got: " + output,
                 output.contains("commit"));
 
@@ -106,9 +100,8 @@ public class AeshAliasCompletionTest {
         // Type "unknown " and tab — no alias, no command, no candidates
         connection.read("unknown ");
         connection.read(completeChar.getFirstValue());
-        Thread.sleep(100);
-
-        String output = connection.getOutputBuffer();
+        // No completion expected; poll briefly to let any async processing finish
+        String output = connection.waitForOutputContaining("unknown ", 500);
         // Should not contain any option completions
         assertEquals("Should have no completions for unknown command",
                 "unknown ", output);
@@ -123,15 +116,13 @@ public class AeshAliasCompletionTest {
 
         // Define alias: git = something-else (alias has same name as real command)
         connection.read("alias git='unknown'" + Config.getLineSeparator());
-        Thread.sleep(200);
+        connection.waitForOutputContaining("git='unknown'", 5000);
         connection.clearOutputBuffer();
 
         // Type "git " and tab — real command should take priority
         connection.read("git ");
         connection.read(completeChar.getFirstValue());
-        Thread.sleep(100);
-
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("commit", 5000);
         // Should show git's subcommands (commit), not alias expansion
         assertTrue("Real command should take priority, got: " + output,
                 output.contains("commit"));

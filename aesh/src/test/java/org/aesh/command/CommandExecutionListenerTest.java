@@ -134,6 +134,7 @@ public class CommandExecutionListenerTest {
     @Test
     public void testCallbackExceptionDoesNotBreakConsole() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch firstLatch = new CountDownLatch(1);
         CountDownLatch secondLatch = new CountDownLatch(1);
 
         // First callback throws, second should still fire
@@ -144,6 +145,7 @@ public class CommandExecutionListenerTest {
                 .commandExecutionListener((line, result, durationMs) -> {
                     int count = callCount.incrementAndGet();
                     if (count == 1) {
+                        firstLatch.countDown();
                         throw new RuntimeException("Intentional test exception");
                     }
                     secondLatch.countDown();
@@ -158,7 +160,7 @@ public class CommandExecutionListenerTest {
 
         // First command — callback throws
         connection.read("succeed" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("First callback should fire", firstLatch.await(5, TimeUnit.SECONDS));
 
         // Second command — should still work (console not broken)
         connection.read("succeed" + Config.getLineSeparator());

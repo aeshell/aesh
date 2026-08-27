@@ -19,6 +19,11 @@
  */
 package org.aesh.command.activator;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -45,6 +50,7 @@ public class AeshCommandActivatorTest {
     @Test
     public void testActivatorFail() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -55,6 +61,7 @@ public class AeshCommandActivatorTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -63,7 +70,7 @@ public class AeshCommandActivatorTest {
         console.start();
 
         connection.read("foo" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         Assert.assertTrue(connection.getOutputBuffer(),
                 connection.getOutputBuffer().contains("The command is not available in the current context."));
     }

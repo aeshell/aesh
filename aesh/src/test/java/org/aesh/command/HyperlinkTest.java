@@ -8,6 +8,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -168,6 +170,7 @@ public class HyperlinkTest {
     @Test
     public void testCommandDefinitionHelpUrl() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(HelpUrlCommand.class)
@@ -180,12 +183,13 @@ public class HyperlinkTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
         connection.read("helpurl -h" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         String output = connection.getOutputBuffer();
         assertTrue("Help output should contain documentation URL",
@@ -209,6 +213,7 @@ public class HyperlinkTest {
     @Test
     public void testCommandWithDescriptionUrl() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(DescUrlCommand.class)
@@ -221,12 +226,13 @@ public class HyperlinkTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
         connection.read("descurl -h" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         String output = connection.getOutputBuffer();
         assertTrue("Help output should contain the option description",
@@ -238,6 +244,7 @@ public class HyperlinkTest {
     @Test
     public void testPrintHyperlinkFromCommand() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(HyperlinkOutputCommand.class)
@@ -250,12 +257,13 @@ public class HyperlinkTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
         connection.read("hyperlinkout" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         // The command calls printHyperlink. Since TestConnection's device
         // is vt100 which doesn't support hyperlinks, it should fall back to plain text.

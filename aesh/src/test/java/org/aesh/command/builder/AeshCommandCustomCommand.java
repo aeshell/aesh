@@ -20,11 +20,14 @@
 package org.aesh.command.builder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -62,6 +65,7 @@ public class AeshCommandCustomCommand {
     public void testCustom() throws Exception {
 
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(createBuilder())
@@ -72,6 +76,7 @@ public class AeshCommandCustomCommand {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -80,7 +85,7 @@ public class AeshCommandCustomCommand {
 
         connection.read("foo --bar YES");
         connection.read(Config.getLineSeparator());
-        Thread.sleep(80);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         console.stop();
     }

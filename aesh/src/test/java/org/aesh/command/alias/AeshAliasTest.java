@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -36,7 +37,6 @@ import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
-import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.terminal.utils.Config;
@@ -208,18 +208,15 @@ public class AeshAliasTest {
     public void testAliasCommandViaConsole() throws Exception {
         TestConnection connection = new TestConnection();
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, null);
         console.start();
 
         // Define an alias
         connection.read("alias ll='ls -la'" + Config.getLineSeparator());
-        Thread.sleep(100);
-
         // List aliases — should show ll
-        connection.clearOutputBuffer();
         connection.read("alias" + Config.getLineSeparator());
-        Thread.sleep(100);
-        String output = connection.getOutputBuffer();
+
+        String output = connection.waitForOutputContaining("ls -la", 5000);
         assertTrue("alias listing should contain ll", output.contains("ll"));
         assertTrue("alias listing should contain ls -la", output.contains("ls -la"));
 
@@ -230,21 +227,23 @@ public class AeshAliasTest {
     public void testUnaliasCommandViaConsole() throws Exception {
         TestConnection connection = new TestConnection();
 
-        ReadlineConsole console = buildConsole(connection);
+        ReadlineConsole console = buildConsole(connection, null);
         console.start();
 
-        // Define an alias
+        // Define an alias, then remove it
         connection.read("alias myalias='echo hello'" + Config.getLineSeparator());
-        Thread.sleep(100);
+        // Wait for the echo of the define command to appear
+        connection.waitForOutputContaining("myalias", 5000);
 
-        // Remove it
         connection.read("unalias myalias" + Config.getLineSeparator());
-        Thread.sleep(100);
+        // Wait for the echo of the unalias command to appear
+        connection.waitForOutputContaining("unalias", 5000);
+        connection.clearOutputBuffer();
 
         // List aliases — should be empty or not contain myalias
-        connection.clearOutputBuffer();
         connection.read("alias" + Config.getLineSeparator());
-        Thread.sleep(100);
+        // Wait for the echo of the "alias" command to appear in the output
+        connection.waitForOutputContaining("alias", 5000);
         String output = connection.getOutputBuffer();
         assertFalse("myalias should be removed", output.contains("myalias"));
 
@@ -253,20 +252,24 @@ public class AeshAliasTest {
 
     // ========== Helpers ==========
 
-    private ReadlineConsole buildConsole(TestConnection connection) throws IOException, CommandRegistryException {
+    private ReadlineConsole buildConsole(TestConnection connection, CountDownLatch latch)
+            throws IOException, CommandRegistryException {
         File aliasFile = new File(tempDir.getRoot(), "test_aliases");
 
-        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+        SettingsBuilder<CommandInvocation> builder = SettingsBuilder.builder()
                 .commandRegistry(AeshCommandRegistryBuilder.<CommandInvocation> builder()
                         .command(FooCommand.class).create())
                 .aliasFile(aliasFile)
                 .connection(connection)
                 .setPersistExport(false)
                 .persistAlias(false)
-                .logging(true)
-                .build();
+                .logging(true);
 
-        return new ReadlineConsole(settings);
+        if (latch != null) {
+            builder.commandExecutionListener((line, result, durationMs) -> latch.countDown());
+        }
+
+        return new ReadlineConsole(builder.build());
     }
 
     // ========== Test commands ==========

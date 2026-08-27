@@ -96,7 +96,6 @@ public class AeshScriptTest {
 
         connection.read("run");
         connection.read(Config.getLineSeparator());
-        Thread.sleep(20);
 
         counter.await(1, TimeUnit.SECONDS);
 

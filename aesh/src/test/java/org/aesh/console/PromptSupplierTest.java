@@ -3,6 +3,8 @@ package org.aesh.console;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.aesh.command.Command;
@@ -36,8 +38,7 @@ public class PromptSupplierTest {
         });
         console.start();
 
-        Thread.sleep(200);
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("dynamic> ", 5000);
         assertTrue("Prompt supplier output should appear", output.contains("dynamic> "));
         assertTrue("Supplier should have been called at least once", counter.get() >= 1);
 
@@ -67,8 +68,7 @@ public class PromptSupplierTest {
         console.setPrompt(new Prompt("static> "));
         console.start();
 
-        Thread.sleep(200);
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("supplier> ", 5000);
         assertTrue("Prompt supplier should take precedence over static prompt",
                 output.contains("supplier> "));
 
@@ -79,22 +79,24 @@ public class PromptSupplierTest {
     public void testPromptSupplierCalledPerCycle() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
         AtomicInteger counter = new AtomicInteger(0);
+        CountDownLatch latch = new CountDownLatch(1);
 
         ReadlineConsole console = buildConsole(connection, () -> {
             int n = counter.incrementAndGet();
             return new Prompt("prompt-" + n + "> ");
-        });
+        }, latch);
         console.start();
 
-        Thread.sleep(200);
+        // Wait for the first prompt to appear
+        connection.waitForOutputContaining("prompt-1> ", 5000);
         // Execute a command to trigger a second readline cycle
         connection.read("noop" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
+        // Wait for second prompt to appear
+        String output = connection.waitForOutputContaining("prompt-2> ", 5000);
         assertTrue("Supplier should have been called at least twice (once per readline cycle)",
                 counter.get() >= 2);
-
-        String output = connection.getOutputBuffer();
         assertTrue("First prompt should appear", output.contains("prompt-1> "));
         assertTrue("Second prompt should appear", output.contains("prompt-2> "));
 
@@ -122,8 +124,7 @@ public class PromptSupplierTest {
         console.setPrompt(new Prompt("static> "));
         console.start();
 
-        Thread.sleep(200);
-        String output = connection.getOutputBuffer();
+        String output = connection.waitForOutputContaining("static> ", 5000);
         assertTrue("Static prompt should be used when no supplier is set",
                 output.contains("static> "));
 
@@ -136,21 +137,31 @@ public class PromptSupplierTest {
     private ReadlineConsole buildConsole(TestConnection connection,
             java.util.function.Supplier<Prompt> supplier)
             throws CommandRegistryException, IOException {
+        return buildConsole(connection, supplier, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private ReadlineConsole buildConsole(TestConnection connection,
+            java.util.function.Supplier<Prompt> supplier, CountDownLatch latch)
+            throws CommandRegistryException, IOException {
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(NoopCommand.class)
                 .create();
 
-        Settings<CommandInvocation> settings = SettingsBuilder
+        SettingsBuilder<CommandInvocation> builder = SettingsBuilder
                 .builder()
                 .commandRegistry(registry)
                 .enableOperatorParser(true)
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
-                .promptSupplier(supplier)
-                .build();
+                .promptSupplier(supplier);
 
-        return new ReadlineConsole(settings);
+        if (latch != null) {
+            builder.commandExecutionListener((line, result, durationMs) -> latch.countDown());
+        }
+
+        return new ReadlineConsole(builder.build());
     }
 
     // ---- Test commands ----

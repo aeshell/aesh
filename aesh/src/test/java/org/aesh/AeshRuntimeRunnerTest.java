@@ -48,23 +48,20 @@ import org.junit.Test;
 public class AeshRuntimeRunnerTest {
 
     @Test
-    public void testCommandResult() throws InterruptedException {
+    public void testCommandResult() {
         CommandResult result = AeshRuntimeRunner.builder().command(Bar1Command.class).execute();
-        Thread.sleep(200);
         assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
 
         result = AeshRuntimeRunner.builder().command(Bar2Command.class).execute();
-        Thread.sleep(200);
         assertEquals(CommandResult.FAILURE.getResultValue(), result.getResultValue());
 
     }
 
     @Test
-    public void testInstantiatedCommand() throws InterruptedException {
+    public void testInstantiatedCommand() {
         Bar1Command bar1Cmd = new Bar1Command();
 
         CommandResult result = AeshRuntimeRunner.builder().command(bar1Cmd).execute();
-        Thread.sleep(200);
         assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
         assertEquals(100, bar1Cmd.getSomeVal());
 

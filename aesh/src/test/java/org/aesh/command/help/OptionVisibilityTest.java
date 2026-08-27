@@ -3,6 +3,8 @@ package org.aesh.command.help;
 import static org.junit.Assert.*;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -177,6 +179,8 @@ public class OptionVisibilityTest {
     @Test
     public void testHelpAllIntegration() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch1 = new CountDownLatch(1);
+        CountDownLatch latch2 = new CountDownLatch(2);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(VisibilityCommand.class)
@@ -189,13 +193,17 @@ public class OptionVisibilityTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> {
+                    latch1.countDown();
+                    latch2.countDown();
+                })
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("vis --help" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("First command should complete", latch1.await(5, TimeUnit.SECONDS));
         String defaultOutput = connection.getOutputBuffer();
         assertTrue(defaultOutput.contains("--name"));
         assertFalse("--debug should not appear in default help", defaultOutput.contains("--debug"));
@@ -203,7 +211,7 @@ public class OptionVisibilityTest {
         connection.clearOutputBuffer();
 
         connection.read("vis --help=all" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Second command should complete", latch2.await(5, TimeUnit.SECONDS));
         String fullOutput = connection.getOutputBuffer();
         assertTrue(fullOutput.contains("--name"));
         assertTrue("--debug should appear with --help=all", fullOutput.contains("--debug"));

@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.aesh.command.Command;
@@ -141,6 +143,7 @@ public class StreamingPipeTest {
         TestConnection connection = new TestConnection();
         java.io.File tmpFile = java.io.File.createTempFile("aesh-pipe-test", ".txt");
         tmpFile.deleteOnExit();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(AeshCommandPipelineTest.PipeCommand.class)
@@ -152,13 +155,14 @@ public class StreamingPipeTest {
                 .enableOperatorParser(true)
                 .commandRegistry(registry)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("pipe | upper > " + tmpFile.getAbsolutePath() + Config.getLineSeparator());
-        Thread.sleep(500);
+        assertTrue("Pipe command should complete", latch.await(5, TimeUnit.SECONDS));
 
         String content = new String(java.nio.file.Files.readAllBytes(tmpFile.toPath())).trim();
         assertTrue("File should contain uppercased output, got: " + content,

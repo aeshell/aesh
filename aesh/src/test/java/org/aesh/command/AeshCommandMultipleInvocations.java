@@ -21,8 +21,11 @@ package org.aesh.command;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -46,6 +49,7 @@ public class AeshCommandMultipleInvocations {
     @Test
     public void testMultipleInvocations() throws CommandRegistryException, IOException, InterruptedException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(3);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -59,13 +63,14 @@ public class AeshCommandMultipleInvocations {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("foo ;bar --info yup; foo --value=VAL" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("All 3 commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(2, counter);
 
         console.stop();
@@ -74,6 +79,8 @@ public class AeshCommandMultipleInvocations {
     @Test
     public void testMultipleInvocationsClearLine() throws CommandRegistryException, IOException, InterruptedException {
         TestConnection connection = new TestConnection();
+        // foo + barbar execute (barbar throws, so && stops chain — foo --value=VAL skipped)
+        CountDownLatch latch = new CountDownLatch(2);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -88,6 +95,7 @@ public class AeshCommandMultipleInvocations {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -95,7 +103,7 @@ public class AeshCommandMultipleInvocations {
         counter = 0;
 
         connection.read("foo ;barbar && foo --value=VAL" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(1, counter);
         connection.clearOutputBuffer();
         counter = 0;
@@ -107,6 +115,10 @@ public class AeshCommandMultipleInvocations {
     @Test
     public void testMultipleInvocationsRequiredOption() throws CommandRegistryException, IOException, InterruptedException {
         TestConnection connection = new TestConnection();
+        // foo + req execute (req fails validation, && stops chain)
+        // Then a standalone foo executes → total 3 commands via listener
+        CountDownLatch firstLatch = new CountDownLatch(2);
+        CountDownLatch secondLatch = new CountDownLatch(3);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -121,6 +133,10 @@ public class AeshCommandMultipleInvocations {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> {
+                    firstLatch.countDown();
+                    secondLatch.countDown();
+                })
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -128,11 +144,11 @@ public class AeshCommandMultipleInvocations {
         counter = 0;
 
         connection.read("foo ;req && foo --value=VAL" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("First batch should complete", firstLatch.await(5, TimeUnit.SECONDS));
         assertEquals(1, counter);
         connection.clearOutputBuffer();
         connection.read("foo" + Config.getLineSeparator());
-        Thread.sleep(20);
+        assertTrue("Second command should complete", secondLatch.await(5, TimeUnit.SECONDS));
         assertEquals(2, counter);
 
         console.stop();

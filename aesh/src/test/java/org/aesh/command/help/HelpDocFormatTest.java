@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -112,11 +114,12 @@ public class HelpDocFormatTest {
     @Test
     public void testHelpSkillFormatIntegration() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, DocTestCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, DocTestCommand.class, latch);
         console.start();
 
         connection.read("mycmd --help=skill" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         // Skill format starts with YAML front matter
         assertTrue("Skill format should contain YAML front matter delimiter",
@@ -130,11 +133,12 @@ public class HelpDocFormatTest {
     @Test
     public void testHelpMarkdownFormatIntegration() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, DocTestCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, DocTestCommand.class, latch);
         console.start();
 
         connection.read("mycmd --help=markdown" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         // Markdown format uses # headings with uppercase command name
         assertTrue("Markdown format should contain # heading",
@@ -146,11 +150,12 @@ public class HelpDocFormatTest {
     @Test
     public void testHelpAsciidocFormatIntegration() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, DocTestCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, DocTestCommand.class, latch);
         console.start();
 
         connection.read("mycmd --help=asciidoc" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         // AsciiDoc format uses = headings with uppercase command name
         assertTrue("AsciiDoc format should contain = heading",
@@ -162,11 +167,12 @@ public class HelpDocFormatTest {
     @Test
     public void testHelpShortAliasMdIntegration() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, DocTestCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, DocTestCommand.class, latch);
         console.start();
 
         connection.read("mycmd --help=md" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         assertTrue("--help=md should produce markdown with # heading",
                 output.contains("# MYCMD"));
@@ -177,11 +183,12 @@ public class HelpDocFormatTest {
     @Test
     public void testHelpShortAliasAdocIntegration() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, DocTestCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, DocTestCommand.class, latch);
         console.start();
 
         connection.read("mycmd --help=adoc" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         assertTrue("--help=adoc should produce asciidoc with = heading",
                 output.contains("= MYCMD"));
@@ -192,11 +199,12 @@ public class HelpDocFormatTest {
     @Test
     public void testBareHelpUnchanged() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, DocTestCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, DocTestCommand.class, latch);
         console.start();
 
         connection.read("mycmd --help" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         // Terminal help uses "Usage:" prefix, not YAML front matter or # headings
         assertTrue("Bare --help should show terminal format with Usage:",
@@ -210,11 +218,12 @@ public class HelpDocFormatTest {
     @Test
     public void testHelpAllStillWorks() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, DocTestCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, DocTestCommand.class, latch);
         console.start();
 
         connection.read("mycmd --help=all" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         // --help=all should still produce terminal format
         assertTrue("--help=all should show terminal format with Usage:",
@@ -226,11 +235,12 @@ public class HelpDocFormatTest {
     @Test
     public void testHelpUnknownFormatFallsBack() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, DocTestCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, DocTestCommand.class, latch);
         console.start();
 
         connection.read("mycmd --help=json" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         // Unknown format should fall through to terminal help
         assertTrue("--help=json should fall back to terminal format with Usage:",
@@ -242,6 +252,7 @@ public class HelpDocFormatTest {
     @Test
     public void testSubcommandHelpSkill() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(AppGroupCommand.class)
@@ -254,13 +265,14 @@ public class HelpDocFormatTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("app run --help=skill" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         // Should generate skill docs for 'run' subcommand, not 'app'
         assertTrue("Subcommand skill docs should contain YAML front matter",
@@ -274,6 +286,7 @@ public class HelpDocFormatTest {
     @Test
     public void testSubcommandBareHelp() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(AppGroupCommand.class)
@@ -286,13 +299,14 @@ public class HelpDocFormatTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("app run --help" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         // Bare --help for subcommand should show terminal format
         assertTrue("Subcommand bare --help should show terminal format",
@@ -304,12 +318,13 @@ public class HelpDocFormatTest {
     @Test
     public void testHelpWithRequiredOption() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
-        ReadlineConsole console = buildConsole(connection, RequiredOptionCommand.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        ReadlineConsole console = buildConsole(connection, RequiredOptionCommand.class, latch);
         console.start();
 
         // --help=skill should work even when required options are not provided
         connection.read("reqcmd --help=skill" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         assertTrue("--help=skill should work with required options not set",
                 output.contains("---"));
@@ -330,8 +345,8 @@ public class HelpDocFormatTest {
     }
 
     @SuppressWarnings("unchecked")
-    private ReadlineConsole buildConsole(TestConnection connection, Class<? extends Command> cmdClass)
-            throws CommandRegistryException, IOException {
+    private ReadlineConsole buildConsole(TestConnection connection, Class<? extends Command> cmdClass,
+            CountDownLatch latch) throws CommandRegistryException, IOException {
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(cmdClass)
                 .create();
@@ -343,6 +358,7 @@ public class HelpDocFormatTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         return new ReadlineConsole(settings);

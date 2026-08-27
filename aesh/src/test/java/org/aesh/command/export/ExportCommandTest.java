@@ -23,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -130,6 +132,7 @@ public class ExportCommandTest {
         };
 
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder().create();
 
@@ -142,12 +145,13 @@ public class ExportCommandTest {
                 .readInputrc(false)
                 .logging(true)
                 .exportListener(listener)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
         connection.read("export FOO=bar" + Config.getLineSeparator());
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         assertTrue(listenerCalled[0]);
         console.stop();
     }

@@ -19,6 +19,11 @@
  */
 package org.aesh.command;
 
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
@@ -40,6 +45,7 @@ public class AeshCommandRequiredTest {
     @Test
     public void testOptionRequired() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ReqCommand.class)
@@ -50,6 +56,7 @@ public class AeshCommandRequiredTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -57,7 +64,7 @@ public class AeshCommandRequiredTest {
         console.start();
 
         connection.read("req " + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("Option: --reset-configuration is required for this command."
                 + Config.getLineSeparator());
 
@@ -67,6 +74,7 @@ public class AeshCommandRequiredTest {
     @Test
     public void testArgumentAndOptionRequired() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ReqCommand2.class)
@@ -77,6 +85,7 @@ public class AeshCommandRequiredTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -84,7 +93,7 @@ public class AeshCommandRequiredTest {
         console.start();
 
         connection.read("req2 --reset-configuration=false" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("Argument 'arg' is required for this command."
                 + Config.getLineSeparator());
 
@@ -94,6 +103,7 @@ public class AeshCommandRequiredTest {
     @Test
     public void testArgumentAndOptionRequiredGroupCommand() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(GroupReqCommand.class)
@@ -104,6 +114,7 @@ public class AeshCommandRequiredTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -111,7 +122,7 @@ public class AeshCommandRequiredTest {
         console.start();
 
         connection.read("group req2 --reset-configuration=false" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("Argument 'arg' is required for this command."
                 + Config.getLineSeparator());
 

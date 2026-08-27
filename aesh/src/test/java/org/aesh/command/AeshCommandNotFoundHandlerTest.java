@@ -57,7 +57,7 @@ public class AeshCommandNotFoundHandlerTest {
         console.start();
 
         connection.read("foo -l 12 -h 20" + Config.getLineSeparator());
-        Thread.sleep(50);
+        connection.waitForOutputContaining("DUUUUDE, where is your command?", 5000);
         assertTrue(connection.getOutputBuffer().endsWith("DUUUUDE, where is your command?" + Config.getLineSeparator()));
 
         console.stop();

@@ -22,6 +22,8 @@ package org.aesh.command.validator;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -52,6 +54,7 @@ public class AeshCommandValidatorTest {
     @Test
     public void testCommandValidator() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -62,13 +65,14 @@ public class AeshCommandValidatorTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
         connection.read("foo -l 12 -h 20" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         connection.assertBufferEndsWith("Sum of high and low must be over 42!" + Config.getLineSeparator());
 
@@ -78,6 +82,7 @@ public class AeshCommandValidatorTest {
     @Test
     public void testGroupCommandValidator() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(GitCommand.class)
@@ -88,13 +93,14 @@ public class AeshCommandValidatorTest {
                 .connection(connection)
                 .commandRegistry(registry)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
         connection.read("git commit" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("Either all or message must be set" + Config.getLineSeparator());
 
         console.stop();

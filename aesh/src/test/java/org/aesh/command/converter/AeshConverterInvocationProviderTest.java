@@ -20,8 +20,11 @@
 package org.aesh.command.converter;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -54,12 +57,15 @@ public class AeshConverterInvocationProviderTest {
                 .command(new ConCommand())
                 .create();
 
+        CountDownLatch latch = new CountDownLatch(1);
+
         Settings<CommandInvocation> settings = SettingsBuilder
                 .<CommandInvocation> builder()
                 .commandRegistry(registry)
                 .converterInvocationProvider(new FooConverterProvider())
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -67,7 +73,7 @@ public class AeshConverterInvocationProviderTest {
 
         connection.read("convert --foo bar" + Config.getLineSeparator());
 
-        Thread.sleep(50);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("FOOO" + Config.getLineSeparator());
         console.stop();
     }

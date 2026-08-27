@@ -19,9 +19,12 @@
  */
 package org.aesh.command;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -44,6 +47,7 @@ public class AeshCommandOverrideRequiredTest {
     @Test
     public void testOverrideRequired() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -54,13 +58,14 @@ public class AeshCommandOverrideRequiredTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("foo -h" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("OVERRIDDEN" + Config.getLineSeparator());
 
         console.stop();

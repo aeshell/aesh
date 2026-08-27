@@ -22,6 +22,10 @@ package org.aesh.command;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
@@ -40,6 +44,7 @@ public class SubCommandModeConsoleTest {
     @Test
     public void testSubCommandModeHelpOnChild() throws Exception {
         TestConnection connection = new TestConnection();
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(AppGroupCommand.class)
@@ -49,6 +54,7 @@ public class SubCommandModeConsoleTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -56,15 +62,16 @@ public class SubCommandModeConsoleTest {
 
         // Type "app" + enter to enter sub-command mode
         connection.read("app" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("app should complete", latchRef.get().await(5, TimeUnit.SECONDS));
 
         String output = connection.getOutputBuffer();
         assertTrue("should show entering message", output.contains("Entering app mode"));
         connection.clearOutputBuffer();
 
         // Now in sub-command mode — type "build --help" + enter
+        latchRef.set(new CountDownLatch(1));
         connection.read("build --help" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("build --help should complete", latchRef.get().await(5, TimeUnit.SECONDS));
 
         output = connection.getOutputBuffer();
         assertTrue("help should contain command name 'build'", output.contains("build"));
@@ -73,8 +80,9 @@ public class SubCommandModeConsoleTest {
         connection.clearOutputBuffer();
 
         // Type "deploy --help" + enter
+        latchRef.set(new CountDownLatch(1));
         connection.read("deploy --help" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("deploy --help should complete", latchRef.get().await(5, TimeUnit.SECONDS));
 
         output = connection.getOutputBuffer();
         assertTrue("deploy help should contain 'deploy'", output.contains("deploy"));
@@ -83,7 +91,6 @@ public class SubCommandModeConsoleTest {
 
         // Exit sub-command mode
         connection.read("exit" + Config.getLineSeparator());
-        Thread.sleep(100);
 
         console.stop();
     }
@@ -91,6 +98,7 @@ public class SubCommandModeConsoleTest {
     @Test
     public void testSubCommandModeCompletion() throws Exception {
         TestConnection connection = new TestConnection();
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(AppGroupCommand.class)
@@ -100,6 +108,7 @@ public class SubCommandModeConsoleTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -107,40 +116,36 @@ public class SubCommandModeConsoleTest {
 
         // Enter sub-command mode
         connection.read("app" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("app should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         connection.clearOutputBuffer();
 
         // Tab-complete "bu" should complete to "build "
         connection.read("bu");
         connection.read(Key.CTRL_I);
-        Thread.sleep(100);
+        connection.waitForOutputContaining("build ", 5000);
         connection.assertBuffer("build ");
 
-        // Clear and tab-complete "de" should complete to "deploy "
+        // Ctrl+C exits sub-command mode (exitOnCtrlC=true by default)
         connection.read(Key.CTRL_C);
-        Thread.sleep(100);
-        // After Ctrl+C in sub-command mode, we might exit — re-enter if needed
-        String output = connection.getOutputBuffer();
-        if (!output.contains("app")) {
-            // Re-enter sub-command mode
-            connection.read("app" + Config.getLineSeparator());
-            Thread.sleep(200);
-        }
+        // Re-enter sub-command mode
+        latchRef.set(new CountDownLatch(1));
+        connection.read("app" + Config.getLineSeparator());
+        assertTrue("re-enter app should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         connection.clearOutputBuffer();
 
         connection.read("de");
         connection.read(Key.CTRL_I);
-        Thread.sleep(100);
+        connection.waitForOutputContaining("deploy ", 5000);
         connection.assertBuffer("deploy ");
 
         connection.read("exit" + Config.getLineSeparator());
-        Thread.sleep(100);
         console.stop();
     }
 
     @Test
     public void testSubCommandModeOptionNameCompletion() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(AppGroupCommand.class)
@@ -150,6 +155,7 @@ public class SubCommandModeConsoleTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -157,17 +163,16 @@ public class SubCommandModeConsoleTest {
 
         // Enter sub-command mode
         connection.read("app" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("app should complete", latch.await(5, TimeUnit.SECONDS));
         connection.clearOutputBuffer();
 
-        // Type "build --targ" + tab — should complete to "build --target=" without trailing space
+        // Type "build --targ" + tab — should complete to "build --target "
         connection.read("build --targ");
         connection.read(Key.CTRL_I);
-        Thread.sleep(100);
+        connection.waitForOutputContaining("build --target ", 5000);
         connection.assertBuffer("build --target ");
 
         connection.read(Key.CTRL_C);
-        Thread.sleep(100);
 
         console.stop();
     }
@@ -177,6 +182,7 @@ public class SubCommandModeConsoleTest {
         TestConnection connection = new TestConnection();
         BuildSubCommand.lastTarget = null;
         BuildSubCommand.executed = false;
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(AppGroupCommand.class)
@@ -186,6 +192,7 @@ public class SubCommandModeConsoleTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -193,18 +200,18 @@ public class SubCommandModeConsoleTest {
 
         // Enter sub-command mode
         connection.read("app" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("app should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         connection.clearOutputBuffer();
 
         // Execute child command
+        latchRef.set(new CountDownLatch(1));
         connection.read("build --target release" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("build should complete", latchRef.get().await(5, TimeUnit.SECONDS));
 
         assertTrue("build command should have executed", BuildSubCommand.executed);
         assertTrue("target should be 'release'", "release".equals(BuildSubCommand.lastTarget));
 
         connection.read("exit" + Config.getLineSeparator());
-        Thread.sleep(100);
         console.stop();
     }
 
@@ -260,6 +267,7 @@ public class SubCommandModeConsoleTest {
         TestConnection connection = new TestConnection();
         NestedLeafCmd.executed = false;
         NestedLeafCmd.lastValue = null;
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(TopGroupCommand.class)
@@ -269,6 +277,7 @@ public class SubCommandModeConsoleTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -276,15 +285,17 @@ public class SubCommandModeConsoleTest {
 
         // Enter top-level sub-command mode
         connection.read("top" + Config.getLineSeparator());
-        Thread.sleep(300);
+        assertTrue("top should complete", latchRef.get().await(5, TimeUnit.SECONDS));
 
         // Enter nested sub-command mode
+        latchRef.set(new CountDownLatch(1));
         connection.read("mid" + Config.getLineSeparator());
-        Thread.sleep(300);
+        assertTrue("mid should complete", latchRef.get().await(5, TimeUnit.SECONDS));
 
         // Execute leaf command within nested context
+        latchRef.set(new CountDownLatch(1));
         connection.read("leaf --value hello" + Config.getLineSeparator());
-        Thread.sleep(300);
+        assertTrue("leaf should complete", latchRef.get().await(5, TimeUnit.SECONDS));
 
         String output = connection.getOutputBuffer();
         assertTrue("should enter top mode, got: " + output, output.contains("Entering top mode"));
@@ -294,11 +305,9 @@ public class SubCommandModeConsoleTest {
 
         // Exit nested mode back to top
         connection.read("exit" + Config.getLineSeparator());
-        Thread.sleep(100);
 
         // Exit top mode
         connection.read("exit" + Config.getLineSeparator());
-        Thread.sleep(100);
 
         console.stop();
     }
@@ -306,6 +315,7 @@ public class SubCommandModeConsoleTest {
     @Test
     public void testExitSubCommandModeWithDotDot() throws Exception {
         TestConnection connection = new TestConnection();
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(AppGroupCommand.class)
@@ -315,6 +325,7 @@ public class SubCommandModeConsoleTest {
                 .commandRegistry(registry)
                 .connection(connection)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -322,22 +333,22 @@ public class SubCommandModeConsoleTest {
 
         // Enter sub-command mode
         connection.read("app" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("app should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         assertTrue(connection.getOutputBuffer().contains("Entering app mode"));
         connection.clearOutputBuffer();
 
-        // Exit with ".."
+        // Exit with ".." — readline processes sequentially from the input pipe,
+        // so the next "app" command will be processed after ".." exits sub-command mode
         connection.read(".." + Config.getLineSeparator());
-        Thread.sleep(200);
 
         // Should be back at the main prompt — verify by typing a top-level command
         connection.clearOutputBuffer();
+        latchRef.set(new CountDownLatch(1));
         connection.read("app" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("re-enter app should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         assertTrue("should re-enter app mode", connection.getOutputBuffer().contains("Entering app mode"));
 
         connection.read("exit" + Config.getLineSeparator());
-        Thread.sleep(100);
         console.stop();
     }
 

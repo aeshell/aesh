@@ -20,10 +20,13 @@
 package org.aesh.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -79,12 +82,15 @@ public class AeshConsoleTest {
                 .command(LsCommand.class)
                 .create();
 
+        CountDownLatch latch = new CountDownLatch(2);
+
         Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .commandRegistry(registry)
                 .validatorInvocationProvider(new DirectoryValidatorInvocationProvider())
                 .connection(connection)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -95,7 +101,7 @@ public class AeshConsoleTest {
 
         connection.read("ls --files /home:/tmp" + Config.getLineSeparator());
 
-        Thread.sleep(100);
+        assertTrue("Commands should complete", latch.await(5, TimeUnit.SECONDS));
         console.stop();
     }
 

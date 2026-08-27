@@ -149,7 +149,6 @@ public class CommandOutputHandlerTest {
                 .start();
 
         connection.read("output --msg first" + Config.getLineSeparator());
-        Thread.sleep(200);
         connection.read("output --msg second" + Config.getLineSeparator());
         assertTrue("Both commands should complete", latch.await(5, TimeUnit.SECONDS));
 

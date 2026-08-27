@@ -21,6 +21,8 @@ package org.aesh.console;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import org.aesh.AeshConsoleRunner;
@@ -41,6 +43,7 @@ public class AeshConnectionClosedTest {
     @Test
     public void testConnectionClosed() throws InterruptedException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         ConnectionClosed closed = new ConnectionClosed();
 
@@ -48,6 +51,7 @@ public class AeshConnectionClosedTest {
                 .builder()
                 .connection(connection)
                 .setConnectionClosedHandler(closed)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .logging(true)
                 .build();
 
@@ -59,10 +63,14 @@ public class AeshConnectionClosedTest {
         console.start();
 
         connection.read("test" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("hello" + Config.getLineSeparator());
         connection.read(Key.CTRL_D);
-        Thread.sleep(100);
+        // Poll for close notification
+        long deadline = System.currentTimeMillis() + 5000;
+        while (!closed.notifiedOfClose && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10);
+        }
         assertTrue(closed.notifiedOfClose);
     }
 

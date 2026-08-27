@@ -133,7 +133,7 @@ public class CompletionConsoleTest {
 
         con.read("file");
         con.read(Key.CTRL_I);
-        Thread.sleep(200);
+        con.waitForOutputContaining("possibilities", 5000);
 
         assertTrue(con.getOutputBuffer().startsWith("# file"));
         assertTrue(con.getOutputBuffer().endsWith("Display all 105 possibilities? (y or n)"));
@@ -141,7 +141,7 @@ public class CompletionConsoleTest {
 
         con.read("n");
 
-        Thread.sleep(200);
+        con.waitForOutputContaining("# file", 5000);
 
         assertEquals(Config.getLineSeparator() + "# file", con.getOutputBuffer());
         console.stop();

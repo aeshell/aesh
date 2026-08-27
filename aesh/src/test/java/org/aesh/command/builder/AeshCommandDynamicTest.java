@@ -20,6 +20,10 @@
 package org.aesh.command.builder;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -49,6 +53,7 @@ public class AeshCommandDynamicTest {
     @Test
     public void testDynamic() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
                 .command(createGroupCommand().create())
@@ -59,6 +64,7 @@ public class AeshCommandDynamicTest {
                 .connection(connection)
                 .commandRegistry(registry)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -74,7 +80,7 @@ public class AeshCommandDynamicTest {
 
         connection.read("group child1 --foo BAR" + Config.getLineSeparator());
 
-        Thread.sleep(10);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
 
         console.stop();
     }

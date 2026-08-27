@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
@@ -35,6 +36,7 @@ public class ShellFeaturesTest {
     @Test
     public void testPrintAboveFromCommand() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(PrintAboveCommand.class)
@@ -47,6 +49,7 @@ public class ShellFeaturesTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -54,7 +57,7 @@ public class ShellFeaturesTest {
         console.start();
 
         connection.read("printabove" + Config.getLineSeparator());
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         String output = connection.getOutputBuffer();
         assertTrue("printAbove text should appear in output",
                 output.contains("notification from above"));

@@ -19,7 +19,11 @@
  */
 package org.aesh.command.validator;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -145,6 +149,7 @@ public class AeshCommandOptionValidatorTest {
     @Test
     public void testRequiredOption() throws IOException, CommandRegistryException, InterruptedException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(ValidatorOptionCommand.class)
@@ -156,13 +161,14 @@ public class AeshCommandOptionValidatorTest {
                 .connection(connection)
                 .logging(true)
                 .validatorInvocationProvider(new TestValidatorInvocationProvider())
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
 
         console.start();
         connection.read("test argvalue" + Config.getLineSeparator());
-        Thread.sleep(20);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         connection.assertBufferEndsWith("Option: --foo is required for this command." + Config.getLineSeparator());
 
         console.stop();

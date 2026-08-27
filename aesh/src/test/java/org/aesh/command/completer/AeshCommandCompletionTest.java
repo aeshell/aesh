@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -197,6 +199,7 @@ public class AeshCommandCompletionTest {
     @Test
     public void testCommandActivator() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(TotoCommand.class)
@@ -205,10 +208,9 @@ public class AeshCommandCompletionTest {
         Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .connection(connection)
-                //.inputStream(pipedInputStream)
-                //.outputStream(new PrintStream(byteArrayOutputStream))
                 .logging(true)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -222,9 +224,7 @@ public class AeshCommandCompletionTest {
         assertEquals("hidden ", connection.getOutputBuffer());
 
         connection.read(enter.getFirstValue());
-        // Must sleep, otherwise activated will become false before hidden
-        // is executed.
-        Thread.sleep(200);
+        latch.await(5, TimeUnit.SECONDS);
         connection.clearOutputBuffer();
 
         TestCommandActivator.activated = false;
@@ -339,7 +339,7 @@ public class AeshCommandCompletionTest {
         connection.read("arquillian-container-configuration --container arquillian-tomcat-embedded-7 --containerOption ");
         connection.read(completeChar.getFirstValue());
 
-        Thread.sleep(80);
+        connection.waitForOutputContaining("managed", 5000);
         assertEquals("arquillian-container-configuration --container arquillian-tomcat-embedded-7 --containerOption managed ",
                 connection.getOutputBuffer());
 
@@ -348,6 +348,7 @@ public class AeshCommandCompletionTest {
     @Test
     public void testGroupCommand() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(GitCommand.class)
@@ -358,6 +359,7 @@ public class AeshCommandCompletionTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -366,10 +368,10 @@ public class AeshCommandCompletionTest {
         connection.read("git --");
         connection.read(completeChar.getFirstValue());
 
-        Thread.sleep(80);
+        connection.waitForOutputContaining("--help", 5000);
         connection.assertBuffer("git --help ");
         connection.read(enter.getFirstValue());
-        Thread.sleep(80);
+        latch.await(5, TimeUnit.SECONDS);
         connection.clearOutputBuffer();
 
         connection.read("git reb");
@@ -384,10 +386,11 @@ public class AeshCommandCompletionTest {
         connection.read(completeChar.getFirstValue());
         //outputStream.flush();
 
-        Thread.sleep(80);
+        connection.waitForOutputContaining("--test", 5000);
         connection.assertBuffer("git rebase --force --test ");
         connection.read(enter.getFirstValue());
-        Thread.sleep(80);
+        // --test has no value, so the command fails with a parse error message
+        connection.waitForOutputContaining("no value was given", 5000);
         connection.clearOutputBuffer();
 
         connection.read("git rebase --fo");
@@ -755,6 +758,7 @@ public class AeshCommandCompletionTest {
         connection.read(completeChar.getFirstValue());
         connection.assertBuffer("test argvalue --foo\\ bar ");
         connection.read(Key.CTRL_C);
+        // Wait for CTRL_C to clear state and re-prompt
         Thread.sleep(100);
         connection.clearOutputBuffer();
         connection.read("test --");

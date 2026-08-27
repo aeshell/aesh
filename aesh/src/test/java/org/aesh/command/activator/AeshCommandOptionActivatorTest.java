@@ -67,17 +67,17 @@ public class AeshCommandOptionActivatorTest {
         connection.read("val --");
         connection.read(Key.CTRL_I);
 
-        Thread.sleep(80);
+        connection.waitForOutputContaining("val --bar ", 5000);
         connection.assertBuffer("val --bar ");
 
         connection.read("123 --");
         connection.read(Key.CTRL_I);
 
-        Thread.sleep(80);
+        connection.waitForOutputContaining("val --bar 123 --", 5000);
         connection.assertBuffer("val --bar 123 --");
         validatorProvider.updateContext("foo");
         connection.read(Key.CTRL_I);
-        Thread.sleep(80);
+        connection.waitForOutputContaining("val --bar 123 --foo ", 5000);
         connection.assertBuffer("val --bar 123 --foo ");
 
         console.stop();

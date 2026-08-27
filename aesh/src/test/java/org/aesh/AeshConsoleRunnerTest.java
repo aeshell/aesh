@@ -92,8 +92,7 @@ public class AeshConsoleRunnerTest {
         connection.read("bar1" + getLineSeparator());
         connection.assertBufferEndsWith("Hello from Bar1" + getLineSeparator());
         connection.read("exit" + getLineSeparator());
-        Thread.sleep(200);
-        assertTrue(connection.closed());
+        assertClosedWithin(connection, 5000);
 
     }
 
@@ -115,8 +114,7 @@ public class AeshConsoleRunnerTest {
         connection.read("hello" + getLineSeparator());
         connection.assertBufferEndsWith("Hello from Aesh!" + getLineSeparator());
         connection.read("exit" + getLineSeparator());
-        Thread.sleep(200);
-        assertTrue(connection.closed());
+        assertClosedWithin(connection, 5000);
     }
 
     @Test(expected = RuntimeException.class)
@@ -161,8 +159,7 @@ public class AeshConsoleRunnerTest {
         connection.read("hello" + getLineSeparator());
         connection.assertBufferEndsWith("Hello from Aesh!" + getLineSeparator());
         connection.read("exit" + getLineSeparator());
-        Thread.sleep(200);
-        assertTrue(connection.closed());
+        assertClosedWithin(connection, 5000);
     }
 
     @Test(expected = RuntimeException.class)
@@ -203,6 +200,14 @@ public class AeshConsoleRunnerTest {
             commandInvocation.println("Hello from Bar2");
             return CommandResult.SUCCESS;
         }
+    }
+
+    private static void assertClosedWithin(TestConnection connection, long timeoutMs) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (!connection.closed() && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10);
+        }
+        assertTrue("Connection should be closed", connection.closed());
     }
 
 }

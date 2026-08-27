@@ -20,8 +20,11 @@
 package org.aesh.command.operator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -50,6 +53,7 @@ public class AeshCommandEndOperatorTest {
     @Test
     public void testEnd() throws IOException, InterruptedException, CommandRegistryException {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(3);
 
         CommandRegistry registry = AeshCommandRegistryBuilder.builder()
                 .command(FooCommand.class)
@@ -63,13 +67,14 @@ public class AeshCommandEndOperatorTest {
                 .connection(connection)
                 .setPersistExport(false)
                 .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
         console.start();
 
         connection.read("foo ;bar --info yup; foo" + Config.getLineSeparator());
-        Thread.sleep(100);
+        assertTrue("All commands should complete", latch.await(5, TimeUnit.SECONDS));
         assertEquals(3, counter);
 
         console.stop();

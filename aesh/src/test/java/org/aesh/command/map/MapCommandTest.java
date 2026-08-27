@@ -27,6 +27,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
@@ -88,6 +91,7 @@ public class MapCommandTest {
     @Test
     public void testCompletion() throws Exception {
         TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
 
         // Build dynamic command.
         DynCommand1 cmd = new DynCommand1();
@@ -108,6 +112,7 @@ public class MapCommandTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -150,7 +155,7 @@ public class MapCommandTest {
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         {
             String val = (String) cmd.options.get("opt-dyn1-withvalue");
             assertEquals("cdcsdc", val);
@@ -170,6 +175,7 @@ public class MapCommandTest {
     @Test
     public void testCompletionWithStaticOptions() throws Exception {
         TestConnection connection = new TestConnection();
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
 
         // Build dynamic command.
         DynCommand1 cmd = new DynCommand1();
@@ -206,6 +212,7 @@ public class MapCommandTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -229,7 +236,7 @@ public class MapCommandTest {
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("First command should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         {
             String val = (String) cmd.options.get("dir");
             assertEquals("toto", val);
@@ -239,6 +246,7 @@ public class MapCommandTest {
         // Enable dynamic commands
         provider.options = getOptions();
 
+        latchRef.set(new CountDownLatch(1));
         connection.read("dyn1 --verbose");
         connection.read(completeChar.getFirstValue());
         assertEquals("dyn1 --verbose ", connection.getOutputBuffer());
@@ -258,7 +266,7 @@ public class MapCommandTest {
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("Second command should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         {
             String val = (String) cmd.options.get("dir");
             assertEquals("tutu", val);
@@ -278,6 +286,7 @@ public class MapCommandTest {
     @Test
     public void testExecution() throws Exception {
         TestConnection connection = new TestConnection();
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
 
         // Build dynamic command.
         DynCommand1 cmd = new DynCommand1();
@@ -314,6 +323,7 @@ public class MapCommandTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -326,23 +336,25 @@ public class MapCommandTest {
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("dyn1 should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         assertFalse(cmd.contains("verbose"));
         assertFalse(cmd.contains("dir"));
 
+        latchRef.set(new CountDownLatch(1));
         connection.read("dyn1 --verbose");
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("dyn1 --verbose should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         assertTrue(cmd.contains("verbose"));
         assertFalse(cmd.contains("dir"));
 
+        latchRef.set(new CountDownLatch(1));
         connection.read("dyn1 --dir=toto");
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("dyn1 --dir should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         assertFalse(cmd.contains("verbose"));
         assertTrue(cmd.contains("dir"));
         assertFalse(cmd.contains("opt-dyn1-withvalue"));
@@ -350,11 +362,12 @@ public class MapCommandTest {
         // add dynamic options
         provider.options = getOptions();
 
+        latchRef.set(new CountDownLatch(1));
         connection.read("dyn1 --opt-dyn1-withvalue=foo");
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("dyn1 --opt-dyn1-withvalue should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         assertFalse(cmd.contains("verbose"));
         assertFalse(cmd.contains("dir"));
         assertTrue(cmd.contains("opt-dyn1-withvalue"));
@@ -364,24 +377,23 @@ public class MapCommandTest {
         // Update to a new set if options.
         provider.options = getOptionsRequired();
         connection.read("dyn1");
-        // Execute command.
+        // Execute command — fails required option check (no listener fire).
         connection.read(Config.getLineSeparator());
-        Thread.sleep(200);
-        assertTrue(connection.getOutputBuffer().contains("Option: --opt-dyn1-required is required for this command"));
+        connection.waitForOutputContaining("Option: --opt-dyn1-required is required for this command", 5000);
         connection.clearOutputBuffer();
 
         connection.read("dyn1 --opt-dyn1-required=xxx");
-        // Execute command.
+        // Execute command — fails required option check (no listener fire).
         connection.read(Config.getLineSeparator());
-        Thread.sleep(200);
-        assertTrue(connection.getOutputBuffer().contains("Option: --opt-dyn2-required is required for this command"));
+        connection.waitForOutputContaining("Option: --opt-dyn2-required is required for this command", 5000);
         connection.clearOutputBuffer();
 
+        latchRef.set(new CountDownLatch(1));
         connection.read("dyn1 --opt-dyn1-required=xxx --opt-dyn2-required=yyy");
         // Execute command.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("dyn1 with both required should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         assertTrue(connection.getOutputBuffer(), cmd.contains("opt-dyn1-required"));
         assertTrue(connection.getOutputBuffer(), cmd.contains("opt-dyn2-required"));
         assertFalse(cmd.contains("opt-dyn1-withvalue"));
@@ -392,6 +404,7 @@ public class MapCommandTest {
     @Test
     public void clearedOptionTest() throws Exception {
         TestConnection connection = new TestConnection();
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
 
         // Build dynamic command.
         DynCommand1 cmd = new DynCommand1();
@@ -412,6 +425,7 @@ public class MapCommandTest {
                 .logging(true)
                 .connection(connection)
                 .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
                 .build();
 
         ReadlineConsole console = new ReadlineConsole(settings);
@@ -420,20 +434,21 @@ public class MapCommandTest {
 
         connection.clearOutputBuffer();
         connection.read("dyn1 --opt-dyn1-withvalue=");
-        // Execute command provising XXX value.
+        // Execute command providing empty value.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("First command should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         ProcessedOption opt = processedCmd.findLongOption("opt-dyn1-withvalue");
         assertEquals("", opt.getValue());
         assertEquals(1, opt.getValues().size());
 
+        latchRef.set(new CountDownLatch(1));
         connection.clearOutputBuffer();
         connection.read("dyn1 --opt-dyn1-withvalue=XXX");
-        // Execute command provising XXX value.
+        // Execute command providing XXX value.
         connection.read(Config.getLineSeparator());
         connection.clearOutputBuffer();
-        Thread.sleep(200);
+        assertTrue("Second command should complete", latchRef.get().await(5, TimeUnit.SECONDS));
         opt = processedCmd.findLongOption("opt-dyn1-withvalue");
         assertEquals("XXX", opt.getValue());
         assertEquals(1, opt.getValues().size());

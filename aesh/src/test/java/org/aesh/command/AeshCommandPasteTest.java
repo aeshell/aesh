@@ -58,7 +58,7 @@ public class AeshCommandPasteTest {
         console.start();
 
         connection.read("FOO" + LINE_SEPARATOR + "FUU" + LINE_SEPARATOR + "bar");
-        Thread.sleep(100);
+        connection.waitForOutputContaining("bar", 5000);
         connection.assertBufferEndsWith("bar");
 
         console.stop();
@@ -85,7 +85,7 @@ public class AeshCommandPasteTest {
         console.start();
 
         connection.read("foo" + LINE_SEPARATOR + "FUU" + LINE_SEPARATOR + "bar");
-        Thread.sleep(150);
+        connection.waitForOutputContaining("bar", 5000);
         connection.assertBufferEndsWith("bar");
 
         console.stop();
