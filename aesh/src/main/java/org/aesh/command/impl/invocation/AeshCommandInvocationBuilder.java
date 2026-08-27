@@ -19,9 +19,12 @@
  */
 package org.aesh.command.impl.invocation;
 
+import java.util.function.Consumer;
+
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.context.CommandContext;
+import org.aesh.command.impl.shell.ShellOutputTee;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.shell.Shell;
@@ -35,10 +38,22 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
 
     private final Shell shell;
     private final Console console;
+    private final Consumer<String> outputHandler;
 
     public AeshCommandInvocationBuilder(Shell shell, Console console) {
+        this(shell, console, null);
+    }
+
+    public AeshCommandInvocationBuilder(Shell shell, Console console, Consumer<String> outputHandler) {
         this.shell = shell;
         this.console = console;
+        this.outputHandler = outputHandler;
+    }
+
+    private Shell wrapShell() {
+        if (outputHandler != null)
+            return new ShellOutputTee(shell, outputHandler);
+        return shell;
     }
 
     @Override
@@ -51,9 +66,9 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
             ctx = ((ReadlineConsole) console).getCommandContext();
         }
         if (ctx != null && ctx.isInSubCommandMode()) {
-            return new AeshCommandInvocation(console, shell, runtime, config, commandContainer, ctx);
+            return new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer, ctx);
         }
-        return new AeshCommandInvocation(console, shell, runtime, config, commandContainer);
+        return new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer);
     }
 
     @Override
@@ -61,7 +76,7 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
             CommandInvocationConfiguration config,
             CommandContainer<AeshCommandInvocation> commandContainer,
             CommandContext commandContext) {
-        return new AeshCommandInvocation(console, shell, runtime, config, commandContainer, commandContext);
+        return new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer, commandContext);
     }
 
 }

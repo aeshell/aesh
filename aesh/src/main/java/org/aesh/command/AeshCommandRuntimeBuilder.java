@@ -21,6 +21,7 @@
 package org.aesh.command;
 
 import java.util.EnumSet;
+import java.util.function.Consumer;
 
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
@@ -65,6 +66,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     private DefaultValueProvider defaultValueProvider;
     private boolean parseBrackets;
     private EnumSet<OperatorType> operators;
+    private Consumer<String> commandOutputHandler;
 
     private AeshCommandRuntimeBuilder() {
     }
@@ -165,6 +167,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         this.registry = (CommandRegistry<CI>) settings.commandRegistry();
         this.ctx = settings.aeshContext();
         this.operators = settings.operatorParserEnabled() ? EnumSet.allOf(OperatorType.class) : null;
+        this.commandOutputHandler = settings.commandOutputHandler();
         return this;
     }
 
@@ -186,7 +189,8 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         }
 
         if (commandInvocationBuilder == null)
-            commandInvocationBuilder = (CommandInvocationBuilder) new DefaultCommandInvocationBuilder(shell);
+            commandInvocationBuilder = (CommandInvocationBuilder) new DefaultCommandInvocationBuilder(shell,
+                    commandOutputHandler);
 
         if (ctx == null) {
             ctx = DefaultAeshContext.getDefault();

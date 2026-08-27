@@ -111,6 +111,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     private Consumer<Void> connectionClosedHandler;
     private SubCommandModeSettings subCommandModeSettings;
     private boolean enableShellEscape;
+    private Consumer<String> commandOutputHandler;
 
     SettingsImpl() {
     }
@@ -168,6 +169,7 @@ public class SettingsImpl<CI extends CommandInvocation>
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
         setSubCommandModeSettings(baseSettings.subCommandModeSettings());
         setEnableShellEscape(baseSettings.enableShellEscape());
+        setCommandOutputHandler(baseSettings.commandOutputHandler());
     }
 
     public void resetToDefaults() {
@@ -881,5 +883,15 @@ public class SettingsImpl<CI extends CommandInvocation>
     @Override
     public void setEnableShellEscape(boolean enable) {
         this.enableShellEscape = enable;
+    }
+
+    @Override
+    public Consumer<String> commandOutputHandler() {
+        return commandOutputHandler;
+    }
+
+    @Override
+    public void setCommandOutputHandler(Consumer<String> handler) {
+        this.commandOutputHandler = handler;
     }
 }

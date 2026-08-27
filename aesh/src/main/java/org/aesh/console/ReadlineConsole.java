@@ -636,7 +636,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         shell = new ShellImpl(connection, settings.enableSearchInPaging());
         return AeshCommandRuntimeBuilder.builder()
                 .settings(settings)
-                .commandInvocationBuilder(new AeshCommandInvocationBuilder(shell, this))
+                .commandInvocationBuilder(new AeshCommandInvocationBuilder(
+                        shell, this, settings.commandOutputHandler()))
                 .aeshContext(context)
                 .operators(EnumSet.allOf(OperatorType.class))
                 .build();

@@ -372,4 +372,25 @@ public interface Settings<CI extends CommandInvocation>
      * Set whether the {@code !} prefix is enabled for native OS commands.
      */
     void setEnableShellEscape(boolean enable);
+
+    /**
+     * Handler that receives command output (what commands write via
+     * {@code invocation.println()} / {@code invocation.print()}) separately
+     * from readline chrome, prompt drawing, and ANSI escape sequences.
+     * <p>
+     * When set, command output is teed to both the terminal and this handler.
+     * When null (default), no overhead is added to the output path.
+     *
+     * @return the command output handler, or null
+     * @since 3.17
+     */
+    Consumer<String> commandOutputHandler();
+
+    /**
+     * Set the command output handler.
+     *
+     * @param handler the handler, or null to disable
+     * @since 3.17
+     */
+    void setCommandOutputHandler(Consumer<String> handler);
 }

@@ -351,6 +351,19 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Set a handler that receives command output separately from readline
+     * chrome. Output is teed to both the terminal and this handler.
+     * Zero overhead when not set.
+     *
+     * @param handler the handler, or null to disable
+     * @since 3.17
+     */
+    public SettingsBuilder<CI> commandOutputHandler(Consumer<String> handler) {
+        settings.setCommandOutputHandler(handler);
+        return this;
+    }
+
     public Settings<CI> build() {
         if (settings.logging())
             LoggerUtil.doLog();

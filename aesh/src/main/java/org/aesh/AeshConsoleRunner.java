@@ -20,6 +20,7 @@
 package org.aesh;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.aesh.command.Command;
@@ -161,6 +162,21 @@ public class AeshConsoleRunner {
         if (settings == null)
             settings = SettingsBuilder.builder().build();
         settings.setEnableShellEscape(enable);
+        return this;
+    }
+
+    /**
+     * Set a handler that receives command output separately from readline
+     * chrome. Output is teed to both the terminal and this handler.
+     *
+     * @param handler the handler
+     * @return this builder
+     * @since 3.17
+     */
+    public AeshConsoleRunner commandOutputHandler(Consumer<String> handler) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setCommandOutputHandler(handler);
         return this;
     }
 
