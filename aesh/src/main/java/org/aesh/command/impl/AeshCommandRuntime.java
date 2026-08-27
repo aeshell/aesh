@@ -357,7 +357,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         CommandResult result = null;
         for (String line : lines) {
             result = executeCommand(line);
-            if (result == CommandResult.FAILURE)
+            // Stop on any non-zero exit code, consistent with POSIX and the
+            // && operator which uses result.isSuccess() (#604)
+            if (result != null && result.isFailure())
                 return result;
         }
         return result;

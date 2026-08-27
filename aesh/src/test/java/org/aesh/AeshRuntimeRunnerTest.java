@@ -57,6 +57,168 @@ public class AeshRuntimeRunnerTest {
 
     }
 
+    // --- CommandResult propagation tests (#604) ---
+
+    @Test
+    public void testUsageErrorResult() {
+        // A command with a required option, invoked without it, should return USAGE_ERROR
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(RequiredOptionCommand.class)
+                .execute();
+        assertEquals(CommandResult.USAGE_ERROR.getResultValue(), result.getResultValue());
+    }
+
+    @Test
+    public void testCommandNotFoundResult() throws Exception {
+        // CommandNotFoundException propagates from CommandRuntime and is mapped to
+        // COMMAND_NOT_FOUND (127) by AeshRuntimeRunner. Verify the constant and that
+        // CommandRuntime throws when the command name is unknown.
+        assertEquals(127, CommandResult.COMMAND_NOT_FOUND.getResultValue());
+        assertEquals(127, CommandResult.COMMAND_NOT_FOUND.getExitCode());
+        assertTrue("COMMAND_NOT_FOUND is failure", CommandResult.COMMAND_NOT_FOUND.isFailure());
+
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder.builder()
+                        .command(Bar1Command.class)
+                        .create())
+                .build();
+
+        try {
+            runtime.executeCommand("nonexistent");
+            assertTrue("Should have thrown CommandNotFoundException", false);
+        } catch (org.aesh.command.CommandNotFoundException e) {
+            // correct — AeshRuntimeRunner maps this to COMMAND_NOT_FOUND (127)
+        }
+    }
+
+    @Test
+    public void testCustomExitCodeResult() {
+        // A command returning a custom exit code (42) should propagate it
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(CustomExitCodeCommand.class)
+                .execute();
+        assertEquals(42, result.getResultValue());
+        assertEquals(42, result.getExitCode());
+        assertTrue("Non-zero exit code is failure", result.isFailure());
+    }
+
+    @Test
+    public void testNullReturnNormalizedToSuccess() {
+        // A command returning null should be treated as SUCCESS
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(NullReturnCommand.class)
+                .execute();
+        assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
+        assertTrue("null return should be SUCCESS", result.isSuccess());
+    }
+
+    @Test
+    public void testMultiLineShortCircuitsOnNonZero() throws Exception {
+        // executeCommand(String... lines) should stop on any non-zero result (#604)
+        // Using CommandRuntime directly to exercise the multi-line overload
+        MultiLineTrackingCommand.reset();
+
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder.builder()
+                        .command(MultiLineTrackingCommand.class)
+                        .create())
+                .build();
+
+        // First command returns custom code 5 (non-zero) — second should NOT run
+        CommandResult result = runtime.executeCommand(
+                "multitrack --code 5",
+                "multitrack --code 0");
+
+        assertEquals(5, result.getResultValue());
+        assertTrue("Should have stopped after non-zero result", result.isFailure());
+        assertEquals("Only first command should have executed", 1, MultiLineTrackingCommand.callCount);
+    }
+
+    @Test
+    public void testMultiLineContinuesOnSuccess() throws Exception {
+        // executeCommand(String... lines) should continue when all commands succeed
+        MultiLineTrackingCommand.reset();
+
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder.builder()
+                        .command(MultiLineTrackingCommand.class)
+                        .create())
+                .build();
+
+        CommandResult result = runtime.executeCommand(
+                "multitrack --code 0",
+                "multitrack --code 0",
+                "multitrack --code 0");
+
+        assertEquals(0, result.getResultValue());
+        assertTrue("All succeeded", result.isSuccess());
+        assertEquals("All three commands should have executed", 3, MultiLineTrackingCommand.callCount);
+    }
+
+    @Test
+    public void testExitCodeClamping() {
+        // getExitCode() clamps to POSIX 0-255 range
+        assertEquals(0, CommandResult.SUCCESS.getExitCode());
+        assertEquals(1, CommandResult.FAILURE.getExitCode());
+        assertEquals(2, CommandResult.USAGE_ERROR.getExitCode());
+        assertEquals(127, CommandResult.COMMAND_NOT_FOUND.getExitCode());
+        assertEquals(130, CommandResult.INTERRUPTED.getExitCode());
+
+        // Negative values clamp to 1
+        assertEquals(1, CommandResult.valueOf(-1).getExitCode());
+        // Values > 255 clamp to 255
+        assertEquals(255, CommandResult.valueOf(256).getExitCode());
+        // Values in range pass through
+        assertEquals(42, CommandResult.valueOf(42).getExitCode());
+    }
+
+    // --- Helper commands for CommandResult tests ---
+
+    @CommandDefinition(name = "required-opt", description = "requires --name")
+    public static class RequiredOptionCommand implements Command<CommandInvocation> {
+        @Option(name = "name", required = true)
+        private String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "custom-exit", description = "returns exit code 42")
+    public static class CustomExitCodeCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.valueOf(42);
+        }
+    }
+
+    @CommandDefinition(name = "null-return", description = "returns null (should be SUCCESS)")
+    public static class NullReturnCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return null;
+        }
+    }
+
+    @CommandDefinition(name = "multitrack", description = "tracks calls, returns specified code")
+    public static class MultiLineTrackingCommand implements Command<CommandInvocation> {
+        @Option(name = "code", description = "exit code to return", defaultValue = "0")
+        private int code;
+
+        static int callCount = 0;
+
+        static void reset() {
+            callCount = 0;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            callCount++;
+            return CommandResult.valueOf(code);
+        }
+    }
+
     @Test
     public void testInstantiatedCommand() {
         Bar1Command bar1Cmd = new Bar1Command();
