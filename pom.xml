@@ -71,7 +71,7 @@
       <version.shade.plugin>3.6.2</version.shade.plugin>
       <version.enforcer.plugin>3.6.3</version.enforcer.plugin>
       <version.gpg.plugin>3.2.8</version.gpg.plugin>
-      <version.nexus-staging.plugin>1.7.0</version.nexus-staging.plugin>
+      <version.central-publishing.plugin>0.11.0</version.central-publishing.plugin>
       <version.clean.plugin>3.4.0</version.clean.plugin>
       <version.resources.plugin>3.5.0</version.resources.plugin>
       <version.install.plugin>3.1.3</version.install.plugin>
@@ -96,15 +96,10 @@
 
     <distributionManagement>
         <repository>
-            <id>jboss-releases-repository</id>
-            <name>JBoss Releases Repository</name>
-            <url>https://repository.jboss.org/nexus/repository/releases/</url>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://central.sonatype.com</url>
         </repository>
-        <snapshotRepository>
-            <id>jboss-snapshots-repository</id>
-            <name>JBoss Snapshots Repository</name>
-            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
-        </snapshotRepository>
     </distributionManagement>
 
     <build>
@@ -167,14 +162,13 @@
             </executions>
           </plugin>
           <plugin>
-            <groupId>org.sonatype.plugins</groupId>
-            <artifactId>nexus-staging-maven-plugin</artifactId>
-            <version>${version.nexus-staging.plugin}</version>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>${version.central-publishing.plugin}</version>
             <extensions>true</extensions>
             <configuration>
-              <serverId>jboss-releases-repository</serverId>
-              <nexusUrl>https://repository.jboss.org/nexus/</nexusUrl>
-              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+              <publishingServerId>central</publishingServerId>
+              <autoPublish>true</autoPublish>
             </configuration>
           </plugin>
           <plugin>

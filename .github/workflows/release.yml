@@ -27,9 +27,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
-          server-id: jboss-releases-repository
-          server-username: NEXUS_USER
-          server-password: NEXUS_TOKEN
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_TOKEN
 
       - name: Determine versions
         id: versions
@@ -74,8 +74,8 @@ jobs:
       - name: Build and deploy
         run: mvn clean deploy -Prelease -DskipTests
         env:
-          NEXUS_USER: ${{ secrets.NEXUS_USER }}
-          NEXUS_TOKEN: ${{ secrets.NEXUS_TOKEN }}
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
           MAVEN_GPG_KEY: ${{ secrets.GPG_ARMORED }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
