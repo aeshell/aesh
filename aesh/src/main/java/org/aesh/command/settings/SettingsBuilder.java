@@ -364,6 +364,23 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Pre-load responses for {@code commandInvocation.inputLine()} calls.
+     * Responses are consumed in order. Use this for test frameworks that
+     * need to provide answers to interactive prompts without timing
+     * dependencies.
+     *
+     * @param responses the responses to return from inputLine(), in order
+     * @since 3.17
+     */
+    public SettingsBuilder<CI> inputLineResponses(String... responses) {
+        if (responses != null && responses.length > 0) {
+            settings.setInputLineResponses(
+                    new java.util.concurrent.ConcurrentLinkedQueue<>(java.util.Arrays.asList(responses)));
+        }
+        return this;
+    }
+
     public Settings<CI> build() {
         if (settings.logging())
             LoggerUtil.doLog();

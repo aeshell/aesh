@@ -112,6 +112,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     private SubCommandModeSettings subCommandModeSettings;
     private boolean enableShellEscape;
     private Consumer<String> commandOutputHandler;
+    private java.util.Queue<String> inputLineResponses;
 
     SettingsImpl() {
     }
@@ -170,6 +171,7 @@ public class SettingsImpl<CI extends CommandInvocation>
         setSubCommandModeSettings(baseSettings.subCommandModeSettings());
         setEnableShellEscape(baseSettings.enableShellEscape());
         setCommandOutputHandler(baseSettings.commandOutputHandler());
+        setInputLineResponses(baseSettings.inputLineResponses());
     }
 
     public void resetToDefaults() {
@@ -893,5 +895,15 @@ public class SettingsImpl<CI extends CommandInvocation>
     @Override
     public void setCommandOutputHandler(Consumer<String> handler) {
         this.commandOutputHandler = handler;
+    }
+
+    @Override
+    public java.util.Queue<String> inputLineResponses() {
+        return inputLineResponses;
+    }
+
+    @Override
+    public void setInputLineResponses(java.util.Queue<String> responses) {
+        this.inputLineResponses = responses;
     }
 }

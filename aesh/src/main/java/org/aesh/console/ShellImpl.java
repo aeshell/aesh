@@ -19,9 +19,11 @@
  */
 package org.aesh.console;
 
+import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.aesh.command.settings.Settings;
 import org.aesh.command.shell.Shell;
 import org.aesh.readline.Readline;
 import org.aesh.readline.action.ActionDecoder;
@@ -40,13 +42,19 @@ public class ShellImpl implements Shell {
 
     private Connection connection;
     private final PagingSupport pagingSupport;
+    private final Settings<?> settings;
 
     public ShellImpl(Connection connection) {
-        this(connection, false);
+        this(connection, false, null);
     }
 
     public ShellImpl(Connection connection, boolean search) {
+        this(connection, search, null);
+    }
+
+    public ShellImpl(Connection connection, boolean search, Settings<?> settings) {
         this.connection = connection;
+        this.settings = settings;
         pagingSupport = new PagingSupport(connection, search);
     }
 
@@ -96,6 +104,24 @@ public class ShellImpl implements Shell {
 
     @Override
     public String readLine(Prompt prompt) throws InterruptedException {
+        // Check for pre-canned responses first (#607)
+        Queue<String> queue = settings != null ? settings.inputLineResponses() : null;
+        if (queue != null && !queue.isEmpty()) {
+            String response = queue.poll();
+            // Still write the prompt so test frameworks can assert on it
+            int[] promptChars = prompt != null ? prompt.getPromptCharacters() : null;
+            if (promptChars != null && promptChars.length > 0)
+                connection.stdoutHandler().accept(promptChars);
+            return response;
+        }
+        // In non-interactive mode with no pre-canned responses, inputLine()
+        // would deadlock (the command blocks the only thread that could
+        // deliver input). Throw a clear error instead (#609).
+        if (!connection.isInteractive() && (queue == null || queue.isEmpty())) {
+            throw new IllegalStateException(
+                    "inputLine() called in non-interactive mode with no pre-canned responses. "
+                            + "Use inputLineResponses() to provide them.");
+        }
         printCollectedOutput();
         pagingSupport.reset();
         final String[] out = { null };

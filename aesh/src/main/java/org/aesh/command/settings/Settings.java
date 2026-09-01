@@ -22,6 +22,7 @@ package org.aesh.command.settings;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.util.Queue;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -393,4 +394,27 @@ public interface Settings<CI extends CommandInvocation>
      * @since 3.17
      */
     void setCommandOutputHandler(Consumer<String> handler);
+
+    /**
+     * Pre-canned responses for {@code commandInvocation.inputLine()} calls.
+     * When a command calls {@code inputLine()}, the queue is checked first.
+     * If non-empty, the next entry is returned immediately without blocking.
+     * This enables test frameworks to provide responses for interactive
+     * prompts without timing dependencies.
+     * <p>
+     * The queue can be refilled between command executions via
+     * {@link #setInputLineResponses(Queue)}.
+     *
+     * @return the response queue, or null if not set
+     * @since 3.17
+     */
+    Queue<String> inputLineResponses();
+
+    /**
+     * Set the pre-canned response queue for {@code inputLine()} calls.
+     *
+     * @param responses the response queue, or null to disable
+     * @since 3.17
+     */
+    void setInputLineResponses(Queue<String> responses);
 }
