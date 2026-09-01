@@ -239,7 +239,13 @@ public class TestConnection implements Connection {
 
     }
 
+    private static final int MAX_HANDLER_WAIT_RETRIES = 200; // 200 * 10ms = 2 seconds
+
     private void doRead(int[] input) {
+        doRead(input, 0);
+    }
+
+    private void doRead(int[] input, int retryCount) {
         if (reading) {
             // If the stdinHandler was recently changed (e.g., readline cycle
             // transition), yield briefly to let the processing thread drain
@@ -255,9 +261,14 @@ public class TestConnection implements Connection {
             if (stdinHandler != null) {
                 stdinHandler.accept(input);
             } else {
+                if (retryCount >= MAX_HANDLER_WAIT_RETRIES) {
+                    throw new RuntimeException("stdinHandler is null after "
+                            + (retryCount * 10) + "ms — no readline handler is accepting input. "
+                            + "Input: " + java.util.Arrays.toString(input));
+                }
                 try {
                     Thread.sleep(10);
-                    doRead(input);
+                    doRead(input, retryCount + 1);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
