@@ -56,13 +56,20 @@ public final class MetadataProviderRegistry {
     private static final ClassValue<CommandMetadataProvider<?>> cache = new ClassValue<CommandMetadataProvider<?>>() {
         @Override
         protected CommandMetadataProvider<?> computeValue(Class<?> cls) {
-            String className = cls.getName();
-            for (MetadataRegistry registry : getRegistries()) {
-                @SuppressWarnings("rawtypes")
-                CommandMetadataProvider provider = registry.get(className);
-                if (provider != null) {
-                    return provider;
+            // Walk the class hierarchy to support CDI interceptor/proxy
+            // subclasses whose runtime class differs from the original
+            // @CommandDefinition-annotated class (#608)
+            Class<?> current = cls;
+            while (current != null && current != Object.class) {
+                String className = current.getName();
+                for (MetadataRegistry registry : getRegistries()) {
+                    @SuppressWarnings("rawtypes")
+                    CommandMetadataProvider provider = registry.get(className);
+                    if (provider != null) {
+                        return provider;
+                    }
                 }
+                current = current.getSuperclass();
             }
             return ABSENT;
         }
