@@ -45,4 +45,12 @@ public interface Console {
     void read();
 
     void setPrompt(String s);
+
+    /**
+     * Returns true if the connection closed (EOF) while a command was running.
+     * Default: false (no pending close).
+     */
+    default boolean isClosePending() {
+        return false;
+    }
 }

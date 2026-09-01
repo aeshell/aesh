@@ -271,6 +271,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         });
 
         this.runtime = generateRuntime();
+        if (!connection.isInteractive()) {
+            processManager.setSynchronous(true);
+        }
         read(this.connection, readline);
         // Notify embedders/test frameworks that readline is armed and ready (#603)
         if (onReadyCallback != null)
@@ -326,6 +329,15 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     /**
+     * Returns true if the connection closed (EOF) while a command was still
+     * running. Checked by ProcessManager to stop the console after the last
+     * command completes instead of re-arming readline on a closed connection.
+     */
+    public boolean isClosePending() {
+        return closePending;
+    }
+
+    /**
      * Use {@link Readline} to startBlockingReader a user input and then process it
      *
      * @param conn the tty connection
@@ -341,7 +353,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                     .connection(conn)
                     .requestHandler(line -> {
                         if (line == null) {
-                            // EOF (Ctrl+D) — stop the console
+                            // EOF (Ctrl+D or end of piped input) — stop the console
                             doStop(true);
                         } else if (!line.trim().isEmpty()) {
                             shell.startCollectOutput();
@@ -349,16 +361,21 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                         } else
                             read(conn, readline);
                     })
-                    .completions(completions)
-                    .preProcessors(preProcessors)
-                    .history(history)
-                    .flags(readlineFlags);
+                    .preProcessors(preProcessors);
 
-            // Use dynamic prompt supplier if set, otherwise static prompt
-            if (settings.promptSupplier() != null) {
-                requestBuilder.promptSupplier(settings.promptSupplier());
+            if (conn.isInteractive()) {
+                // Interactive mode: full readline features
+                requestBuilder.completions(completions)
+                        .history(history)
+                        .flags(readlineFlags);
+                if (settings.promptSupplier() != null) {
+                    requestBuilder.promptSupplier(settings.promptSupplier());
+                } else {
+                    requestBuilder.prompt(prompt);
+                }
             } else {
-                requestBuilder.prompt(prompt);
+                // Non-interactive (piped) mode: no prompt, no completions, no history (#609)
+                requestBuilder.prompt(new Prompt(""));
             }
 
             readline.readline(requestBuilder.build());

@@ -53,9 +53,19 @@ public class ProcessManager {
     private CommandExecutionListener executionListener;
     private String commandLine;
     private volatile Process activeProcess;
+    private boolean synchronous;
 
     public ProcessManager(Console console) {
         this.console = console;
+    }
+
+    /**
+     * When true, commands run on the calling thread instead of a separate
+     * Process thread. Used for non-interactive/piped input where synchronous
+     * execution prevents input loss between readline cycles (#609).
+     */
+    public void setSynchronous(boolean synchronous) {
+        this.synchronous = synchronous;
     }
 
     public void setExecutionListener(CommandExecutionListener listener) {
@@ -109,7 +119,9 @@ public class ProcessManager {
             //if there are commands that wasn't executed we need to clear their data
             if (executor.hasSkipped())
                 executor.clearSkippedListData();
-            if (console.running())
+            // Check closePending: if EOF arrived while the command was running,
+            // stop the console instead of re-arming readline (#609)
+            if (console.running() && !console.isClosePending())
                 console.read();
             else
                 conn.close();
@@ -169,12 +181,16 @@ public class ProcessManager {
             Process mainProcess = new Process(this, conn, lastStage, commandLine, executionListener);
             mainProcess.setUpstreamPipeThreads(upstreamThreads);
             activeProcess = mainProcess;
+            // Pipe chains always need threads for concurrent producer/consumer
             mainProcess.start();
         } else {
-            // Single command — run normally
+            // Single command
             Process process = new Process(this, conn, exec, commandLine, executionListener);
             activeProcess = process;
-            process.start();
+            if (synchronous)
+                process.run(); // same thread — no race with piped input (#609)
+            else
+                process.start();
         }
     }
 }

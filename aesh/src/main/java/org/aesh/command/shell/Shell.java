@@ -135,6 +135,20 @@ public interface Shell {
     void clear();
 
     /**
+     * Check if this shell is connected to an interactive terminal.
+     * Returns false when stdin is piped or redirected.
+     * Commands can use this to skip interactive prompts, progress bars,
+     * or other UI elements that don't make sense for scripted input.
+     *
+     * @return true if interactive (real terminal), false if piped/redirected
+     * @since 3.17
+     */
+    default boolean isInteractive() {
+        Connection conn = connection();
+        return conn == null || conn.isInteractive();
+    }
+
+    /**
      * Returns the underlying terminal connection.
      * Useful for integrating with frameworks that need direct terminal access
      * (e.g., TamboUI TUI framework).

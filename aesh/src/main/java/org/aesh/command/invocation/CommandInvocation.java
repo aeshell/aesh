@@ -44,6 +44,17 @@ import org.aesh.terminal.KeyAction;
 public interface CommandInvocation {
 
     /**
+     * Check if this invocation is running in an interactive terminal.
+     * Returns false when stdin is piped or redirected.
+     *
+     * @return true if interactive, false if piped/redirected
+     * @since 3.17
+     */
+    default boolean isInteractive() {
+        return getShell().isInteractive();
+    }
+
+    /**
      * @return the shell
      */
     Shell getShell();

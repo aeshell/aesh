@@ -58,20 +58,33 @@ public class TestConnection implements Connection {
     // When the handler changes, doRead() briefly yields to let the
     // processing thread drain any buffered input.
     private volatile boolean handlerChanged = false;
+    private final boolean interactive;
 
     public TestConnection() {
-        this(new Size(80, 20), true);
+        this(new Size(80, 20), true, true);
     }
 
     public TestConnection(boolean stripAnsiCodes) {
-        this(new Size(80, 20), stripAnsiCodes);
+        this(new Size(80, 20), stripAnsiCodes, true);
     }
 
     public TestConnection(Size size) {
-        this(size, true);
+        this(size, true, true);
     }
 
     public TestConnection(Size size, boolean stripAnsiCodes) {
+        this(size, stripAnsiCodes, true);
+    }
+
+    /**
+     * Create a TestConnection with configurable interactivity.
+     *
+     * @param size terminal size
+     * @param stripAnsiCodes whether to strip ANSI codes from output
+     * @param interactive whether the connection reports as interactive (true) or piped (false)
+     */
+    public TestConnection(Size size, boolean stripAnsiCodes, boolean interactive) {
+        this.interactive = interactive;
         bufferBuilder = new StringBuilder();
         stdOutHandler = ints -> {
             if (stripAnsiCodes)
@@ -86,6 +99,13 @@ public class TestConnection implements Connection {
             this.size = size;
 
         attributes = new Attributes();
+    }
+
+    /**
+     * Create a non-interactive TestConnection for simulating piped input.
+     */
+    public static TestConnection nonInteractive() {
+        return new TestConnection(new Size(80, 20), true, false);
     }
 
     public void clearOutputBuffer() {
@@ -207,6 +227,11 @@ public class TestConnection implements Connection {
     public void openBlocking() {
         //we're not doing anything here, all input will come from the read(..) methods
         reading = true;
+    }
+
+    @Override
+    public boolean isInteractive() {
+        return interactive;
     }
 
     @Override
