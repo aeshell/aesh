@@ -27,6 +27,7 @@ import org.aesh.terminal.Connection;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.tty.TerminalConnection;
+import org.aesh.terminal.tty.TtyDetect;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Parser;
 
@@ -51,10 +52,16 @@ class LazyTerminalShell implements Shell {
     private synchronized void ensureInitialized() {
         if (!initialized) {
             initialized = true;
+            // Only create a TerminalConnection when stdin is a real TTY.
+            // Under CI/Surefire, stdin is piped and creating a terminal starts
+            // an ExternalTerminal pump thread stuck on System.in.read() that
+            // blocks JVM shutdown (aesh-readline#269).
+            if (!TtyDetect.isStdinTty())
+                return;
             try {
                 terminalConnection = new TerminalConnection();
             } catch (Exception e) {
-                // No terminal available (CI, pipe, headless) — fall back
+                // No terminal available — fall back to env vars for size
             }
         }
     }
