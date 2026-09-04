@@ -90,6 +90,13 @@
                 <artifactId>terminal-telnet</artifactId>
                 <version>${readline.version}</version>
             </dependency>
+
+            <!-- Builtins -->
+            <dependency>
+                <groupId>org.aesh</groupId>
+                <artifactId>aesh-builtins</artifactId>
+                <version>${project.version}</version>
+            </dependency>
        </dependencies>
    </dependencyManagement>
 

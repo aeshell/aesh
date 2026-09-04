@@ -40,6 +40,7 @@
         <module>aesh-processor</module>
         <module>aesh-charts</module>
         <module>aesh-tamboui</module>
+        <module>aesh-builtins</module>
     </modules>
 
     <!-- Licenses -->
