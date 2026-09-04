@@ -19,10 +19,32 @@
  */
 package org.aesh.selector;
 
+/**
+ * Types of interactive selector prompts available for {@code @Option} fields.
+ * <p>
+ * When set on an option annotation (e.g., {@code @Option(selector = SelectorType.SELECT)}),
+ * the selector UI is shown during command execution if the user did not provide
+ * the option value on the command line. The selected value(s) are injected into
+ * the field before the command's {@code execute()} method runs.
+ */
 public enum SelectorType {
+    /** Free text input (uses {@code shell.readLine()}). */
     INPUT,
+    /** Masked password input. */
     PASSWORD,
+    /** Single-select list with arrow-key navigation. */
     SELECT,
-    SELECTIONS,
-    NO_OP
+    /** Multi-select checkboxes with Space to toggle. */
+    MULTI_SELECT,
+    /** Yes/no confirmation prompt. For boolean fields. */
+    CONFIRM,
+    /** Key-based expandable choice with help text. */
+    EXPAND,
+    /** No selector — default behavior. */
+    NO_OP,
+    /**
+     * @deprecated Use {@link #MULTI_SELECT} instead.
+     */
+    @Deprecated
+    SELECTIONS
 }

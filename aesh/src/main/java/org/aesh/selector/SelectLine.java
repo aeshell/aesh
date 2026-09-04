@@ -19,16 +19,36 @@
  */
 package org.aesh.selector;
 
+import org.aesh.terminal.utils.ANSI;
+
+/**
+ * Represents a single line in a selection list.
+ * Tracks focus (cursor position) and selection state,
+ * and renders with Unicode indicators and ANSI color when available.
+ */
 public class SelectLine {
 
+    // Unicode indicators
+    private static final String FOCUSED_MARKER = "\u276F "; // ❯
+    private static final String UNFOCUSED_MARKER = "  ";
+    private static final String SELECTED_ICON = "\u25C9 "; // ◉
+    private static final String UNSELECTED_ICON = "\u25EF "; // ◯
+
+    // ASCII fallback (when NO_COLOR is set or terminal doesn't support Unicode)
+    private static final String FOCUSED_MARKER_ASCII = "> ";
+    private static final String UNFOCUSED_MARKER_ASCII = "  ";
+    private static final String SELECTED_ICON_ASCII = "[*] ";
+    private static final String UNSELECTED_ICON_ASCII = "[ ] ";
+
+    private static final boolean NO_COLOR = System.getenv("NO_COLOR") != null;
+
     private final int maxLength;
-    private boolean selected = false;
-    private boolean focus = false;
+    private boolean selected;
+    private boolean focus;
     private final String description;
 
     public SelectLine(String description, int maxLength) {
-        this.description = description;
-        this.maxLength = maxLength;
+        this(description, false, maxLength);
     }
 
     public SelectLine(String description, boolean selected, int maxLength) {
@@ -41,27 +61,75 @@ public class SelectLine {
         selected = !selected;
     }
 
+    public void setFocus(boolean focus) {
+        this.focus = focus;
+    }
+
+    /**
+     * Toggle focus state. Kept for backward compatibility.
+     */
     public void focus() {
         focus = !focus;
     }
 
-    private char getFocus() {
-        return focus ? '>' : ' ';
+    public boolean isFocused() {
+        return focus;
     }
 
     public boolean isSelected() {
         return selected;
     }
 
+    /**
+     * Render the line for single-select mode (no checkbox, just focus marker).
+     */
+    public String printSingleSelect() {
+        StringBuilder sb = new StringBuilder();
+        if (NO_COLOR) {
+            sb.append(focus ? FOCUSED_MARKER_ASCII : UNFOCUSED_MARKER_ASCII);
+            sb.append(description);
+        } else {
+            sb.append(focus ? FOCUSED_MARKER : UNFOCUSED_MARKER);
+            if (focus) {
+                sb.append(ANSI.BOLD).append(description).append(ANSI.BOLD_OFF);
+            } else {
+                sb.append(description);
+            }
+        }
+        return truncate(sb.toString());
+    }
+
+    /**
+     * Render the line for multi-select mode (checkbox + focus marker).
+     */
     public String print() {
-        String out = selected ? getFocus() + "[*] " + description : getFocus() + "[ ] " + description;
-        if (out.length() > maxLength)
-            return out.substring(0, maxLength - 3) + "...";
-        else
-            return out;
+        StringBuilder sb = new StringBuilder();
+        if (NO_COLOR) {
+            sb.append(focus ? FOCUSED_MARKER_ASCII : UNFOCUSED_MARKER_ASCII);
+            sb.append(selected ? SELECTED_ICON_ASCII : UNSELECTED_ICON_ASCII);
+            sb.append(description);
+        } else {
+            sb.append(focus ? FOCUSED_MARKER : UNFOCUSED_MARKER);
+            if (selected) {
+                sb.append(ANSI.GREEN_TEXT).append(SELECTED_ICON).append(description).append(ANSI.DEFAULT_TEXT);
+            } else {
+                sb.append(UNSELECTED_ICON).append(description);
+            }
+        }
+        return truncate(sb.toString());
     }
 
     public String value() {
         return description;
+    }
+
+    private String truncate(String text) {
+        // Strip ANSI for length calculation
+        String plain = text.replaceAll("\u001B\\[[;\\d]*m", "");
+        if (plain.length() > maxLength) {
+            // Truncate the plain text and re-apply
+            return text.substring(0, Math.min(text.length(), maxLength - 3)) + "...";
+        }
+        return text;
     }
 }

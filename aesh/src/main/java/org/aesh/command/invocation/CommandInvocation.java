@@ -21,7 +21,9 @@
 package org.aesh.command.invocation;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
@@ -33,6 +35,8 @@ import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.readline.prompt.Prompt;
+import org.aesh.selector.Selector;
+import org.aesh.selector.SelectorType;
 import org.aesh.terminal.KeyAction;
 
 /**
@@ -410,6 +414,70 @@ public interface CommandInvocation {
         if (config == null)
             return false;
         return config.hasPipedData() || config.hasInputRedirection();
+    }
+
+    // --- Interactive prompt convenience methods (#610) ---
+
+    /**
+     * Show a yes/no confirmation prompt.
+     *
+     * @param message the question to ask
+     * @param defaultValue the value returned when Enter is pressed
+     * @return true for yes, false for no
+     * @since 3.18
+     */
+    default boolean confirm(String message, boolean defaultValue) throws InterruptedException {
+        return Selector.confirm(getShell(), message, defaultValue);
+    }
+
+    /**
+     * Show a single-select list and return the selected value.
+     *
+     * @param message the prompt message
+     * @param choices the list of choices
+     * @return the selected value, or null if empty
+     * @since 3.18
+     */
+    default String select(String message, List<String> choices) throws InterruptedException {
+        return Selector.singleSelect(getShell(), message, choices);
+    }
+
+    /**
+     * Show a multi-select checkbox list and return selected values.
+     *
+     * @param message the prompt message
+     * @param choices the list of choices
+     * @return the selected values
+     * @since 3.18
+     */
+    default List<String> multiSelect(String message, List<String> choices)
+            throws InterruptedException {
+        return new Selector(SelectorType.MULTI_SELECT, choices, message)
+                .doSelect(getShell());
+    }
+
+    /**
+     * Prompt for text input.
+     *
+     * @param message the prompt message
+     * @return the user's input
+     * @since 3.18
+     */
+    default String prompt(String message) throws InterruptedException {
+        return inputLine(new Prompt(message + " "));
+    }
+
+    /**
+     * Prompt for text input with validation. Re-prompts until valid.
+     *
+     * @param message the prompt message
+     * @param validator function returning null if valid, or error message
+     * @return the validated input
+     * @since 3.18
+     */
+    default String prompt(String message, Function<String, String> validator)
+            throws InterruptedException {
+        return Selector.inputWithValidation(getShell(), message, validator);
     }
 
 }
