@@ -38,7 +38,6 @@ import org.aesh.terminal.Connection;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.tty.Size;
-import org.aesh.terminal.tty.impl.WinSysTerminal;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Config;
 import org.aesh.terminal.utils.Parser;
@@ -74,8 +73,9 @@ public class PagingSupport {
             lastScrolledLines = lines.size();
             max = termSize.getHeight() - 1;
             if (Config.isWindows()) {
-                // forcePaging is used by tests.
-                alternateSupported = WinSysTerminal.isVTSupported();
+                // On Windows, alternate buffer requires VT support (Windows 10+).
+                // Check via connection capabilities instead of WinSysTerminal directly.
+                alternateSupported = connection.supportsAnsi();
             } else {
                 alternateSupported = true;
             }
@@ -92,14 +92,52 @@ public class PagingSupport {
             List<String> lst = new ArrayList<>();
             int width = Config.isWindows() ? size.getWidth() - 1 : size.getWidth();
             for (String l : splitLines) {
-                String remaining = l;
-                do {
-                    String st = remaining.substring(0, Math.min(remaining.length(), width));
-                    lst.add(st);
-                    remaining = remaining.substring(Math.min(remaining.length(), width));
-                } while (!remaining.isEmpty());
+                // Use visible length (stripping ANSI codes) for wrapping decisions,
+                // but preserve the original string with ANSI codes intact
+                String stripped = stripAnsi(l);
+                if (stripped.length() <= width) {
+                    lst.add(l);
+                } else {
+                    // For lines with ANSI codes, wrap on visible character boundaries
+                    wrapLine(l, width, lst);
+                }
             }
             return lst;
+        }
+
+        /**
+         * Wrap a line at visible-width boundaries, preserving ANSI escape sequences.
+         * Escape sequences don't consume visible columns.
+         */
+        private void wrapLine(String line, int width, List<String> out) {
+            StringBuilder current = new StringBuilder();
+            int visibleLen = 0;
+            int i = 0;
+            while (i < line.length()) {
+                char c = line.charAt(i);
+                if (c == '\u001B' && i + 1 < line.length() && line.charAt(i + 1) == '[') {
+                    // ANSI escape sequence: consume until the terminator letter
+                    int start = i;
+                    i += 2; // skip ESC[
+                    while (i < line.length() && line.charAt(i) != 'm'
+                            && !Character.isLetter(line.charAt(i)))
+                        i++;
+                    if (i < line.length())
+                        i++; // include terminator
+                    current.append(line, start, i);
+                } else {
+                    if (visibleLen >= width) {
+                        out.add(current.toString());
+                        current = new StringBuilder();
+                        visibleLen = 0;
+                    }
+                    current.append(c);
+                    visibleLen++;
+                    i++;
+                }
+            }
+            if (current.length() > 0)
+                out.add(current.toString());
         }
 
         int getMax() {
@@ -327,7 +365,7 @@ public class PagingSupport {
         private void printCurrentLine() {
             String l = nextCurrentLine();
             if (searchingMode) {
-                displayHightlighted(pattern, l);
+                displayHighlighted(pattern, l);
             } else {
                 getConnection().write(l + Config.getLineSeparator());
             }
@@ -382,21 +420,16 @@ public class PagingSupport {
                 Integer.MAX_VALUE);
     }
 
+    private static final int MAX_OUTPUT_SIZE = 10 * 1024 * 1024; // 10 MB limit
+
     private final History searchHistory = new InMemoryHistory();
     private Paging paging;
     private final Connection connection;
-    private final Readline readline;
     private StringBuilder outputCollector;
     private final boolean search;
 
     public PagingSupport(Connection connection, boolean search) {
-        this(connection, null, search);
-    }
-
-    @Deprecated
-    public PagingSupport(Connection connection, Readline readline, boolean search) {
         this.connection = connection;
-        this.readline = readline;
         this.search = search;
         Consumer<Size> consumer = connection.sizeHandler();
         connection.setSizeHandler(new Consumer<Size>() {
@@ -424,7 +457,19 @@ public class PagingSupport {
         if (outputCollector == null) {
             outputCollector = new StringBuilder();
         }
-        outputCollector.append(content);
+        if (outputCollector.length() + content.length() > MAX_OUTPUT_SIZE) {
+            // Truncate to prevent unbounded memory growth
+            int remaining = MAX_OUTPUT_SIZE - outputCollector.length();
+            if (remaining > 0) {
+                outputCollector.append(content, 0, remaining);
+                outputCollector.append(Config.getLineSeparator())
+                        .append("... output truncated at ")
+                        .append(MAX_OUTPUT_SIZE / (1024 * 1024))
+                        .append(" MB ...");
+            }
+        } else {
+            outputCollector.append(content);
+        }
     }
 
     private Connection getConnection() {
@@ -432,7 +477,7 @@ public class PagingSupport {
     }
 
     private Readline getReadline() {
-        return readline == null ? new Readline() : readline;
+        return new Readline();
     }
 
     private StringBuilder getOutputCollector() {
@@ -445,7 +490,7 @@ public class PagingSupport {
         }
     }
 
-    private void displayHightlighted(String pattern, String l) {
+    private void displayHighlighted(String pattern, String l) {
         int index = l.indexOf(pattern);
         while (index >= 0) {
             getConnection().write(l.substring(0, index));
@@ -495,7 +540,9 @@ public class PagingSupport {
                             allLines = lines.length;
                         } else {
                             switch (k) {
-                                case SPACE: {
+                                case SPACE:
+                                case PGDOWN:
+                                case PGDOWN_2: {
                                     currentLines = 0;
                                     break;
                                 }
@@ -504,6 +551,21 @@ public class PagingSupport {
                                     currentLines -= 1;
                                     break;
                                 }
+                                case b:
+                                case PGUP:
+                                case PGUP_2: {
+                                    // Page up: move back one screen
+                                    int pageBack = 2 * (max - 1);
+                                    allLines = Math.max(0, allLines - pageBack);
+                                    currentLines = 0;
+                                    break;
+                                }
+                                case h: {
+                                    showSimpleHelp();
+                                    currentLines -= 1; // don't count help as a content line
+                                    break;
+                                }
+                                case Q:
                                 case q: {
                                     allLines = lines.length;
                                     break;
@@ -598,6 +660,10 @@ public class PagingSupport {
                                     paging.goEnd();
                                     break;
                                 }
+                                case h: {
+                                    showHelp();
+                                    break;
+                                }
                                 case Q:
                                 case ESC:
                                 case q: {
@@ -626,22 +692,26 @@ public class PagingSupport {
     }
 
     private Key read() throws InterruptedException {
+        return readKey(getConnection());
+    }
+
+    /**
+     * Read a single key press from the connection in raw mode.
+     * Handles Ctrl-C (SIGINT) by returning null.
+     * This method can be reused by other components that need single-key input.
+     */
+    static Key readKey(Connection conn) throws InterruptedException {
         ActionDecoder decoder = new ActionDecoder();
         final Key[] key = { null };
         CountDownLatch latch = new CountDownLatch(1);
-        Attributes attributes = getConnection().enterRawMode();
-        // We need to set the interrupt SignalHandler to interrupt the reading.
-        Consumer<Signal> prevHandler = getConnection().signalHandler();
-        getConnection().setSignalHandler((signal) -> {
-            // Interrupting the current reading thread.
-            switch (signal) {
-                case INT: {
-                    latch.countDown();
-                }
-            }
+        Attributes attributes = conn.enterRawMode();
+        Consumer<Signal> prevHandler = conn.signalHandler();
+        conn.setSignalHandler(signal -> {
+            if (signal == Signal.INT)
+                latch.countDown();
         });
         try {
-            getConnection().setStdinHandler(keys -> {
+            conn.setStdinHandler(keys -> {
                 decoder.add(keys);
                 if (decoder.hasNext()) {
                     key[0] = Key.findStartKey(decoder.next().buffer().array());
@@ -649,14 +719,13 @@ public class PagingSupport {
                 }
             });
             try {
-                // Wait until interrupted
                 latch.await();
             } finally {
-                getConnection().setStdinHandler(null);
+                conn.setStdinHandler(null);
             }
         } finally {
-            getConnection().setAttributes(attributes);
-            getConnection().setSignalHandler(prevHandler);
+            conn.setAttributes(attributes);
+            conn.setSignalHandler(prevHandler);
         }
         return key[0];
     }
@@ -698,5 +767,44 @@ public class PagingSupport {
             throw new InterruptedException();
         }
         return out[0];
+    }
+
+    private void showHelp() {
+        getConnection().write(ANSI.CURSOR_SAVE);
+        getConnection().stdoutHandler().accept(ANSI.ERASE_LINE_FROM_CURSOR);
+        getConnection().write("  SPACE/PgDn  Page down" + Config.getLineSeparator());
+        getConnection().write("  b/PgUp      Page up" + Config.getLineSeparator());
+        getConnection().write("  Enter/Down  Line down" + Config.getLineSeparator());
+        getConnection().write("  Up          Line up" + Config.getLineSeparator());
+        getConnection().write("  g/Home      Go to start" + Config.getLineSeparator());
+        getConnection().write("  G/End       Go to end" + Config.getLineSeparator());
+        getConnection().write("  /pattern    Search forward" + Config.getLineSeparator());
+        getConnection().write("  n           Next match" + Config.getLineSeparator());
+        getConnection().write("  N           Previous match" + Config.getLineSeparator());
+        getConnection().write("  q/ESC       Quit" + Config.getLineSeparator());
+        getConnection().write("  h           This help" + Config.getLineSeparator());
+        getConnection().write("Press any key to continue...");
+        try {
+            read();
+        } catch (InterruptedException ignored) {
+        }
+        // Redraw from current position
+        if (paging != null) {
+            paging.resetScreen();
+            while (paging.inWorkflow() && !paging.needPrompt()) {
+                paging.printCurrentLine();
+            }
+        }
+    }
+
+    private void showSimpleHelp() {
+        getConnection().write(ANSI.CURSOR_SAVE);
+        getConnection().stdoutHandler().accept(ANSI.ERASE_LINE_FROM_CURSOR);
+        getConnection().write("  SPACE/PgDn  Page down   |  b/PgUp  Page up   |  Enter  Line down   |  q  Quit");
+        getConnection().write(ANSI.CURSOR_RESTORE);
+    }
+
+    private static String stripAnsi(String text) {
+        return text.replaceAll("\u001B\\[[;\\d]*[a-zA-Z]", "");
     }
 }
