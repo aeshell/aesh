@@ -68,7 +68,7 @@ public class AeshRuntimeRunner {
     private org.aesh.command.converter.ConverterInvocationProvider converterInvocationProvider;
     private org.aesh.command.validator.ValidatorInvocationProvider validatorInvocationProvider;
     private org.aesh.console.AeshContext aeshContext;
-    private boolean lazyStartup;
+    private boolean lazyStartup = true;
     private boolean rootRegistered;
     private CommandContainerBuilder<?> customContainerBuilder;
     private DefaultValueProvider pendingDefaultValueProvider;
@@ -110,9 +110,9 @@ public class AeshRuntimeRunner {
     }
 
     public AeshRuntimeRunner command(Class<? extends Command> command) {
+        if (rootRegistered)
+            throw new IllegalStateException("AeshRuntimeRunner supports a single root command");
         if (lazyStartup) {
-            if (rootRegistered)
-                throw new IllegalStateException("lazyStartup supports a single root command");
             pendingCommandClass = command;
             rootRegistered = true;
             return this;
@@ -128,9 +128,9 @@ public class AeshRuntimeRunner {
 
     @SuppressWarnings("unchecked")
     public AeshRuntimeRunner command(Command commandInstance) {
+        if (rootRegistered)
+            throw new IllegalStateException("AeshRuntimeRunner supports a single root command");
         if (lazyStartup) {
-            if (rootRegistered)
-                throw new IllegalStateException("lazyStartup supports a single root command");
             pendingCommandInstance = commandInstance;
             pendingCommandClass = commandInstance.getClass();
             rootRegistered = true;
@@ -292,6 +292,9 @@ public class AeshRuntimeRunner {
                         e.getUnknownSubcommand(), e.getAvailableSubcommands());
             }
             System.err.println(e.getMessage());
+            String help = LazyHelp.renderUnknownSubcommandHelp(pendingCommandClass, args);
+            if (help != null)
+                System.err.println(help);
             return CommandResult.USAGE_ERROR;
         }
     }

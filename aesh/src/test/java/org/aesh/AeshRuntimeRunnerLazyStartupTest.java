@@ -188,6 +188,66 @@ public class AeshRuntimeRunnerLazyStartupTest {
     }
 
     @Test
+    public void testSecondRootCommandIsRejectedEager() {
+        AeshRuntimeRunner runner = AeshRuntimeRunner.builder()
+                .lazyStartup(false)
+                .command(LazyLeafCommand.class);
+
+        try {
+            runner.command(LazyLeafCommand.class);
+            fail("Expected a second eager root command to be rejected");
+        } catch (IllegalStateException expected) {
+        }
+    }
+
+    @Test
+    public void testUnknownSubcommandHelpMatchesEager() {
+        assertTypoEqualsEager("bogus");
+        assertTypoEqualsEager("helpmid", "bogus");
+    }
+
+    private static void assertTypoEqualsEager(String... typoArgs) {
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream origErr = System.err;
+        System.setErr(new PrintStream(err));
+        CommandResult lazyResult;
+        try {
+            lazyResult = AeshRuntimeRunner.builder()
+                    .lazyStartup(true)
+                    .command(HelpRootCommand.class)
+                    .args(typoArgs)
+                    .execute();
+        } finally {
+            System.setErr(origErr);
+        }
+        String lazyErr = err.toString();
+
+        assertEquals(CommandResult.USAGE_ERROR, lazyResult);
+        assertFalse(HelpRootCommand.constructed);
+        assertFalse(HelpMidCommand.constructed);
+        assertFalse(HelpLeafCommand.constructed);
+        assertFalse(HelpSkippedCommand.constructed);
+
+        resetHelpFlags();
+        ByteArrayOutputStream err2 = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(err2));
+        CommandResult eagerResult;
+        try {
+            eagerResult = AeshRuntimeRunner.builder()
+                    .lazyStartup(false)
+                    .command(HelpRootCommand.class)
+                    .args(typoArgs)
+                    .execute();
+        } finally {
+            System.setErr(origErr);
+        }
+
+        assertEquals(eagerResult, lazyResult);
+        assertEquals(err2.toString(), lazyErr);
+        resetHelpFlags();
+    }
+
+    @Test
     public void testCustomAeshBuilderSupportedInLazyMode() {
         CountingContainerBuilder.calls = 0;
 

@@ -146,9 +146,8 @@ public class LazyStartupBenchmark {
         long elapsed;
         try {
             long start = System.nanoTime();
-            result = lazy
-                    ? AeshRuntimeRunner.builder().lazyStartup(true).command(BenchRoot.class).args(cmdArgs).execute()
-                    : AeshRuntimeRunner.builder().command(BenchRoot.class).args(cmdArgs).execute();
+            AeshRuntimeRunner runner = AeshRuntimeRunner.builder().lazyStartup(lazy);
+            result = runner.command(BenchRoot.class).args(cmdArgs).execute();
             elapsed = System.nanoTime() - start;
         } finally {
             System.setOut(original);

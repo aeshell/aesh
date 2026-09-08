@@ -49,13 +49,13 @@ public final class LazyHelp {
     public static String render(Class<? extends Command> rootClass, String[] args) {
         if (rootClass == null || !mayRequestHelp(args))
             return null;
-        AeshCommandLineParser<CommandInvocation> root = buildTree(rootClass, args);
-        if (root == null)
+        Walk walk = walk(rootClass, args);
+        if (walk == null || !walk.fullyMatched)
             return null;
-        parse(root, root.getProcessedCommand().name(), args);
-        if (findError(root) != null)
+        parse(walk.root, walk.root.getProcessedCommand().name(), args);
+        if (findError(walk.root) != null)
             return null;
-        CommandLineParser<CommandInvocation> parsed = root.parsedCommand();
+        CommandLineParser<CommandInvocation> parsed = walk.root.parsedCommand();
         if (parsed == null)
             return null;
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> parsedCommand = parsed.getProcessedCommand();
@@ -66,6 +66,15 @@ public final class LazyHelp {
         if (parsedCommand.version() != null && parsedCommand.isGenerateVersionOptionSet())
             return parsedCommand.name() + " version: " + parsedCommand.version();
         return null;
+    }
+
+    public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args) {
+        if (rootClass == null)
+            return null;
+        Walk walk = walk(rootClass, args);
+        if (walk == null)
+            return null;
+        return walk.deepest.printHelp();
     }
 
     private static boolean mayRequestHelp(String[] args) {
@@ -81,18 +90,23 @@ public final class LazyHelp {
         return false;
     }
 
-    private static AeshCommandLineParser<CommandInvocation> buildTree(Class<? extends Command> rootClass,
-            String[] args) {
+    private static Walk walk(Class<? extends Command> rootClass, String[] args) {
         AeshCommandLineParser<CommandInvocation> root = newParser(rootClass);
         if (root == null)
             return null;
+        Walk walk = new Walk();
+        walk.root = root;
+        walk.deepest = root;
+        walk.fullyMatched = true;
         AeshCommandLineParser<CommandInvocation> current = root;
         Class<? extends Command> currentClass = rootClass;
         int index = 0;
         while (true) {
             List<Class<? extends Command>> children = childClasses(currentClass);
-            if (children == null || children.isEmpty())
-                return children == null ? null : root;
+            if (children == null)
+                return null;
+            if (children.isEmpty())
+                return walk;
             for (Class<? extends Command> childClass : children) {
                 AeshCommandLineParser<CommandInvocation> child = newParser(childClass);
                 if (child == null)
@@ -104,20 +118,29 @@ public final class LazyHelp {
                 }
             }
             if (args == null || index >= args.length)
-                return root;
+                return walk;
             String token = args[index];
             if (token == null || token.isEmpty() || token.charAt(0) == '-' || token.equals("--"))
-                return root;
+                return walk;
             Class<? extends Command> matched = LazyRouteResolver.matchChild(currentClass, token);
-            if (matched == null)
-                return null;
+            if (matched == null) {
+                walk.fullyMatched = false;
+                return walk;
+            }
             CommandLineParser<CommandInvocation> next = current.getChildParser(token);
             if (!(next instanceof AeshCommandLineParser))
                 return null;
             current = (AeshCommandLineParser<CommandInvocation>) next;
+            walk.deepest = current;
             currentClass = matched;
             index++;
         }
+    }
+
+    private static final class Walk {
+        private AeshCommandLineParser<CommandInvocation> root;
+        private AeshCommandLineParser<CommandInvocation> deepest;
+        private boolean fullyMatched;
     }
 
     private static List<Class<? extends Command>> childClasses(Class<? extends Command> parent) {
