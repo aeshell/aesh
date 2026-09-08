@@ -6,6 +6,7 @@
  */
 package org.aesh.builtins.common;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -60,9 +61,13 @@ public class AeshTestCommons {
 
         commandLatch = new CountDownLatch(1);
 
+        File historyFile = File.createTempFile("aesh-builtins-test-history", ".txt");
+        historyFile.deleteOnExit();
+
         Settings settings = SettingsBuilder.builder()
                 .connection(connection)
                 .commandRegistry(registry)
+                .historyFile(historyFile)
                 .commandExecutionListener((line, result, durationMs) -> commandLatch.countDown())
                 .build();
 

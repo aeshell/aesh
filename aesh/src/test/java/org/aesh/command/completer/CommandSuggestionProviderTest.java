@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
@@ -130,10 +132,14 @@ public class CommandSuggestionProviderTest {
                 .command(ConnectCommand.class)
                 .create();
 
+        File historyFile = File.createTempFile("aesh-ghost-test-history", ".txt");
+        historyFile.deleteOnExit();
+
         Settings<CommandInvocation> settings = SettingsBuilder
                 .builder()
                 .logging(true)
                 .enableAlias(false)
+                .historyFile(historyFile)
                 .connection(connection)
                 .commandRegistry(registry)
                 .build();
