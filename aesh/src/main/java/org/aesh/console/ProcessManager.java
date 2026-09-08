@@ -58,7 +58,7 @@ public class ProcessManager {
     private final AtomicBoolean scheduling = new AtomicBoolean();
     private CommandExecutionListener executionListener;
     private String commandLine;
-    private volatile Process activeProcess;
+    private volatile CommandJob activeJob;
     private boolean synchronous;
 
     public ProcessManager(Console console) {
@@ -84,8 +84,8 @@ public class ProcessManager {
      * the active process completes.
      */
     public boolean hasActiveProcess() {
-        Process p = activeProcess;
-        return p != null && p.isAlive();
+        CommandJob job = activeJob;
+        return job != null && job.isRunning();
     }
 
     public void execute(Executor<? extends CommandInvocation> executor, Connection conn, String commandLine) {
@@ -97,8 +97,8 @@ public class ProcessManager {
         return planner != null && planner.hasMoreUnits();
     }
 
-    public void processFinished(Process process) {
-        activeProcess = null;
+    public void processFinished(CommandJob job) {
+        activeJob = null;
         drain();
     }
 
@@ -184,21 +184,21 @@ public class ProcessManager {
         }
 
         Execution<T> lastStage = pipeChain.get(pipeChain.size() - 1);
-        Process mainProcess = new Process(this, conn, lastStage, commandLine, executionListener);
-        mainProcess.setUpstreamPipeThreads(upstreamThreads);
-        activeProcess = mainProcess;
-        mainProcess.start();
+        CommandJob mainJob = new CommandJob(this, conn, lastStage, commandLine, executionListener);
+        mainJob.setUpstreamPipeThreads(upstreamThreads);
+        activeJob = mainJob;
+        mainJob.start();
     }
 
     private void launchSingle(Execution<? extends CommandInvocation> exec) {
-        Process process = new Process(this, conn, exec, commandLine, executionListener);
-        activeProcess = process;
-        process.start();
+        CommandJob job = new CommandJob(this, conn, exec, commandLine, executionListener);
+        activeJob = job;
+        job.start();
     }
 
     private void runInline(Execution<? extends CommandInvocation> exec) {
-        Process process = new Process(this, conn, exec, commandLine, executionListener);
-        activeProcess = process;
-        process.run();
+        CommandJob job = new CommandJob(this, conn, exec, commandLine, executionListener);
+        activeJob = job;
+        job.run();
     }
 }

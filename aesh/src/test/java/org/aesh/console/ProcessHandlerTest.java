@@ -70,7 +70,7 @@ public class ProcessHandlerTest {
 
         ProcessManager manager = new ProcessManager(null) {
             @Override
-            public void processFinished(Process process) {
+            public void processFinished(CommandJob job) {
             }
         };
         Execution<CommandInvocation> execution = new Execution<CommandInvocation>() {
@@ -117,9 +117,9 @@ public class ProcessHandlerTest {
             }
         };
 
-        new Process(manager, connection, execution, "test", null).run();
+        new CommandJob(manager, connection, execution, "test", null).run();
 
-        assertTrue("Process.run must not touch the stdin handler, saw: " + connection.stdinHandlerSets,
+        assertTrue("CommandJob.run must not touch the stdin handler, saw: " + connection.stdinHandlerSets,
                 connection.stdinHandlerSets.isEmpty());
         assertEquals(preSignal, connection.signalHandler());
     }

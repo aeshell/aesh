@@ -20,148 +20,83 @@
 package org.aesh.console;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.aesh.command.CommandException;
 import org.aesh.command.CommandExecutionListener;
-import org.aesh.command.CommandResult;
 import org.aesh.command.Execution;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.parser.CommandLineParserException;
-import org.aesh.command.validator.CommandValidatorException;
-import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.tty.Signal;
-import org.aesh.terminal.utils.Config;
-import org.aesh.terminal.utils.LoggerUtil;
 
 /**
  * @author Aesh team
+ * @deprecated Replaced by {@link CommandJob}, which does not expose thread
+ *             primitives. AeshCommandRuntimeBuilder-style internal code uses
+ *             CommandJob directly.
  */
-public class Process extends Thread implements Consumer<Signal> {
+@Deprecated
+public class Process implements Consumer<Signal> {
 
-    private final Connection conn;
-    private final Execution<? extends CommandInvocation> execution;
-    private final ProcessManager manager;
-    private final String commandLine;
-    private final CommandExecutionListener executionListener;
-    private volatile boolean running;
-    private List<Thread> upstreamPipeThreads;
-
-    private static final Logger LOGGER = LoggerUtil.getLogger(Process.class.getName());
-    private int pid;
+    private final CommandJob job;
 
     public Process(ProcessManager manager, Connection conn,
             Execution<? extends CommandInvocation> execution,
             String commandLine, CommandExecutionListener executionListener) {
-        this.manager = manager;
-        this.conn = conn;
-        this.execution = execution;
-        this.commandLine = commandLine;
-        this.executionListener = executionListener;
+        this.job = new CommandJob(manager, conn, execution, commandLine, executionListener);
+    }
+
+    public void start() {
+        job.start();
+    }
+
+    public void run() {
+        job.run();
+    }
+
+    public void join() throws InterruptedException {
+        job.awaitCompletion();
+    }
+
+    public void join(long millis) throws InterruptedException {
+        job.awaitCompletion(millis, TimeUnit.MILLISECONDS);
+    }
+
+    public boolean isAlive() {
+        return job.isRunning();
+    }
+
+    public void interrupt() {
+        job.requestInterrupt();
+    }
+
+    /**
+     * @deprecated Replaced by {@link CommandJob#id()}. Returns the job sequence
+     *             number, not a thread id.
+     */
+    @Deprecated
+    public int pid() {
+        return (int) job.id().value();
     }
 
     @Override
     public void accept(Signal signal) {
-        switch (signal) {
-            case INT:
-                if (running) {
-                    // Ctrl-C interrupt : we use Thread interrupts to signal the command to stop
-                    LOGGER.fine("got interrupted in Task");
-                    interrupt();
-                }
-        }
-    }
-
-    @Override
-    public void run() {
-        // Subscribe to events, in particular Ctrl-C
-        HandlerScope signalScope = HandlerScope.signal(conn, this);
-        running = true;
-        pid = (int) Thread.currentThread().getId();
-
-        long startTime = executionListener != null ? System.currentTimeMillis() : 0;
-        Throwable caughtError = null;
-        try {
-            execution.execute();
-        } catch (CommandValidatorException | CommandException | OptionValidatorException | CommandLineParserException e) {
-            caughtError = e;
-            execution.setResult(CommandResult.FAILURE);
-            conn.write(e.getMessage() + Config.getLineSeparator());
-        } catch (InterruptedException e) {
-            // Ctrl-C interrupt — clear the interrupt flag so the finally block
-            // (which re-enters readline) doesn't see a stale interrupt when
-            // forking processes like 'stty size' for terminal dimensions.
-            Thread.interrupted();
-            execution.setResult(CommandResult.INTERRUPTED);
-        } catch (Exception e) {
-            caughtError = e;
-            execution.setResult(CommandResult.FAILURE);
-            conn.write(e.getMessage() + Config.getLineSeparator());
-            LOGGER.log(Level.WARNING, "Uncaught exception when executing the command: " + execution.getCommand().toString(), e);
-        } finally {
-            running = false;
-            awaitUpstreamPipeThreads();
-            signalScope.close();
-            long durationMs = System.currentTimeMillis() - startTime;
-            // Re-arm readline before firing the completion callback so
-            // consumers can safely send the next command immediately (#599)
-            manager.processFinished(this);
-            if (executionListener != null) {
-                try {
-                    executionListener.onCommandComplete(commandLine, execution.getResult(), durationMs, caughtError);
-                } catch (Exception e) {
-                    LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", e);
-                }
-            }
-        }
+        job.accept(signal);
     }
 
     public Execution<? extends CommandInvocation> execution() {
-        return execution;
+        return job.execution();
     }
 
-    public int pid() {
-        return pid;
-    }
-
-    /**
-     * Set the upstream pipe threads that should be waited on when this process finishes.
-     * Used by {@link ProcessManager} when running pipe chains concurrently.
-     */
     void setUpstreamPipeThreads(List<Thread> threads) {
-        this.upstreamPipeThreads = threads;
+        job.setUpstreamPipeThreads(threads);
     }
 
-    /**
-     * Get the upstream pipe threads, or null if this is not the last stage of a pipe chain.
-     */
     List<Thread> getUpstreamPipeThreads() {
-        return upstreamPipeThreads;
+        return job.getUpstreamPipeThreads();
     }
 
-    /**
-     * Take the upstream pipe threads for joining, clearing the reference so a
-     * later join is a no-op. Interrupt and wait for any upstream pipe threads
-     * to finish. Interrupting is needed because upstream stages may be blocked
-     * on PipedOutputStream.write() if the downstream consumer finished early.
-     */
     void awaitUpstreamPipeThreads() {
-        List<Thread> threads = upstreamPipeThreads;
-        upstreamPipeThreads = null;
-        if (threads == null)
-            return;
-        for (Thread t : threads) {
-            t.interrupt();
-        }
-        for (Thread t : threads) {
-            try {
-                t.join(2000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
+        job.awaitUpstreamPipeThreads();
     }
 }
