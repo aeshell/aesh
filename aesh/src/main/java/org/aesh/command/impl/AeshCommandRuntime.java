@@ -49,7 +49,6 @@ import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
-import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -221,33 +220,15 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     private CommandResult runExecutor(Executor<CI> executor) throws CommandException,
             CommandValidatorException, CommandLineParserException, InterruptedException {
-        Execution exec;
+        ExecutionPlanner<CI> planner = new ExecutionPlanner<>(executor.getExecutions());
         CommandResult result = null;
-        while ((exec = executor.getNextExecution()) != null) {
-            // Collect pipe chain: sequence of executions where all except the last
-            // use a PipeOperator as their executable
-            List<Execution> pipeChain = new ArrayList<>();
-            pipeChain.add(exec);
-            while (exec.getExecutable() instanceof PipeOperator) {
-                // Set preliminary result so Executor.getNextExecution() advances
-                exec.setResult(CommandResult.SUCCESS);
-                Execution next = executor.getNextExecution();
-                if (next == null)
-                    break;
-                pipeChain.add(next);
-                exec = next;
-            }
-            // Clear preliminary results — actual execution will set them
-            for (int i = 0; i < pipeChain.size() - 1; i++) {
-                pipeChain.get(i).setResult(null);
-            }
-
-            if (pipeChain.size() == 1) {
-                // No pipe — execute sequentially (original path)
-                result = executeSingle(pipeChain.get(0));
-            } else {
-                // Pipe chain — run stages concurrently
+        ExecutionPlanner.Unit<CI> unit;
+        while ((unit = planner.nextUnit()) != null) {
+            List<Execution> pipeChain = new ArrayList<>(unit.executions());
+            if (unit.isPipeline()) {
                 result = executePipeChain(pipeChain);
+            } else {
+                result = executeSingle(pipeChain.get(0));
             }
         }
         if (result != null)

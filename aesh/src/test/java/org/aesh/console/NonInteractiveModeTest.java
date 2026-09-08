@@ -55,6 +55,31 @@ public class NonInteractiveModeTest {
         console.stop();
     }
 
+    @Test
+    public void testLongSequentialChainDoesNotGrowStack() throws Exception {
+        TestConnection connection = TestConnection.nonInteractive();
+        CounterCommand.reset();
+        CountDownLatch latch = new CountDownLatch(500);
+
+        ReadlineConsole console = buildNonInteractiveConsole(connection,
+                (line, result, durationMs) -> latch.countDown());
+        console.start();
+
+        StringBuilder line = new StringBuilder();
+        for (int i = 0; i < 500; i++) {
+            if (i > 0)
+                line.append(';');
+            line.append("counter");
+        }
+        connection.read(line.toString() + NL);
+        assertTrue("Long chain should complete", latch.await(60, TimeUnit.SECONDS));
+        assertEquals(500, CounterCommand.count.get());
+        assertTrue("Stack should stay shallow, was: " + CounterCommand.maxDepth.get(),
+                CounterCommand.maxDepth.get() < 200);
+
+        console.stop();
+    }
+
     /**
      * No prompt should be written to output in non-interactive mode.
      */
@@ -192,14 +217,17 @@ public class NonInteractiveModeTest {
     @CommandDefinition(name = "counter", description = "Increments a counter")
     public static class CounterCommand implements Command<CommandInvocation> {
         static final AtomicInteger count = new AtomicInteger(0);
+        static final AtomicInteger maxDepth = new AtomicInteger(0);
 
         static void reset() {
             count.set(0);
+            maxDepth.set(0);
         }
 
         @Override
         public CommandResult execute(CommandInvocation ci) {
             count.incrementAndGet();
+            maxDepth.accumulateAndGet(Thread.currentThread().getStackTrace().length, Integer::max);
             return CommandResult.SUCCESS;
         }
     }
