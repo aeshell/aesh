@@ -31,6 +31,9 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.container.CommandContainerBuilder;
+import org.aesh.command.impl.LazyRouteResolver;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -64,6 +67,12 @@ public class AeshRuntimeRunner {
     private org.aesh.command.converter.ConverterInvocationProvider converterInvocationProvider;
     private org.aesh.command.validator.ValidatorInvocationProvider validatorInvocationProvider;
     private org.aesh.console.AeshContext aeshContext;
+    private boolean lazyStartup;
+    private boolean rootRegistered;
+    private CommandContainerBuilder<?> customContainerBuilder;
+    private DefaultValueProvider pendingDefaultValueProvider;
+    private Class<? extends Command> pendingCommandClass;
+    private Command pendingCommandInstance;
 
     private AeshRuntimeRunner() {
     }
@@ -77,26 +86,61 @@ public class AeshRuntimeRunner {
      * This allows frameworks (e.g., CDI, Spring) to inject dependencies
      * into subcommands and option service providers.
      */
-    public AeshRuntimeRunner containerBuilder(org.aesh.command.container.CommandContainerBuilder<?> containerBuilder) {
+    public AeshRuntimeRunner containerBuilder(CommandContainerBuilder<?> containerBuilder) {
+        if (lazyStartup && !(containerBuilder instanceof AeshCommandContainerBuilder))
+            throw new IllegalStateException(
+                    "Only AeshCommandContainerBuilder subclasses are supported with lazy startup");
+        customContainerBuilder = containerBuilder;
         this.registryBuilder.containerBuilder(containerBuilder);
         return this;
     }
 
+    public AeshRuntimeRunner lazyStartup(boolean lazyStartup) {
+        if (lazyStartup && rootRegistered)
+            throw new IllegalStateException("lazyStartup must be configured before registering a command");
+        if (lazyStartup && customContainerBuilder != null
+                && !(customContainerBuilder instanceof AeshCommandContainerBuilder))
+            throw new IllegalStateException(
+                    "Only AeshCommandContainerBuilder subclasses are supported with lazy startup");
+        this.lazyStartup = lazyStartup;
+        if (!lazyStartup)
+            materializePendingRoot();
+        return this;
+    }
+
     public AeshRuntimeRunner command(Class<? extends Command> command) {
+        if (lazyStartup) {
+            if (rootRegistered)
+                throw new IllegalStateException("lazyStartup supports a single root command");
+            pendingCommandClass = command;
+            rootRegistered = true;
+            return this;
+        }
         try {
             registryBuilder.command(command);
         } catch (CommandRegistryException e) {
             throw new RuntimeException("Exception while building command: " + e.getMessage());
         }
+        rootRegistered = true;
         return this;
     }
 
+    @SuppressWarnings("unchecked")
     public AeshRuntimeRunner command(Command commandInstance) {
+        if (lazyStartup) {
+            if (rootRegistered)
+                throw new IllegalStateException("lazyStartup supports a single root command");
+            pendingCommandInstance = commandInstance;
+            pendingCommandClass = commandInstance.getClass();
+            rootRegistered = true;
+            return this;
+        }
         try {
             registryBuilder.command(commandInstance);
         } catch (CommandRegistryException e) {
             throw new RuntimeException("Exception while building command: " + e.getMessage());
         }
+        rootRegistered = true;
         return this;
     }
 
@@ -130,7 +174,7 @@ public class AeshRuntimeRunner {
      * that don't declare their own per-command provider via the annotation.
      */
     public AeshRuntimeRunner defaultValueProvider(DefaultValueProvider provider) {
-        this.registryBuilder.defaultValueProvider(provider);
+        pendingDefaultValueProvider = provider;
         return this;
     }
 
@@ -202,8 +246,63 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    private void materializePendingRoot() {
+        if (pendingCommandClass == null && pendingCommandInstance == null)
+            return;
+        try {
+            if (lazyStartup) {
+                AeshCommandContainerBuilder<?> builder;
+                if (customContainerBuilder instanceof AeshCommandContainerBuilder) {
+                    builder = (AeshCommandContainerBuilder<?>) customContainerBuilder;
+                } else {
+                    builder = new AeshCommandContainerBuilder<>();
+                    registryBuilder.containerBuilder(builder);
+                }
+                builder.setLazyChildResolution(true);
+                if (pendingDefaultValueProvider != null)
+                    builder.setDefaultValueProvider(pendingDefaultValueProvider);
+            }
+            if (pendingCommandInstance != null)
+                registryBuilder.command(pendingCommandInstance);
+            else
+                registryBuilder.command(pendingCommandClass);
+        } catch (CommandRegistryException e) {
+            throw new RuntimeException("Exception while building command: " + e.getMessage());
+        }
+        pendingCommandClass = null;
+        pendingCommandInstance = null;
+    }
+
+    private CommandResult failFastOnUnknownSubcommand() {
+        if (!lazyStartup || completionShellType != null || dynamicCompletionShellType != null || dynamicComplete)
+            return null;
+        if (pendingCommandClass == null)
+            return null;
+        try {
+            LazyRouteResolver.validate(pendingCommandClass, args);
+            return null;
+        } catch (SubcommandNotFoundException e) {
+            if (commandNotFoundHandler != null) {
+                String fullLine = LazyRouteResolver.commandName(pendingCommandClass)
+                        + (args != null && args.length > 0
+                                ? " " + String.join(" ", args)
+                                : "");
+                commandNotFoundHandler.handleCommandNotFound(fullLine, System.err::println,
+                        e.getUnknownSubcommand(), e.getAvailableSubcommands());
+            }
+            System.err.println(e.getMessage());
+            return CommandResult.USAGE_ERROR;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
+        CommandResult fastFailure = failFastOnUnknownSubcommand();
+        if (fastFailure != null)
+            return fastFailure;
+        materializePendingRoot();
+        if (!lazyStartup && pendingDefaultValueProvider != null)
+            registryBuilder.defaultValueProvider(pendingDefaultValueProvider);
         CommandRegistry commandRegistry = registryBuilder.create();
 
         if (commandRegistry.getAllCommandNames().isEmpty())

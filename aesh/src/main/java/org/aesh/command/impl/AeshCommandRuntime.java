@@ -383,8 +383,10 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             aeshParser.storeInvocationProviders(invocationProviders);
             List<CommandLineParser<CI>> childParsers = aeshParser.getChildParsers();
             if (childParsers != null) {
-                for (CommandLineParser<?> child : childParsers) {
+                for (CommandLineParser<CI> child : childParsers) {
                     child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+                    if (child instanceof AeshCommandLineParser)
+                        ((AeshCommandLineParser<CI>) child).storeInvocationProviders(invocationProviders);
                 }
             }
         } else {

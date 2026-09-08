@@ -19,6 +19,7 @@
  */
 package org.aesh.command.container;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.aesh.command.Command;
@@ -141,7 +142,10 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
     private CommandLineParserException findChildParserException(CommandLineParser<CI> parser) {
         if (!parser.isGroupCommand())
             return null;
-        for (CommandLineParser<CI> child : parser.getAllChildParsers()) {
+        List<CommandLineParser<CI>> children = parser.getChildParsers();
+        if (children == null)
+            return null;
+        for (CommandLineParser<CI> child : children) {
             if (child.getProcessedCommand().parserExceptions().size() > 0
                     && !child.getProcessedCommand().hasOptionWithOverrideRequired()) {
                 return child.getProcessedCommand().parserExceptions().get(0);

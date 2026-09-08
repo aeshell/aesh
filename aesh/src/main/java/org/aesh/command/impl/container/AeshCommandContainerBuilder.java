@@ -32,6 +32,7 @@ import java.util.function.Function;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.GroupCommand;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
@@ -65,22 +66,51 @@ import org.aesh.util.ReflectionUtil;
 @SuppressWarnings("unchecked")
 public class AeshCommandContainerBuilder<CI extends CommandInvocation> implements CommandContainerBuilder<CI> {
 
+    private boolean lazyChildResolution;
+    private DefaultValueProvider defaultValueProvider;
+
+    public void setLazyChildResolution(boolean lazyChildResolution) {
+        this.lazyChildResolution = lazyChildResolution;
+    }
+
+    public void setDefaultValueProvider(DefaultValueProvider defaultValueProvider) {
+        this.defaultValueProvider = defaultValueProvider;
+    }
+
     @Override
     public CommandContainer<CI> create(Command command) throws CommandLineParserException {
         CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(command.getClass());
+        AeshCommandContainer<CI> container;
         if (provider != null) {
-            return buildFromProvider(provider, command);
+            container = buildFromProvider(provider, command);
+        } else {
+            container = doGenerateCommandLineParser(command);
         }
-        return doGenerateCommandLineParser(command);
+        applyDefaultValueProvider(container);
+        return container;
     }
 
     @Override
     public CommandContainer<CI> create(Class<? extends Command> command) throws CommandLineParserException {
         CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(command);
+        AeshCommandContainer<CI> container;
         if (provider != null) {
-            return buildFromProvider(provider, provider.newInstance());
+            container = buildFromProvider(provider, provider.newInstance());
+        } else {
+            container = doGenerateCommandLineParser(ReflectionUtil.newInstance(command));
         }
-        return doGenerateCommandLineParser(ReflectionUtil.newInstance(command));
+        applyDefaultValueProvider(container);
+        return container;
+    }
+
+    private void applyDefaultValueProvider(AeshCommandContainer<CI> container) {
+        if (defaultValueProvider == null || container.getParser() == null)
+            return;
+        ProcessedCommand<Command<CI>, CI> processedCommand = container.getParser().getProcessedCommand();
+        if (processedCommand != null && processedCommand.getDefaultValueProvider() == null)
+            processedCommand.setDefaultValueProvider(defaultValueProvider);
+        if (container.getParser() instanceof AeshCommandLineParser)
+            ((AeshCommandLineParser<CI>) container.getParser()).storeDefaultValueProvider(defaultValueProvider);
     }
 
     private AeshCommandContainer<CI> buildFromProvider(CommandMetadataProvider provider, Command command)
@@ -136,7 +166,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             }
             // Eagerly resolve lazy children so the cost is paid at construction
             // time rather than on the first executeCommand() call (#577)
-            parser.getAllChildParsers();
+            if (!lazyChildResolution)
+                parser.getAllChildParsers();
         }
 
         return container;
@@ -208,7 +239,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 }
                 // Eagerly resolve lazy children so the cost is paid at construction
                 // time rather than on the first executeCommand() call (#577)
-                groupParser.getAllChildParsers();
+                if (!lazyChildResolution)
+                    groupParser.getAllChildParsers();
                 return groupContainer;
             }
 

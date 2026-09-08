@@ -30,6 +30,7 @@ import java.util.function.Function;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandLifecycle;
+import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.container.CommandContainer;
@@ -75,6 +76,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private Map<String, Class<? extends Command>> lazyChildClasses;
     private Function<Class<? extends Command>, CommandContainer<CI>> childResolver;
     private InvocationProviders storedInvocationProviders;
+    private DefaultValueProvider storedDefaultValueProvider;
     private boolean isChild = false;
     private ProcessedOption lastParsedOption;
     private boolean parsedCommand = false;
@@ -116,6 +118,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             ((AeshCommandLineParser<CI>) commandLineParser).setParent(this);
     }
 
+    @Override
     public List<CommandLineParser<CI>> getChildParsers() {
         return childParsers;
     }
@@ -131,6 +134,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     public void storeInvocationProviders(InvocationProviders providers) {
         this.storedInvocationProviders = providers;
+    }
+
+    public void storeDefaultValueProvider(DefaultValueProvider provider) {
+        this.storedDefaultValueProvider = provider;
     }
 
     /**
@@ -168,17 +175,19 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             return;
         // Deduplicate: aliases register the same class under multiple keys (#503)
         java.util.Set<Class<? extends Command>> uniqueClasses = new java.util.LinkedHashSet<>(lazyChildClasses.values());
+        java.util.Set<Class<? extends Command>> resolved = new java.util.LinkedHashSet<>();
         for (Class<? extends Command> clazz : uniqueClasses) {
             try {
                 CommandContainer<CI> container = resolveChildContainer(clazz);
                 addChildParser(container.getParser());
                 propagateChildResolver(container.getParser());
                 applyStoredProviders(container.getParser());
+                resolved.add(clazz);
             } catch (CommandLineParserException e) {
                 // best-effort: skip unresolvable children
             }
         }
-        lazyChildClasses.clear();
+        lazyChildClasses.values().removeAll(resolved);
     }
 
     @SuppressWarnings("unchecked")
@@ -198,6 +207,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             applyStoredProviders(container.getParser());
             return container.getParser();
         } catch (CommandLineParserException e) {
+            processedCommand.addParserException(e);
             return null;
         }
     }
@@ -205,6 +215,15 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private void applyStoredProviders(CommandLineParser<CI> child) {
         if (storedInvocationProviders != null) {
             child.getProcessedCommand().updateInvocationProviders(storedInvocationProviders);
+            if (child instanceof AeshCommandLineParser)
+                ((AeshCommandLineParser<CI>) child).storeInvocationProviders(storedInvocationProviders);
+        }
+        if (storedDefaultValueProvider != null) {
+            ProcessedCommand<Command<CI>, CI> childCommand = child.getProcessedCommand();
+            if (childCommand.getDefaultValueProvider() == null)
+                childCommand.setDefaultValueProvider(storedDefaultValueProvider);
+            if (child instanceof AeshCommandLineParser)
+                ((AeshCommandLineParser<CI>) child).storeDefaultValueProvider(storedDefaultValueProvider);
         }
     }
 

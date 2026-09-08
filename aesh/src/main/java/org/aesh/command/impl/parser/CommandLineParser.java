@@ -76,6 +76,10 @@ public interface CommandLineParser<CI extends CommandInvocation> {
      */
     List<CommandLineParser<CI>> getAllChildParsers();
 
+    default List<CommandLineParser<CI>> getChildParsers() {
+        return getAllChildParsers();
+    }
+
     /**
      * @return command populator to work on this command
      */
