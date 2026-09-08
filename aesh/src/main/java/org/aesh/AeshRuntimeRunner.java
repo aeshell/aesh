@@ -32,6 +32,7 @@ import org.aesh.command.CommandRuntime;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
+import org.aesh.command.impl.LazyHelp;
 import org.aesh.command.impl.LazyRouteResolver;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -300,6 +301,14 @@ public class AeshRuntimeRunner {
         CommandResult fastFailure = failFastOnUnknownSubcommand();
         if (fastFailure != null)
             return fastFailure;
+        if (lazyStartup && pendingCommandClass != null
+                && completionShellType == null && dynamicCompletionShellType == null && !dynamicComplete) {
+            String help = LazyHelp.render(pendingCommandClass, args);
+            if (help != null) {
+                System.out.println(help);
+                return CommandResult.SUCCESS;
+            }
+        }
         materializePendingRoot();
         if (!lazyStartup && pendingDefaultValueProvider != null)
             registryBuilder.defaultValueProvider(pendingDefaultValueProvider);

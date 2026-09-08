@@ -65,6 +65,11 @@ public final class LazyRouteResolver {
         return commandClass.getSimpleName();
     }
 
+    static Class<? extends Command> matchChild(Class<? extends Command> parent, String token) {
+        ChildRoute route = findChild(parent, token);
+        return route == null ? null : route.childClass;
+    }
+
     private static ChildRoute findChild(Class<? extends Command> parent, String token) {
         CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(parent);
         if (provider != null) {

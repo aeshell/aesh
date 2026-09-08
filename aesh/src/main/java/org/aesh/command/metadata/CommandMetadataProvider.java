@@ -65,6 +65,11 @@ public interface CommandMetadataProvider<C extends Command> {
     @SuppressWarnings("rawtypes")
     ProcessedCommand buildProcessedCommand(C instance) throws CommandLineParserException;
 
+    @SuppressWarnings("rawtypes")
+    default ProcessedCommand buildHelpProcessedCommand() throws CommandLineParserException {
+        throw new UnsupportedOperationException("Metadata-only help is not supported by this provider");
+    }
+
     /**
      * @return true if this command is a group command with subcommands
      */

@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
@@ -42,6 +43,8 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.GroupCommand;
+import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.container.CommandContainer;
@@ -97,6 +100,17 @@ public class AeshRuntimeRunnerLazyStartupTest {
         InstanceSelectedCommand.constructed = false;
         InstanceSkippedCommand.constructed = false;
         DynLazyChildCommand.constructed = false;
+        HelpRootCommand.constructed = false;
+        HelpMidCommand.constructed = false;
+        HelpLeafCommand.constructed = false;
+        HelpSkippedCommand.constructed = false;
+        VersionCommand.constructed = false;
+        SectionProvider.constructed = false;
+        SectionRootCommand.constructed = false;
+        SectionChildCommand.constructed = false;
+        DynHelpChildCommand.constructed = false;
+        HelpAsmRoot.constructed = false;
+        HelpAsmChild.constructed = false;
     }
 
     @After
@@ -374,6 +388,215 @@ public class AeshRuntimeRunnerLazyStartupTest {
 
         assertEquals(CommandResult.SUCCESS, result);
         assertTrue(DynLazyChildCommand.constructed);
+    }
+
+    @Test
+    public void testLazyHelpRendersWithoutConstruction() {
+        final CommandResult[] lazyResult = new CommandResult[1];
+        String lazyOutput = captureStdout(() -> lazyResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(HelpRootCommand.class)
+                .args("--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, lazyResult[0]);
+        assertFalse(HelpRootCommand.constructed);
+        assertFalse(HelpMidCommand.constructed);
+        assertFalse(HelpLeafCommand.constructed);
+        assertFalse(HelpSkippedCommand.constructed);
+
+        resetHelpFlags();
+        final CommandResult[] eagerResult = new CommandResult[1];
+        String eagerOutput = captureStdout(() -> eagerResult[0] = AeshRuntimeRunner.builder()
+                .command(HelpRootCommand.class)
+                .args("--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, eagerResult[0]);
+        assertEquals(eagerOutput, lazyOutput);
+    }
+
+    @Test
+    public void testLazyHelpWithInstanceRoot() {
+        HelpRootCommand root = new HelpRootCommand();
+        assertTrue(HelpRootCommand.constructed);
+
+        final CommandResult[] lazyResult = new CommandResult[1];
+        String lazyOutput = captureStdout(() -> lazyResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(root)
+                .args("--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, lazyResult[0]);
+        assertFalse(HelpMidCommand.constructed);
+        assertFalse(HelpLeafCommand.constructed);
+        assertFalse(HelpSkippedCommand.constructed);
+
+        resetHelpFlags();
+        HelpRootCommand.constructed = true;
+        final CommandResult[] eagerResult = new CommandResult[1];
+        String eagerOutput = captureStdout(() -> eagerResult[0] = AeshRuntimeRunner.builder()
+                .command(new HelpRootCommand())
+                .args("--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, eagerResult[0]);
+        assertEquals(eagerOutput, lazyOutput);
+    }
+
+    @Test
+    public void testLazyNestedHelpRendersWithoutConstruction() {
+        assertNestedHelpEqualsEager("helpmid", "--help");
+        assertNestedHelpEqualsEager("helpmid", "helpleaf", "--help");
+    }
+
+    private static void assertNestedHelpEqualsEager(String... helpArgs) {
+        final CommandResult[] lazyResult = new CommandResult[1];
+        String lazyOutput = captureStdout(() -> lazyResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(HelpRootCommand.class)
+                .args(helpArgs)
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, lazyResult[0]);
+        assertFalse(HelpRootCommand.constructed);
+        assertFalse(HelpMidCommand.constructed);
+        assertFalse(HelpLeafCommand.constructed);
+        assertFalse(HelpSkippedCommand.constructed);
+
+        resetHelpFlags();
+        final CommandResult[] eagerResult = new CommandResult[1];
+        String eagerOutput = captureStdout(() -> eagerResult[0] = AeshRuntimeRunner.builder()
+                .command(HelpRootCommand.class)
+                .args(helpArgs)
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, eagerResult[0]);
+        assertEquals(eagerOutput, lazyOutput);
+        resetHelpFlags();
+    }
+
+    @Test
+    public void testLazyVersionRendersWithoutConstruction() {
+        final CommandResult[] lazyResult = new CommandResult[1];
+        String lazyOutput = captureStdout(() -> lazyResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(VersionCommand.class)
+                .args("--version")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, lazyResult[0]);
+        assertFalse(VersionCommand.constructed);
+
+        VersionCommand.constructed = false;
+        final CommandResult[] eagerResult = new CommandResult[1];
+        String eagerOutput = captureStdout(() -> eagerResult[0] = AeshRuntimeRunner.builder()
+                .command(VersionCommand.class)
+                .args("--version")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, eagerResult[0]);
+        assertEquals(eagerOutput, lazyOutput);
+    }
+
+    @Test
+    public void testLazyHelpWithCustomSections() {
+        final CommandResult[] lazyResult = new CommandResult[1];
+        String lazyOutput = captureStdout(() -> lazyResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(SectionRootCommand.class)
+                .args("--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, lazyResult[0]);
+        assertTrue(SectionProvider.constructed);
+        assertFalse(SectionRootCommand.constructed);
+        assertFalse(SectionChildCommand.constructed);
+        assertTrue(lazyOutput.contains("TEST-HEADER"));
+        assertTrue(lazyOutput.contains("TEST-FOOTER"));
+        assertTrue(lazyOutput.contains("plug"));
+
+        SectionProvider.constructed = false;
+        SectionRootCommand.constructed = false;
+        SectionChildCommand.constructed = false;
+        final CommandResult[] eagerResult = new CommandResult[1];
+        String eagerOutput = captureStdout(() -> eagerResult[0] = AeshRuntimeRunner.builder()
+                .command(SectionRootCommand.class)
+                .args("--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, eagerResult[0]);
+        assertEquals(eagerOutput, lazyOutput);
+    }
+
+    @Test
+    public void testLazyHelpDocFormatFallsBack() {
+        final CommandResult[] lazyResult = new CommandResult[1];
+        String lazyOutput = captureStdout(() -> lazyResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(HelpRootCommand.class)
+                .args("--help=markdown")
+                .execute());
+
+        resetHelpFlags();
+        final CommandResult[] eagerResult = new CommandResult[1];
+        String eagerOutput = captureStdout(() -> eagerResult[0] = AeshRuntimeRunner.builder()
+                .command(HelpRootCommand.class)
+                .args("--help=markdown")
+                .execute());
+
+        assertEquals(eagerResult[0], lazyResult[0]);
+        assertEquals(eagerOutput, lazyOutput);
+    }
+
+    @Test
+    public void testLazyHelpDynamicGroupFallsBack() {
+        final CommandResult[] lazyResult = new CommandResult[1];
+        String lazyOutput = captureStdout(() -> lazyResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(DynHelpRootCommand.class)
+                .args("--help")
+                .execute());
+
+        resetHelpFlags();
+        final CommandResult[] eagerResult = new CommandResult[1];
+        String eagerOutput = captureStdout(() -> eagerResult[0] = AeshRuntimeRunner.builder()
+                .command(DynHelpRootCommand.class)
+                .args("--help")
+                .execute());
+
+        assertEquals(eagerResult[0], lazyResult[0]);
+        assertEquals(eagerOutput, lazyOutput);
+    }
+
+    @Test
+    public void testLazyHelpViaProvider() {
+        MetadataProviderRegistry.register(className -> {
+            if (className.equals(HelpAsmRoot.class.getName()))
+                return new DelegatingHelpProvider<>(HelpAsmRoot.class, "asmroot",
+                        new Class[] { HelpAsmChild.class }, new String[][] { { "asmchild" } });
+            return null;
+        });
+
+        final CommandResult[] lazyResult = new CommandResult[1];
+        String lazyOutput = captureStdout(() -> lazyResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(HelpAsmRoot.class)
+                .args("--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, lazyResult[0]);
+        assertFalse(HelpAsmRoot.constructed);
+        assertFalse(HelpAsmChild.constructed);
+        assertTrue(lazyOutput.contains("asmchild"));
+    }
+
+    private static void resetHelpFlags() {
+        HelpRootCommand.constructed = false;
+        HelpMidCommand.constructed = false;
+        HelpLeafCommand.constructed = false;
+        HelpSkippedCommand.constructed = false;
     }
 
     private static String captureStdout(Runnable action) {
@@ -843,6 +1066,258 @@ public class AeshRuntimeRunnerLazyStartupTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "helproot", description = "help root", generateHelp = true, groupCommands = {
+            HelpMidCommand.class, HelpSkippedCommand.class })
+    public static class HelpRootCommand implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public HelpRootCommand() {
+            constructed = true;
+        }
+
+        @Option(name = "mode", aliases = { "m" }, defaultValue = "fast", description = "Operation mode")
+        private String mode;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "helpmid", description = "help mid", generateHelp = true, groupCommands = {
+            HelpLeafCommand.class })
+    public static class HelpMidCommand implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public HelpMidCommand() {
+            constructed = true;
+        }
+
+        @Option(name = "level", description = "Nesting level")
+        private String level;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "helpleaf", description = "help leaf", generateHelp = true)
+    public static class HelpLeafCommand implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public HelpLeafCommand() {
+            constructed = true;
+        }
+
+        @Argument(description = "Target path")
+        private String target;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "helpskipped", description = "help skipped", generateHelp = true)
+    public static class HelpSkippedCommand implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public HelpSkippedCommand() {
+            constructed = true;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "vercmd", description = "version command", version = "3.1")
+    public static class VersionCommand implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public VersionCommand() {
+            constructed = true;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class SectionProvider implements HelpSectionProvider {
+        static boolean constructed;
+
+        public SectionProvider() {
+            constructed = true;
+        }
+
+        @Override
+        public String getHeader() {
+            return "TEST-HEADER";
+        }
+
+        @Override
+        public String getFooter() {
+            return "TEST-FOOTER";
+        }
+
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return Collections.singletonMap("Plugins",
+                    Collections.singletonList(new HelpEntry("plug", "A plugin")));
+        }
+    }
+
+    @CommandDefinition(name = "secroot", description = "section root", generateHelp = true, helpSectionProvider = SectionProvider.class, groupCommands = {
+            SectionChildCommand.class })
+    public static class SectionRootCommand implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public SectionRootCommand() {
+            constructed = true;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "secchild", description = "section child", generateHelp = true)
+    public static class SectionChildCommand implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public SectionChildCommand() {
+            constructed = true;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "dynhelproot", description = "dynamic help root", generateHelp = true)
+    public static class DynHelpRootCommand implements GroupCommand<CommandInvocation> {
+        @Override
+        public List<Command<CommandInvocation>> getCommands() {
+            return Collections.singletonList(new DynHelpChildCommand());
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "dynhelpchild", description = "dynamic help child")
+    public static class DynHelpChildCommand implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public DynHelpChildCommand() {
+            constructed = true;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "asmroot", description = "assembly root", generateHelp = true, groupCommands = {
+            HelpAsmChild.class })
+    public static class HelpAsmRoot implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public HelpAsmRoot() {
+            constructed = true;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "asmchild", description = "assembly child", generateHelp = true)
+    public static class HelpAsmChild implements Command<CommandInvocation> {
+        static boolean constructed;
+
+        public HelpAsmChild() {
+            constructed = true;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static class DelegatingHelpProvider<C extends Command> implements CommandMetadataProvider<C> {
+        private final Class<C> commandType;
+        private final String name;
+        private final Class<? extends Command>[] children;
+        private final String[][] names;
+
+        DelegatingHelpProvider(Class<C> commandType, String name,
+                Class<? extends Command>[] children, String[][] names) {
+            this.commandType = commandType;
+            this.name = name;
+            this.children = children;
+            this.names = names;
+        }
+
+        @Override
+        public Class<C> commandType() {
+            return commandType;
+        }
+
+        @Override
+        public C newInstance() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ProcessedCommand buildProcessedCommand(C instance) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isGroupCommand() {
+            return children.length > 0;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Class<? extends Command>[] groupCommandClasses() {
+            return children;
+        }
+
+        @Override
+        public String commandName() {
+            return name;
+        }
+
+        @Override
+        public String[][] groupCommandNamesAndAliases() {
+            return names;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public ProcessedCommand buildHelpProcessedCommand() {
+            try {
+                return new AeshCommandContainerBuilder<CommandInvocation>()
+                        .buildHelpProcessedCommand(commandType);
+            } catch (CommandLineParserException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

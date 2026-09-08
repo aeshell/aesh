@@ -20,6 +20,7 @@ package org.aesh.processor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -1379,6 +1380,107 @@ public class ProcessorTest {
         Class<?> metadataClass = result.classLoader.loadClass("test.FullCallbackCommand_AeshMetadata");
 
         assertEquivalence(commandClass, metadataClass);
+    }
+
+    private static final String COUNTING_CONVERTER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.converter.Converter;\n" +
+            "import org.aesh.command.converter.ConverterInvocation;\n" +
+            "import org.aesh.command.validator.OptionValidatorException;\n" +
+            "\n" +
+            "public class CountingConverter implements Converter<String, ConverterInvocation> {\n" +
+            "    public static int constructions;\n" +
+            "\n" +
+            "    public CountingConverter() {\n" +
+            "        constructions++;\n" +
+            "    }\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public String convert(ConverterInvocation invocation) throws OptionValidatorException {\n" +
+            "        return invocation.getInput();\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String COUNTING_HELP_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"counting\", description = \"Counting help command\", generateHelp = true)\n" +
+            "public class CountingHelpCommand implements Command<CommandInvocation> {\n" +
+            "    public static int constructions;\n" +
+            "\n" +
+            "    public CountingHelpCommand() {\n" +
+            "        constructions++;\n" +
+            "    }\n" +
+            "\n" +
+            "    @Option(name = \"output\", converter = CountingConverter.class, description = \"Output path\")\n" +
+            "    private String output;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testHelpProcessedCommandParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CustomValidator", CUSTOM_VALIDATOR_SOURCE),
+                new InMemorySource("test.CustomCompleter", CUSTOM_COMPLETER_SOURCE),
+                new InMemorySource("test.CustomActivator", CUSTOM_ACTIVATOR_SOURCE),
+                new InMemorySource("test.CustomRenderer", CUSTOM_RENDERER_SOURCE),
+                new InMemorySource("test.CustomParser", CUSTOM_PARSER_SOURCE),
+                new InMemorySource("test.CustomCommandValidator", CUSTOM_CMD_VALIDATOR_SOURCE),
+                new InMemorySource("test.CustomResultHandler", CUSTOM_RESULT_HANDLER_SOURCE),
+                new InMemorySource("test.CustomCommandActivator", CUSTOM_CMD_ACTIVATOR_SOURCE),
+                new InMemorySource("test.FullCallbackCommand", FULL_CALLBACKS_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.FullCallbackCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.FullCallbackCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand fullPC = provider.buildProcessedCommand(instance);
+        ProcessedCommand helpPC = provider.buildHelpProcessedCommand();
+
+        assertNull("Help build must not hold a command instance", helpPC.getCommand());
+        assertEquals(fullPC.getOptions().size(), helpPC.getOptions().size());
+        assertEquals(fullPC.printHelp("full", false, false), helpPC.printHelp("full", false, false));
+        assertEquals(fullPC.printHelp("full", false, true), helpPC.printHelp("full", false, true));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testHelpBuildInstantiatesNothing() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CountingConverter", COUNTING_CONVERTER_SOURCE),
+                new InMemorySource("test.CountingHelpCommand", COUNTING_HELP_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.CountingHelpCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.CountingHelpCommand_AeshMetadata");
+        Class<?> converterClass = result.classLoader.loadClass("test.CountingConverter");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+
+        commandClass.getField("constructions").setInt(null, 0);
+        converterClass.getField("constructions").setInt(null, 0);
+        ProcessedCommand helpPC = provider.buildHelpProcessedCommand();
+        assertNotNull(helpPC);
+        assertEquals("Help build must not construct the command",
+                0, commandClass.getField("constructions").getInt(null));
+        assertEquals("Help build must not construct converters",
+                0, converterClass.getField("constructions").getInt(null));
+
+        provider.buildProcessedCommand(provider.newInstance());
+        assertEquals(1, commandClass.getField("constructions").getInt(null));
+        assertEquals(1, converterClass.getField("constructions").getInt(null));
     }
 
     @Test

@@ -103,6 +103,37 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         return container;
     }
 
+    @SuppressWarnings("unchecked")
+    public ProcessedCommand<Command<CI>, CI> buildHelpProcessedCommand(Class<? extends Command> commandClass)
+            throws CommandLineParserException {
+        Class<Command<CI>> clazz = (Class<Command<CI>>) commandClass;
+        CommandDefinition command = clazz.getAnnotation(CommandDefinition.class);
+        if (command == null)
+            throw new CommandLineParserException("Commands must be annotated with @CommandDefinition");
+        boolean isGroup = command.groupCommands().length > 0 || GroupCommand.class.isAssignableFrom(clazz);
+        ProcessedCommand<Command<CI>, CI> processedCommand = ProcessedCommandBuilder.<Command<CI>, CI> builder()
+                .name(command.name())
+                .aliases(Arrays.asList(command.aliases()))
+                .description(command.description())
+                .command((Command<CI>) null)
+                .generateHelp(command.generateHelp())
+                .disableParsing(!isGroup && command.disableParsing())
+                .stopAtFirstPositional(command.stopAtFirstPositional())
+                .sortOptions(command.sortOptions())
+                .version(command.version())
+                .helpUrl(command.helpUrl())
+                .create();
+
+        processedCommand.setCompleteFallback(command.completeFallback());
+        processCommand(processedCommand, clazz, true);
+        validatePositionalIndexes(processedCommand);
+        if (command.helpGroup().length() > 0)
+            processedCommand.setHelpGroup(command.helpGroup());
+        if (command.helpSectionProvider() != NullHelpSectionProvider.class)
+            processedCommand.setHelpSectionProviderClass(command.helpSectionProvider());
+        return processedCommand;
+    }
+
     private void applyDefaultValueProvider(AeshCommandContainer<CI> container) {
         if (defaultValueProvider == null || container.getParser() == null)
             return;
@@ -253,11 +284,16 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     }
 
     private static void processCommand(ProcessedCommand processedCommand, Class clazz) throws CommandLineParserException {
+        processCommand(processedCommand, clazz, false);
+    }
+
+    private static void processCommand(ProcessedCommand processedCommand, Class clazz, boolean forHelp)
+            throws CommandLineParserException {
         for (Field field : clazz.getDeclaredFields())
-            processField(processedCommand, field);
+            processField(processedCommand, field, forHelp);
 
         if (clazz.getSuperclass() != null)
-            processCommand(processedCommand, clazz.getSuperclass());
+            processCommand(processedCommand, clazz.getSuperclass(), forHelp);
     }
 
     private static void validatePositionalIndexes(ProcessedCommand processedCommand) throws CommandLineParserException {
@@ -291,10 +327,21 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     }
 
     private static void processField(ProcessedCommand processedCommand, Field field) throws CommandLineParserException {
-        processField(processedCommand, field, null);
+        processField(processedCommand, field, null, false);
+    }
+
+    private static void processField(ProcessedCommand processedCommand, Field field, boolean forHelp)
+            throws CommandLineParserException {
+        processField(processedCommand, field, null, forHelp);
     }
 
     private static void processField(ProcessedCommand processedCommand, Field field, String mixinFieldName)
+            throws CommandLineParserException {
+        processField(processedCommand, field, mixinFieldName, false);
+    }
+
+    private static void processField(ProcessedCommand processedCommand, Field field, String mixinFieldName,
+            boolean forHelp)
             throws CommandLineParserException {
         Option o;
         OptionGroup og;
@@ -315,45 +362,47 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 fieldType = unwrapOptionalType(field);
             }
 
-            processedCommand.addOption(
-                    ProcessedOptionBuilder.builder()
-                            .shortName(o.shortName())
-                            .name(o.name().length() < 1 ? field.getName() : o.name())
-                            .description(o.description())
-                            .required(o.required())
-                            .valueSeparator(' ')
-                            .askIfNotSet(o.askIfNotSet())
-                            .acceptNameWithoutDashes(o.acceptNameWithoutDashes())
-                            .selector(o.selector())
-                            .addAllDefaultValues(o.defaultValue())
-                            .type(fieldType)
-                            .fieldName(field.getName())
-                            .optionalWrapped(isOptionalWrapped)
-                            .optionType(optionType)
-                            .converter(o.converter())
-                            .completer(o.completer())
-                            .validator(o.validator())
-                            .activator(o.activator())
-                            .renderer(o.renderer())
-                            .parser(o.parser())
-                            .overrideRequired(o.overrideRequired())
-                            .optionalValue(o.optionalValue())
-                            .fallbackValue("\u0000".equals(o.fallbackValue()) ? null : o.fallbackValue())
-                            .negatable(o.negatable())
-                            .negationPrefix(o.negationPrefix())
-                            .inherited(o.inherited())
-                            .descriptionUrl(o.descriptionUrl())
-                            .url(o.url())
-                            .completeFallback(resolveEffectiveFallback(
-                                    o.completeFallback(), processedCommand))
-                            .aliases(o.aliases())
-                            .helpGroup(o.helpGroup())
-                            .exclusiveWith(o.exclusiveWith())
-                            .addAllAllowedValues(o.allowedValues())
-                            .visibility(o.visibility())
-                            .order(o.order())
-                            .mixinFieldName(mixinFieldName)
-                            .build());
+            ProcessedOptionBuilder optionBuilder = ProcessedOptionBuilder.builder()
+                    .shortName(o.shortName())
+                    .name(o.name().length() < 1 ? field.getName() : o.name())
+                    .description(o.description())
+                    .required(o.required())
+                    .valueSeparator(' ')
+                    .askIfNotSet(o.askIfNotSet())
+                    .acceptNameWithoutDashes(o.acceptNameWithoutDashes())
+                    .selector(o.selector())
+                    .addAllDefaultValues(o.defaultValue())
+                    .type(fieldType)
+                    .fieldName(field.getName())
+                    .optionalWrapped(isOptionalWrapped)
+                    .optionType(optionType);
+            if (!forHelp) {
+                optionBuilder.converter(o.converter())
+                        .completer(o.completer())
+                        .validator(o.validator())
+                        .activator(o.activator())
+                        .renderer(o.renderer())
+                        .parser(o.parser());
+            }
+            processedCommand.addOption(optionBuilder
+                    .overrideRequired(o.overrideRequired())
+                    .optionalValue(o.optionalValue())
+                    .fallbackValue("\u0000".equals(o.fallbackValue()) ? null : o.fallbackValue())
+                    .negatable(o.negatable())
+                    .negationPrefix(o.negationPrefix())
+                    .inherited(o.inherited())
+                    .descriptionUrl(o.descriptionUrl())
+                    .url(o.url())
+                    .completeFallback(resolveEffectiveFallback(
+                            o.completeFallback(), processedCommand))
+                    .aliases(o.aliases())
+                    .helpGroup(o.helpGroup())
+                    .exclusiveWith(o.exclusiveWith())
+                    .addAllAllowedValues(o.allowedValues())
+                    .visibility(o.visibility())
+                    .order(o.order())
+                    .mixinFieldName(mixinFieldName)
+                    .build());
         } else if ((ol = field.getAnnotation(OptionList.class)) != null) {
             // Support Optional<List<T>> by unwrapping Optional
             Class<?> rawFieldType = field.getType();
@@ -376,41 +425,43 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 type = (Class) listType.getActualTypeArguments()[0];
             }
 
-            processedCommand.addOption(
-                    ProcessedOptionBuilder.builder()
-                            .shortName(ol.shortName())
-                            .name(ol.name().length() < 1 ? field.getName() : ol.name())
-                            .description(ol.description())
-                            .required(ol.required())
-                            .valueSeparator(ol.valueSeparator())
-                            .askIfNotSet(ol.askIfNotSet())
-                            .acceptNameWithoutDashes(ol.acceptNameWithoutDashes())
-                            .selector(ol.selector())
-                            .addAllDefaultValues(ol.defaultValue())
-                            .type(type)
-                            .fieldName(field.getName())
-                            .optionalWrapped(isOptionalWrapped)
-                            .optionType(OptionType.LIST)
-                            .converter(ol.converter())
-                            .completer(ol.completer())
-                            .validator(ol.validator())
-                            .activator(ol.activator())
-                            .renderer(ol.renderer())
-                            .parser(ol.parser())
-                            .overrideRequired(ol.overrideRequired())
-                            .inherited(ol.inherited())
-                            .descriptionUrl(ol.descriptionUrl())
-                            .url(ol.url())
-                            .completeFallback(resolveEffectiveFallback(
-                                    ol.completeFallback(), processedCommand))
-                            .aliases(ol.aliases())
-                            .helpGroup(ol.helpGroup())
-                            .exclusiveWith(ol.exclusiveWith())
-                            .addAllAllowedValues(ol.allowedValues())
-                            .visibility(ol.visibility())
-                            .order(ol.order())
-                            .mixinFieldName(mixinFieldName)
-                            .build());
+            ProcessedOptionBuilder optionListBuilder = ProcessedOptionBuilder.builder()
+                    .shortName(ol.shortName())
+                    .name(ol.name().length() < 1 ? field.getName() : ol.name())
+                    .description(ol.description())
+                    .required(ol.required())
+                    .valueSeparator(ol.valueSeparator())
+                    .askIfNotSet(ol.askIfNotSet())
+                    .acceptNameWithoutDashes(ol.acceptNameWithoutDashes())
+                    .selector(ol.selector())
+                    .addAllDefaultValues(ol.defaultValue())
+                    .type(type)
+                    .fieldName(field.getName())
+                    .optionalWrapped(isOptionalWrapped)
+                    .optionType(OptionType.LIST);
+            if (!forHelp) {
+                optionListBuilder.converter(ol.converter())
+                        .completer(ol.completer())
+                        .validator(ol.validator())
+                        .activator(ol.activator())
+                        .renderer(ol.renderer())
+                        .parser(ol.parser());
+            }
+            processedCommand.addOption(optionListBuilder
+                    .overrideRequired(ol.overrideRequired())
+                    .inherited(ol.inherited())
+                    .descriptionUrl(ol.descriptionUrl())
+                    .url(ol.url())
+                    .completeFallback(resolveEffectiveFallback(
+                            ol.completeFallback(), processedCommand))
+                    .aliases(ol.aliases())
+                    .helpGroup(ol.helpGroup())
+                    .exclusiveWith(ol.exclusiveWith())
+                    .addAllAllowedValues(ol.allowedValues())
+                    .visibility(ol.visibility())
+                    .order(ol.order())
+                    .mixinFieldName(mixinFieldName)
+                    .build());
 
         } else if ((og = field.getAnnotation(OptionGroup.class)) != null) {
             // Support Optional<Map<K,V>> by unwrapping Optional
@@ -434,7 +485,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 type = (Class) listType.getActualTypeArguments()[1];
             }
 
-            processedCommand.addOption(ProcessedOptionBuilder.builder()
+            ProcessedOptionBuilder optionGroupBuilder = ProcessedOptionBuilder.builder()
                     .shortName(og.shortName())
                     .name(og.name().length() < 1
                             ? (og.shortName() != '\u0000' ? "" : field.getName())
@@ -449,13 +500,16 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .addAllDefaultValues(og.defaultValue())
                     .type(type)
                     .fieldName(field.getName())
-                    .optionType(OptionType.GROUP)
-                    .converter(og.converter())
-                    .completer(og.completer())
-                    .validator(og.validator())
-                    .activator(og.activator())
-                    .renderer(og.renderer())
-                    .parser(og.parser())
+                    .optionType(OptionType.GROUP);
+            if (!forHelp) {
+                optionGroupBuilder.converter(og.converter())
+                        .completer(og.completer())
+                        .validator(og.validator())
+                        .activator(og.activator())
+                        .renderer(og.renderer())
+                        .parser(og.parser());
+            }
+            processedCommand.addOption(optionGroupBuilder
                     .overrideRequired(og.overrideRequired())
                     .inherited(og.inherited())
                     .descriptionUrl(og.descriptionUrl())
@@ -493,7 +547,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 ParameterizedType listType = (ParameterizedType) argsGenericType;
                 type = (Class) listType.getActualTypeArguments()[0];
             }
-            processedCommand.setArguments(ProcessedOptionBuilder.builder()
+            ProcessedOptionBuilder argumentsBuilder = ProcessedOptionBuilder.builder()
                     .shortName('\u0000')
                     .name("")
                     .description(a.description())
@@ -508,12 +562,15 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .paramLabel(a.paramLabel())
                     .arity(a.arity())
                     .index(a.index())
-                    .optionType(OptionType.ARGUMENTS)
-                    .converter(a.converter())
-                    .completer(a.completer())
-                    .validator(a.validator())
-                    .activator(a.activator())
-                    .parser(a.parser())
+                    .optionType(OptionType.ARGUMENTS);
+            if (!forHelp) {
+                argumentsBuilder.converter(a.converter())
+                        .completer(a.completer())
+                        .validator(a.validator())
+                        .activator(a.activator())
+                        .parser(a.parser());
+            }
+            processedCommand.setArguments(argumentsBuilder
                     .url(a.url())
                     .completeFallback(resolveEffectiveFallback(
                             a.completeFallback(), processedCommand))
@@ -528,57 +585,65 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             if (Collection.class.isAssignableFrom(argFieldType))
                 throw new CommandLineParserException("Argument field can not be an instance of Collection");
             OptionType optionType = OptionType.ARGUMENT;
-            processedCommand.addArgument(
-                    ProcessedOptionBuilder.builder()
-                            .shortName('\u0000')
-                            .name("")
-                            .description(arg.description())
-                            .required(arg.required())
-                            .valueSeparator(' ')
-                            .askIfNotSet(arg.askIfNotSet())
-                            .selector(arg.selector())
-                            .addAllDefaultValues(arg.defaultValue())
-                            .type(argFieldType)
-                            .fieldName(field.getName())
-                            .optionalWrapped(argOptionalWrapped)
-                            .paramLabel(arg.paramLabel())
-                            .arity(arg.arity())
-                            .index(arg.index())
-                            .optionType(optionType)
-                            .converter(arg.converter())
-                            .completer(arg.completer())
-                            .validator(arg.validator())
-                            .activator(arg.activator())
-                            .renderer(arg.renderer())
-                            .parser(arg.parser())
-                            .overrideRequired(arg.overrideRequired())
-                            .inherited(arg.inherited())
-                            .url(arg.url())
-                            .completeFallback(resolveEffectiveFallback(
-                                    arg.completeFallback(), processedCommand))
-                            .mixinFieldName(mixinFieldName)
-                            .build());
+            ProcessedOptionBuilder argumentBuilder = ProcessedOptionBuilder.builder()
+                    .shortName('\u0000')
+                    .name("")
+                    .description(arg.description())
+                    .required(arg.required())
+                    .valueSeparator(' ')
+                    .askIfNotSet(arg.askIfNotSet())
+                    .selector(arg.selector())
+                    .addAllDefaultValues(arg.defaultValue())
+                    .type(argFieldType)
+                    .fieldName(field.getName())
+                    .optionalWrapped(argOptionalWrapped)
+                    .paramLabel(arg.paramLabel())
+                    .arity(arg.arity())
+                    .index(arg.index())
+                    .optionType(optionType);
+            if (!forHelp) {
+                argumentBuilder.converter(arg.converter())
+                        .completer(arg.completer())
+                        .validator(arg.validator())
+                        .activator(arg.activator())
+                        .renderer(arg.renderer())
+                        .parser(arg.parser());
+            }
+            processedCommand.addArgument(argumentBuilder
+                    .overrideRequired(arg.overrideRequired())
+                    .inherited(arg.inherited())
+                    .url(arg.url())
+                    .completeFallback(resolveEffectiveFallback(
+                            arg.completeFallback(), processedCommand))
+                    .mixinFieldName(mixinFieldName)
+                    .build());
         } else if (field.getAnnotation(Mixin.class) != null) {
             // Chain mixinFieldName for nested mixins: "outer" + "inner" -> "outer.inner"
             String nestedMixinName = mixinFieldName != null
                     ? mixinFieldName + "." + field.getName()
                     : field.getName();
-            processMixinClass(processedCommand, field.getType(), nestedMixinName);
+            processMixinClass(processedCommand, field.getType(), nestedMixinName, forHelp);
         }
     }
 
     private static void processMixinField(ProcessedCommand processedCommand, Field mixinField)
             throws CommandLineParserException {
-        processMixinClass(processedCommand, mixinField.getType(), mixinField.getName());
+        processMixinClass(processedCommand, mixinField.getType(), mixinField.getName(), false);
     }
 
     private static void processMixinClass(ProcessedCommand processedCommand, Class<?> clazz, String mixinFieldName)
             throws CommandLineParserException {
+        processMixinClass(processedCommand, clazz, mixinFieldName, false);
+    }
+
+    private static void processMixinClass(ProcessedCommand processedCommand, Class<?> clazz, String mixinFieldName,
+            boolean forHelp)
+            throws CommandLineParserException {
         for (Field field : clazz.getDeclaredFields()) {
-            processField(processedCommand, field, mixinFieldName);
+            processField(processedCommand, field, mixinFieldName, forHelp);
         }
         if (clazz.getSuperclass() != null && clazz.getSuperclass() != Object.class) {
-            processMixinClass(processedCommand, clazz.getSuperclass(), mixinFieldName);
+            processMixinClass(processedCommand, clazz.getSuperclass(), mixinFieldName, forHelp);
         }
     }
 

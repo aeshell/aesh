@@ -253,7 +253,15 @@ final class CodeGenerator {
         sb.append("    public ProcessedCommand buildProcessedCommand(").append(simpleName).append(" instance)");
         sb.append(" throws CommandLineParserException {\n");
         generateBuildProcessedCommand(sb, simpleName, commandElement,
-                fields, isGroup, elementUtils, typeUtils, accessorInfos);
+                fields, isGroup, elementUtils, typeUtils, accessorInfos, false);
+        sb.append("    }\n\n");
+
+        // buildHelpProcessedCommand()
+        sb.append("    @Override\n");
+        sb.append("    public ProcessedCommand buildHelpProcessedCommand()");
+        sb.append(" throws CommandLineParserException {\n");
+        generateBuildProcessedCommand(sb, simpleName, commandElement,
+                fields, isGroup, elementUtils, typeUtils, new java.util.ArrayList<>(), true);
         sb.append("    }\n\n");
 
         // Generate the single Accessor inner class
@@ -384,7 +392,7 @@ final class CodeGenerator {
             TypeElement commandElement,
             List<VariableElement> fields, boolean isGroup,
             Elements elementUtils, Types typeUtils,
-            List<FieldAccessorInfo> accessorInfos) {
+            List<FieldAccessorInfo> accessorInfos, boolean forHelp) {
 
         sb.append(
                 "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
@@ -401,14 +409,17 @@ final class CodeGenerator {
 
         sb.append("                .name(").append(stringLiteral(
                 getAnnotationValue(commandElement, "name", elementUtils))).append(")\n");
-        generateCommandActivator(sb, commandElement, isGroup, elementUtils);
+        generateCommandActivator(sb, commandElement, isGroup, elementUtils, forHelp);
         String[] aliases = getAnnotationStringArrayValue(commandElement, "aliases", elementUtils);
         sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(aliases)).append("))\n");
         sb.append("                .description(").append(stringLiteral(
                 getAnnotationValue(commandElement, "description", elementUtils))).append(")\n");
-        generateCommandValidator(sb, commandElement, isGroup, elementUtils);
-        sb.append("                .command(instance)\n");
-        generateResultHandler(sb, commandElement, isGroup, elementUtils);
+        generateCommandValidator(sb, commandElement, isGroup, elementUtils, forHelp);
+        if (forHelp)
+            sb.append("                .command((").append(simpleName).append(") null)\n");
+        else
+            sb.append("                .command(instance)\n");
+        generateResultHandler(sb, commandElement, isGroup, elementUtils, forHelp);
         sb.append("                .generateHelp(false)\n");
         boolean disableParsing = !isGroup && "true".equals(
                 getAnnotationValue(commandElement, "disableParsing", elementUtils));
@@ -419,7 +430,7 @@ final class CodeGenerator {
         sb.append("                .sortOptions(").append(
                 "true".equals(getAnnotationValue(commandElement, "sortOptions", elementUtils)))
                 .append(")\n");
-        generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils);
+        generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils, forHelp);
         sb.append("                .version(\"\")\n");
         String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);
         sb.append("                .helpUrl(").append(stringLiteral(helpUrl != null ? helpUrl : "")).append(")\n");
@@ -473,7 +484,11 @@ final class CodeGenerator {
             sb.append("            ProcessedOption helpOpt = ProcessedOption.createDirect(\n");
             sb.append("                    \"h\", \"help\", \"Display this help and exit\",\n");
             sb.append("                    Boolean.class, \"generatedHelp\", OptionType.BOOLEAN,\n");
-            sb.append("                    CONVERTER_java_lang_Boolean, new Accessor(").append(helpIdx).append("));\n");
+            if (forHelp)
+                sb.append("                    CONVERTER_java_lang_Boolean, null);\n");
+            else
+                sb.append("                    CONVERTER_java_lang_Boolean, new Accessor(").append(helpIdx)
+                        .append("));\n");
             sb.append("            helpOpt.setOverrideRequired(true);\n");
             sb.append("            processedCommand.addOptionDirect(helpOpt);\n");
             sb.append("        }\n");
@@ -488,7 +503,11 @@ final class CodeGenerator {
             sb.append("            ProcessedOption versionOpt = ProcessedOption.createDirect(\n");
             sb.append("                    \"v\", \"version\", \"Displays version information of the command\",\n");
             sb.append("                    Boolean.class, \"generatedVersion\", OptionType.BOOLEAN,\n");
-            sb.append("                    CONVERTER_java_lang_Boolean, new Accessor(").append(versionIdx).append("));\n");
+            if (forHelp)
+                sb.append("                    CONVERTER_java_lang_Boolean, null);\n");
+            else
+                sb.append("                    CONVERTER_java_lang_Boolean, new Accessor(").append(versionIdx)
+                        .append("));\n");
             sb.append("            versionOpt.setOverrideRequired(true);\n");
             sb.append("            processedCommand.addOptionDirect(versionOpt);\n");
             sb.append("        }\n");
@@ -499,7 +518,7 @@ final class CodeGenerator {
         // Process user fields
         for (VariableElement field : fields) {
             generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils, accessorInfos,
-                    commandFallback);
+                    commandFallback, forHelp);
         }
 
         generateParentCommandInjector(sb, simpleName, fields);
@@ -508,7 +527,9 @@ final class CodeGenerator {
     }
 
     private static void generateCommandValidator(StringBuilder sb, TypeElement element, boolean isGroup,
-            Elements elementUtils) {
+            Elements elementUtils, boolean forHelp) {
+        if (forHelp)
+            return;
         String validatorClass = getAnnotationClassValue(element,
                 CommandDefinition.class.getCanonicalName(),
                 "validator", elementUtils);
@@ -518,7 +539,9 @@ final class CodeGenerator {
     }
 
     private static void generateResultHandler(StringBuilder sb, TypeElement element, boolean isGroup,
-            Elements elementUtils) {
+            Elements elementUtils, boolean forHelp) {
+        if (forHelp)
+            return;
         String handlerClass = getAnnotationClassValue(element,
                 CommandDefinition.class.getCanonicalName(),
                 "resultHandler", elementUtils);
@@ -528,7 +551,9 @@ final class CodeGenerator {
     }
 
     private static void generateDefaultValueProvider(StringBuilder sb, TypeElement element, boolean isGroup,
-            Elements elementUtils) {
+            Elements elementUtils, boolean forHelp) {
+        if (forHelp)
+            return;
         String providerClass = getAnnotationClassValue(element,
                 CommandDefinition.class.getCanonicalName(),
                 "defaultValueProvider", elementUtils);
@@ -538,7 +563,9 @@ final class CodeGenerator {
     }
 
     private static void generateCommandActivator(StringBuilder sb, TypeElement element, boolean isGroup,
-            Elements elementUtils) {
+            Elements elementUtils, boolean forHelp) {
+        if (forHelp)
+            return;
         String activatorClass = getAnnotationClassValue(element,
                 CommandDefinition.class.getCanonicalName(),
                 "activator", elementUtils);
@@ -549,13 +576,14 @@ final class CodeGenerator {
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
-        generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils, accessorInfos, commandFallback);
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+        generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils, accessorInfos, commandFallback,
+                forHelp);
     }
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         Option o = field.getAnnotation(Option.class);
         OptionList ol = field.getAnnotation(OptionList.class);
         OptionGroup og = field.getAnnotation(OptionGroup.class);
@@ -564,64 +592,66 @@ final class CodeGenerator {
 
         if (o != null) {
             generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback);
+                    commandFallback, forHelp);
         } else if (ol != null) {
             generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback);
+                    commandFallback, forHelp);
         } else if (og != null) {
             generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback);
+                    commandFallback, forHelp);
         } else if (args != null) {
             generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback);
+                    commandFallback, forHelp);
         } else if (arg != null) {
             generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback);
+                    commandFallback, forHelp);
         } else if (field.getAnnotation(Mixin.class) != null) {
             // Chain mixinFieldName for nested mixins: "outer" + "inner" -> "outer.inner"
             String nestedMixinName = mixinFieldName != null
                     ? mixinFieldName + "." + field.getSimpleName().toString()
                     : field.getSimpleName().toString();
             generateMixin(sb, simpleName, field, nestedMixinName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback);
+                    commandFallback, forHelp);
         }
     }
 
     private static void generateMixin(StringBuilder sb, String simpleName, VariableElement mixinField,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         TypeMirror mixinType = mixinField.asType();
         if (!(mixinType instanceof DeclaredType))
             return;
         TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
         String mixinTypeName = mixinType.toString();
 
-        if (isPrivateField(mixinField)) {
-            String constName = fieldConstantName(mixinFieldName);
-            sb.append("        try {\n");
-            sb.append("            if (").append(constName).append(".get(instance) == null) {\n");
-            sb.append("                ").append(constName).append(".set(instance, new ").append(mixinTypeName)
-                    .append("());\n");
-            sb.append("            }\n");
-            sb.append("        } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n\n");
-        } else {
-            sb.append("        if (instance.").append(mixinFieldName).append(" == null) {\n");
-            sb.append("            instance.").append(mixinFieldName).append(" = new ").append(mixinTypeName)
-                    .append("();\n");
-            sb.append("        }\n\n");
+        if (!forHelp) {
+            if (isPrivateField(mixinField)) {
+                String constName = fieldConstantName(mixinFieldName);
+                sb.append("        try {\n");
+                sb.append("            if (").append(constName).append(".get(instance) == null) {\n");
+                sb.append("                ").append(constName).append(".set(instance, new ").append(mixinTypeName)
+                        .append("());\n");
+                sb.append("            }\n");
+                sb.append("        } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n\n");
+            } else {
+                sb.append("        if (instance.").append(mixinFieldName).append(" == null) {\n");
+                sb.append("            instance.").append(mixinFieldName).append(" = new ").append(mixinTypeName)
+                        .append("();\n");
+                sb.append("        }\n\n");
+            }
         }
 
         generateMixinFields(sb, simpleName, mixinFieldName, mixinElement, elementUtils, typeUtils, accessorInfos,
-                commandFallback);
+                commandFallback, forHelp);
     }
 
     private static void generateMixinFields(StringBuilder sb, String simpleName, String mixinFieldName,
             TypeElement typeElement, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
             if (enclosed instanceof VariableElement) {
                 generateFieldProcessing(sb, simpleName, (VariableElement) enclosed, mixinFieldName,
-                        elementUtils, typeUtils, accessorInfos, commandFallback);
+                        elementUtils, typeUtils, accessorInfos, commandFallback, forHelp);
             }
         }
         // Recurse into superclass
@@ -630,14 +660,14 @@ final class CodeGenerator {
             if (superclass instanceof DeclaredType) {
                 TypeElement superElement = (TypeElement) ((DeclaredType) superclass).asElement();
                 generateMixinFields(sb, simpleName, mixinFieldName, superElement, elementUtils, typeUtils, accessorInfos,
-                        commandFallback);
+                        commandFallback, forHelp);
             }
         }
     }
 
     private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType);
@@ -665,8 +695,11 @@ final class CodeGenerator {
         sb.append("                    ").append(fieldType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", ").append(optionType).append(",\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, fieldType, effectiveType, typeUtils);
-        sb.append(", new Accessor(").append(accIdx).append("));\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, fieldType, effectiveType, typeUtils, forHelp);
+        if (forHelp)
+            sb.append(", null);\n");
+        else
+            sb.append(", new Accessor(").append(accIdx).append("));\n");
         // Non-default setters
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
@@ -680,11 +713,11 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(o.defaultValue())).append("));\n");
         emitCompleterSetter(sb, var, field, "completer", isBooleanType, isFileOrResourceType(effectiveType, typeUtils),
-                elementUtils);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
-        emitParserSetter(sb, var, field, "parser", elementUtils);
+                elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
+        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
         if (o.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (o.optionalValue())
@@ -736,7 +769,7 @@ final class CodeGenerator {
 
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType);
@@ -760,8 +793,11 @@ final class CodeGenerator {
         sb.append("                    ").append(elementType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", OptionType.LIST,\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, elementType);
-        sb.append(", new Accessor(").append(accIdx).append("));\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, elementType, forHelp);
+        if (forHelp)
+            sb.append(", null);\n");
+        else
+            sb.append(", new Accessor(").append(accIdx).append("));\n");
         sb.append("            ").append(var).append(".setValueSeparator(").append(charLiteral(ol.valueSeparator()))
                 .append(");\n");
         emitInitialValueFactory(sb, var, field.asType(), typeUtils);
@@ -776,11 +812,11 @@ final class CodeGenerator {
         if (ol.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(ol.defaultValue())).append("));\n");
-        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
-        emitParserSetter(sb, var, field, "parser", elementUtils);
+        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
+        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
         if (ol.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (ol.inherited())
@@ -814,7 +850,7 @@ final class CodeGenerator {
 
     private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType);
@@ -840,8 +876,11 @@ final class CodeGenerator {
         sb.append("                    ").append(valueType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", OptionType.GROUP,\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, valueType);
-        sb.append(", new Accessor(").append(accIdx).append("));\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, valueType, forHelp);
+        if (forHelp)
+            sb.append(", null);\n");
+        else
+            sb.append(", new Accessor(").append(accIdx).append("));\n");
         sb.append("            ").append(var).append(".setValueSeparator(',');\n");
         emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
@@ -855,11 +894,11 @@ final class CodeGenerator {
         if (og.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(og.defaultValue())).append("));\n");
-        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
-        emitParserSetter(sb, var, field, "parser", elementUtils);
+        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
+        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
         if (og.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (og.inherited())
@@ -893,7 +932,7 @@ final class CodeGenerator {
 
     private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType);
@@ -913,8 +952,11 @@ final class CodeGenerator {
         sb.append("                    ").append(elementType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", OptionType.ARGUMENTS,\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, elementType);
-        sb.append(", new Accessor(").append(accIdx).append("));\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, elementType, forHelp);
+        if (forHelp)
+            sb.append(", null);\n");
+        else
+            sb.append(", new Accessor(").append(accIdx).append("));\n");
         emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
@@ -937,10 +979,10 @@ final class CodeGenerator {
         if (!a.arity().isEmpty())
             sb.append("            ").append(var).append(".setArity(").append(stringLiteral(a.arity())).append(");\n");
         sb.append("            ").append(var).append(".setIndex(").append(stringLiteral(a.index())).append(");\n");
-        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
-        emitParserSetter(sb, var, field, "parser", elementUtils);
+        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
+        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
         if (a.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
         {
@@ -957,7 +999,7 @@ final class CodeGenerator {
 
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType);
@@ -977,8 +1019,11 @@ final class CodeGenerator {
         sb.append("                    ").append(fieldType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", OptionType.ARGUMENT,\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, fieldType);
-        sb.append(", new Accessor(").append(accIdx).append("));\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, fieldType, forHelp);
+        if (forHelp)
+            sb.append(", null);\n");
+        else
+            sb.append(", new Accessor(").append(accIdx).append("));\n");
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (arg.required())
@@ -998,11 +1043,11 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setArity(").append(stringLiteral(arg.arity())).append(");\n");
         sb.append("            ").append(var).append(".setIndex(").append(stringLiteral(arg.index())).append(");\n");
         emitCompleterSetter(sb, var, field, "completer", false, isFileOrResourceType(field.asType(), typeUtils),
-                elementUtils);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
-        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
-        emitParserSetter(sb, var, field, "parser", elementUtils);
+                elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
+        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
         if (arg.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (arg.inherited())
@@ -1136,7 +1181,11 @@ final class CodeGenerator {
 
     /** Emit a converter expression inline (for createDirect() call). */
     private static void emitConverterExpression(StringBuilder sb, VariableElement field,
-            String attributeName, Elements elementUtils, String fieldType) {
+            String attributeName, Elements elementUtils, String fieldType, boolean forHelp) {
+        if (forHelp) {
+            sb.append("null");
+            return;
+        }
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_CONVERTER)) {
             sb.append("new ").append(className).append("()");
@@ -1150,24 +1199,31 @@ final class CodeGenerator {
      * for enum types, avoiding the runtime CLConverterManager lookup (#591).
      */
     private static void emitConverterExpression(StringBuilder sb, VariableElement field,
-            String attributeName, Elements elementUtils, String fieldType, TypeMirror effectiveType, Types typeUtils) {
+            String attributeName, Elements elementUtils, String fieldType, TypeMirror effectiveType, Types typeUtils,
+            boolean forHelp) {
+        if (forHelp) {
+            sb.append("null");
+            return;
+        }
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_CONVERTER)) {
             sb.append("new ").append(className).append("()");
-        } else {
-            // Check if the type is an enum -- emit EnumConverter directly (#591)
-            String[] enumConstants = getEnumConstantNames(effectiveType, typeUtils);
-            if (enumConstants != null) {
-                sb.append("new org.aesh.command.impl.converter.EnumConverter(").append(fieldType).append(".class)");
-            } else {
-                sb.append("CONVERTER_").append(converterConstantSuffix(fieldType));
-            }
+            return;
         }
+        if (getEnumConstantNames(effectiveType, typeUtils) != null) {
+            // Check if the type is an enum -- emit EnumConverter directly (#591).
+            sb.append("new org.aesh.command.impl.converter.EnumConverter(").append(fieldType).append(".class)");
+            return;
+        }
+        sb.append("CONVERTER_").append(converterConstantSuffix(fieldType));
     }
 
     /** Emit completer setter if non-default. */
     private static void emitCompleterSetter(StringBuilder sb, String var, VariableElement field,
-            String attributeName, boolean isBooleanType, boolean isFileOrResource, Elements elementUtils) {
+            String attributeName, boolean isBooleanType, boolean isFileOrResource, Elements elementUtils,
+            boolean forHelp) {
+        if (forHelp)
+            return;
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_OPTION_COMPLETER)) {
             sb.append("            ").append(var).append(".setCompleter(new ").append(className).append("());\n");
@@ -1181,7 +1237,9 @@ final class CodeGenerator {
 
     /** Emit parser setter if non-default (for createDirect() path). */
     private static void emitParserSetter(StringBuilder sb, String var, VariableElement field,
-            String attributeName, Elements elementUtils) {
+            String attributeName, Elements elementUtils, boolean forHelp) {
+        if (forHelp)
+            return;
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(AESH_OPTION_PARSER)) {
             sb.append("            ").append(var).append(".setParser(new ").append(className).append("());\n");
@@ -1190,7 +1248,10 @@ final class CodeGenerator {
 
     /** Emit a generic callback setter (validator, activator, renderer). */
     private static void emitCallbackSetter(StringBuilder sb, String var, String setterName,
-            VariableElement field, String attributeName, String nullSentinel, Elements elementUtils) {
+            VariableElement field, String attributeName, String nullSentinel, Elements elementUtils,
+            boolean forHelp) {
+        if (forHelp)
+            return;
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(nullSentinel)) {
             sb.append("            ").append(var).append(".").append(setterName)
