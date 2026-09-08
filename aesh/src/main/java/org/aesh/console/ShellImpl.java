@@ -127,15 +127,13 @@ public class ShellImpl implements Shell {
         final String[] out = { null };
         CountDownLatch latch = new CountDownLatch(1);
         Readline readline = new Readline();
-        readline.readline(connection, prompt, event -> {
-            out[0] = event;
-            latch.countDown();
-        });
-        try {
+        try (HandlerScope scope = HandlerScope.stdin(connection, connection.stdinHandler())) {
+            readline.readline(connection, prompt, event -> {
+                out[0] = event;
+                latch.countDown();
+            });
             // Wait until interrupted
             latch.await();
-        } finally {
-            connection.setStdinHandler(null);
         }
         return out[0];
     }
@@ -157,7 +155,7 @@ public class ShellImpl implements Shell {
         final Key[] key = { null };
         CountDownLatch latch = new CountDownLatch(1);
         Attributes attributes = connection.enterRawMode();
-        try {
+        try (HandlerScope scope = HandlerScope.stdin(connection, connection.stdinHandler())) {
             connection.setStdinHandler(keys -> {
                 decoder.add(keys);
                 if (decoder.hasNext()) {
@@ -165,15 +163,11 @@ public class ShellImpl implements Shell {
                     latch.countDown();
                 }
             });
-            try {
-                // Wait until interrupted
-                if (unit == null)
-                    latch.await();
-                else
-                    latch.await(timeout, unit);
-            } finally {
-                connection.setStdinHandler(null);
-            }
+            // Wait until interrupted
+            if (unit == null)
+                latch.await();
+            else
+                latch.await(timeout, unit);
         } finally {
             connection.setAttributes(attributes);
         }

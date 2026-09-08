@@ -78,9 +78,7 @@ public class Process extends Thread implements Consumer<Signal> {
     @Override
     public void run() {
         // Subscribe to events, in particular Ctrl-C
-        Consumer<Signal> prev = conn.signalHandler();
-        Consumer<int[]> prevIn = conn.stdinHandler();
-        conn.setSignalHandler(this);
+        HandlerScope signalScope = HandlerScope.signal(conn, this);
         running = true;
         pid = (int) Thread.currentThread().getId();
 
@@ -105,8 +103,8 @@ public class Process extends Thread implements Consumer<Signal> {
             LOGGER.log(Level.WARNING, "Uncaught exception when executing the command: " + execution.getCommand().toString(), e);
         } finally {
             running = false;
-            conn.setSignalHandler(prev);
-            conn.setStdinHandler(prevIn);
+            awaitUpstreamPipeThreads();
+            signalScope.close();
             long durationMs = System.currentTimeMillis() - startTime;
             // Re-arm readline before firing the completion callback so
             // consumers can safely send the next command immediately (#599)
@@ -142,5 +140,28 @@ public class Process extends Thread implements Consumer<Signal> {
      */
     List<Thread> getUpstreamPipeThreads() {
         return upstreamPipeThreads;
+    }
+
+    /**
+     * Take the upstream pipe threads for joining, clearing the reference so a
+     * later join is a no-op. Interrupt and wait for any upstream pipe threads
+     * to finish. Interrupting is needed because upstream stages may be blocked
+     * on PipedOutputStream.write() if the downstream consumer finished early.
+     */
+    void awaitUpstreamPipeThreads() {
+        List<Thread> threads = upstreamPipeThreads;
+        upstreamPipeThreads = null;
+        if (threads == null)
+            return;
+        for (Thread t : threads) {
+            t.interrupt();
+        }
+        for (Thread t : threads) {
+            try {
+                t.join(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }

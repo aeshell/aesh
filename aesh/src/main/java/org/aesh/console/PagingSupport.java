@@ -705,12 +705,11 @@ public class PagingSupport {
         final Key[] key = { null };
         CountDownLatch latch = new CountDownLatch(1);
         Attributes attributes = conn.enterRawMode();
-        Consumer<Signal> prevHandler = conn.signalHandler();
-        conn.setSignalHandler(signal -> {
+        try (HandlerScope signalScope = HandlerScope.signal(conn, signal -> {
             if (signal == Signal.INT)
                 latch.countDown();
         });
-        try {
+                HandlerScope stdinScope = HandlerScope.stdin(conn, conn.stdinHandler())) {
             conn.setStdinHandler(keys -> {
                 decoder.add(keys);
                 if (decoder.hasNext()) {
@@ -718,14 +717,9 @@ public class PagingSupport {
                     latch.countDown();
                 }
             });
-            try {
-                latch.await();
-            } finally {
-                conn.setStdinHandler(null);
-            }
+            latch.await();
         } finally {
             conn.setAttributes(attributes);
-            conn.setSignalHandler(prevHandler);
         }
         return key[0];
     }
@@ -735,29 +729,26 @@ public class PagingSupport {
         String[] out = new String[1];
         // We need to set the interrupt SignalHandler to be aware of the interrupt
         Consumer<Signal> prevHandler = getConnection().signalHandler();
-        getConnection().setSignalHandler((signal) -> {
+        try (HandlerScope scope = HandlerScope.signal(getConnection(), (signal) -> {
             prevHandler.accept(signal);
             switch (signal) {
                 case INT: {
                     latch.countDown();
                 }
             }
-        });
-        getReadline().readline(
-                ReadlineRequest.builder()
-                        .connection(getConnection())
-                        .prompt(new Prompt("/", (Character) null))
-                        .requestHandler(newLine -> {
-                            out[0] = newLine;
-                            latch.countDown();
-                        })
-                        .history(searchHistory)
-                        .flags(RED_PATTERN_READLINE_FLAGS)
-                        .build());
-        try {
+        })) {
+            getReadline().readline(
+                    ReadlineRequest.builder()
+                            .connection(getConnection())
+                            .prompt(new Prompt("/", (Character) null))
+                            .requestHandler(newLine -> {
+                                out[0] = newLine;
+                                latch.countDown();
+                            })
+                            .history(searchHistory)
+                            .flags(RED_PATTERN_READLINE_FLAGS)
+                            .build());
             latch.await();
-        } finally {
-            getConnection().setSignalHandler(prevHandler);
         }
         // At this point, if the current thread has been interrupted
         // then an exception has been thrown, and we are not reaching this point.
