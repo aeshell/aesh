@@ -106,6 +106,15 @@ public class ProcessManager {
         drain();
     }
 
+    public CommandResult runNative(Execution<? extends CommandInvocation> execution, Connection conn,
+            String commandLine) {
+        CommandJob job = new CommandJob(this, conn, execution, commandLine, executionListener);
+        job.setPipelineConfig(pipelineConfig);
+        activeJob = job;
+        job.run();
+        return job.result();
+    }
+
     public boolean hasNext() {
         return planner != null && planner.hasMoreUnits();
     }

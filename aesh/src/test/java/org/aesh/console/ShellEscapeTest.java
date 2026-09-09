@@ -1,13 +1,16 @@
 package org.aesh.console;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -15,6 +18,7 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.readline.prompt.Prompt;
+import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
@@ -151,6 +155,157 @@ public class ShellEscapeTest {
         assertTrue("Command should complete within 5 seconds",
                 latch.await(5, TimeUnit.SECONDS));
         assertTrue("Normal command should have executed", TestCmd.executed);
+
+        console.stop();
+    }
+
+    @Test
+    public void testNativeExitCodePropagated() throws Exception {
+        if (System.getProperty("os.name", "").toLowerCase().contains("win"))
+            return;
+
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<CommandResult> listenerResult = new AtomicReference<>();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(TestCmd.class)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .enableShellEscape(true)
+                .commandExecutionListener(new CommandExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                    }
+
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs,
+                            Throwable error) {
+                        listenerResult.set(result);
+                        latch.countDown();
+                    }
+                })
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        connection.read("!exit 42" + Config.getLineSeparator());
+        assertTrue("Native command should complete", latch.await(5, TimeUnit.SECONDS));
+        assertEquals(42, listenerResult.get().getResultValue());
+
+        console.stop();
+    }
+
+    @Test
+    public void testNativeFailureExitCode() throws Exception {
+        if (System.getProperty("os.name", "").toLowerCase().contains("win"))
+            return;
+
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<CommandResult> listenerResult = new AtomicReference<>();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(TestCmd.class)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .enableShellEscape(true)
+                .commandExecutionListener(new CommandExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                    }
+
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs,
+                            Throwable error) {
+                        listenerResult.set(result);
+                        latch.countDown();
+                    }
+                })
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        connection.read("!exit 3" + Config.getLineSeparator());
+        assertTrue("Native command should complete", latch.await(5, TimeUnit.SECONDS));
+        assertTrue(listenerResult.get().isFailure());
+        assertEquals(3, listenerResult.get().getResultValue());
+
+        console.stop();
+    }
+
+    @Test
+    public void testNativeInterruptMapsToInterrupted() throws Exception {
+        if (System.getProperty("os.name", "").toLowerCase().contains("win"))
+            return;
+
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<CommandResult> listenerResult = new AtomicReference<>();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(TestCmd.class)
+                .create();
+
+        Settings settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .enableShellEscape(true)
+                .commandExecutionListener(new CommandExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                    }
+
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs,
+                            Throwable error) {
+                        listenerResult.set(result);
+                        latch.countDown();
+                    }
+                })
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        Thread interrupter = new Thread(() -> {
+            long deadline = System.currentTimeMillis() + 5000;
+            while (!(connection.signalHandler() instanceof CommandJob)) {
+                if (System.currentTimeMillis() > deadline)
+                    return;
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            connection.signalHandler().accept(Signal.INT);
+        });
+        interrupter.setDaemon(true);
+        interrupter.start();
+
+        connection.read("!sleep 30" + Config.getLineSeparator());
+
+        long start = System.currentTimeMillis();
+        assertTrue("Interrupted native command should complete", latch.await(40, TimeUnit.SECONDS));
+        long elapsed = System.currentTimeMillis() - start;
+        assertEquals(CommandResult.INTERRUPTED, listenerResult.get());
+        assertTrue("Interrupt must preempt the sleep, took: " + elapsed, elapsed < 15000);
 
         console.stop();
     }
