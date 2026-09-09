@@ -29,6 +29,7 @@ import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.tty.TerminalConnection;
 import org.aesh.terminal.tty.TtyDetect;
 import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
 import org.aesh.terminal.utils.Parser;
 
 /**
@@ -78,11 +79,7 @@ class LazyTerminalShell implements Shell {
 
     @Override
     public void write(int[] out) {
-        Console console = System.console();
-        if (console != null) {
-            console.writer().write(Parser.fromCodePoints(out));
-            console.writer().flush();
-        }
+        System.out.print(Parser.fromCodePoints(out));
     }
 
     @Override
@@ -97,6 +94,8 @@ class LazyTerminalShell implements Shell {
 
     @Override
     public String readLine(Prompt prompt) {
+        if (Config.isWindows())
+            return null;
         Console console = System.console();
         if (console != null) {
             if (prompt != null) {
@@ -123,6 +122,8 @@ class LazyTerminalShell implements Shell {
 
     @Override
     public Key read(Prompt prompt) {
+        if (Config.isWindows())
+            return null;
         Console console = System.console();
         if (console != null) {
             try {
@@ -166,10 +167,7 @@ class LazyTerminalShell implements Shell {
 
     @Override
     public void clear() {
-        Console console = System.console();
-        if (console != null) {
-            console.writer().write(Parser.fromCodePoints(ANSI.CLEAR_SCREEN));
-        }
+        System.out.print(Parser.fromCodePoints(ANSI.CLEAR_SCREEN));
     }
 
     /**

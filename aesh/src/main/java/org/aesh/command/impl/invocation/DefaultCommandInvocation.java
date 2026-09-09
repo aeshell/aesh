@@ -211,11 +211,7 @@ public class DefaultCommandInvocation implements CommandInvocation {
 
         @Override
         public void write(int[] out) {
-            Console console = System.console();
-            if (console != null) {
-                console.writer().write(Parser.fromCodePoints(out));
-                console.writer().flush();
-            }
+            System.out.print(Parser.fromCodePoints(out));
         }
 
         @Override
@@ -230,6 +226,8 @@ public class DefaultCommandInvocation implements CommandInvocation {
 
         @Override
         public String readLine(Prompt prompt) {
+            if (Config.isWindows())
+                return null;
             Console console = System.console();
             if (console != null) {
                 if (prompt != null) {
@@ -256,6 +254,8 @@ public class DefaultCommandInvocation implements CommandInvocation {
 
         @Override
         public Key read(Prompt prompt) {
+            if (Config.isWindows())
+                return null;
             Console console = System.console();
             if (console != null) {
                 try {
@@ -289,10 +289,7 @@ public class DefaultCommandInvocation implements CommandInvocation {
 
         @Override
         public void clear() {
-            Console console = System.console();
-            if (console != null) {
-                console.writer().write(Parser.fromCodePoints(ANSI.CLEAR_SCREEN));
-            }
+            System.out.print(Parser.fromCodePoints(ANSI.CLEAR_SCREEN));
         }
     }
 }

@@ -74,7 +74,7 @@ public final class NativeExecution implements Execution<CommandInvocation> {
 
     @Override
     public CommandResult execute() throws InterruptedException {
-        boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
+        boolean isWindows = Config.isWindows();
         ProcessBuilder builder = isWindows
                 ? new ProcessBuilder("cmd", "/c", command)
                 : new ProcessBuilder("sh", "-c", command);

@@ -46,6 +46,7 @@ import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.terminal.utils.Config;
 import org.aesh.util.completer.ShellCompletionGenerator;
 import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
 
@@ -921,6 +922,8 @@ public class AeshRuntimeRunner {
     }
 
     private static String readUserResponse() throws java.io.IOException {
+        if (Config.isWindows())
+            return new java.io.BufferedReader(new java.io.InputStreamReader(System.in)).readLine();
         java.io.Console console = System.console();
         if (console != null) {
             return console.readLine();
