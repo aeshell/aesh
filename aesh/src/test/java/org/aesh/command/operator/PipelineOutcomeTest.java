@@ -49,6 +49,7 @@ import org.aesh.command.PipelineExecutionListener;
 import org.aesh.command.PipelineResult;
 import org.aesh.command.StageOutcome;
 import org.aesh.command.impl.AeshCommandRuntime;
+import org.aesh.command.impl.operator.PipeBrokenException;
 import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -105,6 +106,39 @@ public class PipelineOutcomeTest {
     public static class TrueCommand implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "flood", description = "upstream flooding output")
+    public static class FloodCommand implements Command<CommandInvocation> {
+        static final AtomicInteger written = new AtomicInteger();
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            for (int i = 0; i < 100000; i++) {
+                commandInvocation.println("line-" + i);
+                written.incrementAndGet();
+            }
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "head", description = "downstream reading one line")
+    public static class HeadCommand implements Command<CommandInvocation> {
+        static volatile String firstLine;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            try {
+                java.io.InputStream stdin = commandInvocation.getStdin();
+                if (stdin != null) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
+                    firstLine = reader.readLine();
+                }
+            } catch (Exception e) {
+                return CommandResult.FAILURE;
+            }
             return CommandResult.SUCCESS;
         }
     }
@@ -167,6 +201,8 @@ public class PipelineOutcomeTest {
                 .command(OkPipeCommand.class)
                 .command(SinkDrainCommand.class)
                 .command(TrueCommand.class)
+                .command(FloodCommand.class)
+                .command(HeadCommand.class)
                 .create();
         return AeshCommandRuntimeBuilder.<CommandInvocation> builder()
                 .commandRegistry(registry)
@@ -250,14 +286,32 @@ public class PipelineOutcomeTest {
     }
 
     @Test
+    public void testEarlyConsumerExitBreaksProducer() throws Exception {
+        FloodCommand.written.set(0);
+        HeadCommand.firstLine = null;
+        CommandRuntime<CommandInvocation> runtime = buildRuntime();
+
+        CommandResult result = runtime.executeCommand("flood | head");
+
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("line-0", HeadCommand.firstLine);
+        PipelineResult pipeline = ((AeshCommandRuntime<CommandInvocation>) runtime)
+                .lastPipelineResult();
+        assertNotNull(pipeline);
+        assertEquals(CommandResult.PIPE_BROKEN, pipeline.stages().get(0).result());
+        assertTrue(FloodCommand.written.get() < 100000);
+    }
+
+    @Test
     public void testPipeBrokenConstant() {
         assertEquals(141, CommandResult.PIPE_BROKEN.getResultValue());
         assertEquals(141, CommandResult.PIPE_BROKEN.getExitCode());
         assertTrue(CommandResult.PIPE_BROKEN.isFailure());
         assertSame(CommandResult.PIPE_BROKEN, CommandResult.valueOf(141));
-        assertTrue(PipeOperator.isPipeBroken(new IOException("Pipe closed")));
+        assertTrue(PipeOperator.isPipeBroken(new PipeBrokenException()));
         assertTrue(PipeOperator.isPipeBroken(
-                new RuntimeException(new IOException("Pipe closed"))));
+                new RuntimeException(new PipeBrokenException())));
+        assertFalse(PipeOperator.isPipeBroken(new IOException("Pipe closed")));
         assertFalse(PipeOperator.isPipeBroken(new IOException("boom")));
         assertFalse(PipeOperator.isPipeBroken(null));
     }

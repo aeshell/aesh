@@ -27,6 +27,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.PipelineConfig;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
@@ -54,6 +55,7 @@ public class PipeOperator extends EndOperator implements
 
     private final BlockingQueue<byte[]> queue;
     private final AeshContext context;
+    private volatile boolean consumerGone;
     private final int chunkSizeBytes;
     private final int queueCapacityChunks;
     private CommandInvocationConfiguration config;
@@ -106,25 +108,27 @@ public class PipeOperator extends EndOperator implements
                     target.offer(EOF);
                 }
             } catch (IOException e) {
-                if (!isPipeBroken(e)) {
+                if (!isRoutinePipeClose(e)) {
                     if (exception == null)
                         exception = e;
                 }
             } finally {
-                if (exception != null && !isPipeBroken(exception)) {
+                if (exception != null && !isRoutinePipeClose(exception)) {
                     throw exception;
                 }
             }
         }
     }
 
+    private static boolean isRoutinePipeClose(IOException error) {
+        String message = error.getMessage();
+        return message != null && message.contains("Pipe closed");
+    }
+
     public static boolean isPipeBroken(Throwable error) {
         while (error != null) {
-            if (error instanceof IOException) {
-                String message = error.getMessage();
-                if (message != null && message.contains("Pipe closed"))
-                    return true;
-            }
+            if (error instanceof PipeBrokenException)
+                return true;
             error = error.getCause();
         }
         return false;
@@ -147,6 +151,8 @@ public class PipeOperator extends EndOperator implements
             write(new byte[] { (byte) b }, 0, 1);
         }
 
+        private static final long OFFER_WAIT_MS = 100;
+
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
             if (closed)
@@ -154,7 +160,10 @@ public class PipeOperator extends EndOperator implements
             byte[] chunk = new byte[len];
             System.arraycopy(b, off, chunk, 0, len);
             try {
-                target.put(chunk);
+                while (!target.offer(chunk, OFFER_WAIT_MS, TimeUnit.MILLISECONDS)) {
+                    if (consumerGone)
+                        throw new PipeBrokenException();
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IOException("Pipe closed");
@@ -233,6 +242,7 @@ public class PipeOperator extends EndOperator implements
         @Override
         public void close() {
             closed = true;
+            consumerGone = true;
             // Drain the queue so upstream's put() unblocks
             source.clear();
             // Put EOF so any blocked take() returns
