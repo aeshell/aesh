@@ -20,6 +20,7 @@
 package org.aesh.command.operator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -28,6 +29,7 @@ import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -47,6 +49,7 @@ import org.aesh.command.PipelineExecutionListener;
 import org.aesh.command.PipelineResult;
 import org.aesh.command.StageOutcome;
 import org.aesh.command.impl.AeshCommandRuntime;
+import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
@@ -64,12 +67,42 @@ public class PipelineOutcomeTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation)
                 throws CommandException, InterruptedException {
+            commandInvocation.println("partial");
             throw new CommandException("upstream boom");
         }
     }
 
     @CommandDefinition(name = "sink", description = "downstream that ignores stdin")
     public static class SinkCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sinkdrain", description = "downstream draining stdin")
+    public static class SinkDrainCommand implements Command<CommandInvocation> {
+        static final List<String> lines = new ArrayList<>();
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            try {
+                java.io.InputStream stdin = commandInvocation.getStdin();
+                if (stdin != null) {
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(stdin));
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                        lines.add(line);
+                }
+            } catch (Exception e) {
+                return CommandResult.FAILURE;
+            }
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "truecmd", description = "upstream writing nothing")
+    public static class TrueCommand implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
@@ -132,6 +165,8 @@ public class PipelineOutcomeTest {
                 .command(FailPipeCommand.class)
                 .command(SinkCommand.class)
                 .command(OkPipeCommand.class)
+                .command(SinkDrainCommand.class)
+                .command(TrueCommand.class)
                 .create();
         return AeshCommandRuntimeBuilder.<CommandInvocation> builder()
                 .commandRegistry(registry)
@@ -180,6 +215,51 @@ public class PipelineOutcomeTest {
         assertEquals(CommandResult.SUCCESS, pipeline.stages().get(0).result());
         assertNull(pipeline.stages().get(0).error());
         assertEquals(CommandResult.SUCCESS, pipeline.stages().get(1).result());
+    }
+
+    @Test
+    public void testFailingUpstreamStillDeliversEof() throws Exception {
+        SinkDrainCommand.lines.clear();
+        CommandRuntime<CommandInvocation> runtime = buildRuntime();
+
+        CommandResult result = runtime.executeCommand("failpipe | sinkdrain");
+
+        assertEquals(CommandResult.SUCCESS, result);
+        assertTrue(SinkDrainCommand.lines.contains("partial"));
+        PipelineResult pipeline = ((AeshCommandRuntime<CommandInvocation>) runtime)
+                .lastPipelineResult();
+        assertNotNull(pipeline);
+        assertEquals(CommandResult.FAILURE, pipeline.stages().get(0).result());
+        assertTrue(pipeline.stages().get(0).error() instanceof CommandException);
+        assertEquals(CommandResult.SUCCESS, pipeline.stages().get(1).result());
+    }
+
+    @Test
+    public void testSilentUpstreamStillDeliversEof() throws Exception {
+        SinkDrainCommand.lines.clear();
+        CommandRuntime<CommandInvocation> runtime = buildRuntime();
+
+        CommandResult result = runtime.executeCommand("truecmd | sinkdrain");
+
+        assertEquals(CommandResult.SUCCESS, result);
+        assertTrue(SinkDrainCommand.lines.isEmpty());
+        PipelineResult pipeline = ((AeshCommandRuntime<CommandInvocation>) runtime)
+                .lastPipelineResult();
+        assertNotNull(pipeline);
+        assertEquals(CommandResult.SUCCESS, pipeline.stages().get(0).result());
+    }
+
+    @Test
+    public void testPipeBrokenConstant() {
+        assertEquals(141, CommandResult.PIPE_BROKEN.getResultValue());
+        assertEquals(141, CommandResult.PIPE_BROKEN.getExitCode());
+        assertTrue(CommandResult.PIPE_BROKEN.isFailure());
+        assertSame(CommandResult.PIPE_BROKEN, CommandResult.valueOf(141));
+        assertTrue(PipeOperator.isPipeBroken(new IOException("Pipe closed")));
+        assertTrue(PipeOperator.isPipeBroken(
+                new RuntimeException(new IOException("Pipe closed"))));
+        assertFalse(PipeOperator.isPipeBroken(new IOException("boom")));
+        assertFalse(PipeOperator.isPipeBroken(null));
     }
 
     @Test

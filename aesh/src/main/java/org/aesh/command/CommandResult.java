@@ -51,6 +51,9 @@ public class CommandResult {
     /** Interrupted by signal, e.g., Ctrl-C / SIGINT (exit code 130 = 128 + 2). */
     public static final CommandResult INTERRUPTED = new CommandResult(130);
 
+    /** Producer killed by SIGPIPE: downstream closed the pipe early (exit code 141 = 128 + 13). */
+    public static final CommandResult PIPE_BROKEN = new CommandResult(141);
+
     private final int result;
 
     /**
@@ -71,6 +74,8 @@ public class CommandResult {
                 return COMMAND_NOT_FOUND;
             case 130:
                 return INTERRUPTED;
+            case 141:
+                return PIPE_BROKEN;
             default:
                 return new CommandResult(result);
         }

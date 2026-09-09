@@ -36,7 +36,9 @@ import org.aesh.command.PipelineExecutionListener;
 import org.aesh.command.PipelineResult;
 import org.aesh.command.StageOutcome;
 import org.aesh.command.impl.ExecutionPlanner;
+import org.aesh.command.impl.PipeThreads;
 import org.aesh.command.impl.PipelineStages;
+import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.utils.LoggerUtil;
@@ -222,19 +224,21 @@ public class ProcessManager {
         for (int i = 0; i < upstreamCount; i++) {
             final int stageIndex = i;
             Execution<T> stage = pipeChain.get(i);
-            Thread t = new Thread(() -> {
+            Thread t = PipeThreads.newThread(() -> {
                 long start = System.currentTimeMillis();
                 try {
                     stage.execute();
                 } catch (Throwable e) {
                     stageErrors[stageIndex] = e;
-                    stage.setResult(CommandResult.FAILURE);
+                    if (PipeOperator.isPipeBroken(e))
+                        stage.setResult(CommandResult.PIPE_BROKEN);
+                    else
+                        stage.setResult(CommandResult.FAILURE);
                     LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
                 } finally {
                     stageDurations[stageIndex] = System.currentTimeMillis() - start;
                 }
             }, "aesh-pipe-" + i);
-            t.setDaemon(true);
             upstreamThreads.add(t);
         }
 

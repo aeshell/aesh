@@ -91,9 +91,10 @@ public class PipeOperator extends EndOperator implements
         public void close() throws IOException {
             try {
                 if (writer != null)
-                    writer.close(); // flushes and sends EOF via QueueOutputStream.close()
+                    writer.close();
+                else
+                    signalEndOfStream();
             } catch (IOException e) {
-                // Suppress pipe-broken errors (downstream finished early)
                 if (!isPipeBroken(e)) {
                     if (exception == null)
                         exception = e;
@@ -104,10 +105,24 @@ public class PipeOperator extends EndOperator implements
                 }
             }
         }
+    }
 
-        private boolean isPipeBroken(IOException e) {
-            String msg = e.getMessage();
-            return msg != null && msg.contains("Pipe closed");
+    public static boolean isPipeBroken(Throwable error) {
+        while (error != null) {
+            if (error instanceof IOException) {
+                String message = error.getMessage();
+                if (message != null && message.contains("Pipe closed"))
+                    return true;
+            }
+            error = error.getCause();
+        }
+        return false;
+    }
+
+    private void signalEndOfStream() {
+        if (!queue.offer(EOF)) {
+            queue.clear();
+            queue.offer(EOF);
         }
     }
 

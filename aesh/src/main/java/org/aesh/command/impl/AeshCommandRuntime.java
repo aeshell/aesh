@@ -52,6 +52,7 @@ import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -317,12 +318,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     try {
                         stage.execute();
                     } catch (Throwable e) {
-                        // Upstream failures are logged but not propagated — the
-                        // pipeline result comes from the last stage (Unix semantics).
-                        // Pipe broken / IOException from downstream closing early
-                        // is expected (SIGPIPE-like behavior).
                         stageErrors[stageIndex] = e;
-                        stage.setResult(CommandResult.FAILURE);
+                        if (PipeOperator.isPipeBroken(e))
+                            stage.setResult(CommandResult.PIPE_BROKEN);
+                        else
+                            stage.setResult(CommandResult.FAILURE);
                     } finally {
                         stageDurations[stageIndex] = System.currentTimeMillis() - start;
                     }
