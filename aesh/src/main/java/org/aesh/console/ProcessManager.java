@@ -31,7 +31,12 @@ import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Execution;
 import org.aesh.command.Executor;
+import org.aesh.command.PipelineConfig;
+import org.aesh.command.PipelineExecutionListener;
+import org.aesh.command.PipelineResult;
+import org.aesh.command.StageOutcome;
 import org.aesh.command.impl.ExecutionPlanner;
+import org.aesh.command.impl.PipelineStages;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.utils.LoggerUtil;
@@ -60,6 +65,7 @@ public class ProcessManager {
     private String commandLine;
     private volatile CommandJob activeJob;
     private boolean synchronous;
+    private PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
 
     public ProcessManager(Console console) {
         this.console = console;
@@ -76,6 +82,11 @@ public class ProcessManager {
 
     public void setExecutionListener(CommandExecutionListener listener) {
         this.executionListener = listener;
+    }
+
+    public void setPipelineConfig(PipelineConfig pipelineConfig) {
+        if (pipelineConfig != null)
+            this.pipelineConfig = pipelineConfig;
     }
 
     /**
@@ -99,7 +110,44 @@ public class ProcessManager {
 
     public void processFinished(CommandJob job) {
         activeJob = null;
+        firePipelineEvents(job);
         drain();
+    }
+
+    private void firePipelineEvents(CommandJob job) {
+        if (!(executionListener instanceof PipelineExecutionListener) || job.upstreamStageCount() == 0)
+            return;
+        PipelineExecutionListener listener = (PipelineExecutionListener) executionListener;
+        try {
+            int upstreamCount = job.upstreamStageCount();
+            int stageCount = upstreamCount + 1;
+            String[] names = job.getPipelineStageNames();
+            List<Execution<? extends CommandInvocation>> upstream = job.getUpstreamStages();
+            Throwable[] errors = job.getUpstreamStageErrors();
+            long[] durations = job.getUpstreamStageDurations();
+            List<StageOutcome> stages = new ArrayList<>(stageCount);
+            for (int i = 0; i < upstreamCount; i++) {
+                stages.add(new StageOutcome(i, stageCount, names[i], upstream.get(i),
+                        upstream.get(i).getResult(), errors[i], durations[i]));
+            }
+            stages.add(new StageOutcome(upstreamCount, stageCount, names[upstreamCount],
+                    job.execution(), job.result(), job.error(), job.duration().toMillis()));
+            PipelineResult result = new PipelineResult(job.result(), stages);
+            for (StageOutcome stage : stages) {
+                try {
+                    listener.onStageComplete(stage);
+                } catch (Exception e) {
+                    LOGGER.log(Level.FINE, "PipelineExecutionListener.onStageComplete threw exception", e);
+                }
+            }
+            try {
+                listener.onPipelineComplete(result);
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, "PipelineExecutionListener.onPipelineComplete threw exception", e);
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Pipeline event dispatch failed", e);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -164,15 +212,26 @@ public class ProcessManager {
     }
 
     private <T extends CommandInvocation> void launchPipeline(List<Execution<T>> pipeChain) {
-        List<Thread> upstreamThreads = new ArrayList<>(pipeChain.size() - 1);
-        for (int i = 0; i < pipeChain.size() - 1; i++) {
+        int upstreamCount = pipeChain.size() - 1;
+        String[] stageNames = new String[pipeChain.size()];
+        for (int i = 0; i < pipeChain.size(); i++)
+            stageNames[i] = PipelineStages.commandName(pipeChain.get(i), i);
+        Throwable[] stageErrors = new Throwable[upstreamCount];
+        long[] stageDurations = new long[upstreamCount];
+        List<Thread> upstreamThreads = new ArrayList<>(upstreamCount);
+        for (int i = 0; i < upstreamCount; i++) {
+            final int stageIndex = i;
             Execution<T> stage = pipeChain.get(i);
             Thread t = new Thread(() -> {
+                long start = System.currentTimeMillis();
                 try {
                     stage.execute();
-                } catch (Exception e) {
+                } catch (Throwable e) {
+                    stageErrors[stageIndex] = e;
                     stage.setResult(CommandResult.FAILURE);
                     LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
+                } finally {
+                    stageDurations[stageIndex] = System.currentTimeMillis() - start;
                 }
             }, "aesh-pipe-" + i);
             t.setDaemon(true);
@@ -183,21 +242,26 @@ public class ProcessManager {
             t.start();
         }
 
-        Execution<T> lastStage = pipeChain.get(pipeChain.size() - 1);
+        Execution<T> lastStage = pipeChain.get(upstreamCount);
         CommandJob mainJob = new CommandJob(this, conn, lastStage, commandLine, executionListener);
+        mainJob.setPipelineConfig(pipelineConfig);
         mainJob.setUpstreamPipeThreads(upstreamThreads);
+        mainJob.setUpstreamOutcomes(new ArrayList<Execution<? extends CommandInvocation>>(
+                pipeChain.subList(0, upstreamCount)), stageNames, stageErrors, stageDurations);
         activeJob = mainJob;
         mainJob.start();
     }
 
     private void launchSingle(Execution<? extends CommandInvocation> exec) {
         CommandJob job = new CommandJob(this, conn, exec, commandLine, executionListener);
+        job.setPipelineConfig(pipelineConfig);
         activeJob = job;
         job.start();
     }
 
     private void runInline(Execution<? extends CommandInvocation> exec) {
         CommandJob job = new CommandJob(this, conn, exec, commandLine, executionListener);
+        job.setPipelineConfig(pipelineConfig);
         activeJob = job;
         job.run();
     }

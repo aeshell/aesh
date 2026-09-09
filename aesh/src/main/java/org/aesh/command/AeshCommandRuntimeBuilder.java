@@ -66,6 +66,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     private DefaultValueProvider defaultValueProvider;
     private boolean parseBrackets;
     private EnumSet<OperatorType> operators;
+    private PipelineConfig pipelineConfig;
     private Consumer<String> commandOutputHandler;
 
     private AeshCommandRuntimeBuilder() {
@@ -82,6 +83,11 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
 
     public AeshCommandRuntimeBuilder<CI> operators(EnumSet<OperatorType> operators) {
         this.operators = operators;
+        return this;
+    }
+
+    public AeshCommandRuntimeBuilder<CI> pipelineConfig(PipelineConfig pipelineConfig) {
+        this.pipelineConfig = pipelineConfig;
         return this;
     }
 
@@ -167,6 +173,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         this.registry = (CommandRegistry<CI>) settings.commandRegistry();
         this.ctx = settings.aeshContext();
         this.operators = settings.operatorParserEnabled() ? EnumSet.allOf(OperatorType.class) : null;
+        this.pipelineConfig = settings.pipelineConfig();
         this.commandOutputHandler = settings.commandOutputHandler();
         return this;
     }
@@ -200,9 +207,12 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
             operators = NO_OPERATORS;
         }
 
-        return new AeshCommandRuntime<>(ctx, registry, commandInvocationProvider,
+        AeshCommandRuntime<CI> runtime = new AeshCommandRuntime<>(ctx, registry, commandInvocationProvider,
                 commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
                 validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider,
                 commandInvocationBuilder, parseBrackets, operators);
+        if (pipelineConfig != null)
+            runtime.setPipelineConfig(pipelineConfig);
+        return runtime;
     }
 }

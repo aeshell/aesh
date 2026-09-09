@@ -25,8 +25,8 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,6 +39,9 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Execution;
 import org.aesh.command.Executor;
+import org.aesh.command.PipelineConfig;
+import org.aesh.command.PipelineResult;
+import org.aesh.command.StageOutcome;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocation;
@@ -91,6 +94,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     private final boolean parseBrackets;
     private final EnumSet<OperatorType> operators;
+    private volatile PipelineResult lastPipelineResult;
+    private volatile PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
 
     public AeshCommandRuntime(AeshContext ctx,
             CommandRegistry<CI> registry,
@@ -126,6 +131,15 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     @Override
     public AeshContext getAeshContext() {
         return ctx;
+    }
+
+    public PipelineConfig pipelineConfig() {
+        return pipelineConfig;
+    }
+
+    public void setPipelineConfig(PipelineConfig pipelineConfig) {
+        if (pipelineConfig != null)
+            this.pipelineConfig = pipelineConfig;
     }
 
     @Override
@@ -284,50 +298,113 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     @SuppressWarnings("unchecked")
     private CommandResult executePipeChain(List<Execution> chain) throws CommandException,
             CommandValidatorException, CommandLineParserException, InterruptedException {
-        // Run all stages except the last in background threads
-        ExecutorService threadPool = Executors.newFixedThreadPool(chain.size() - 1, r -> {
-            Thread t = new Thread(r, "aesh-pipe-" + System.nanoTime());
-            t.setDaemon(true);
-            return t;
-        });
+        ExecutorService threadPool = PipeThreads.sharedPool();
+
+        int stageCount = chain.size();
+        String[] stageNames = new String[stageCount];
+        for (int i = 0; i < stageCount; i++)
+            stageNames[i] = PipelineStages.commandName(chain.get(i), i);
+        Throwable[] stageErrors = new Throwable[stageCount];
+        long[] stageDurations = new long[stageCount];
 
         List<Future<?>> futures = new ArrayList<>(chain.size() - 1);
         try {
-            // Submit upstream stages to thread pool
             for (int i = 0; i < chain.size() - 1; i++) {
+                final int stageIndex = i;
                 Execution stage = chain.get(i);
                 futures.add(threadPool.submit(() -> {
+                    long start = System.currentTimeMillis();
                     try {
                         stage.execute();
-                    } catch (Exception e) {
+                    } catch (Throwable e) {
                         // Upstream failures are logged but not propagated — the
                         // pipeline result comes from the last stage (Unix semantics).
                         // Pipe broken / IOException from downstream closing early
                         // is expected (SIGPIPE-like behavior).
+                        stageErrors[stageIndex] = e;
                         stage.setResult(CommandResult.FAILURE);
+                    } finally {
+                        stageDurations[stageIndex] = System.currentTimeMillis() - start;
                     }
                 }));
             }
 
             // Run the last stage on the calling thread
             Execution lastStage = chain.get(chain.size() - 1);
-            CommandResult result = executeSingle(lastStage);
-
-            // Wait for upstream stages to complete
-            for (Future<?> future : futures) {
-                try {
-                    future.get();
-                } catch (java.util.concurrent.ExecutionException e) {
-                    // Upstream failure — log but don't propagate
-                    // (Unix pipes return the last command's exit code)
-                    LOGGER.log(Level.FINE, "Upstream pipe stage failed", e.getCause());
-                }
+            long lastStart = System.currentTimeMillis();
+            CommandResult result;
+            try {
+                result = executeSingle(lastStage);
+            } catch (CommandException | CommandValidatorException | CommandLineParserException
+                    | InterruptedException | RuntimeException | Error e) {
+                stageErrors[stageCount - 1] = e;
+                throw e;
+            } finally {
+                stageDurations[stageCount - 1] = System.currentTimeMillis() - lastStart;
             }
 
+            settleUpstream(chain, futures, stageErrors);
+
+            recordPipelineResult(chain, stageNames, stageErrors, stageDurations, result);
             return result;
         } finally {
-            threadPool.shutdownNow();
+            for (Future<?> future : futures) {
+                if (!future.isDone())
+                    future.cancel(true);
+            }
         }
+    }
+
+    private void settleUpstream(List<Execution> chain, List<Future<?>> futures,
+            Throwable[] stageErrors) {
+        long timeoutMs = pipelineConfig.upstreamJoinTimeoutMs();
+        for (int i = 0; i < futures.size(); i++) {
+            Future<?> future = futures.get(i);
+            try {
+                if (timeoutMs > 0)
+                    future.get(timeoutMs, TimeUnit.MILLISECONDS);
+                else
+                    future.get();
+            } catch (java.util.concurrent.ExecutionException e) {
+                LOGGER.log(Level.FINE, "Upstream pipe stage failed", e.getCause());
+            } catch (java.util.concurrent.TimeoutException | InterruptedException e) {
+                if (e instanceof InterruptedException)
+                    Thread.currentThread().interrupt();
+                LOGGER.log(Level.FINE, "Upstream pipe stage join timed out", e);
+                future.cancel(true);
+                settleTimedOutStage(chain.get(i), stageErrors, i, e);
+            }
+        }
+    }
+
+    private void settleTimedOutStage(Execution stage, Throwable[] stageErrors, int index, Throwable timeout) {
+        if (stage.getResult() == null) {
+            if (stageErrors[index] == null)
+                stageErrors[index] = timeout;
+            stage.setResult(CommandResult.FAILURE);
+        }
+    }
+
+    private void recordPipelineResult(List<Execution> chain, String[] stageNames,
+            Throwable[] stageErrors, long[] stageDurations, CommandResult result) {
+        List<StageOutcome> stages = new ArrayList<>(chain.size());
+        for (int i = 0; i < chain.size(); i++) {
+            Execution stage = chain.get(i);
+            stages.add(new StageOutcome(i, chain.size(), stageNames[i], stage,
+                    stage.getResult(), stageErrors[i], stageDurations[i]));
+        }
+        lastPipelineResult = new PipelineResult(result, stages);
+    }
+
+    /**
+     * The outcome of the most recently executed pipeline on this runtime,
+     * or null if the last execution was not a pipeline.
+     * <p>
+     * The returned {@link CommandResult} still follows Unix semantics (last
+     * stage wins); per-stage results and errors are retained for diagnostics.
+     */
+    public PipelineResult lastPipelineResult() {
+        return lastPipelineResult;
     }
 
     @Override

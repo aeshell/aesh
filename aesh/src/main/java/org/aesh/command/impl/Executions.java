@@ -34,6 +34,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.DocFormat;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
+import org.aesh.command.PipelineConfig;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.context.CommandContext;
@@ -344,7 +345,8 @@ class Executions {
                     }
                     case NEED_OPERATOR: {
                         OperatorType ot = pl.operator();
-                        Operator op = buildOperator(pl.operator(), runtime.getAeshContext());
+                        Operator op = buildOperator(pl.operator(), runtime.getAeshContext(),
+                                runtime.pipelineConfig());
                         if (ot.isConfiguration()) {
                             if (config != null) { // input provider prior to an output consumer.
                                 if (config.getConfiguration().getInputRedirection() == null) {
@@ -392,7 +394,7 @@ class Executions {
         if (state == State.NEED_OPERATOR) {
             // The implicit execution operator is missing.
             ExecutableOperator exec = (ExecutableOperator) buildOperator(OperatorType.NONE,
-                    runtime.getAeshContext());
+                    runtime.getAeshContext(), runtime.pipelineConfig());
             invocationConfiguration = config == null
                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), dataProvider)
                     : config.getConfiguration();
@@ -402,7 +404,7 @@ class Executions {
         return executions;
     }
 
-    private static Operator buildOperator(OperatorType op, AeshContext context) {
+    private static Operator buildOperator(OperatorType op, AeshContext context, PipelineConfig config) {
         if (op == null) {
             return null;
         }
@@ -418,7 +420,7 @@ class Executions {
                 return new OutputRedirectionOperator(context, true);
             }
             case PIPE: {
-                return new PipeOperator(context);
+                return new PipeOperator(context, config);
             }
             case REDIRECT_IN: {
                 return new InputRedirectionOperator(context);

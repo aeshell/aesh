@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,6 +32,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Execution;
+import org.aesh.command.PipelineConfig;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
@@ -56,7 +58,12 @@ public final class CommandJob implements Consumer<Signal> {
     private volatile Throwable error;
     private volatile long startTime;
     private volatile long endTime;
+    private volatile PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
     private volatile List<Thread> upstreamPipeThreads;
+    private volatile List<Execution<? extends CommandInvocation>> upstreamStages;
+    private volatile String[] pipelineStageNames;
+    private volatile Throwable[] upstreamStageErrors;
+    private volatile long[] upstreamStageDurations;
 
     public CommandJob(ProcessManager manager, Connection conn,
             Execution<? extends CommandInvocation> execution,
@@ -70,6 +77,11 @@ public final class CommandJob implements Consumer<Signal> {
 
     public JobId id() {
         return id;
+    }
+
+    public void setPipelineConfig(PipelineConfig pipelineConfig) {
+        if (pipelineConfig != null)
+            this.pipelineConfig = pipelineConfig;
     }
 
     public JobState state() {
@@ -167,19 +179,65 @@ public final class CommandJob implements Consumer<Signal> {
         return upstreamPipeThreads;
     }
 
+    void setUpstreamOutcomes(List<Execution<? extends CommandInvocation>> stages,
+            String[] stageNames, Throwable[] errors, long[] durations) {
+        this.upstreamStages = stages;
+        this.pipelineStageNames = stageNames;
+        this.upstreamStageErrors = errors;
+        this.upstreamStageDurations = durations;
+    }
+
+    int upstreamStageCount() {
+        return upstreamStages == null ? 0 : upstreamStages.size();
+    }
+
+    List<Execution<? extends CommandInvocation>> getUpstreamStages() {
+        return upstreamStages;
+    }
+
+    String[] getPipelineStageNames() {
+        return pipelineStageNames;
+    }
+
+    Throwable[] getUpstreamStageErrors() {
+        return upstreamStageErrors;
+    }
+
+    long[] getUpstreamStageDurations() {
+        return upstreamStageDurations;
+    }
+
     void awaitUpstreamPipeThreads() {
         List<Thread> threads = upstreamPipeThreads;
         upstreamPipeThreads = null;
         if (threads == null)
             return;
-        for (Thread t : threads) {
-            t.interrupt();
+        if (pipelineConfig.interruptUpstream()) {
+            for (Thread t : threads) {
+                t.interrupt();
+            }
         }
+        long timeoutMs = pipelineConfig.upstreamJoinTimeoutMs();
         for (Thread t : threads) {
             try {
-                t.join(2000);
+                if (timeoutMs > 0)
+                    t.join(timeoutMs);
+                else
+                    t.join();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+            }
+        }
+        if (upstreamStages != null) {
+            for (int i = 0; i < upstreamStages.size(); i++) {
+                Execution<? extends CommandInvocation> stage = upstreamStages.get(i);
+                if (stage.getResult() == null) {
+                    if (upstreamStageErrors != null && upstreamStageErrors[i] == null) {
+                        upstreamStageErrors[i] = new TimeoutException(
+                                "Upstream stage join timed out");
+                    }
+                    stage.setResult(CommandResult.FAILURE);
+                }
             }
         }
     }

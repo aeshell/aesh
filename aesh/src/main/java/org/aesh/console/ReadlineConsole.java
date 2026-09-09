@@ -183,6 +183,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         processManager = new ProcessManager(this);
         processManager.setExecutionListener(settings.commandExecutionListener());
+        processManager.setPipelineConfig(settings.pipelineConfig());
     }
 
     public void start() throws IOException {

@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,6 +38,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
+import org.aesh.command.PipelineConfig;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.terminal.tty.Signal;
@@ -260,6 +262,39 @@ public class CommandJobTest {
         CommandJob second = runInline(new FakeExecution());
 
         assertNotEquals(first.id(), second.id());
+    }
+
+    @Test
+    public void testAwaitUpstreamRespectsJoinTimeout() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        Thread blocker = new Thread(() -> {
+            entered.countDown();
+            try {
+                new CountDownLatch(1).await(30, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        blocker.setDaemon(true);
+        blocker.start();
+        assertTrue(entered.await(5, TimeUnit.SECONDS));
+
+        ProcessManager manager = new ProcessManager(null) {
+            @Override
+            public void processFinished(CommandJob job) {
+            }
+        };
+        CommandJob job = new CommandJob(manager, new TestConnection(), new FakeExecution(), "test", null);
+        job.setUpstreamPipeThreads(Collections.singletonList(blocker));
+        job.setPipelineConfig(new PipelineConfig(16, 8192, 200, true));
+
+        long start = System.currentTimeMillis();
+        job.awaitUpstreamPipeThreads();
+        long elapsed = System.currentTimeMillis() - start;
+
+        assertTrue("Join must time out, took: " + elapsed, elapsed < 10000);
+        blocker.join(5000);
+        assertFalse(blocker.isAlive());
     }
 
     @Test

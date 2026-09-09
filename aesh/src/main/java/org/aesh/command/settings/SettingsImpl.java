@@ -29,6 +29,7 @@ import java.util.function.Supplier;
 
 import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundHandler;
+import org.aesh.command.PipelineConfig;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
@@ -79,6 +80,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     private boolean persistAlias = true;
     private boolean enableOperatorParser = true;
     private boolean manEnabled = true;
+    private PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
     private AeshContext aeshContext;
     private boolean exportEnabled = true;
     private File exportFile;
@@ -138,6 +140,7 @@ public class SettingsImpl<CI extends CommandInvocation>
         setPersistAlias(baseSettings.persistAlias());
         setQuitHandler(baseSettings.quitHandler());
         enableOperatorParser(baseSettings.operatorParserEnabled());
+        setPipelineConfig(baseSettings.pipelineConfig());
         setManEnabled(baseSettings.manEnabled());
         setAeshContext(baseSettings.aeshContext());
         setExportEnabled(baseSettings.exportEnabled());
@@ -559,6 +562,16 @@ public class SettingsImpl<CI extends CommandInvocation>
     @Override
     public boolean operatorParserEnabled() {
         return enableOperatorParser;
+    }
+
+    @Override
+    public PipelineConfig pipelineConfig() {
+        return pipelineConfig;
+    }
+
+    public void setPipelineConfig(PipelineConfig pipelineConfig) {
+        if (pipelineConfig != null)
+            this.pipelineConfig = pipelineConfig;
     }
 
     @Override

@@ -28,6 +28,7 @@ import java.io.OutputStreamWriter;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import org.aesh.command.PipelineConfig;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.console.AeshContext;
 
@@ -51,11 +52,9 @@ public class PipeOperator extends EndOperator implements
     /** Sentinel value placed in the queue to signal EOF. */
     private static final byte[] EOF = new byte[0];
 
-    /** Queue capacity in number of chunks. Each chunk is up to 8KB. */
-    private static final int QUEUE_CAPACITY = 16;
-
-    private final BlockingQueue<byte[]> queue = new ArrayBlockingQueue<>(QUEUE_CAPACITY);
+    private final BlockingQueue<byte[]> queue;
     private final AeshContext context;
+    private final int chunkSizeBytes;
     private CommandInvocationConfiguration config;
 
     /**
@@ -66,7 +65,7 @@ public class PipeOperator extends EndOperator implements
 
         @Override
         protected BufferedWriter buildWriter() throws IOException {
-            return new BufferedWriter(new OutputStreamWriter(new QueueOutputStream()));
+            return new BufferedWriter(new OutputStreamWriter(new QueueOutputStream()), chunkSizeBytes);
         }
 
         /**
@@ -213,7 +212,13 @@ public class PipeOperator extends EndOperator implements
     }
 
     public PipeOperator(AeshContext context) {
+        this(context, PipelineConfig.DEFAULT);
+    }
+
+    public PipeOperator(AeshContext context, PipelineConfig config) {
         this.context = context;
+        this.queue = new ArrayBlockingQueue<>(config.queueCapacityChunks());
+        this.chunkSizeBytes = config.chunkSizeBytes();
     }
 
     @Override

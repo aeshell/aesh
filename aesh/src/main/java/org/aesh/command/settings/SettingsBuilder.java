@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 
 import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundHandler;
+import org.aesh.command.PipelineConfig;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
@@ -82,6 +83,11 @@ public class SettingsBuilder<CI extends CommandInvocation> {
 
     public SettingsBuilder<CI> historySize(int size) {
         settings.setHistorySize(size);
+        return this;
+    }
+
+    public SettingsBuilder<CI> pipelineConfig(PipelineConfig pipelineConfig) {
+        settings.setPipelineConfig(pipelineConfig);
         return this;
     }
 

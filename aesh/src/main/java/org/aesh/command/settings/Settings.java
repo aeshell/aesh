@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 
 import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundHandler;
+import org.aesh.command.PipelineConfig;
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
@@ -170,6 +171,11 @@ public interface Settings<CI extends CommandInvocation>
      * Is operator parser enabled
      */
     boolean operatorParserEnabled();
+
+    /**
+     * Pipeline resource and timing configuration
+     */
+    PipelineConfig pipelineConfig();
 
     /**
      * Is the man command enabled (currently only for AeshConsole)
