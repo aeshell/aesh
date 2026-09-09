@@ -28,6 +28,7 @@ import java.io.OutputStreamWriter;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.aesh.command.PipelineConfig;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
@@ -55,6 +56,7 @@ public class PipeOperator extends EndOperator implements
 
     private final BlockingQueue<byte[]> queue;
     private final AeshContext context;
+    private final AtomicLong truncatedBytes = new AtomicLong();
     private volatile boolean consumerGone;
     private final int chunkSizeBytes;
     private final int queueCapacityChunks;
@@ -125,6 +127,21 @@ public class PipeOperator extends EndOperator implements
         return message != null && message.contains("Pipe closed");
     }
 
+    public long truncatedBytes() {
+        return truncatedBytes.get();
+    }
+
+    private void discardForEof(BlockingQueue<byte[]> target) {
+        if (!target.offer(EOF)) {
+            long dropped = 0;
+            for (byte[] chunk : target.toArray(new byte[0][]))
+                dropped += chunk.length;
+            target.clear();
+            truncatedBytes.addAndGet(dropped);
+            target.offer(EOF);
+        }
+    }
+
     public static boolean isPipeBroken(Throwable error) {
         while (error != null) {
             if (error instanceof PipeBrokenException)
@@ -177,10 +194,7 @@ public class PipeOperator extends EndOperator implements
                 // Use offer instead of put — if the queue is full and we're
                 // interrupted, offer returns false without blocking. Clear
                 // the queue first to make room for the EOF sentinel.
-                if (!target.offer(EOF)) {
-                    target.clear();
-                    target.offer(EOF);
-                }
+                discardForEof(target);
             }
         }
     }
@@ -244,9 +258,7 @@ public class PipeOperator extends EndOperator implements
             closed = true;
             consumerGone = true;
             // Drain the queue so upstream's put() unblocks
-            source.clear();
-            // Put EOF so any blocked take() returns
-            source.offer(EOF);
+            discardForEof(source);
         }
     }
 
@@ -279,6 +291,10 @@ public class PipeOperator extends EndOperator implements
 
     public boolean hasErrorData() {
         return errorQueue != null && !errorQueue.isEmpty();
+    }
+
+    public OutputDelegate getMergingErrorDelegate() {
+        return new PipeQueueDelegate(queue);
     }
 
     public BufferedInputStream getErrorData() {

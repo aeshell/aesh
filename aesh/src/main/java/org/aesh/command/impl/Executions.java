@@ -46,13 +46,16 @@ import org.aesh.command.impl.operator.AndOperator;
 import org.aesh.command.impl.operator.ConfigurationOperator;
 import org.aesh.command.impl.operator.DataProvider;
 import org.aesh.command.impl.operator.EndOperator;
+import org.aesh.command.impl.operator.ErrorRedirectionOperator;
 import org.aesh.command.impl.operator.ExecutableOperator;
 import org.aesh.command.impl.operator.InputDelegate;
 import org.aesh.command.impl.operator.InputRedirectionOperator;
 import org.aesh.command.impl.operator.Operator;
 import org.aesh.command.impl.operator.OrOperator;
 import org.aesh.command.impl.operator.OutputRedirectionOperator;
+import org.aesh.command.impl.operator.PipeAndErrorOperator;
 import org.aesh.command.impl.operator.PipeOperator;
+import org.aesh.command.impl.operator.RedirectOutAllOperator;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
@@ -279,6 +282,13 @@ class Executions {
                         throw new CommandException(ex);
                     }
                 }
+                if (invocationConfiguration.getErrorRedirection() != null) {
+                    try {
+                        invocationConfiguration.getErrorRedirection().close();
+                    } catch (IOException ex) {
+                        throw new CommandException(ex);
+                    }
+                }
                 if (invocationConfiguration.getInputRedirection() != null) {
                     invocationConfiguration.getInputRedirection().close();
                 }
@@ -326,6 +336,9 @@ class Executions {
         CommandContainer<CI> processedCommand = null;
         boolean newParsedLine;
         ConfigurationOperator config = null;
+        ErrorRedirectionOperator pendingErrorFile = null;
+        RedirectOutAllOperator pendingMerge = null;
+        boolean argumentForError = false;
         DataProvider dataProvider = null;
         InputDelegate inDelegate = null;
         CommandInvocationConfiguration invocationConfiguration;
@@ -342,10 +355,18 @@ class Executions {
                         break;
                     }
                     case NEED_ARGUMENT: {
-                        if (config == null) {
-                            throw new IllegalArgumentException("Invalid " + pl.line());
+                        if (argumentForError) {
+                            argumentForError = false;
+                            if (pendingErrorFile != null)
+                                pendingErrorFile.setArgument(pl.firstWord().word());
+                            else if (pendingMerge != null)
+                                pendingMerge.setArgument(pl.firstWord().word());
+                        } else {
+                            if (config == null) {
+                                throw new IllegalArgumentException("Invalid " + pl.line());
+                            }
+                            config.setArgument(pl.firstWord().word());
                         }
-                        config.setArgument(pl.firstWord().word());
                         state = State.NEED_OPERATOR;
                         break;
                     }
@@ -354,16 +375,31 @@ class Executions {
                         Operator op = buildOperator(pl.operator(), runtime.getAeshContext(),
                                 runtime.pipelineConfig());
                         if (ot.isConfiguration()) {
-                            if (config != null) { // input provider prior to an output consumer.
-                                if (config.getConfiguration().getInputRedirection() == null) {
-                                    throw new IllegalArgumentException("Invalid operators structure");
+                            if (op instanceof ErrorRedirectionOperator) {
+                                pendingErrorFile = (ErrorRedirectionOperator) op;
+                                pendingMerge = null;
+                                argumentForError = true;
+                            } else if (op instanceof RedirectOutAllOperator) {
+                                pendingMerge = (RedirectOutAllOperator) op;
+                                pendingErrorFile = null;
+                                argumentForError = true;
+                            } else {
+                                if (config != null) { // input provider prior to an output consumer.
+                                    if (config.getConfiguration().getInputRedirection() == null) {
+                                        throw new IllegalArgumentException("Invalid operators structure");
+                                    }
+                                    inDelegate = config.getConfiguration().getInputRedirection();
                                 }
-                                inDelegate = config.getConfiguration().getInputRedirection();
+                                config = (ConfigurationOperator) op;
                             }
-                            config = (ConfigurationOperator) op;
                         }
                         if (ot.isConfiguration() && ot.hasArgument()) {
                             state = State.NEED_ARGUMENT;
+                        } else if (op instanceof RedirectOutAllOperator) {
+                            // Trailing merge flag: no argument follows, the
+                            // execution materializes in the end-of-input tail
+                            pendingMerge = (RedirectOutAllOperator) op;
+                            pendingErrorFile = null;
                         } else {
                             // The operator must be an executor one
                             if (!(op instanceof ExecutableOperator)) {
@@ -379,6 +415,14 @@ class Executions {
                                             config.getConfiguration().getOutputRedirection(),
                                             inDelegate == null ? config.getConfiguration().getInputRedirection() : inDelegate,
                                             dataProvider);
+                            if (pendingErrorFile != null) {
+                                invocationConfiguration.setErrorRedirection(
+                                        pendingErrorFile.errorDelegate());
+                                pendingErrorFile = null;
+                            } else if (pendingMerge != null) {
+                                pendingMerge.mergeInto(invocationConfiguration);
+                                pendingMerge = null;
+                            }
                             Execution<CI> execution = new ExecutionImpl<>(exec, runtime,
                                     invocationConfiguration, processedCommand);
                             if (exec instanceof DataProvider) {
@@ -404,6 +448,14 @@ class Executions {
             invocationConfiguration = config == null
                     ? new CommandInvocationConfiguration(runtime.getAeshContext(), dataProvider)
                     : config.getConfiguration();
+            if (pendingErrorFile != null) {
+                invocationConfiguration.setErrorRedirection(
+                        pendingErrorFile.errorDelegate());
+                pendingErrorFile = null;
+            } else if (pendingMerge != null) {
+                pendingMerge.mergeInto(invocationConfiguration);
+                pendingMerge = null;
+            }
             Execution<CI> execution = new ExecutionImpl<CI>(exec, runtime, invocationConfiguration, processedCommand);
             executions.add(execution);
         }
@@ -422,11 +474,23 @@ class Executions {
             case REDIRECT_OUT: {
                 return new OutputRedirectionOperator(context);
             }
+            case REDIRECT_OUT_ERROR: {
+                return new ErrorRedirectionOperator(context, false);
+            }
+            case APPEND_OUT_ERROR: {
+                return new ErrorRedirectionOperator(context, true);
+            }
+            case REDIRECT_OUT_ALL: {
+                return new RedirectOutAllOperator(context);
+            }
             case APPEND_OUT: {
                 return new OutputRedirectionOperator(context, true);
             }
             case PIPE: {
                 return new PipeOperator(context, config);
+            }
+            case PIPE_AND_ERROR: {
+                return new PipeAndErrorOperator(context, config);
             }
             case REDIRECT_IN: {
                 return new InputRedirectionOperator(context);

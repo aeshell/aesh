@@ -28,14 +28,14 @@ import java.util.Set;
  */
 public enum OperatorType {
     PIPE("|", false, true),
-    PIPE_AND_ERROR("|&"),
+    PIPE_AND_ERROR("|&", false, true),
     REDIRECT_OUT(">", true, true),
     REDIRECT_OUT_ERROR("2>", true, true),
     REDIRECT_IN("<", true, true),
     END(";"),
     APPEND_OUT(">>", true, true),
     APPEND_OUT_ERROR("2>>", true, true),
-    REDIRECT_OUT_ALL("2>&1", true, true),
+    REDIRECT_OUT_ALL("2>&1", false, true),
     AMP("&", true, true),
     AND("&&"),
     OR("||"),
