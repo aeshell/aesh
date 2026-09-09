@@ -55,17 +55,26 @@ public class PipeOperator extends EndOperator implements
     private final BlockingQueue<byte[]> queue;
     private final AeshContext context;
     private final int chunkSizeBytes;
+    private final int queueCapacityChunks;
     private CommandInvocationConfiguration config;
+    private BlockingQueue<byte[]> errorQueue;
+    private PipeQueueDelegate errorDelegate;
 
     /**
      * Output delegate for pipe -- writes to the blocking queue without
      * stripping ANSI codes.
      */
-    private class PipeOutputDelegate extends OutputDelegate {
+    private class PipeQueueDelegate extends OutputDelegate {
+
+        private final BlockingQueue<byte[]> target;
+
+        PipeQueueDelegate(BlockingQueue<byte[]> target) {
+            this.target = target;
+        }
 
         @Override
         protected BufferedWriter buildWriter() throws IOException {
-            return new BufferedWriter(new OutputStreamWriter(new QueueOutputStream()), chunkSizeBytes);
+            return new BufferedWriter(new OutputStreamWriter(new QueueOutputStream(target)), chunkSizeBytes);
         }
 
         /**
@@ -92,8 +101,10 @@ public class PipeOperator extends EndOperator implements
             try {
                 if (writer != null)
                     writer.close();
-                else
-                    signalEndOfStream();
+                else if (!target.offer(EOF)) {
+                    target.clear();
+                    target.offer(EOF);
+                }
             } catch (IOException e) {
                 if (!isPipeBroken(e)) {
                     if (exception == null)
@@ -119,19 +130,17 @@ public class PipeOperator extends EndOperator implements
         return false;
     }
 
-    private void signalEndOfStream() {
-        if (!queue.offer(EOF)) {
-            queue.clear();
-            queue.offer(EOF);
-        }
-    }
-
     /**
      * OutputStream that writes byte chunks into the blocking queue.
      * Closing sends an EOF sentinel.
      */
     private class QueueOutputStream extends OutputStream {
+        private final BlockingQueue<byte[]> target;
         private volatile boolean closed;
+
+        QueueOutputStream(BlockingQueue<byte[]> target) {
+            this.target = target;
+        }
 
         @Override
         public void write(int b) throws IOException {
@@ -145,7 +154,7 @@ public class PipeOperator extends EndOperator implements
             byte[] chunk = new byte[len];
             System.arraycopy(b, off, chunk, 0, len);
             try {
-                queue.put(chunk);
+                target.put(chunk);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IOException("Pipe closed");
@@ -159,9 +168,9 @@ public class PipeOperator extends EndOperator implements
                 // Use offer instead of put — if the queue is full and we're
                 // interrupted, offer returns false without blocking. Clear
                 // the queue first to make room for the EOF sentinel.
-                if (!queue.offer(EOF)) {
-                    queue.clear();
-                    queue.offer(EOF);
+                if (!target.offer(EOF)) {
+                    target.clear();
+                    target.offer(EOF);
                 }
             }
         }
@@ -172,10 +181,15 @@ public class PipeOperator extends EndOperator implements
      * Returns -1 (EOF) when the EOF sentinel is received.
      */
     private class QueueInputStream extends InputStream {
+        private final BlockingQueue<byte[]> source;
         private byte[] currentChunk;
         private int pos;
         private volatile boolean eof;
         private volatile boolean closed;
+
+        QueueInputStream(BlockingQueue<byte[]> source) {
+            this.source = source;
+        }
 
         @Override
         public int read() throws IOException {
@@ -190,7 +204,7 @@ public class PipeOperator extends EndOperator implements
                 return -1;
             while (currentChunk == null || pos >= currentChunk.length) {
                 try {
-                    currentChunk = queue.take();
+                    currentChunk = source.take();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return -1;
@@ -213,16 +227,16 @@ public class PipeOperator extends EndOperator implements
             if (eof || closed)
                 return 0;
             int chunkAvail = currentChunk != null ? currentChunk.length - pos : 0;
-            return chunkAvail + (queue.isEmpty() ? 0 : 1);
+            return chunkAvail + (source.isEmpty() ? 0 : 1);
         }
 
         @Override
         public void close() {
             closed = true;
             // Drain the queue so upstream's put() unblocks
-            queue.clear();
+            source.clear();
             // Put EOF so any blocked take() returns
-            queue.offer(EOF);
+            source.offer(EOF);
         }
     }
 
@@ -234,14 +248,33 @@ public class PipeOperator extends EndOperator implements
         this.context = context;
         this.queue = new ArrayBlockingQueue<>(config.queueCapacityChunks());
         this.chunkSizeBytes = config.chunkSizeBytes();
+        this.queueCapacityChunks = config.queueCapacityChunks();
     }
 
     @Override
     public CommandInvocationConfiguration getConfiguration() throws IOException {
         if (config == null) {
-            config = new CommandInvocationConfiguration(context, new PipeOutputDelegate(), null);
+            config = new CommandInvocationConfiguration(context, new PipeQueueDelegate(queue), null);
         }
         return config;
+    }
+
+    public synchronized OutputDelegate getErrorDelegate() {
+        if (errorDelegate == null) {
+            errorQueue = new ArrayBlockingQueue<>(queueCapacityChunks);
+            errorDelegate = new PipeQueueDelegate(errorQueue);
+        }
+        return errorDelegate;
+    }
+
+    public boolean hasErrorData() {
+        return errorQueue != null && !errorQueue.isEmpty();
+    }
+
+    public BufferedInputStream getErrorData() {
+        if (errorQueue == null)
+            return null;
+        return new BufferedInputStream(new QueueInputStream(errorQueue));
     }
 
     @Override
@@ -251,6 +284,6 @@ public class PipeOperator extends EndOperator implements
 
     @Override
     public BufferedInputStream getData() {
-        return new BufferedInputStream(new QueueInputStream());
+        return new BufferedInputStream(new QueueInputStream(queue));
     }
 }

@@ -42,6 +42,7 @@ import org.aesh.console.Console;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.KeyAction;
+import org.aesh.terminal.utils.Config;
 
 /**
  * @author Aesh team
@@ -175,6 +176,16 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public void println(String msg, boolean page) {
         shell.writeln(msg, page);
+    }
+
+    @Override
+    public void printErr(String msg) {
+        if (getConfiguration() != null && getConfiguration().getErrorRedirection() != null) {
+            getConfiguration().getErrorRedirection()
+                    .write(msg + Config.getLineSeparator());
+        } else {
+            shell.writeln(msg, false);
+        }
     }
 
     @Override

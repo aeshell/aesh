@@ -39,6 +39,7 @@ import org.aesh.terminal.Key;
 import org.aesh.terminal.KeyAction;
 import org.aesh.terminal.tty.Size;
 import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.Config;
 import org.aesh.terminal.utils.Parser;
 
 /**
@@ -150,6 +151,15 @@ public class DefaultCommandInvocation implements CommandInvocation {
     @Override
     public void println(String msg, boolean paging) {
         shell.writeln(msg, paging);
+    }
+
+    @Override
+    public void printErr(String msg) {
+        if (config != null && config.getErrorRedirection() != null) {
+            config.getErrorRedirection().write(msg + Config.getLineSeparator());
+        } else {
+            shell.writeln(msg, false);
+        }
     }
 
     @Override

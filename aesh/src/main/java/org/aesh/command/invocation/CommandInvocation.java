@@ -219,6 +219,17 @@ public interface CommandInvocation {
     }
 
     /**
+     * Print an error message. Without error redirection this writes to the
+     * terminal like {@link #println(String)}; with redirection it goes to
+     * the configured error channel.
+     *
+     * @param msg
+     */
+    default void printErr(String msg) {
+        println(msg);
+    }
+
+    /**
      * Print a message on console
      *
      * @param msg

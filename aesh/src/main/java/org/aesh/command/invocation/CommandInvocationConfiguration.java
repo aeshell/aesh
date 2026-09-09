@@ -33,6 +33,7 @@ import org.aesh.console.AeshContext;
 public class CommandInvocationConfiguration {
 
     private OutputDelegate outputDelegate;
+    private OutputDelegate errorDelegate;
     private AeshContext context;
     private DataProvider dataProvider;
     private InputDelegate inputDelegate;
@@ -77,6 +78,14 @@ public class CommandInvocationConfiguration {
         return outputDelegate;
     }
 
+    public OutputDelegate getErrorRedirection() {
+        return errorDelegate;
+    }
+
+    public void setErrorRedirection(OutputDelegate errorDelegate) {
+        this.errorDelegate = errorDelegate;
+    }
+
     public AeshContext getAeshContext() {
         return context;
     }
@@ -87,6 +96,10 @@ public class CommandInvocationConfiguration {
 
     public boolean hasOutputRedirection() {
         return getOutputRedirection() != null;
+    }
+
+    public boolean hasErrorRedirection() {
+        return getErrorRedirection() != null;
     }
 
     public boolean hasInputRedirection() {
