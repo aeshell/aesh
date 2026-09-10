@@ -26,15 +26,21 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
+import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ParsedCommand;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.CompletionFallback;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionVisibility;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
 import org.junit.Test;
@@ -664,6 +670,118 @@ public class ShellCompletionGeneratorTest {
                 out.contains("if ($commandAst.ToString().EndsWith(' '))"));
         assertTrue("Should use cursorPosition for trailing space detection",
                 out.contains("$cursorPosition -gt $commandAst.ToString().Length"));
+    }
+
+    // --- Activator / visibility filtering (#621) ---
+
+    public static class AlwaysOffCommandActivator implements CommandActivator {
+        @Override
+        public boolean isActivated(ParsedCommand command) {
+            return false;
+        }
+    }
+
+    public static class AlwaysOffOptionActivator implements OptionActivator {
+        @Override
+        public boolean isActivated(ParsedCommand command) {
+            return false;
+        }
+    }
+
+    @CommandDefinition(name = "active", description = "Always available")
+    public static class ActiveCmd implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "inactive", description = "Never available", activator = AlwaysOffCommandActivator.class)
+    public static class InactiveCmd implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "gated", groupCommands = { ActiveCmd.class, InactiveCmd.class }, description = "Gated group")
+    public static class GatedGroupCmd implements Command {
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "flagged", description = "Options with visibility and activators")
+    public static class FlaggedCmd implements Command {
+        @Option(hasValue = false, description = "Regular flag")
+        private boolean on;
+
+        @Option(hasValue = false, description = "Deactivated flag", activator = AlwaysOffOptionActivator.class)
+        private boolean off;
+
+        @Option(hasValue = false, description = "Hidden flag", visibility = OptionVisibility.HIDDEN)
+        private boolean secret;
+
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testStaticSkipsDeactivatedSubcommand() {
+        for (ShellType type : ShellType.values()) {
+            String out = generate(type, GatedGroupCmd.class, "gated");
+            assertTrue(type + ": active subcommand should be completed",
+                    out.contains("active"));
+            assertFalse(type + ": deactivated subcommand should not be completed",
+                    out.contains("inactive"));
+        }
+    }
+
+    @Test
+    public void testStaticSkipsHiddenAndDeactivatedOptions() {
+        for (ShellType type : ShellType.values()) {
+            String out = generate(type, FlaggedCmd.class, "flagged");
+            String present = type == ShellType.FISH ? "-l on" : "--on";
+            String absentOpt = type == ShellType.FISH ? "-l off" : "--off";
+            String absentHidden = type == ShellType.FISH ? "-l secret" : "--secret";
+            assertTrue(type + ": regular option should be completed",
+                    out.contains(present));
+            assertFalse(type + ": deactivated option should not be completed",
+                    out.contains(absentOpt));
+            assertFalse(type + ": HIDDEN option should not be completed",
+                    out.contains(absentHidden));
+        }
+    }
+
+    @Test
+    public void testCompletionFilterCustomPredicate() throws CommandLineParserException {
+        CompletionFilter noPush = new CompletionFilter() {
+            @Override
+            public boolean includeCommand(ProcessedCommand<?, ?> command) {
+                return !"push".equals(command.name());
+            }
+
+            @Override
+            public boolean includeOption(ProcessedCommand<?, ?> command, ProcessedOption option) {
+                return true;
+            }
+        };
+        String out = ShellCompletionGenerator.generate(ShellType.BASH, GroupCmd.class, "git",
+                CompletionFilter.defaults().and(noPush));
+        assertTrue("commit should be completed", out.contains("commit"));
+        assertFalse("filtered subcommand should not be completed", out.contains("push"));
+    }
+
+    @Test
+    public void testCompletionFilterAllowAllIncludesDeactivated() {
+        CommandLineParser<CommandInvocation> parser = getParser(GatedGroupCmd.class);
+        String out = ShellCompletionGenerator.forShell(ShellType.BASH)
+                .generate(parser, "gated", CompletionFilter.allowAll());
+        assertTrue("allowAll should include the deactivated subcommand",
+                out.contains("inactive"));
     }
 
     @Test

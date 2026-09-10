@@ -35,6 +35,12 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
 
     @Override
     public String generate(CommandLineParser<? extends CommandInvocation> parser, String programName) {
+        return generate(parser, programName, CompletionFilter.defaults());
+    }
+
+    @Override
+    public String generate(CommandLineParser<? extends CommandInvocation> parser, String programName,
+            CompletionFilter filter) {
         StringBuilder out = new StringBuilder();
         out.append("#compdef ").append(programName).append(NL);
         out.append(NL);
@@ -42,12 +48,11 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
         out.append("# Place this file in a directory listed in $fpath (e.g., ~/.zsh/completions/)").append(NL);
         out.append(NL);
 
-        generateFunction(out, parser, programName, "_" + programName, null);
-        if (parser.isGroupCommand()) {
-            for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
-                String childFuncName = "_" + programName + "_" + child.getProcessedCommand().name().toLowerCase();
-                generateFunction(out, child, programName, childFuncName, programName);
-            }
+        generateFunction(out, parser, programName, "_" + programName, null, filter);
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
+            String childFuncName = "_" + programName + "_" + child.getProcessedCommand().name().toLowerCase();
+            generateFunction(out, child, programName, childFuncName, programName, filter);
         }
 
         out.append("_").append(programName).append(" \"$@\"").append(NL);
@@ -57,13 +62,14 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
 
     private void generateFunction(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser,
-            String programName, String funcName, String parentName) {
+            String programName, String funcName, String parentName,
+            CompletionFilter filter) {
         out.append(funcName).append("() {").append(NL);
 
         if (parser.isGroupCommand()) {
-            generateGroupCommandBody(out, parser, programName);
+            generateGroupCommandBody(out, parser, programName, filter);
         } else {
-            generateSimpleCommandBody(out, parser, programName, parentName);
+            generateSimpleCommandBody(out, parser, programName, parentName, filter);
         }
 
         out.append("}").append(NL).append(NL);
@@ -71,10 +77,11 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
 
     private void generateGroupCommandBody(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser,
-            String programName) {
+            String programName, CompletionFilter filter) {
         out.append("    local -a commands").append(NL);
         out.append("    commands=(").append(NL);
-        for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
             String name = child.getProcessedCommand().name().toLowerCase();
             String desc = escapeZsh(ProcessedCommand.resolveDescription(
                     child.getProcessedCommand(), child.getProcessedCommand().description(),
@@ -87,7 +94,7 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
         out.append(NL);
 
         out.append("    _arguments -C \\").append(NL);
-        appendOptionsAsArguments(out, parser, programName, null);
+        appendOptionsAsArguments(out, parser, programName, null, filter);
         out.append("        '1:command:->cmd' \\").append(NL);
         out.append("        '*::arg:->args'").append(NL);
         out.append(NL);
@@ -98,7 +105,8 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
         out.append("            ;;").append(NL);
         out.append("        args)").append(NL);
         out.append("            case ${words[1]} in").append(NL);
-        for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
             String childName = child.getProcessedCommand().name().toLowerCase();
             out.append("                ").append(childName).append(")").append(NL);
             out.append("                    _").append(programName).append("_")
@@ -112,14 +120,16 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
 
     private void generateSimpleCommandBody(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser,
-            String programName, String parentName) {
+            String programName, String parentName, CompletionFilter filter) {
         out.append("    _arguments \\").append(NL);
-        appendOptionsAsArguments(out, parser, programName, parentName);
+        appendOptionsAsArguments(out, parser, programName, parentName, filter);
 
         if (parser.getProcessedCommand().hasArguments() || parser.getProcessedCommand().hasArgument()) {
             ProcessedOption arg = parser.getProcessedCommand().hasArguments()
                     ? parser.getProcessedCommand().getArguments()
                     : parser.getProcessedCommand().getArgument();
+            if (!filter.includeOption(parser.getProcessedCommand(), arg))
+                return;
             String desc = escapeZsh(ProcessedCommand.resolveOptionDesc(
                     parser.getProcessedCommand(), arg, programName, parentName));
             if (desc.isEmpty())
@@ -141,11 +151,8 @@ public class ZshCompletionGenerator implements ShellCompletionGenerator {
 
     private void appendOptionsAsArguments(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser,
-            String programName, String parentName) {
-        for (ProcessedOption option : parser.getProcessedCommand().getOptions()) {
-            if (option.isProperty())
-                continue;
-
+            String programName, String parentName, CompletionFilter filter) {
+        for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
             appendZshOption(out, option, parser.getProcessedCommand(), programName, parentName);
 
             for (String alias : option.getAliases()) {

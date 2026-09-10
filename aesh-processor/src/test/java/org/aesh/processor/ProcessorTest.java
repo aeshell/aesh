@@ -2419,6 +2419,88 @@ public class ProcessorTest {
         assertTrue("Should contain subcommand name", bashScript.contains("compcmd"));
     }
 
+    private static final String GATED_OFF_ACTIVATOR_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.activator.CommandActivator;\n" +
+            "import org.aesh.command.impl.internal.ParsedCommand;\n" +
+            "\n" +
+            "public class GatedOffActivator implements CommandActivator {\n" +
+            "    @Override\n" +
+            "    public boolean isActivated(ParsedCommand command) {\n" +
+            "        return false;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String GATED_CHILD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"gatedchild\", description = \"Gated child\",\n" +
+            "        activator = test.GatedOffActivator.class)\n" +
+            "public class GatedChildCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"level\", description = \"Level\")\n" +
+            "    String level;\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    private static final String GATED_GROUP_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"gatedgrp\", description = \"Gated group\",\n" +
+            "        groupCommands = { test.GatedChildCommand.class, test.CompletionCommand.class })\n" +
+            "public class GatedGroupCommand implements Command<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testCompletionScriptSkipsDeactivatedChildOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.GatedOffActivator", GATED_OFF_ACTIVATOR_SOURCE),
+                new InMemorySource("test.GatedChildCommand", GATED_CHILD_SOURCE),
+                new InMemorySource("test.CompletionCommand", COMPLETION_CMD_SOURCE),
+                new InMemorySource("test.GatedGroupCommand", GATED_GROUP_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> groupClass = result.classLoader.loadClass("test.GatedGroupCommand");
+        Class<?> groupMetaClass = result.classLoader.loadClass("test.GatedGroupCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) groupMetaClass.newInstance();
+        Command instance = (Command) groupClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+
+        org.aesh.command.impl.container.AeshCommandContainer container = new org.aesh.command.impl.container.AeshCommandContainer(
+                parser);
+        Class<?> gatedChildClass = result.classLoader.loadClass("test.GatedChildCommand");
+        CommandMetadataProvider gatedChildProvider = (CommandMetadataProvider) result.classLoader
+                .loadClass("test.GatedChildCommand_AeshMetadata").newInstance();
+        container.addLazyChild(gatedChildProvider.commandName(), gatedChildClass);
+        Class<?> activeChildClass = result.classLoader.loadClass("test.CompletionCommand");
+        CommandMetadataProvider activeChildProvider = (CommandMetadataProvider) result.classLoader
+                .loadClass("test.CompletionCommand_AeshMetadata").newInstance();
+        container.addLazyChild(activeChildProvider.commandName(), activeChildClass);
+
+        String bashScript = org.aesh.util.completer.ShellCompletionGenerator
+                .forShell(org.aesh.util.completer.ShellCompletionGenerator.ShellType.BASH)
+                .generate(parser, "gatedgrp");
+
+        assertTrue("Active child should be completed", bashScript.contains("compcmd"));
+        assertFalse("Deactivated child should not be completed on generated path",
+                bashScript.contains("gatedchild"));
+    }
+
     @Test
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void testDynamicCompletionWithGeneratedCommand() throws Exception {

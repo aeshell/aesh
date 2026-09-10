@@ -34,27 +34,33 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
 
     @Override
     public String generate(CommandLineParser<? extends CommandInvocation> parser, String programName) {
+        return generate(parser, programName, CompletionFilter.defaults());
+    }
+
+    @Override
+    public String generate(CommandLineParser<? extends CommandInvocation> parser, String programName,
+            CompletionFilter filter) {
         StringBuilder out = new StringBuilder();
         out.append(generateHeader(programName));
-        out.append(generateMainFunction(parser, programName));
-        generateCommandFunctions(out, parser, programName);
+        out.append(generateMainFunction(parser, programName, filter));
+        generateCommandFunctions(out, parser, programName, filter);
         out.append(generateFooter(programName));
         return out.toString();
     }
 
     private void generateCommandFunctions(StringBuilder out,
-            CommandLineParser<? extends CommandInvocation> parser, String prefix) {
-        generateCommandFunction(out, parser, prefix);
-        if (parser.isGroupCommand()) {
-            for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
-                String childPrefix = prefix + "_" + child.getProcessedCommand().name().toLowerCase();
-                generateCommandFunctions(out, child, childPrefix);
-            }
+            CommandLineParser<? extends CommandInvocation> parser, String prefix,
+            CompletionFilter filter) {
+        generateCommandFunction(out, parser, prefix, filter);
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
+            String childPrefix = prefix + "_" + child.getProcessedCommand().name().toLowerCase();
+            generateCommandFunctions(out, child, childPrefix, filter);
         }
     }
 
     private String generateMainFunction(CommandLineParser<? extends CommandInvocation> parser,
-            String programName) {
+            String programName, CompletionFilter filter) {
         StringBuilder sb = new StringBuilder();
         sb.append("_complete_").append(programName).append("() {").append(NL);
         sb.append("    local cur prev words cword").append(NL);
@@ -66,7 +72,8 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
             sb.append("    local i").append(NL);
             sb.append("    for ((i=1; i < cword; i++)); do").append(NL);
             sb.append("        case \"${words[i]}\" in").append(NL);
-            for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
+            for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                    filter)) {
                 sb.append("            ").append(child.getProcessedCommand().name().toLowerCase())
                         .append(") subcmd=\"").append(child.getProcessedCommand().name().toLowerCase())
                         .append("\"; break;;").append(NL);
@@ -75,7 +82,8 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
             sb.append("    done").append(NL);
             sb.append(NL);
             sb.append("    case \"$subcmd\" in").append(NL);
-            for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
+            for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                    filter)) {
                 String childName = child.getProcessedCommand().name().toLowerCase();
                 sb.append("        ").append(childName).append(") _cmd_")
                         .append(programName).append("_").append(childName).append("; return;;").append(NL);
@@ -90,7 +98,8 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
     }
 
     private void generateCommandFunction(StringBuilder out,
-            CommandLineParser<? extends CommandInvocation> parser, String prefix) {
+            CommandLineParser<? extends CommandInvocation> parser, String prefix,
+            CompletionFilter filter) {
         String funcName = "_cmd_" + prefix;
         out.append(funcName).append("() {").append(NL);
 
@@ -98,10 +107,7 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
         StringBuilder valueOpts = new StringBuilder();
         boolean hasFileOption = false;
 
-        for (ProcessedOption option : parser.getProcessedCommand().getOptions()) {
-            if (option.isProperty())
-                continue;
-
+        for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
             StringBuilder target = option.hasValue() ? valueOpts : noValueOpts;
 
             target.append(" --").append(option.name());
@@ -121,10 +127,9 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
         }
 
         StringBuilder childNames = new StringBuilder();
-        if (parser.isGroupCommand()) {
-            for (CommandLineParser<? extends CommandInvocation> child : parser.getAllChildParsers()) {
-                childNames.append(" ").append(child.getProcessedCommand().name().toLowerCase());
-            }
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
+            childNames.append(" ").append(child.getProcessedCommand().name().toLowerCase());
         }
 
         out.append("    local no_value_opts=\"").append(noValueOpts).append("\"").append(NL);
@@ -134,15 +139,15 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
         out.append(NL);
 
         boolean hasValueOptions = false;
-        for (ProcessedOption option : parser.getProcessedCommand().getOptions()) {
-            if (option.hasValue() && !option.isProperty())
+        for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
+            if (option.hasValue())
                 hasValueOptions = true;
         }
 
         if (hasValueOptions) {
             out.append("    case \"$prev\" in").append(NL);
-            for (ProcessedOption option : parser.getProcessedCommand().getOptions()) {
-                if (!option.hasValue() || option.isProperty())
+            for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
+                if (!option.hasValue())
                     continue;
 
                 StringBuilder pattern = new StringBuilder();
@@ -182,7 +187,8 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
             ProcessedOption arg = parser.getProcessedCommand().hasArguments()
                     ? parser.getProcessedCommand().getArguments()
                     : parser.getProcessedCommand().getArgument();
-            if (arg.isTypeAssignableByResourcesOrFile()) {
+            if (filter.includeOption(parser.getProcessedCommand(), arg)
+                    && arg.isTypeAssignableByResourcesOrFile()) {
                 out.append("    if [[ \"$cur\" != -* ]]; then").append(NL);
                 out.append("        _filedir").append(NL);
                 out.append("        return").append(NL);

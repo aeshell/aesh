@@ -44,6 +44,24 @@ public interface ShellCompletionGenerator {
     String generate(CommandLineParser<? extends CommandInvocation> parser, String programName);
 
     /**
+     * Generate a static completion script for the given command parser,
+     * including only the commands and options accepted by the given filter.
+     * <p>
+     * The default implementation delegates to {@link #generate(CommandLineParser, String)},
+     * ignoring the filter. Built-in generators honor the filter; third-party
+     * implementations should override this method to support filtering.
+     *
+     * @param parser the command parser
+     * @param programName the name of the program (used in the completion registration)
+     * @param filter decides which commands and options are included
+     * @return the completion script content
+     */
+    default String generate(CommandLineParser<? extends CommandInvocation> parser, String programName,
+            CompletionFilter filter) {
+        return generate(parser, programName);
+    }
+
+    /**
      * Generate a dynamic callback completion script that calls back to the
      * Java process via {@code --aesh-complete} for runtime completions.
      *
@@ -103,9 +121,48 @@ public interface ShellCompletionGenerator {
     @SuppressWarnings("unchecked")
     static String generate(ShellType type, Class<? extends Command> commandClass, String programName)
             throws CommandLineParserException {
+        return forShell(type).generate(buildParser(commandClass), programName);
+    }
+
+    /**
+     * One-shot filtered static completion script generation from a command class.
+     * <p>
+     * Example: exclude a platform-specific command group on builds where it
+     * is not registered:
+     *
+     * <pre>
+     * CompletionFilter noVm = new CompletionFilter() {
+     *     public boolean includeCommand(ProcessedCommand<?, ?> cmd) {
+     *         return !"vm".equals(cmd.name());
+     *     }
+     *
+     *     public boolean includeOption(ProcessedCommand<?, ?> cmd, ProcessedOption opt) {
+     *         return true;
+     *     }
+     * };
+     * ShellCompletionGenerator.generate(ShellType.BASH, TopCommand.class, "isx",
+     *         CompletionFilter.defaults().and(noVm));
+     * </pre>
+     *
+     * @param type shell type
+     * @param commandClass the command class annotated with @CommandDefinition
+     * @param programName the program name
+     * @param filter decides which commands and options are included
+     * @return the completion script content
+     * @throws CommandLineParserException if the command class cannot be parsed
+     */
+    @SuppressWarnings("unchecked")
+    static String generate(ShellType type, Class<? extends Command> commandClass, String programName,
+            CompletionFilter filter) throws CommandLineParserException {
+        return forShell(type).generate(buildParser(commandClass), programName, filter);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    static CommandLineParser<CommandInvocation> buildParser(Class<? extends Command> commandClass)
+            throws CommandLineParserException {
         CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
         CommandContainer<CommandInvocation> container = builder.create((Class) commandClass);
-        return forShell(type).generate(container.getParser(), programName);
+        return container.getParser();
     }
 
     /**
@@ -117,11 +174,8 @@ public interface ShellCompletionGenerator {
      * @return the dynamic completion script content
      * @throws CommandLineParserException if the command class cannot be parsed
      */
-    @SuppressWarnings("unchecked")
     static String generateDynamic(ShellType type, Class<? extends Command> commandClass, String programName)
             throws CommandLineParserException {
-        CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
-        CommandContainer<CommandInvocation> container = builder.create((Class) commandClass);
-        return forShell(type).generateDynamic(container.getParser(), programName);
+        return forShell(type).generateDynamic(buildParser(commandClass), programName);
     }
 }
