@@ -100,10 +100,18 @@ public class Cat implements Command<CommandInvocation> {
             }
             */
             if(files != null && files.size() > 0) {
-                for(Resource f : files)
-                    displayFile(f.resolve(commandInvocation.getConfiguration().getAeshContext().getCurrentWorkingDirectory()).get(0),
-                            //PathResolver.resolvePath(f, commandInvocation.getAeshContext().getCurrentWorkingDirectory()).get(0),
-                            commandInvocation.getShell());
+                for(Resource f : files) {
+                    List<Resource> resolved = f.resolve(
+                            commandInvocation.getConfiguration().getAeshContext().getCurrentWorkingDirectory());
+                    if (resolved.isEmpty()) {
+                        commandInvocation.println("cat: " + f + ": No such file or directory");
+                        return CommandResult.FAILURE;
+                    }
+                    for (Resource r : resolved)
+                        displayFile(r,
+                                //PathResolver.resolvePath(f, commandInvocation.getAeshContext().getCurrentWorkingDirectory()).get(0),
+                                commandInvocation.getShell());
+                }
 
                 return CommandResult.SUCCESS;
             }
@@ -121,9 +129,7 @@ public class Cat implements Command<CommandInvocation> {
     }
 
     private void displayFile(Resource f, Shell shell) throws FileNotFoundException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(f.read()));
-
-        try {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(f.read()))) {
             String line = br.readLine();
             while(line != null) {
                 if(line.length() == 0) {
@@ -138,6 +144,9 @@ public class Cat implements Command<CommandInvocation> {
 
                 line = br.readLine();
             }
+        }
+        catch (FileNotFoundException e) {
+            throw e;
         }
         catch (IOException e) {
             e.printStackTrace();

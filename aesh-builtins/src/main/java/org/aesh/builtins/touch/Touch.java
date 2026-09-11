@@ -26,6 +26,7 @@ import org.aesh.command.option.Option;
 import org.aesh.io.Resource;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 
@@ -88,6 +89,11 @@ public class Touch implements Command<CommandInvocation> {
     }
 
     private void create(Resource r, CommandInvocation ci) throws IOException {
-        r.resolve(ci.getConfiguration().getAeshContext().getCurrentWorkingDirectory()).get(0).write(false);
+        // Opening (and immediately closing) truncates/creates the file.
+        // The stream must be closed: an open handle blocks delete/move on Windows.
+        try (OutputStream out = r
+                .resolve(ci.getConfiguration().getAeshContext().getCurrentWorkingDirectory()).get(0)
+                .write(false)) {
+        }
     }
 }

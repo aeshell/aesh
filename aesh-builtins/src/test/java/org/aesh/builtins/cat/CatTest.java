@@ -82,7 +82,7 @@ public class CatTest extends AeshTestCommons {
 
         connection().clearOutputBuffer();
         pushToOutput("cat " + tempDir.resolve("missing.txt").toFile().getAbsolutePath());
-        assertTrue(getStream().contains("cat:"));
+        assertTrue("missing file output: [" + getStream() + "]", getStream().contains("cat:"));
 
         finish();
     }

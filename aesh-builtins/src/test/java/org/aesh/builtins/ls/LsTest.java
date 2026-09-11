@@ -64,7 +64,7 @@ public class LsTest extends AeshTestCommons {
         connection().clearOutputBuffer();
         pushToOutput("ls -l " + tempDir.toFile().getAbsolutePath());
         String output = getStream();
-        assertTrue(output.contains("visible.txt"));
+        assertTrue("ls -l output: [" + output + "]", output.contains("visible.txt"));
 
         finish();
     }
