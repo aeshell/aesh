@@ -29,6 +29,9 @@ import org.aesh.builtins.ls.Ls;
 import org.aesh.builtins.mkdir.Mkdir;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.io.PathResolver;
+import org.aesh.parser.LineParser;
+import org.aesh.parser.ParsedLine;
+import org.aesh.parser.ParsedWord;
 import org.aesh.terminal.utils.Config;
 import org.junit.After;
 import org.junit.Before;
@@ -72,7 +75,18 @@ public class WindowsDiagTest extends AeshTestCommons {
                 new File(System.getProperty("user.dir")));
         report.append(" resolved=").append(resolved);
 
+        ParsedLine parsedMkdir = new LineParser().parseLine(
+                "mkdir " + target + Config.getLineSeparator(), 0);
+        report.append(" mkdirTokens=").append(escapeWords(parsedMkdir));
+        ParsedLine parsedCd = new LineParser().parseLine(
+                "cd " + tempDir.toFile().getAbsolutePath() + Config.getPathSeparator()
+                        + Config.getLineSeparator(),
+                0);
+        report.append(" cdTokens=").append(escapeWords(parsedCd));
+
+        long t0 = System.currentTimeMillis();
         pushToOutput("cd " + tempDir.toFile().getAbsolutePath() + Config.getPathSeparator());
+        report.append(" cdMs=").append(System.currentTimeMillis() - t0);
         report.append(" cwdAfterCd=[")
                 .append(getAeshContext().getCurrentWorkingDirectory().getAbsolutePath()).append(']');
 
@@ -83,15 +97,38 @@ public class WindowsDiagTest extends AeshTestCommons {
         report.append(" parentExists=").append(new File(target).getParentFile().exists());
         report.append(" parentWritable=").append(new File(target).getParentFile().canWrite());
 
+        t0 = System.currentTimeMillis();
         pushToOutput("mkdir " + target);
+        report.append(" mkdirMs=").append(System.currentTimeMillis() - t0);
         report.append(" exists=").append(new File(target).exists());
         report.append(" mkdirOut=[").append(getStream()).append(']');
 
         connection().clearOutputBuffer();
+        t0 = System.currentTimeMillis();
         pushToOutput("ls -l " + tempDir.toFile().getAbsolutePath());
+        report.append(" lsMs=").append(System.currentTimeMillis() - t0);
         report.append(" lsOut=[").append(getStream()).append(']');
 
         System.out.println("DIAG " + report);
         finish();
+    }
+
+    private static String escapeWords(ParsedLine parsed) {
+        StringBuilder sb = new StringBuilder();
+        for (ParsedWord word : parsed.words()) {
+            sb.append('<');
+            for (char c : word.word().toCharArray()) {
+                if (c == '\r')
+                    sb.append("<CR>");
+                else if (c == '\n')
+                    sb.append("<LF>");
+                else if (c == '\\')
+                    sb.append("<BS>");
+                else
+                    sb.append(c);
+            }
+            sb.append('>');
+        }
+        return sb.toString();
     }
 }
