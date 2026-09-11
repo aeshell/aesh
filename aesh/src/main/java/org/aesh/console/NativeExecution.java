@@ -21,7 +21,10 @@ package org.aesh.console;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -81,6 +84,7 @@ public final class NativeExecution implements Execution<CommandInvocation> {
         builder.redirectErrorStream(true);
         java.lang.Process process = null;
         InputStream stream = null;
+        Consumer<int[]> savedHandler = connection.stdinHandler();
         try {
             process = builder.start();
             stream = process.getInputStream();
@@ -88,6 +92,7 @@ public final class NativeExecution implements Execution<CommandInvocation> {
             Thread pump = new Thread(() -> pumpStream(pipeStream), "aesh-native-pump");
             pump.setDaemon(true);
             pump.start();
+            connection.setStdinHandler(new StdinForwarder(process));
             try {
                 result = CommandResult.valueOf(process.waitFor());
                 return result;
@@ -98,6 +103,7 @@ public final class NativeExecution implements Execution<CommandInvocation> {
             if (process != null) {
                 process.destroyForcibly();
                 closeQuietly(process.getInputStream());
+                closeQuietly(process.getOutputStream());
                 try {
                     process.waitFor(5, TimeUnit.SECONDS);
                 } catch (InterruptedException interrupted) {
@@ -110,7 +116,55 @@ public final class NativeExecution implements Execution<CommandInvocation> {
             result = CommandResult.FAILURE;
             return result;
         } finally {
+            connection.setStdinHandler(savedHandler);
             closeQuietly(stream);
+        }
+    }
+
+    /**
+     * Forwards terminal input to the native process stdin while it runs.
+     * Readline is not line-editing during native execution, so input is echoed
+     * back for visibility. Ctrl-C (0x03) is not forwarded — it travels the
+     * signal path and interrupts the process. Ctrl-D (0x04) closes process
+     * stdin to signal EOF.
+     */
+    private final class StdinForwarder implements Consumer<int[]> {
+
+        private final java.lang.Process process;
+        private boolean stdinClosed;
+
+        StdinForwarder(java.lang.Process process) {
+            this.process = process;
+        }
+
+        @Override
+        public synchronized void accept(int[] input) {
+            if (stdinClosed)
+                return;
+            OutputStream stdin = process.getOutputStream();
+            try {
+                for (int codePoint : input) {
+                    if (codePoint == 0x03)
+                        continue;
+                    if (codePoint == 0x04) {
+                        closeStdin();
+                        return;
+                    }
+                    byte[] bytes = new String(new int[] { codePoint }, 0, 1)
+                            .getBytes(StandardCharsets.UTF_8);
+                    stdin.write(bytes);
+                    connection.write(new String(bytes, StandardCharsets.UTF_8));
+                }
+                stdin.flush();
+            } catch (IOException e) {
+                LOGGER.log(Level.FINE, "Native stdin forward ended", e);
+                closeStdin();
+            }
+        }
+
+        private void closeStdin() {
+            stdinClosed = true;
+            closeQuietly(process.getOutputStream());
         }
     }
 
@@ -126,7 +180,7 @@ public final class NativeExecution implements Execution<CommandInvocation> {
         }
     }
 
-    private void closeQuietly(InputStream stream) {
+    private void closeQuietly(java.io.Closeable stream) {
         if (stream == null)
             return;
         try {
