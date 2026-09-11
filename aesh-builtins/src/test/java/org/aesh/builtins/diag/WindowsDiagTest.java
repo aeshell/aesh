@@ -63,7 +63,7 @@ public class WindowsDiagTest extends AeshTestCommons {
         report.append(" sep=[").append(Config.getPathSeparator()).append(']');
         report.append(" temp=[").append(tempDir.toFile().getAbsolutePath()).append(']');
 
-        prepare(Mkdir.class, Ls.class);
+        prepare(Mkdir.class, Ls.class, org.aesh.builtins.cd.Cd.class);
 
         String target = tempDir.toFile().getAbsolutePath() + Config.getPathSeparator() + "diag_rocks";
         report.append(" target=[").append(target).append(']');
@@ -71,6 +71,10 @@ public class WindowsDiagTest extends AeshTestCommons {
         List<File> resolved = PathResolver.resolvePath(new File(target),
                 new File(System.getProperty("user.dir")));
         report.append(" resolved=").append(resolved);
+
+        pushToOutput("cd " + tempDir.toFile().getAbsolutePath() + Config.getPathSeparator());
+        report.append(" cwdAfterCd=[")
+                .append(getAeshContext().getCurrentWorkingDirectory().getAbsolutePath()).append(']');
 
         pushToOutput("mkdir " + target);
         report.append(" exists=").append(new File(target).exists());
