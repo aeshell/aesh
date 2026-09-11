@@ -76,6 +76,13 @@ public class WindowsDiagTest extends AeshTestCommons {
         report.append(" cwdAfterCd=[")
                 .append(getAeshContext().getCurrentWorkingDirectory().getAbsolutePath()).append(']');
 
+        File directTarget = new File(target + "_direct");
+        boolean directResult = directTarget.mkdirs();
+        report.append(" directMkdirs=").append(directResult);
+        report.append(" directExists=").append(directTarget.exists());
+        report.append(" parentExists=").append(new File(target).getParentFile().exists());
+        report.append(" parentWritable=").append(new File(target).getParentFile().canWrite());
+
         pushToOutput("mkdir " + target);
         report.append(" exists=").append(new File(target).exists());
         report.append(" mkdirOut=[").append(getStream()).append(']');
