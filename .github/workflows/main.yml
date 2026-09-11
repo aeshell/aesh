@@ -23,6 +23,25 @@ jobs:
       - name: Verify benchmark compiles
         run: mvn compile -Pbenchmark -pl benchmark
 
+  windows-test:
+    runs-on: windows-latest
+    name: windows tests
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - name: Build dependencies
+        run: mvn -q -pl aesh -am -DskipTests install
+      - name: Test builtins
+        run: mvn -pl aesh-builtins test
+      - name: Test shell escape
+        run: mvn -pl aesh test -Dtest='NativeExecutionTest,ShellEscapeTest' -DfailIfNoTests=false
+
   native-test:
     runs-on: ubuntu-latest
     name: native-image smoke test
