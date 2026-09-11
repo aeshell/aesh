@@ -35,13 +35,11 @@ import org.aesh.terminal.Key;
 import org.aesh.terminal.utils.Config;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * @author <a href="mailto:00hf11@gmail.com">Helio Frota</a>
  */
-@Ignore
 public class RmTest extends AeshTestCommons {
 
     private Path tempDir;

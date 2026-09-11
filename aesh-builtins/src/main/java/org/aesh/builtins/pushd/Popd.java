@@ -22,6 +22,8 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Option;
+import org.aesh.io.Resource;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -29,25 +31,21 @@ import org.aesh.command.invocation.CommandInvocation;
 @CommandDefinition(name = "popd", description = "usage: popd [-n]")
 public class Popd implements Command<CommandInvocation> {
 
+    @Option(shortName = 'n', hasValue = false,
+            description = "Suppress the normal directory change, only manipulate the stack")
+    private boolean suppressChange;
+
+    private final DirectoryStack stack = DirectoryStack.getInstance();
+
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws InterruptedException {
-
-            /*TODO:
-        try {
-            Pushd pushd = (Pushd) commandInvocation.getCommandRegistry().getCommand("pushd", "").getParser().getCommand();
-            Resource popFile = pushd.popDirectory();
-            if(popFile != null) {
-                commandInvocation.getAeshContext().setCurrentWorkingDirectory(popFile);
-                return CommandResult.SUCCESS;
-            }
-            else {
-                commandInvocation.getShell().out().println("popd: directory stack empty");
-                return CommandResult.SUCCESS;
-            }
+        Resource directory = stack.pop();
+        if (directory == null) {
+            commandInvocation.getShell().writeln("popd: directory stack empty");
+            return CommandResult.FAILURE;
         }
-        catch (CommandNotFoundException ignored) { }
-            */
-
-        return CommandResult.FAILURE;
+        if (!suppressChange)
+            commandInvocation.getConfiguration().getAeshContext().setCurrentWorkingDirectory(directory);
+        return CommandResult.SUCCESS;
     }
 }

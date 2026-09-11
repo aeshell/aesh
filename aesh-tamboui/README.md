@@ -10,7 +10,7 @@ Build rich terminal UIs — dashboards, tables, gauges, charts — as regular ae
 <dependency>
     <groupId>org.aesh</groupId>
     <artifactId>aesh-tamboui</artifactId>
-    <version>3.17-dev</version>
+    <version>3.17.5</version>
 </dependency>
 ```
 

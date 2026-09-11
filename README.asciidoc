@@ -15,7 +15,7 @@ Aesh is a Java library for building interactive CLI applications with commands, 
 <dependency>
   <groupId>org.aesh</groupId>
   <artifactId>aesh</artifactId>
-  <version>3.17.3</version>
+  <version>3.17.5</version>
 </dependency>
 ----
 
@@ -50,7 +50,7 @@ Add the `aesh-processor` dependency to generate command metadata at compile time
 <dependency>
   <groupId>org.aesh</groupId>
   <artifactId>aesh-processor</artifactId>
-  <version>3.17.3</version>
+  <version>3.17.5</version>
   <scope>provided</scope>
 </dependency>
 ----

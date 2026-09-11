@@ -28,7 +28,6 @@ import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.io.Resource;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -43,11 +42,7 @@ public class Pushd implements Command<CommandInvocation> {
     @Arguments(completer = FileOptionCompleter.class, converter = FileResourceConverter.class)
     private List<Resource> arguments;
 
-    private List<Resource> directories;
-
-    public Pushd() {
-        directories = new ArrayList<>();
-    }
+    private final DirectoryStack stack = DirectoryStack.getInstance();
 
     @Override
     public CommandResult execute(CommandInvocation commandInvocation) throws InterruptedException {
@@ -61,9 +56,9 @@ public class Pushd implements Command<CommandInvocation> {
 
             if(files.get(0).isDirectory()) {
                 Resource oldCwd = commandInvocation.getConfiguration().getAeshContext().getCurrentWorkingDirectory();
-                directories.add(oldCwd);
+                stack.push(oldCwd);
                 commandInvocation.getConfiguration().getAeshContext().setCurrentWorkingDirectory(files.get(0));
-                commandInvocation.getShell().writeln(files.get(0)+" "+getDirectoriesAsString());
+                commandInvocation.getShell().writeln(files.get(0)+" "+stack.asString());
                 return CommandResult.SUCCESS;
             }
 
@@ -75,21 +70,7 @@ public class Pushd implements Command<CommandInvocation> {
         }
     }
 
-    private String getDirectoriesAsString() {
-        StringBuilder builder = new StringBuilder();
-        for(Resource f : directories) {
-            if(builder.length() > 0)
-                builder.insert(0, " ");
-            builder.insert(0, f.toString());
-        }
-
-        return builder.toString();
-    }
-
     public Resource popDirectory() {
-        if(directories.size() > 0)
-            return directories.remove(directories.size()-1);
-        else
-            return null;
+        return stack.pop();
     }
 }
