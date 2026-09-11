@@ -25,5 +25,6 @@ public enum JobState {
     CANCELLATION_REQUESTED,
     COMPLETED,
     FAILED,
-    INTERRUPTED
+    INTERRUPTED,
+    KILLED
 }

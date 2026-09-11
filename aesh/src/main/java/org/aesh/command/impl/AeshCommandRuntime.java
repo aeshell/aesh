@@ -372,6 +372,18 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     Thread.currentThread().interrupt();
                 LOGGER.log(Level.FINE, "Upstream pipe stage join timed out", e);
                 future.cancel(true);
+                // Second chance for stages that exit promptly from the
+                // interrupt but slower than the first timeout.
+                try {
+                    if (timeoutMs > 0)
+                        future.get(timeoutMs, TimeUnit.MILLISECONDS);
+                    else
+                        future.get();
+                } catch (Exception secondChance) {
+                    LOGGER.log(Level.FINE, "Upstream pipe stage still not done", secondChance);
+                    if (secondChance instanceof InterruptedException)
+                        Thread.currentThread().interrupt();
+                }
                 settleTimedOutStage(chain.get(i), stageErrors, i, e);
             }
         }

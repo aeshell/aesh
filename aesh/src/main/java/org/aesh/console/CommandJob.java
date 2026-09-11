@@ -64,6 +64,8 @@ public final class CommandJob implements Consumer<Signal> {
     private volatile String[] pipelineStageNames;
     private volatile Throwable[] upstreamStageErrors;
     private volatile long[] upstreamStageDurations;
+    private volatile boolean finished;
+    private final InterruptEscalation escalation = new InterruptEscalation();
 
     public CommandJob(ProcessManager manager, Connection conn,
             Execution<? extends CommandInvocation> execution,
@@ -157,14 +159,55 @@ public final class CommandJob implements Consumer<Signal> {
     public void accept(Signal signal) {
         switch (signal) {
             case INT:
-                if (isRunning()) {
+                if (state == JobState.RUNNING) {
                     LOGGER.fine("got interrupted in Task");
                     requestInterrupt();
+                } else if (state == JobState.CANCELLATION_REQUESTED) {
+                    escalate();
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    /**
+     * Handles a repeated interrupt for a command that ignored the first one.
+     * Re-asserts the interrupt (the worker may have cleared the flag); the
+     * escalation tracker decides between arming the grace period and
+     * abandoning immediately.
+     */
+    private void escalate() {
+        Thread currentWorker = worker;
+        if (currentWorker != null)
+            currentWorker.interrupt();
+        if (escalation.noteRepeat(this::abandonIfUnresponsive))
+            abandon();
+    }
+
+    private void abandonIfUnresponsive() {
+        Thread currentWorker = worker;
+        if (state == JobState.CANCELLATION_REQUESTED && currentWorker != null && currentWorker.isAlive())
+            abandon();
+    }
+
+    /**
+     * Gives up on an unresponsive worker: the shell reclaims the prompt while
+     * the worker thread keeps running as a leaked daemon. Subprocesses cannot
+     * be reached here — native executions terminate on interrupt directly.
+     */
+    private void abandon() {
+        Thread currentWorker = worker;
+        synchronized (this) {
+            if (state != JobState.CANCELLATION_REQUESTED)
+                return;
+            state = JobState.KILLED;
+            execution.setResult(CommandResult.KILLED);
+        }
+        LOGGER.warning("Command '" + commandLine + "' ignored repeated interrupts; abandoning worker thread "
+                + (currentWorker == null ? "<unknown>" : currentWorker.getName())
+                + " and reclaiming the prompt");
+        finish();
     }
 
     public Execution<? extends CommandInvocation> execution() {
@@ -207,6 +250,19 @@ public final class CommandJob implements Consumer<Signal> {
         return upstreamStageDurations;
     }
 
+    private void joinUpstream(List<Thread> threads, long timeoutMs) {
+        for (Thread t : threads) {
+            try {
+                if (timeoutMs > 0)
+                    t.join(timeoutMs);
+                else
+                    t.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
     void awaitUpstreamPipeThreads() {
         List<Thread> threads = upstreamPipeThreads;
         upstreamPipeThreads = null;
@@ -218,15 +274,19 @@ public final class CommandJob implements Consumer<Signal> {
             }
         }
         long timeoutMs = pipelineConfig.upstreamJoinTimeoutMs();
+        joinUpstream(threads, timeoutMs);
+        // Second chance for stages that swallowed the first interrupt:
+        // re-interrupt the stragglers and wait out one more bounded join.
+        boolean stragglers = false;
         for (Thread t : threads) {
-            try {
-                if (timeoutMs > 0)
-                    t.join(timeoutMs);
-                else
-                    t.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            if (t.isAlive()) {
+                stragglers = true;
+                t.interrupt();
             }
+        }
+        if (stragglers) {
+            LOGGER.warning("Pipeline upstream stages ignored interrupt, re-interrupting");
+            joinUpstream(threads, timeoutMs);
         }
         if (upstreamStages != null) {
             for (int i = 0; i < upstreamStages.size(); i++) {
@@ -272,7 +332,12 @@ public final class CommandJob implements Consumer<Signal> {
     private void finish() {
         endTime = System.currentTimeMillis();
         synchronized (this) {
-            if (state == JobState.CANCELLATION_REQUESTED) {
+            if (finished)
+                return;
+            finished = true;
+            if (state == JobState.KILLED) {
+                execution.setResult(CommandResult.KILLED);
+            } else if (state == JobState.CANCELLATION_REQUESTED) {
                 state = JobState.INTERRUPTED;
                 execution.setResult(CommandResult.INTERRUPTED);
             } else if (state == JobState.RUNNING) {

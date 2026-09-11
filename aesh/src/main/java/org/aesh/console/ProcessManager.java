@@ -120,7 +120,10 @@ public class ProcessManager {
     }
 
     public void processFinished(CommandJob job) {
-        activeJob = null;
+        // Identity check: an abandoned worker may finish after a newer job
+        // became active; it must not clear another job's slot.
+        if (activeJob == job)
+            activeJob = null;
         firePipelineEvents(job);
         drain();
     }

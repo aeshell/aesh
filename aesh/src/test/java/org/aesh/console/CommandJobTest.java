@@ -30,18 +30,26 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
 import org.aesh.command.PipelineConfig;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.result.ResultHandler;
+import org.aesh.command.settings.Settings;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.tty.Signal;
+import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
@@ -242,6 +250,227 @@ public class CommandJobTest {
         assertTrue(job.awaitCompletion(5, TimeUnit.SECONDS));
         assertEquals(JobState.INTERRUPTED, job.state());
         assertEquals(CommandResult.INTERRUPTED, job.result());
+    }
+
+    static FakeExecution ignoringExecution(CountDownLatch entered, AtomicBoolean stop) {
+        return new FakeExecution() {
+            @Override
+            public CommandResult execute() {
+                entered.countDown();
+                while (!stop.get())
+                    Thread.yield();
+                result = CommandResult.SUCCESS;
+                return result;
+            }
+        };
+    }
+
+    private static ProcessManager testManager() {
+        return new ProcessManager(null) {
+            @Override
+            public void processFinished(CommandJob job) {
+            }
+        };
+    }
+
+    @Test
+    public void testRepeatedInterruptAbandonsUnresponsiveJob() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        AtomicBoolean stop = new AtomicBoolean();
+        FakeExecution execution = ignoringExecution(entered, stop);
+        CommandJob job = new CommandJob(testManager(), new TestConnection(), execution, "test", null);
+
+        job.start();
+        assertTrue(entered.await(5, TimeUnit.SECONDS));
+        job.accept(Signal.INT);
+        assertEquals(JobState.CANCELLATION_REQUESTED, job.state());
+        job.accept(Signal.INT);
+        assertTrue("Job should be abandoned after grace period",
+                job.awaitCompletion(10, TimeUnit.SECONDS));
+        assertEquals(JobState.KILLED, job.state());
+        assertEquals(CommandResult.KILLED, job.result());
+        assertFalse(job.isRunning());
+        stop.set(true);
+    }
+
+    @Test
+    public void testThirdInterruptAbandonsImmediately() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        AtomicBoolean stop = new AtomicBoolean();
+        FakeExecution execution = ignoringExecution(entered, stop);
+        CommandJob job = new CommandJob(testManager(), new TestConnection(), execution, "test", null);
+
+        job.start();
+        assertTrue(entered.await(5, TimeUnit.SECONDS));
+        long start = System.currentTimeMillis();
+        job.accept(Signal.INT);
+        job.accept(Signal.INT);
+        job.accept(Signal.INT);
+        assertTrue(job.awaitCompletion(10, TimeUnit.SECONDS));
+        long elapsed = System.currentTimeMillis() - start;
+        assertEquals(CommandResult.KILLED, job.result());
+        assertTrue("Third interrupt must skip the grace period, took: " + elapsed, elapsed < 1500);
+        stop.set(true);
+    }
+
+    @Test
+    public void testSecondInterruptReassertsClearedFlag() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicInteger attempts = new AtomicInteger();
+        FakeExecution execution = new FakeExecution() {
+            @Override
+            public CommandResult execute() {
+                entered.countDown();
+                try {
+                    release.await(30, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    if (attempts.incrementAndGet() == 1) {
+                        Thread.interrupted();
+                        try {
+                            release.await(30, TimeUnit.SECONDS);
+                        } catch (InterruptedException again) {
+                            Thread.currentThread().interrupt();
+                        }
+                    } else {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                result = CommandResult.SUCCESS;
+                return result;
+            }
+        };
+        CommandJob job = new CommandJob(testManager(), new TestConnection(), execution, "test", null);
+
+        job.start();
+        assertTrue(entered.await(5, TimeUnit.SECONDS));
+        job.accept(Signal.INT);
+        long deadline = System.currentTimeMillis() + 5000;
+        while (attempts.get() < 1 && System.currentTimeMillis() < deadline)
+            Thread.sleep(10);
+        assertEquals(1, attempts.get());
+        assertEquals(JobState.CANCELLATION_REQUESTED, job.state());
+        job.accept(Signal.INT);
+        assertTrue(job.awaitCompletion(5, TimeUnit.SECONDS));
+        assertEquals(JobState.INTERRUPTED, job.state());
+        assertEquals(CommandResult.INTERRUPTED, job.result());
+        release.countDown();
+    }
+
+    @CommandDefinition(name = "spin", description = "ignores interrupts")
+    public static class SpinCommand implements Command<CommandInvocation> {
+        static final AtomicBoolean stop = new AtomicBoolean();
+        static CountDownLatch entered = new CountDownLatch(1);
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            entered.countDown();
+            while (!stop.get())
+                Thread.yield();
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "ok", description = "trivial command")
+    public static class OkCommand implements Command<CommandInvocation> {
+        static volatile boolean executed;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            executed = true;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testAbandonedJobReclaimsPrompt() throws Exception {
+        SpinCommand.stop.set(false);
+        SpinCommand.entered = new CountDownLatch(1);
+        OkCommand.executed = false;
+        CountDownLatch killedLatch = new CountDownLatch(1);
+        CountDownLatch okLatch = new CountDownLatch(1);
+        AtomicReference<CommandResult> spinResult = new AtomicReference<>();
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(SpinCommand.class)
+                .command(OkCommand.class)
+                .create();
+
+        TestConnection connection = new TestConnection();
+        Settings settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .commandExecutionListener((line, result, durationMs) -> {
+                    if (line.trim().startsWith("spin")) {
+                        spinResult.set(result);
+                        killedLatch.countDown();
+                    } else {
+                        okLatch.countDown();
+                    }
+                })
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        connection.read("spin" + Config.getLineSeparator());
+        assertTrue(SpinCommand.entered.await(5, TimeUnit.SECONDS));
+        CommandJob job = (CommandJob) connection.signalHandler();
+        job.accept(Signal.INT);
+        job.accept(Signal.INT);
+        assertTrue("Unresponsive job should be abandoned", killedLatch.await(10, TimeUnit.SECONDS));
+        assertEquals(CommandResult.KILLED, spinResult.get());
+
+        connection.read("ok" + Config.getLineSeparator());
+        assertTrue("Prompt should accept input after abandon", okLatch.await(5, TimeUnit.SECONDS));
+        assertTrue(OkCommand.executed);
+
+        SpinCommand.stop.set(true);
+        console.stop();
+    }
+
+    @Test
+    public void testUpstreamSecondInterrupt() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        Thread flincher = new Thread(() -> {
+            entered.countDown();
+            CountDownLatch latch = new CountDownLatch(1);
+            try {
+                latch.await(30, TimeUnit.SECONDS);
+            } catch (InterruptedException first) {
+                Thread.interrupted();
+                try {
+                    latch.await(30, TimeUnit.SECONDS);
+                } catch (InterruptedException second) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        flincher.setDaemon(true);
+        flincher.start();
+        assertTrue(entered.await(5, TimeUnit.SECONDS));
+
+        CommandJob job = new CommandJob(testManager(), new TestConnection(), new FakeExecution(), "test",
+                null);
+        job.setUpstreamPipeThreads(Collections.singletonList(flincher));
+        job.setPipelineConfig(new PipelineConfig(16, 8192, 200, true));
+
+        long start = System.currentTimeMillis();
+        job.awaitUpstreamPipeThreads();
+        long elapsed = System.currentTimeMillis() - start;
+
+        flincher.join(5000);
+        assertFalse("Re-interrupted upstream should exit", flincher.isAlive());
+        assertTrue("Second interrupt should bound the join, took: " + elapsed, elapsed < 10000);
+    }
+
+    @Test
+    public void testKilledExitCodeMapping() {
+        assertEquals(137, CommandResult.KILLED.getExitCode());
+        assertEquals(137, CommandResult.KILLED.getResultValue());
+        assertTrue(CommandResult.valueOf(137) == CommandResult.KILLED);
     }
 
     @Test

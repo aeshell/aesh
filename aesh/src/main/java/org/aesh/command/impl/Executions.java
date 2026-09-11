@@ -198,7 +198,8 @@ class Executions {
 
                         runtime.populateAskedOption(option);
                     } catch (InterruptedException e) {
-                        //input was interrupted, ignore it
+                        Thread.currentThread().interrupt();
+                        throw e;
                     }
                 }
             }

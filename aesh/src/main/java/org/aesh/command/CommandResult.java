@@ -54,6 +54,13 @@ public class CommandResult {
     /** Producer killed by SIGPIPE: downstream closed the pipe early (exit code 141 = 128 + 13). */
     public static final CommandResult PIPE_BROKEN = new CommandResult(141);
 
+    /**
+     * Command abandoned after repeated interrupts were ignored (exit code 137 = 128 + 9).
+     * Unlike {@link #INTERRUPTED}, the command did not stop cooperatively: the shell
+     * reclaimed the prompt while the worker thread was still running.
+     */
+    public static final CommandResult KILLED = new CommandResult(137);
+
     private final int result;
 
     /**
@@ -74,6 +81,8 @@ public class CommandResult {
                 return COMMAND_NOT_FOUND;
             case 130:
                 return INTERRUPTED;
+            case 137:
+                return KILLED;
             case 141:
                 return PIPE_BROKEN;
             default:
