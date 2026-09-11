@@ -49,10 +49,16 @@ public class StringGroup {
     }
 
     public String getFormattedString(int place) {
+        if (maxLength <= 0)
+            return strings[place];
         return Parser.padLeft(maxLength+1, strings[place]);
     }
 
     public String getFormattedStringPadRight(int place) {
+        // Parser.padRight/padLeft throw on zero width; all-empty columns
+        // (e.g. owner/group on Windows) must skip padding.
+        if (maxLength <= 0)
+            return " " + strings[place];
         return " " + Parser.padRight(maxLength, strings[place]);
     }
 

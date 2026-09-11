@@ -63,7 +63,9 @@ public class MvTest extends AeshTestCommons {
         pushToOutput("mv -v " + temp + "file01.txt" + " " + temp + "file02.txt");
         assertTrue(new File(temp + "file02.txt").exists());
 
-        pushToOutput("cd " + temp);
+        // No trailing separator: a trailing backslash triggers readline
+        // line continuation and the cd never submits.
+        pushToOutput("cd " + tempDir.toFile().getAbsolutePath());
         pushToOutput("mkdir " + temp + "aesh_rocks");
         assertTrue(new File(temp + "aesh_rocks").exists());
         pushToOutput("mv -v " + temp + "aesh_rocks" + " " + temp + "aesh");

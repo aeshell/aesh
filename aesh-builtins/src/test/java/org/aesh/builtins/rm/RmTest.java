@@ -65,7 +65,9 @@ public class RmTest extends AeshTestCommons {
         pushToOutput("rm " + tempPath + "file01.txt");
         assertFalse(new File(tempPath + "file01.txt").exists());
 
-        pushToOutput("cd " + tempPath);
+        // No trailing separator: a trailing backslash triggers readline
+        // line continuation and the cd never submits.
+        pushToOutput("cd " + tempDir.toFile().getAbsolutePath());
         pushToOutput("mkdir " + tempPath + "aesh_rocks");
         assertTrue(new File(tempPath+"aesh_rocks").exists());
         pushToOutput("rm -d " + tempPath + "aesh_rocks");
@@ -77,7 +79,7 @@ public class RmTest extends AeshTestCommons {
         pushToOutput("y");
         assertFalse(new File(tempPath+"file03.txt").exists());
 
-        pushToOutput("cd " + tempPath);
+        pushToOutput("cd " + tempDir.toFile().getAbsolutePath());
         pushToOutput("mkdir " + tempPath + "aesh_rocks2");
         assertTrue(new File(tempPath+"aesh_rocks2").exists());
         pushToOutput("rm -di " + tempPath + "aesh_rocks2");
