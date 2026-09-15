@@ -1,7 +1,10 @@
 package org.aesh.charts.linechart;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -291,10 +294,8 @@ public class LineChart {
             plotSeries(canvas, series, xAxis, yAxis, plotLeft, plotRight, plotTop, plotBottom);
         }
 
-        // Draw markers (on top of data)
-        for (Marker marker : markers) {
-            drawMarker(canvas, marker, xAxis, yAxis, plotLeft, plotRight, plotTop, plotBottom);
-        }
+        // Draw markers (on top of data) with collision avoidance
+        drawMarkers(canvas, xAxis, yAxis, plotLeft, plotRight, plotTop, plotBottom);
 
         // Draw legend
         if (showLegend && seriesList.size() > 1) {
@@ -443,42 +444,127 @@ public class LineChart {
     }
 
     /**
-     * Draw a marker (change detection point, annotation) on the chart.
+     * Draw all markers with collision avoidance: co-located markers are merged
+     * (joined labels), and labels that would overlap are offset to adjacent
+     * free rows. When no free row exists within the plot area, the label is
+     * dropped (the symbol is still rendered).
      */
-    private void drawMarker(Canvas canvas, Marker marker,
-            Axis xAxis, Axis yAxis,
+    private void drawMarkers(Canvas canvas, Axis xAxis, Axis yAxis,
             int plotLeft, int plotRight, int plotTop, int plotBottom) {
+
+        if (markers.isEmpty())
+            return;
 
         int plotWidth = plotRight - plotLeft + 1;
         int plotHeight = plotBottom - plotTop;
 
-        double xNorm = xAxis.normalize(marker.x());
-        double yNorm = yAxis.normalize(marker.y());
-
-        int cellX = plotLeft + (int) (xNorm * (plotWidth - 1));
-        int cellY = plotTop + (int) ((1.0 - yNorm) * plotHeight);
-
-        if (cellX < plotLeft || cellX > plotRight || cellY < plotTop || cellY > plotBottom)
-            return;
-
-        // Draw the marker symbol
-        char symbol = style == ChartStyle.ASCII ? 'X' : marker.symbol();
-        canvas.set(cellX, cellY, symbol, marker.color());
-
-        // Draw label above the marker if there's room; otherwise below
-        String label = marker.label();
-        if (label != null && !label.isEmpty()) {
-            int labelY = cellY - 1;
-            if (labelY < plotTop) {
-                labelY = cellY + 1; // fallback: below the marker
+        // 1. Map each marker to its grid cell and merge co-located ones.
+        Map<Long, MergedMarker> cellMap = new LinkedHashMap<>();
+        for (Marker marker : markers) {
+            double xNorm = xAxis.normalize(marker.x());
+            double yNorm = yAxis.normalize(marker.y());
+            int cellX = plotLeft + (int) (xNorm * (plotWidth - 1));
+            int cellY = plotTop + (int) ((1.0 - yNorm) * plotHeight);
+            if (cellX < plotLeft || cellX > plotRight || cellY < plotTop || cellY > plotBottom)
+                continue;
+            long key = ((long) cellY << 32) | (cellX & 0xFFFFFFFFL);
+            MergedMarker merged = cellMap.get(key);
+            if (merged == null) {
+                cellMap.put(key, new MergedMarker(cellX, cellY, marker));
+            } else {
+                merged.merge(marker);
             }
-            if (labelY >= plotTop && labelY <= plotBottom) {
-                int labelX = cellX - label.length() / 2;
-                if (labelX < plotLeft)
-                    labelX = plotLeft;
-                if (labelX + label.length() > plotRight)
-                    labelX = plotRight - label.length() + 1;
-                canvas.writeString(labelX, labelY, label, marker.color());
+        }
+
+        // 2. Sort by Y descending (bottom-up) so lower markers pick rows first.
+        List<MergedMarker> sorted = new ArrayList<>(cellMap.values());
+        sorted.sort(Comparator.comparingInt((MergedMarker m) -> m.cellY).reversed());
+
+        // 3. Track occupied label regions: list of (row, startCol, endCol).
+        List<int[]> occupied = new ArrayList<>();
+
+        // 4. Draw each merged marker with label offset scan.
+        for (MergedMarker mm : sorted) {
+            char symbol = style == ChartStyle.ASCII ? 'X' : mm.symbol;
+            canvas.set(mm.cellX, mm.cellY, symbol, mm.color);
+
+            String label = mm.label;
+            if (label == null || label.isEmpty())
+                continue;
+
+            int labelX = computeLabelX(mm.cellX, label.length(), plotLeft, plotRight);
+            int labelEndX = labelX + label.length() - 1;
+            int labelY = findFreeRow(mm.cellY, labelX, labelEndX, occupied,
+                    plotTop, plotBottom);
+            if (labelY >= 0) {
+                canvas.writeString(labelX, labelY, label, mm.color);
+                occupied.add(new int[] { labelY, labelX, labelEndX });
+            }
+            // else: no free row — label suppressed, symbol still visible
+        }
+    }
+
+    private int computeLabelX(int cellX, int labelLen, int plotLeft, int plotRight) {
+        int labelX = cellX - labelLen / 2;
+        if (labelX < plotLeft)
+            labelX = plotLeft;
+        if (labelX + labelLen - 1 > plotRight)
+            labelX = plotRight - labelLen + 1;
+        return labelX;
+    }
+
+    /**
+     * Scan for a free row near {@code markerY} that doesn't overlap any
+     * existing label region horizontally. Tries above first, then below,
+     * expanding outward. Returns -1 if no row is available.
+     */
+    private int findFreeRow(int markerY, int startCol, int endCol,
+            List<int[]> occupied, int plotTop, int plotBottom) {
+        for (int offset = 1; offset <= plotBottom - plotTop; offset++) {
+            int above = markerY - offset;
+            if (above >= plotTop && !overlaps(above, startCol, endCol, occupied))
+                return above;
+            int below = markerY + offset;
+            if (below <= plotBottom && !overlaps(below, startCol, endCol, occupied))
+                return below;
+        }
+        return -1;
+    }
+
+    private boolean overlaps(int row, int startCol, int endCol, List<int[]> occupied) {
+        for (int[] region : occupied) {
+            if (region[0] == row && region[1] <= endCol && region[2] >= startCol)
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Accumulator for markers that map to the same grid cell.
+     * Joins labels with ", " and keeps the first marker's symbol and color.
+     */
+    private static class MergedMarker {
+        final int cellX;
+        final int cellY;
+        char symbol;
+        String color;
+        String label;
+
+        MergedMarker(int cellX, int cellY, Marker first) {
+            this.cellX = cellX;
+            this.cellY = cellY;
+            this.symbol = first.symbol();
+            this.color = first.color();
+            this.label = first.label();
+        }
+
+        void merge(Marker other) {
+            String otherLabel = other.label();
+            if (otherLabel != null && !otherLabel.isEmpty()) {
+                if (label == null || label.isEmpty())
+                    label = otherLabel;
+                else
+                    label = label + ", " + otherLabel;
             }
         }
     }

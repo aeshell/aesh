@@ -1,5 +1,6 @@
 package org.aesh.charts;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -8,6 +9,7 @@ import org.aesh.charts.common.DataSeries;
 import org.aesh.charts.common.HorizontalLine;
 import org.aesh.charts.common.Marker;
 import org.aesh.charts.linechart.LineChart;
+import org.aesh.charts.linechart.TimeSeriesChart;
 import org.junit.Test;
 
 public class MarkerTest {
@@ -109,6 +111,100 @@ public class MarkerTest {
         assertNotNull(output);
         // The Y-axis should extend to at least 100 to show the threshold
         assertTrue("Should contain threshold label", output.contains("limit"));
+    }
+
+    // --- Collision avoidance tests (#622) ---
+
+    @Test
+    public void testColocatedMarkersJoinLabels() {
+        DataSeries s = new DataSeries("s");
+        s.add(0, 1.0);
+        s.add(1, 2.0);
+        s.add(2, 10.0);
+        LineChart chart = LineChart.builder().width(80).height(20)
+                .style(ChartStyle.BRAILLE).showLegend(false)
+                .yMin(0.55).yMax(10.45).build();
+        chart.addSeries(s);
+        // Two markers at nearly the same position — should merge
+        chart.addMarker(Marker.at(1, 2.0).label("900%").color("\u001B[31m").symbol('\u25B2'));
+        chart.addMarker(Marker.at(1, 2.18).label("100%").color("\u001B[31m").symbol('\u25B2'));
+
+        String output = stripAnsi(chart.render());
+        // Both labels should be legible — either merged ("900%, 100%") or offset
+        assertTrue("First label should be present", output.contains("900%"));
+        assertTrue("Second label should be present", output.contains("100%"));
+        // The old bug: second symbol overwrote the first label, producing "90▲%"
+        assertFalse("Labels should not be garbled", output.contains("90\u25B2%"));
+    }
+
+    @Test
+    public void testNearMissMarkersOffset() {
+        DataSeries s = new DataSeries("s");
+        for (int i = 0; i <= 10; i++)
+            s.add(i, i * 10);
+        LineChart chart = LineChart.builder().width(60).height(15)
+                .style(ChartStyle.UNICODE).showLegend(false).build();
+        chart.addSeries(s);
+        chart.addMarker(Marker.at(5, 50).label("mid"));
+        chart.addMarker(Marker.at(6, 60).label("upper"));
+
+        String output = stripAnsi(chart.render());
+        assertTrue("mid label visible", output.contains("mid"));
+        assertTrue("upper label visible", output.contains("upper"));
+    }
+
+    @Test
+    public void testDenseClusterDoesNotCrash() {
+        DataSeries s = new DataSeries("s");
+        for (int i = 0; i < 5; i++)
+            s.add(i, i);
+        LineChart chart = LineChart.builder().width(40).height(8)
+                .style(ChartStyle.UNICODE).showLegend(false).build();
+        chart.addSeries(s);
+        // 5 markers in a tiny chart — some labels will be dropped
+        for (int i = 0; i < 5; i++)
+            chart.addMarker(Marker.at(i, i).label("m" + i).symbol('!'));
+
+        String output = chart.render();
+        assertNotNull(output);
+        // At minimum, marker symbols should all be present
+        assertTrue(output.contains("!"));
+    }
+
+    @Test
+    public void testEdgeMarkerLabelFallsBack() {
+        DataSeries s = new DataSeries("s");
+        s.add(0, 0);
+        s.add(1, 100);
+        LineChart chart = LineChart.builder().width(40).height(10)
+                .style(ChartStyle.UNICODE).showLegend(false).build();
+        chart.addSeries(s);
+        // Marker at the very top — label can only go below
+        chart.addMarker(Marker.at(1, 100).label("top"));
+
+        String output = stripAnsi(chart.render());
+        assertTrue(output.contains("top"));
+    }
+
+    @Test
+    public void testTimeSeriesChartInheritsCollisionFix() {
+        LineChart chart = TimeSeriesChart.tsBuilder().width(60).height(15)
+                .style(ChartStyle.UNICODE).showLegend(false).build();
+        DataSeries s = new DataSeries("ts");
+        s.add(1000, 10);
+        s.add(2000, 20);
+        s.add(3000, 30);
+        chart.addSeries(s);
+        chart.addMarker(Marker.atTime(2000, 20).label("a"));
+        chart.addMarker(Marker.atTime(2000, 20).label("b"));
+
+        String output = stripAnsi(chart.render());
+        // Merged label
+        assertTrue("Merged labels visible", output.contains("a, b") || (output.contains("a") && output.contains("b")));
+    }
+
+    private static String stripAnsi(String s) {
+        return s.replaceAll("\u001B\\[[;\\d]*m", "");
     }
 
     @Test
