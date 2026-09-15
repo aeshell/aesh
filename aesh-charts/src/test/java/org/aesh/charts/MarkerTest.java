@@ -1,5 +1,6 @@
 package org.aesh.charts;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -205,6 +206,87 @@ public class MarkerTest {
 
     private static String stripAnsi(String s) {
         return s.replaceAll("\u001B\\[[;\\d]*m", "");
+    }
+
+    // --- Legend entry tests (#623) ---
+
+    @Test
+    public void testMarkerLegendEntry() {
+        LineChart chart = LineChart.builder()
+                .width(60).height(12)
+                .style(ChartStyle.UNICODE)
+                .showLegend(true)
+                .build();
+
+        DataSeries s = DataSeries.ofValues("series1", 10, 20, 30, 20, 10);
+        chart.addSeries(s);
+        chart.addMarker(Marker.at(2, 30).label("peak").symbol('\u25B2')
+                .color("\u001B[31m").legendName("Regression"));
+
+        String output = stripAnsi(chart.render());
+        assertTrue("Legend should contain marker name", output.contains("Regression"));
+        assertTrue("Legend should contain marker symbol", output.contains("\u25B2"));
+    }
+
+    @Test
+    public void testMarkerLegendDedup() {
+        LineChart chart = LineChart.builder()
+                .width(70).height(12)
+                .style(ChartStyle.UNICODE)
+                .showLegend(true)
+                .build();
+
+        DataSeries s = DataSeries.ofValues("data", 10, 20, 30, 40, 50);
+        chart.addSeries(s);
+        chart.addMarker(Marker.at(1, 20).label("a").symbol('!').legendName("Alerts"));
+        chart.addMarker(Marker.at(3, 40).label("b").symbol('!').legendName("Alerts"));
+
+        String output = stripAnsi(chart.render());
+        // "Alerts" should appear exactly once, not twice
+        int idx = output.indexOf("Alerts");
+        assertTrue("Legend should contain Alerts", idx >= 0);
+        assertEquals("Legend should not duplicate Alerts", -1,
+                output.indexOf("Alerts", idx + 1));
+    }
+
+    @Test
+    public void testMarkerWithoutLegendNameNotInLegend() {
+        LineChart chart = LineChart.builder()
+                .width(60).height(12)
+                .style(ChartStyle.UNICODE)
+                .showLegend(true)
+                .build();
+
+        DataSeries s1 = DataSeries.ofValues("s1", 10, 20, 30);
+        DataSeries s2 = DataSeries.ofValues("s2", 30, 20, 10);
+        chart.addSeries(s1);
+        chart.addSeries(s2);
+        chart.addMarker(Marker.at(1, 20).label("ann"));
+
+        String output = stripAnsi(chart.render());
+        assertTrue("Series legend should appear", output.contains("s1"));
+        assertTrue("Series legend should appear", output.contains("s2"));
+        // "ann" is a per-point label, not a legend name
+        // It should appear as a label on the chart but not duplicated in the legend line
+    }
+
+    @Test
+    public void testSingleSeriesWithMarkerLegendShown() {
+        // With only 1 series, legend is normally hidden.
+        // But if a marker has a legendName, legend should appear.
+        LineChart chart = LineChart.builder()
+                .width(60).height(12)
+                .style(ChartStyle.UNICODE)
+                .showLegend(true)
+                .build();
+
+        DataSeries s = DataSeries.ofValues("only", 10, 20, 30);
+        chart.addSeries(s);
+        chart.addMarker(Marker.at(2, 30).label("peak").legendName("Events"));
+
+        String output = stripAnsi(chart.render());
+        assertTrue("Marker legend should appear even with 1 series",
+                output.contains("Events"));
     }
 
     @Test

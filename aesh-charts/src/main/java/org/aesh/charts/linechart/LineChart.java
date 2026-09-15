@@ -258,7 +258,14 @@ public class LineChart {
         int yAxisWidth = yAxis.labelWidth();
         int plotWidth = width - yAxisWidth - 1;
         int titleHeight = (title != null && !title.isEmpty()) ? 1 : 0;
-        int legendHeight = (showLegend && seriesList.size() > 1) ? 1 : 0;
+        boolean anyMarkerLegend = false;
+        for (Marker m : markers) {
+            if (m.legendName() != null && !m.legendName().isEmpty()) {
+                anyMarkerLegend = true;
+                break;
+            }
+        }
+        int legendHeight = (showLegend && (seriesList.size() > 1 || anyMarkerLegend)) ? 1 : 0;
         int xAxisHeight = 2 + (xLabel != null ? 1 : 0);
         int plotHeight = height - titleHeight - legendHeight - xAxisHeight;
         if (plotWidth < 5 || plotHeight < 3)
@@ -297,12 +304,14 @@ public class LineChart {
         // Draw markers (on top of data) with collision avoidance
         drawMarkers(canvas, xAxis, yAxis, plotLeft, plotRight, plotTop, plotBottom);
 
-        // Draw legend
-        if (showLegend && seriesList.size() > 1) {
+        // Draw legend (series + marker entries)
+        boolean hasMarkerLegend = markers.stream()
+                .anyMatch(m -> m.legendName() != null && !m.legendName().isEmpty());
+        if (showLegend && (seriesList.size() > 1 || hasMarkerLegend)) {
             String legend = Legend.render(
                     seriesList.stream().map(DataSeries::name).collect(Collectors.toList()),
                     seriesList.stream().map(DataSeries::color).collect(Collectors.toList()),
-                    style);
+                    style, markers);
             // Center the legend
             int legendX = plotLeft + (plotWidth - stripAnsi(legend).length()) / 2;
             if (legendX < 0)

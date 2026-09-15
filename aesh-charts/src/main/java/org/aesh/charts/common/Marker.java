@@ -24,6 +24,7 @@ public class Marker {
     private String label;
     private String color;
     private char symbol = '\u25CF'; // ● filled circle
+    private String legendName;
 
     private Marker(double x, double y) {
         this.x = x;
@@ -95,7 +96,21 @@ public class Marker {
         return color;
     }
 
+    /**
+     * Set a legend entry name for this marker category.
+     * Markers sharing the same legend name are shown as a single legend entry.
+     * If not set, the marker does not appear in the legend.
+     */
+    public Marker legendName(String legendName) {
+        this.legendName = legendName;
+        return this;
+    }
+
     public char symbol() {
         return symbol;
+    }
+
+    public String legendName() {
+        return legendName;
     }
 }
