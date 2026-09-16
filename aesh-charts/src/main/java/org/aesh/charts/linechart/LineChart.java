@@ -291,10 +291,9 @@ public class LineChart {
         yAxis.drawYAxis(canvas, plotLeft - 1, plotTop, plotBottom, style);
         xAxis.drawXAxis(canvas, plotLeft - 1, plotRight, plotBottom + 1, style);
 
-        // Draw horizontal reference lines (behind data)
-        for (HorizontalLine hline : horizontalLines) {
-            drawHorizontalLine(canvas, hline, yAxis, plotLeft, plotRight, plotTop, plotBottom);
-        }
+        // Draw horizontal reference lines (behind data), merging
+        // co-located labels so they don't overwrite each other
+        drawHorizontalLines(canvas, yAxis, plotLeft, plotRight, plotTop, plotBottom);
 
         // Plot each series
         for (DataSeries series : seriesList) {
@@ -579,20 +578,33 @@ public class LineChart {
     }
 
     /**
-     * Draw a horizontal reference line across the chart.
+     * Draw horizontal reference lines, grouping by grid row so co-located
+     * labels are merged instead of overwriting each other.
      */
-    private void drawHorizontalLine(Canvas canvas, HorizontalLine hline,
-            Axis yAxis,
+    private void drawHorizontalLines(Canvas canvas, Axis yAxis,
             int plotLeft, int plotRight, int plotTop, int plotBottom) {
 
         int plotHeight = plotBottom - plotTop;
-        double yNorm = yAxis.normalize(hline.yValue());
-        int cellY = plotTop + (int) ((1.0 - yNorm) * plotHeight);
+        Map<Integer, List<HorizontalLine>> byRow = new LinkedHashMap<>();
+        for (HorizontalLine hline : horizontalLines) {
+            double yNorm = yAxis.normalize(hline.yValue());
+            int cellY = plotTop + (int) ((1.0 - yNorm) * plotHeight);
+            if (cellY < plotTop || cellY > plotBottom)
+                continue;
+            byRow.computeIfAbsent(cellY, k -> new ArrayList<>()).add(hline);
+        }
 
-        if (cellY < plotTop || cellY > plotBottom)
-            return;
+        for (Map.Entry<Integer, List<HorizontalLine>> group : byRow.entrySet()) {
+            int cellY = group.getKey();
+            List<HorizontalLine> lines = group.getValue();
+            for (HorizontalLine hline : lines)
+                drawHorizontalLineGlyphs(canvas, hline, cellY, plotLeft, plotRight);
+            drawHorizontalLineLabel(canvas, lines, cellY, plotLeft, plotRight);
+        }
+    }
 
-        // Draw the line
+    private void drawHorizontalLineGlyphs(Canvas canvas, HorizontalLine hline,
+            int cellY, int plotLeft, int plotRight) {
         char lineChar;
         if (hline.dashed()) {
             lineChar = style == ChartStyle.ASCII ? '-' : '\u2504'; // ┄ dashed
@@ -606,14 +618,28 @@ public class LineChart {
                 canvas.set(x, cellY, lineChar, hline.color());
             }
         }
+    }
 
+    private void drawHorizontalLineLabel(Canvas canvas, List<HorizontalLine> lines,
+            int cellY, int plotLeft, int plotRight) {
+        StringBuilder label = new StringBuilder();
+        String color = null;
+        for (HorizontalLine hline : lines) {
+            String lineLabel = hline.label();
+            if (lineLabel == null || lineLabel.isEmpty())
+                continue;
+            if (label.length() > 0)
+                label.append(", ");
+            else
+                color = hline.color();
+            label.append(lineLabel);
+        }
+        if (label.length() == 0)
+            return;
         // Draw label at the right end
-        String label = hline.label();
-        if (label != null && !label.isEmpty()) {
-            int labelX = plotRight - label.length();
-            if (labelX > plotLeft) {
-                canvas.writeString(labelX, cellY, label, hline.color());
-            }
+        int labelX = plotRight - label.length();
+        if (labelX > plotLeft) {
+            canvas.writeString(labelX, cellY, label.toString(), color);
         }
     }
 

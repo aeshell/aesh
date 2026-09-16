@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
+import org.aesh.charts.canvas.BlockEncoder;
 import org.aesh.charts.sparkline.Sparkline;
 import org.junit.Test;
 
@@ -46,6 +47,18 @@ public class SparklineTest {
         String output = spark.render();
         assertNotNull(output);
         assertEquals(5, output.length());
+    }
+
+    @Test
+    public void testAllNegativeValues() {
+        Sparkline spark = Sparkline.builder().width(5).height(1).build();
+        spark.addAll(-5, -4, -3, -2, -1);
+        String output = spark.render();
+        assertNotNull(output);
+        assertEquals(5, output.length());
+        // Range must span min..max: lowest maps to lowest block, highest to full
+        assertEquals(BlockEncoder.forFraction(0.0), output.charAt(0));
+        assertEquals(BlockEncoder.forFraction(1.0), output.charAt(4));
     }
 
     @Test

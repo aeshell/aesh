@@ -208,6 +208,46 @@ public class MarkerTest {
         return s.replaceAll("\u001B\\[[;\\d]*m", "");
     }
 
+    // --- HorizontalLine label merge tests ---
+
+    @Test
+    public void testColocatedHorizontalLinesJoinLabels() {
+        LineChart chart = LineChart.builder()
+                .width(50).height(12)
+                .style(ChartStyle.UNICODE)
+                .showLegend(false)
+                .build();
+
+        DataSeries series = DataSeries.ofValues("latency", 50, 60, 55, 120, 65, 70, 55, 130, 60);
+        chart.addSeries(series);
+
+        chart.addHorizontalLine(HorizontalLine.at(100).label("max"));
+        chart.addHorizontalLine(HorizontalLine.at(100).label("limit"));
+
+        String output = stripAnsi(chart.render());
+        assertTrue("Co-located hline labels should merge", output.contains("max, limit"));
+    }
+
+    @Test
+    public void testSeparateHorizontalLinesKeepLabels() {
+        LineChart chart = LineChart.builder()
+                .width(50).height(15)
+                .style(ChartStyle.UNICODE)
+                .showLegend(false)
+                .build();
+
+        DataSeries series = DataSeries.ofValues("latency", 10, 20, 30, 40, 50, 60, 70, 80, 90);
+        chart.addSeries(series);
+
+        chart.addHorizontalLine(HorizontalLine.at(20).label("low"));
+        chart.addHorizontalLine(HorizontalLine.at(80).label("high"));
+
+        String output = stripAnsi(chart.render());
+        assertTrue(output.contains("low"));
+        assertTrue(output.contains("high"));
+        assertFalse("Labels should not merge across rows", output.contains("low, high"));
+    }
+
     // --- Legend entry tests (#623) ---
 
     @Test

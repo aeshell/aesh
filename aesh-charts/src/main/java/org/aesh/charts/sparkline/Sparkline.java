@@ -73,9 +73,11 @@ public class Sparkline {
         int dataCount = Math.min(values.size(), width);
         int startIdx = values.size() - dataCount;
 
-        // Find min/max for scaling
+        // Find min/max for scaling (note: Double.MIN_VALUE is tiny
+        // positive, so max must start at negative infinity for
+        // all-negative data)
         double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
+        double max = -Double.MAX_VALUE;
         for (int i = startIdx; i < values.size(); i++) {
             min = Math.min(min, values.get(i));
             max = Math.max(max, values.get(i));
