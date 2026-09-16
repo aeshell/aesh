@@ -61,6 +61,11 @@ public class SparklineTest {
         assertEquals(BlockEncoder.forFraction(1.0), output.charAt(4));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testWidthZeroRejected() {
+        Sparkline.builder().width(0);
+    }
+
     @Test
     public void testWidthLimitsData() {
         Sparkline spark = Sparkline.builder().width(3).height(1).build();

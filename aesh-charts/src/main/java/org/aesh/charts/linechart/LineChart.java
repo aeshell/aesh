@@ -135,6 +135,9 @@ public class LineChart {
     }
 
     public void setViewportSize(int size) {
+        if (size == 0 || size < -1)
+            throw new IllegalArgumentException(
+                    "viewportSize must be positive or -1 (unset), got: " + size);
         this.viewportSize = size;
     }
 
@@ -703,11 +706,15 @@ public class LineChart {
         private boolean showLegend = true;
 
         public Builder width(int width) {
+            if (width <= 0)
+                throw new IllegalArgumentException("width must be positive, got: " + width);
             this.width = width;
             return this;
         }
 
         public Builder height(int height) {
+            if (height <= 0)
+                throw new IllegalArgumentException("height must be positive, got: " + height);
             this.height = height;
             return this;
         }
@@ -807,6 +814,9 @@ public class LineChart {
          * Default shows all data points (#594).
          */
         public Builder viewportSize(int size) {
+            if (size == 0 || size < -1)
+                throw new IllegalArgumentException(
+                        "viewportSize must be positive or -1 (unset), got: " + size);
             this.viewportSize = size;
             return this;
         }

@@ -45,6 +45,8 @@ public class Axis {
     }
 
     public Axis tickCount(int tickCount) {
+        if (tickCount <= 1)
+            throw new IllegalArgumentException("tickCount must be at least 2, got: " + tickCount);
         this.tickCount = tickCount;
         return this;
     }
@@ -113,6 +115,11 @@ public class Axis {
 
     /**
      * Map a data value to a normalized position (0.0 = min, 1.0 = max).
+     * <p>
+     * On a logarithmic scale, non-positive values have no defined position
+     * and are deliberately clamped to the axis origin (0.0) rather than
+     * throwing: normalize() runs per data point during render, where an
+     * exception would abort the whole chart for one bad value.
      */
     public double normalize(double value) {
         if (scale == Scale.LOGARITHMIC) {

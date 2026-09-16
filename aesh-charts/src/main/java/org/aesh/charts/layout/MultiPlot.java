@@ -95,6 +95,8 @@ public class MultiPlot {
         private ChartStyle style = ChartStyle.UNICODE;
 
         public Builder width(int width) {
+            if (width <= 0)
+                throw new IllegalArgumentException("width must be positive, got: " + width);
             this.width = width;
             return this;
         }

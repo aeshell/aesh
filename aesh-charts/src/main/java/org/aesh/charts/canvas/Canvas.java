@@ -82,6 +82,10 @@ public class Canvas {
      * @param ch the character
      * @param style ANSI escape sequence (e.g., ANSI.GREEN_TEXT), or null
      */
+    // Out-of-bounds writes are silently clipped (and reads return ' ')
+    // by design: renderers probe and overdraw freely, and throwing here
+    // would turn every clipping path into error handling. See
+    // CanvasTest.testOutOfBoundsIgnored.
     public void set(int x, int y, char ch, String style) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             chars[y][x] = ch;

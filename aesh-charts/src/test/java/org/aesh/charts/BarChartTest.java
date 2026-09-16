@@ -73,6 +73,16 @@ public class BarChartTest {
         assertTrue("Should contain the label", output.contains("Only"));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testWidthZeroRejected() {
+        BarChart.builder().width(0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testHeightNegativeRejected() {
+        BarChart.builder().height(-1);
+    }
+
     private static void assertEquals(String expected, String actual) {
         org.junit.Assert.assertEquals(expected, actual);
     }

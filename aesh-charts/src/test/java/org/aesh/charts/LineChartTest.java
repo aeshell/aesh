@@ -375,6 +375,32 @@ public class LineChartTest {
                 rendered.contains("104"));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testViewportSizeZeroRejected() {
+        LineChart.builder().viewportSize(0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testViewportSizeNegativeRejected() {
+        LineChart.builder().viewportSize(-5);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testWidthZeroRejected() {
+        LineChart.builder().width(0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testHeightNegativeRejected() {
+        LineChart.builder().height(-2);
+    }
+
+    @Test
+    public void testViewportSizeUnsetAccepted() {
+        LineChart chart = LineChart.builder().viewportSize(-1).build();
+        assertNotNull(chart.render());
+    }
+
     @Test
     public void testNoViewportShowsAllData() {
         DataSeries series = new DataSeries("data");

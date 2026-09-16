@@ -27,7 +27,8 @@ public class TimeSeries {
      */
     public static TimeSeries of(String name, long[] timestamps, double[] values) {
         TimeSeries ts = new TimeSeries(name);
-        for (int i = 0; i < Math.min(timestamps.length, values.length); i++) {
+        requireMatchingLengths(timestamps.length, values.length);
+        for (int i = 0; i < timestamps.length; i++) {
             ts.add(timestamps[i], values[i]);
         }
         return ts;
@@ -38,10 +39,17 @@ public class TimeSeries {
      */
     public static TimeSeries of(String name, List<Instant> timestamps, List<Double> values) {
         TimeSeries ts = new TimeSeries(name);
-        for (int i = 0; i < Math.min(timestamps.size(), values.size()); i++) {
+        requireMatchingLengths(timestamps.size(), values.size());
+        for (int i = 0; i < timestamps.size(); i++) {
             ts.add(timestamps.get(i).toEpochMilli(), values.get(i));
         }
         return ts;
+    }
+
+    private static void requireMatchingLengths(int xSize, int ySize) {
+        if (xSize != ySize)
+            throw new IllegalArgumentException(
+                    "timestamps and values must have the same length, got: " + xSize + " and " + ySize);
     }
 
     /**

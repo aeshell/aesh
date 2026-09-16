@@ -298,4 +298,14 @@ public class AxisTest {
         assertEquals(5.0, Axis.niceNum(4.0, true), 0.001);
         assertEquals(10.0, Axis.niceNum(8.0, true), 0.001);
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testTickCountZeroRejected() {
+        new Axis().tickCount(0);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testTickCountOneRejected() {
+        new Axis().tickCount(1);
+    }
 }

@@ -210,11 +210,15 @@ public class BarChart {
         private boolean showValues = true;
 
         public Builder width(int width) {
+            if (width <= 0)
+                throw new IllegalArgumentException("width must be positive, got: " + width);
             this.width = width;
             return this;
         }
 
         public Builder height(int height) {
+            if (height <= 0)
+                throw new IllegalArgumentException("height must be positive, got: " + height);
             this.height = height;
             return this;
         }

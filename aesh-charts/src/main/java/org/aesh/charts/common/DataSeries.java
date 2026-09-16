@@ -23,7 +23,8 @@ public class DataSeries {
 
     public DataSeries(String name, double[] xValues, double[] yValues) {
         this(name);
-        for (int i = 0; i < Math.min(xValues.length, yValues.length); i++) {
+        requireMatchingLengths(xValues.length, yValues.length);
+        for (int i = 0; i < xValues.length; i++) {
             this.xValues.add(xValues[i]);
             this.yValues.add(yValues[i]);
         }
@@ -31,8 +32,15 @@ public class DataSeries {
 
     public DataSeries(String name, List<Double> xValues, List<Double> yValues) {
         this.name = name;
+        requireMatchingLengths(xValues.size(), yValues.size());
         this.xValues = new ArrayList<>(xValues);
         this.yValues = new ArrayList<>(yValues);
+    }
+
+    private static void requireMatchingLengths(int xSize, int ySize) {
+        if (xSize != ySize)
+            throw new IllegalArgumentException(
+                    "x and y must have the same length, got: " + xSize + " and " + ySize);
     }
 
     /**
