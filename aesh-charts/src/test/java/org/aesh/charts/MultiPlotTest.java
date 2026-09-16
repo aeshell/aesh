@@ -87,4 +87,22 @@ public class MultiPlotTest {
     public void testWidthZeroRejected() {
         MultiPlot.builder().width(0);
     }
+
+    @Test
+    public void testSeparatorFollowsPlotWidthForNarrowChildren() {
+        MultiPlot plot = MultiPlot.builder().width(80)
+                .style(ChartStyle.ASCII).build();
+        plot.addChart(chart("a", 1, 2, 3));
+        plot.addChart(chart("b", 3, 2, 1));
+
+        String output = plot.render();
+        boolean found = false;
+        for (String line : output.split("\n")) {
+            if (line.matches("-+")) {
+                assertEquals(80, line.length());
+                found = true;
+            }
+        }
+        assertTrue("Width-80 separator expected", found);
+    }
 }

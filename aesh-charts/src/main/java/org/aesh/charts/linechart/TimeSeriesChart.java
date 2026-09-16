@@ -3,9 +3,11 @@ package org.aesh.charts.linechart;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Function;
 
 import org.aesh.charts.common.ChartStyle;
 import org.aesh.charts.common.DataSeries;
+import org.aesh.charts.common.Scale;
 import org.aesh.charts.common.TimeSeries;
 
 /**
@@ -77,8 +79,117 @@ public class TimeSeriesChart extends LineChart {
         return fmt.format(Instant.ofEpochMilli(epochMillis));
     }
 
-    // Builder extending LineChart.Builder
+    // Builder extending LineChart.Builder with covariant overrides so
+    // fluent chains preserve the TimeSeriesBuilder type through build().
     public static class TimeSeriesBuilder extends LineChart.Builder {
+
+        @Override
+        public TimeSeriesBuilder width(int width) {
+            super.width(width);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder height(int height) {
+            super.height(height);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder style(ChartStyle style) {
+            super.style(style);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder title(String title) {
+            super.title(title);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder xLabel(String xLabel) {
+            super.xLabel(xLabel);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder yLabel(String yLabel) {
+            super.yLabel(yLabel);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder xScale(Scale scale) {
+            super.xScale(scale);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder yScale(Scale scale) {
+            super.yScale(scale);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder xTickFormatter(Function<Double, String> formatter) {
+            super.xTickFormatter(formatter);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder yTickFormatter(Function<Double, String> formatter) {
+            super.yTickFormatter(formatter);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder xRange(double min, double max) {
+            super.xRange(min, max);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder yRange(double min, double max) {
+            super.yRange(min, max);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder xMin(double min) {
+            super.xMin(min);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder xMax(double max) {
+            super.xMax(max);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder yMin(double min) {
+            super.yMin(min);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder yMax(double max) {
+            super.yMax(max);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder viewportSize(int size) {
+            super.viewportSize(size);
+            return this;
+        }
+
+        @Override
+        public TimeSeriesBuilder showLegend(boolean show) {
+            super.showLegend(show);
+            return this;
+        }
 
         @Override
         public TimeSeriesChart build() {

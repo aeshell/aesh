@@ -122,13 +122,16 @@ public class BarChart {
                 }
             }
 
-            // Value label above bar
+            // Value label above bar; when the bar reaches the top,
+            // draw inside the top cell instead of dropping the value
             if (showValues) {
                 String valStr = formatValue(bar.value);
                 int valX = barX + (barWidth - valStr.length()) / 2;
                 int valY = plotHeight - 1 - barHeight - 1;
                 if (valY >= 0) {
                     canvas.writeString(valX, valY, valStr);
+                } else if (barHeight > 0 && valStr.length() <= barWidth) {
+                    canvas.writeString(barX, 0, valStr);
                 }
             }
 
@@ -173,10 +176,15 @@ public class BarChart {
                 canvas.set(barStart + col, i, fillChar, bar.color);
             }
 
-            // Value at end of bar
+            // Value at end of bar; when the bar fills the width,
+            // draw inside the bar tail instead of clipping away
             if (showValues) {
                 String valStr = " " + formatValue(bar.value);
-                canvas.writeString(barStart + barLength, i, valStr);
+                if (barStart + barLength + valStr.length() <= width) {
+                    canvas.writeString(barStart + barLength, i, valStr);
+                } else if (barLength >= valStr.length()) {
+                    canvas.writeString(barStart + barLength - valStr.length(), i, valStr);
+                }
             }
         }
 

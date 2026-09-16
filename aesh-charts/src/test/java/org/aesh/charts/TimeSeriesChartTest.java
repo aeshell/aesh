@@ -42,15 +42,24 @@ public class TimeSeriesChartTest {
     }
 
     @Test
+    public void testFluentBuilderChain() {
+        // Covariant overrides must preserve the TimeSeriesBuilder type
+        // through the whole chain, ending in a TimeSeriesChart.
+        TimeSeriesChart chart = TimeSeriesChart.tsBuilder()
+                .width(50).height(10)
+                .style(ChartStyle.UNICODE)
+                .showLegend(false)
+                .build();
+        assertNotNull(chart);
+    }
+
+    @Test
     public void testAddTimeSeriesRenders() {
-        // NB: parent Builder methods return the parent type, so keep the
-        // TimeSeriesBuilder reference and call its covariant build().
-        TimeSeriesChart.TimeSeriesBuilder builder = TimeSeriesChart.tsBuilder();
-        builder.width(50);
-        builder.height(10);
-        builder.style(ChartStyle.UNICODE);
-        builder.showLegend(false);
-        TimeSeriesChart chart = builder.build();
+        TimeSeriesChart chart = TimeSeriesChart.tsBuilder()
+                .width(50).height(10)
+                .style(ChartStyle.UNICODE)
+                .showLegend(false)
+                .build();
         TimeSeries ts = TimeSeries.of("events",
                 new long[] { 0, 60_000L, 120_000L },
                 new double[] { 1.0, 2.0, 3.0 });

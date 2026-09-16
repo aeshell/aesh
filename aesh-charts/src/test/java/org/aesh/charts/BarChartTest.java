@@ -121,6 +121,33 @@ public class BarChartTest {
         assertTrue(output.contains("a"));
     }
 
+    @Test
+    public void testFullWidthBarKeepsValue() {
+        BarChart chart = BarChart.builder()
+                .width(20).height(5)
+                .orientation(Orientation.HORIZONTAL)
+                .style(ChartStyle.UNICODE)
+                .build();
+        chart.addBar("max", 100);
+        String output = chart.render();
+        assertTrue("Value must survive full-width bar, got:\n" + output,
+                output.contains("100"));
+    }
+
+    @Test
+    public void testFullHeightBarKeepsValue() {
+        BarChart chart = BarChart.builder()
+                .width(30).height(6)
+                .orientation(Orientation.VERTICAL)
+                .style(ChartStyle.UNICODE)
+                .build();
+        chart.addBar("tall", 100);
+        chart.addBar("tiny", 1);
+        String output = chart.render();
+        assertTrue("Value must survive full-height bar, got:\n" + output,
+                output.contains("100"));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testWidthZeroRejected() {
         BarChart.builder().width(0);

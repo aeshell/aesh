@@ -139,9 +139,15 @@ public class Axis {
 
     /**
      * Map a normalized position (0.0-1.0) back to a data value.
+     * <p>
+     * Mirrors {@link #normalize(double)}: on a logarithmic scale with a
+     * non-positive minimum there is no defined mapping, so the minimum
+     * bound is returned instead of NaN.
      */
     public double denormalize(double normalized) {
         if (scale == Scale.LOGARITHMIC) {
+            if (min <= 0)
+                return min;
             double logMin = Math.log10(min);
             double logMax = Math.log10(max);
             return Math.pow(10, logMin + normalized * (logMax - logMin));

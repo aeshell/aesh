@@ -64,30 +64,45 @@ public class MultiPlot {
 
     /**
      * Render all charts stacked vertically with separators.
+     * <p>
+     * The separator spans the widest rendered child, so charts narrower
+     * than the plot width still get a matching divider.
      */
     public String render() {
         if (charts.isEmpty())
             return "";
 
-        StringBuilder sb = new StringBuilder();
-        String separator = buildSeparator();
+        List<String> rendered = new ArrayList<>(charts.size());
+        int maxWidth = 0;
+        for (LineChart chart : charts) {
+            String out = chart.render();
+            rendered.add(out);
+            for (String line : out.split("\n", -1))
+                maxWidth = Math.max(maxWidth, visibleLength(line));
+        }
+        String separator = buildSeparator(Math.max(maxWidth, width));
 
-        for (int i = 0; i < charts.size(); i++) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < rendered.size(); i++) {
             if (i > 0) {
                 sb.append('\n').append(separator).append('\n');
             }
-            sb.append(charts.get(i).render());
+            sb.append(rendered.get(i));
         }
         return sb.toString();
     }
 
-    private String buildSeparator() {
+    private String buildSeparator(int separatorWidth) {
         StringBuilder sb = new StringBuilder();
         String sep = style.horizontalSeparator();
-        for (int i = 0; i < width; i++) {
+        for (int i = 0; i < separatorWidth; i++) {
             sb.append(sep);
         }
         return sb.toString();
+    }
+
+    private static int visibleLength(String line) {
+        return line.replaceAll("\u001B\\[[;\\d]*m", "").length();
     }
 
     public static class Builder {

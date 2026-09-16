@@ -113,12 +113,16 @@ public class LineChart {
     // --- Viewport scrolling ---
 
     public void scrollLeft(int amount) {
+        if (amount < 0)
+            throw new IllegalArgumentException("amount must be non-negative, got: " + amount);
         if (viewportStart < 0)
             viewportStart = computeAutoViewportStart();
         viewportStart = Math.max(0, viewportStart - amount);
     }
 
     public void scrollRight(int amount) {
+        if (amount < 0)
+            throw new IllegalArgumentException("amount must be non-negative, got: " + amount);
         if (viewportStart < 0)
             viewportStart = computeAutoViewportStart();
         int maxSize = seriesList.stream().mapToInt(DataSeries::size).max().orElse(0);

@@ -3,6 +3,7 @@ package org.aesh.charts.axis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import org.aesh.charts.common.Scale;
 import org.junit.Test;
 
 /**
@@ -307,5 +308,19 @@ public class AxisTest {
     @Test(expected = IllegalArgumentException.class)
     public void testTickCountOneRejected() {
         new Axis().tickCount(1);
+    }
+
+    @Test
+    public void testDenormalizeLogWithNonPositiveMin() {
+        // Mirrors the normalize() clamp: no NaN, returns the bound
+        Axis axis = new Axis().scale(Scale.LOGARITHMIC).min(0).max(100);
+        assertEquals(0.0, axis.denormalize(0.0), 0.0);
+        assertEquals(0.0, axis.denormalize(1.0), 0.0);
+    }
+
+    @Test
+    public void testDenormalizeLogRoundTrip() {
+        Axis axis = new Axis().scale(Scale.LOGARITHMIC).min(1).max(1000);
+        assertEquals(10.0, axis.denormalize(axis.normalize(10.0)), 0.001);
     }
 }

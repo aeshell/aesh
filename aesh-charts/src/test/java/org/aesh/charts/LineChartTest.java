@@ -401,6 +401,18 @@ public class LineChartTest {
         assertNotNull(chart.render());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testScrollLeftNegativeRejected() {
+        LineChart chart = LineChart.builder().build();
+        chart.scrollLeft(-1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testScrollRightNegativeRejected() {
+        LineChart chart = LineChart.builder().build();
+        chart.scrollRight(-2);
+    }
+
     @Test
     public void testNoViewportShowsAllData() {
         DataSeries series = new DataSeries("data");
