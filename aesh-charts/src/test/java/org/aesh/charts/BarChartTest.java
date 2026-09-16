@@ -73,6 +73,54 @@ public class BarChartTest {
         assertTrue("Should contain the label", output.contains("Only"));
     }
 
+    @Test
+    public void testAllNegativeValues() {
+        BarChart chart = BarChart.builder()
+                .width(40).height(10)
+                .orientation(Orientation.VERTICAL)
+                .style(ChartStyle.UNICODE)
+                .build();
+        chart.addBar("a", -5);
+        chart.addBar("b", -1);
+        String output = chart.render();
+        assertNotNull(output);
+        // Largest (least negative) bar should render cells, smallest none —
+        // and value labels must show
+        assertTrue(output.contains("-5"));
+        assertTrue(output.contains("-1"));
+        assertTrue(output.contains("\u2588"));
+    }
+
+    @Test
+    public void testAllNegativeHorizontal() {
+        BarChart chart = BarChart.builder()
+                .width(40).height(5)
+                .orientation(Orientation.HORIZONTAL)
+                .style(ChartStyle.UNICODE)
+                .build();
+        chart.addBar("a", -5);
+        chart.addBar("b", -1);
+        String output = chart.render();
+        assertTrue(output.contains("a"));
+        assertTrue(output.contains("b"));
+        assertTrue(output.contains("-5"));
+        assertTrue(output.contains("\u2588"));
+    }
+
+    @Test
+    public void testAllZeroValues() {
+        BarChart chart = BarChart.builder()
+                .width(40).height(10)
+                .orientation(Orientation.VERTICAL)
+                .style(ChartStyle.UNICODE)
+                .build();
+        chart.addBar("a", 0);
+        chart.addBar("b", 0);
+        String output = chart.render();
+        assertNotNull(output);
+        assertTrue(output.contains("a"));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testWidthZeroRejected() {
         BarChart.builder().width(0);

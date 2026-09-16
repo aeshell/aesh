@@ -67,6 +67,7 @@ public class BarChart {
     }
 
     private String renderVertical() {
+        double minValue = bars.stream().mapToDouble(b -> b.value).min().orElse(0);
         double maxValue = bars.stream().mapToDouble(b -> b.value).max().orElse(1);
         if (maxValue == 0)
             maxValue = 1;
@@ -95,7 +96,7 @@ public class BarChart {
         for (int i = 0; i < bars.size(); i++) {
             Bar bar = bars.get(i);
             int barX = yAxisWidth + i * (barWidth + gap);
-            double fraction = bar.value / maxValue;
+            double fraction = barFraction(bar.value, minValue, maxValue);
             int barHeight = (int) (fraction * plotHeight);
 
             // Use block elements for sub-cell resolution at the top
@@ -146,6 +147,7 @@ public class BarChart {
     }
 
     private String renderHorizontal() {
+        double minValue = bars.stream().mapToDouble(b -> b.value).min().orElse(0);
         double maxValue = bars.stream().mapToDouble(b -> b.value).max().orElse(1);
         if (maxValue == 0)
             maxValue = 1;
@@ -163,7 +165,7 @@ public class BarChart {
             canvas.set(maxLabelWidth, i, style.verticalLine());
 
             // Bar
-            double fraction = bar.value / maxValue;
+            double fraction = barFraction(bar.value, minValue, maxValue);
             int barLength = (int) (fraction * barAreaWidth);
             char fillChar = style == ChartStyle.ASCII ? '#' : BlockEncoder.FULL_BLOCK;
             int barStart = maxLabelWidth + 1;
@@ -179,6 +181,22 @@ public class BarChart {
         }
 
         return canvas.render();
+    }
+
+    /**
+     * Fraction of the bar to fill. Positive data scales from a zero baseline;
+     * all-non-positive data scales within [min, max] so relative sizes remain
+     * visible instead of overflowing. Mixed data keeps the zero baseline
+     * (negative bars render empty).
+     */
+    private static double barFraction(double value, double minValue, double maxValue) {
+        if (maxValue <= 0) {
+            double range = maxValue - minValue;
+            if (range == 0)
+                range = 1;
+            return (value - minValue) / range;
+        }
+        return value / maxValue;
     }
 
     private static String formatValue(double value) {

@@ -3,6 +3,7 @@ package org.aesh.charts;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import org.aesh.charts.canvas.BlockEncoder;
 import org.aesh.charts.sparkline.Sparkline;
@@ -64,6 +65,28 @@ public class SparklineTest {
     @Test(expected = IllegalArgumentException.class)
     public void testWidthZeroRejected() {
         Sparkline.builder().width(0);
+    }
+
+    @Test
+    public void testDescendingData() {
+        Sparkline spark = Sparkline.builder().width(5).height(1).build();
+        spark.addAll(8, 6, 4, 2, 0);
+        String output = spark.render();
+        assertEquals(5, output.length());
+        // Highest first, lowest last
+        assertEquals(BlockEncoder.forFraction(1.0), output.charAt(0));
+        assertEquals(BlockEncoder.forFraction(0.0), output.charAt(4));
+    }
+
+    @Test
+    public void testColorWrapping() {
+        Sparkline spark = Sparkline.builder().width(3).height(1)
+                .color("\u001B[31m").build();
+        spark.addAll(1, 2, 3);
+        String output = spark.render();
+        assertTrue(output.startsWith("\u001B[31m"));
+        assertTrue(output.endsWith("\u001B[0m"));
+        assertEquals(3 + "\u001B[31m".length() + "\u001B[0m".length(), output.length());
     }
 
     @Test
