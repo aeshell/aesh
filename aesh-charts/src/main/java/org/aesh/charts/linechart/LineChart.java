@@ -197,10 +197,29 @@ public class LineChart {
                 effectiveStart = Math.max(0, effectiveEnd - viewportSize);
             }
             if (effectiveStart < maxDataSize && effectiveEnd > effectiveStart) {
-                DataSeries ref = seriesList.get(0);
-                xMin = ref.xAt(Math.min(effectiveStart, ref.size() - 1));
-                xMax = ref.xAt(Math.min(effectiveEnd - 1, ref.size() - 1));
-                viewportActive = true;
+                // Window bounds are the union across all series. In auto
+                // mode ("show latest") each series contributes its own
+                // latest points so short series stay visible instead of
+                // falling outside the global index window; with an explicit
+                // start the global indexes apply per series. This keeps
+                // series with different lengths or x-offsets sharing one
+                // visible window instead of following series 0 only.
+                boolean auto = viewportStart < 0;
+                double winMin = Double.MAX_VALUE, winMax = -Double.MAX_VALUE;
+                for (DataSeries s : seriesList) {
+                    int sStart = auto ? Math.max(0, s.size() - viewportSize)
+                            : Math.min(effectiveStart, s.size());
+                    int sEnd = auto ? s.size() : Math.min(effectiveEnd, s.size());
+                    if (sStart < sEnd && sStart < s.size()) {
+                        winMin = Math.min(winMin, s.xAt(sStart));
+                        winMax = Math.max(winMax, s.xAt(sEnd - 1));
+                    }
+                }
+                if (winMin <= winMax) {
+                    xMin = winMin;
+                    xMax = winMax;
+                    viewportActive = true;
+                }
             }
         }
 

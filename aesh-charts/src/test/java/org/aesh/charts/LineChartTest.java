@@ -328,6 +328,54 @@ public class LineChartTest {
     }
 
     @Test
+    public void testViewportWindowUnitesDifferentLengths() {
+        DataSeries a = new DataSeries("a");
+        for (int i = 0; i < 10; i++)
+            a.add(i, i);
+        DataSeries b = new DataSeries("b");
+        for (int i = 0; i < 4; i++)
+            b.add(i, 100 + i);
+
+        LineChart chart = LineChart.builder()
+                .width(40).height(10)
+                .viewportSize(5)
+                .build();
+        chart.addSeries(a);
+        chart.addSeries(b);
+
+        // Auto mode shows the last 5 index positions. Series b has only 4
+        // points, all outside series a's window — each series contributes
+        // its own latest points, so the Y range must still reach b (~100),
+        // not just a's [5,9] slice.
+        String rendered = chart.render();
+        assertTrue("Short series values should be in Y range, got:\n" + rendered,
+                rendered.contains("150"));
+    }
+
+    @Test
+    public void testViewportWindowUnitesDifferentXOffsets() {
+        DataSeries a = new DataSeries("a");
+        for (int i = 0; i < 5; i++)
+            a.add(i, i);
+        DataSeries b = new DataSeries("b");
+        for (int i = 0; i < 5; i++)
+            b.add(100 + i, i);
+
+        LineChart chart = LineChart.builder()
+                .width(40).height(10)
+                .viewportSize(3)
+                .build();
+        chart.addSeries(a);
+        chart.addSeries(b);
+
+        // Following series 0 only would show x in [2,4] and hide b entirely.
+        // The union window must span both series' visible points.
+        String rendered = chart.render();
+        assertTrue("Offset series X range should be visible, got:\n" + rendered,
+                rendered.contains("104"));
+    }
+
+    @Test
     public void testNoViewportShowsAllData() {
         DataSeries series = new DataSeries("data");
         for (int i = 0; i < 20; i++) {
