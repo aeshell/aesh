@@ -25,6 +25,8 @@ import org.aesh.command.option.OptionVisibility;
  * ShellCompletionGenerator.generate(ShellType.BASH, TopCommand.class, "isx",
  *         CompletionFilter.defaults().and(noVmFilter));
  * </pre>
+ *
+ * @since 3.19
  */
 public interface CompletionFilter {
 

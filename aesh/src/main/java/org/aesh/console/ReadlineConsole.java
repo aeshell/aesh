@@ -38,6 +38,9 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Executor;
+import org.aesh.command.PipelineExecutionListener;
+import org.aesh.command.PipelineResult;
+import org.aesh.command.StageOutcome;
 import org.aesh.command.alias.AeshAliasManager;
 import org.aesh.command.alias.AliasCommand;
 import org.aesh.command.alias.UnAliasCommand;
@@ -182,7 +185,45 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         context = new DefaultAeshContext(exportManager);
 
         processManager = new ProcessManager(this);
-        processManager.setExecutionListener(settings.commandExecutionListener());
+        CommandExecutionListener userListener = settings.commandExecutionListener();
+        ExportManager exitCodeSource = exportManager;
+        // Forward each arity to the user's same arity: some consumers
+        // override only the 4-arg variant, which a 3-arg call would bypass.
+        // Implements PipelineExecutionListener so stage/pipeline events keep
+        // flowing when the user listener provides them.
+        processManager.setExecutionListener(new PipelineExecutionListener() {
+            @Override
+            public void onCommandComplete(String line, CommandResult result, long durationMs) {
+                recordExitCode(result);
+                if (userListener != null)
+                    userListener.onCommandComplete(line, result, durationMs);
+            }
+
+            @Override
+            public void onCommandComplete(String line, CommandResult result, long durationMs,
+                    Throwable error) {
+                recordExitCode(result);
+                if (userListener != null)
+                    userListener.onCommandComplete(line, result, durationMs, error);
+            }
+
+            private void recordExitCode(CommandResult result) {
+                if (exitCodeSource != null && result != null)
+                    exitCodeSource.setLastExitCode(result.getResultValue());
+            }
+
+            @Override
+            public void onStageComplete(StageOutcome stage) {
+                if (userListener instanceof PipelineExecutionListener)
+                    ((PipelineExecutionListener) userListener).onStageComplete(stage);
+            }
+
+            @Override
+            public void onPipelineComplete(PipelineResult result) {
+                if (userListener instanceof PipelineExecutionListener)
+                    ((PipelineExecutionListener) userListener).onPipelineComplete(result);
+            }
+        });
         processManager.setPipelineConfig(settings.pipelineConfig());
     }
 
@@ -516,6 +557,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
      * give consumers a complete view of all command outcomes (#605).
      */
     private void fireExecutionListener(String line, CommandResult result, Throwable error) {
+        if (exportManager != null && result != null)
+            exportManager.setLastExitCode(result.getResultValue());
         CommandExecutionListener listener = settings.commandExecutionListener();
         if (listener != null) {
             try {

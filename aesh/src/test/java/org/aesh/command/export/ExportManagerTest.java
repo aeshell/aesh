@@ -103,6 +103,73 @@ public class ExportManagerTest {
         }
     }
 
+    // Bash compatibility (#624): every $var on the line expands, unknown
+    // ones to empty — not just the last one.
+    @Test
+    public void testMultipleUnknownVariablesExpandToEmpty() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+
+        assertEquals("echo  ", exportManager.getValue("echo $NOPE1 $NOPE2"));
+        assertEquals("set  = ", exportManager.getValue("set $name = $1"));
+    }
+
+    @Test
+    public void testBackslashEscape() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+        exportManager.addVariable("export FOO=/opt");
+
+        assertEquals("echo $FOO", exportManager.getValue("echo \\$FOO"));
+        assertEquals("/opt", exportManager.getValue("$FOO"));
+    }
+
+    @Test
+    public void testSingleQuotesSuppressExpansion() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+        exportManager.addVariable("export FOO=/opt");
+
+        assertEquals("echo '$FOO'", exportManager.getValue("echo '$FOO'"));
+        assertEquals("echo \"/opt\"", exportManager.getValue("echo \"$FOO\""));
+    }
+
+    @Test
+    public void testSpecialVariables() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+
+        assertEquals("", exportManager.getValue("$1"));
+        assertEquals("0", exportManager.getValue("$?"));
+        exportManager.setLastExitCode(3);
+        assertEquals("3", exportManager.getValue("$?"));
+        assertEquals("3 and ", exportManager.getValue("$? and $9"));
+
+        String pid = exportManager.getValue("$$");
+        assertNotNull(pid);
+        assertTrue("PID should be numeric, got: " + pid, pid.matches("\\d+"));
+    }
+
+    @Test
+    public void testStrayDollarIsLiteral() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+
+        assertEquals("cost $", exportManager.getValue("cost $"));
+        assertEquals("a $ b", exportManager.getValue("a $ b"));
+        assertEquals("$#", exportManager.getValue("$#"));
+        assertNotNull(exportManager.getValue("echo $$"));
+    }
+
+    @Test
+    public void testUnbalancedBraceIsLiteral() {
+        ExportManager exportManager = new ExportManager(
+                new File(Config.getTmpDir() + Config.getPathSeparator() + "aesh_variable_test"));
+        exportManager.addVariable("export FOO=/opt");
+
+        assertEquals("/opt ${FOO", exportManager.getValue("$FOO ${FOO"));
+    }
+
     // Regression test for: self-referencing undefined variable should not NPE
     @Test
     public void testSelfReferencingUndefinedVariable() {

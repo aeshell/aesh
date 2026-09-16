@@ -23,6 +23,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -32,12 +36,14 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Arguments;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.editing.EditMode;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Key;
 import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
@@ -154,6 +160,97 @@ public class ExportCommandTest {
         assertTrue("Command should complete", latch.await(5, TimeUnit.SECONDS));
         assertTrue(listenerCalled[0]);
         console.stop();
+    }
+
+    @Test
+    public void testUnknownVariablesExpandToEmptyEndToEnd() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(3);
+        List<String> seenArgs = Collections.synchronizedList(new ArrayList<>());
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(new ArgsCommand(seenArgs))
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .setPersistExport(false)
+                .mode(EditMode.Mode.EMACS)
+                .readInputrc(false)
+                .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        connection.read("export FOO=bar" + Config.getLineSeparator());
+        // Known var expands, unknown $NOPE vanishes but the line survives
+        connection.read("args $FOO $NOPE tail" + Config.getLineSeparator());
+        // The user's shape: unset vars empty out instead of killing the line
+        connection.read("args $mydata = $1" + Config.getLineSeparator());
+        assertTrue("Commands should complete", latch.await(10, TimeUnit.SECONDS));
+        assertEquals(Arrays.asList("bar", "tail"), seenArgs.subList(0, 2));
+        assertEquals(Collections.singletonList("="), seenArgs.subList(2, 3));
+        console.stop();
+    }
+
+    @Test
+    public void testExitCodeExpansionEndToEnd() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(2);
+        List<String> seenArgs = Collections.synchronizedList(new ArrayList<>());
+
+        CommandRegistry registry = AeshCommandRegistryBuilder.builder()
+                .command(new ArgsCommand(seenArgs))
+                .create();
+
+        Settings<CommandInvocation> settings = SettingsBuilder
+                .builder()
+                .connection(connection)
+                .commandRegistry(registry)
+                .setPersistExport(false)
+                .mode(EditMode.Mode.EMACS)
+                .readInputrc(false)
+                .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latch.countDown())
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.setPrompt(new Prompt(""));
+        console.start();
+
+        // ArgsCommand always returns 1, so $? must expand to "1"
+        connection.read("args" + Config.getLineSeparator());
+        connection.read("args $? done" + Config.getLineSeparator());
+        assertTrue("Commands should complete", latch.await(10, TimeUnit.SECONDS));
+        assertTrue("Exit code should expand to 1, got: " + seenArgs,
+                seenArgs.contains("1"));
+        console.stop();
+    }
+
+    @CommandDefinition(name = "args", description = "")
+    public static class ArgsCommand implements Command {
+
+        private final List<String> seenArgs;
+
+        ArgsCommand(List<String> seenArgs) {
+            this.seenArgs = seenArgs;
+        }
+
+        @Arguments(description = "")
+        private List<String> args;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation)
+                throws CommandException, InterruptedException {
+            if (args != null)
+                seenArgs.addAll(args);
+            // Always non-zero so a following invocation observes it via $?
+            return CommandResult.valueOf(1);
+        }
     }
 
     @CommandDefinition(name = "foo", description = "")

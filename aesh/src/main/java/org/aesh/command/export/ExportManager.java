@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,8 +46,26 @@ public class ExportManager {
     private static final char DOLLAR = '$';
     private final Map<String, String> variables;
     private final Pattern exportPattern = Pattern.compile("^(export)\\s+(\\w+)\\s*=\\s*(\\S+).*$");
-    private final Pattern variableDollarFirstPattern = Pattern.compile("\\$(\\w+|\\{(\\w+)\\})(.*)");
-    private final Pattern variablePattern = Pattern.compile("(.*)\\$(\\w+|\\{(\\w+)\\})(.*)");
+
+    /**
+     * Index of the closing brace matching the opening brace at
+     * {@code openIndex} (which points at the {@code $} of {@code ${}),
+     * or -1 when unbalanced.
+     */
+    private static int findClosingBrace(String value, int openIndex) {
+        int depth = 0;
+        for (int i = openIndex + 1; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '{')
+                depth++;
+            else if (c == '}') {
+                depth--;
+                if (depth == 0)
+                    return i;
+            }
+        }
+        return -1;
+    }
 
     private static final Logger LOGGER = LoggerUtil.getLogger(ExportManager.class.getName());
 
@@ -174,6 +193,24 @@ public class ExportManager {
 
     private static final int MAX_PARSE_DEPTH = 10;
 
+    private int lastExitCode;
+
+    /**
+     * Record the exit code of the most recently executed command,
+     * used for {@code $?} expansion.
+     */
+    public void setLastExitCode(int lastExitCode) {
+        this.lastExitCode = lastExitCode;
+    }
+
+    /**
+     * Expand variables in a line, left to right (bash semantics):
+     * {@code $NAME}/${NAME} substitute known values and empty for unknown,
+     * {@code $?} is the last exit code, {@code $$} the JVM pid,
+     * {@code $1}-{@code $9}/{@code $#} expand to empty, {@code \$} is a
+     * literal dollar, single-quoted spans are left untouched, and any other
+     * stray {@code $} passes through literally (never dropped).
+     */
     private String parseValue(String value, int depth) {
         if (value == null)
             return null;
@@ -185,60 +222,92 @@ public class ExportManager {
             return value;
         }
 
-        if (value.indexOf(DOLLAR) == 0) {
-            Matcher matcher = variableDollarFirstPattern.matcher(value);
-            if (matcher.matches()) {
-                String group1 = matcher.group(1);
-                String group2 = matcher.group(3);
-
-                if (matcher.group(2) != null)
-                    group1 = matcher.group(2);
-
-                if (group1 != null && containsKey(group1)) {
-                    if (group2 != null && group2.indexOf(DOLLAR) > -1) {
-                        if (getVariable(group1).indexOf(DOLLAR) == -1)
-                            return getVariable(group1) + parseValue(group2, depth + 1);
-                        else
-                            return parseValue(getVariable(group1), depth + 1) + parseValue(group2, depth + 1);
-
-                    }
-
-                    if (getVariable(group1).indexOf(DOLLAR) == -1)
-                        return getVariable(group1) + group2;
-                    else
-                        return parseValue(getVariable(group1), depth + 1) + group2;
-                }
-                return group2;
+        StringBuilder out = new StringBuilder(value.length());
+        boolean inSingleQuote = false;
+        int i = 0;
+        while (i < value.length()) {
+            char c = value.charAt(i);
+            if (c == '\\' && !inSingleQuote && i + 1 < value.length()
+                    && value.charAt(i + 1) == DOLLAR) {
+                out.append(DOLLAR);
+                i += 2;
+                continue;
             }
-            return null;
-        }
-
-        Matcher matcher = variablePattern.matcher(value);
-        if (matcher.matches()) {
-            String group1 = matcher.group(1);
-            String group2 = matcher.group(2);
-            String group3 = matcher.group(4);
-
-            if (matcher.group(3) != null)
-                group2 = matcher.group(3);
-
-            if (group2 != null && containsKey(group2)) {
-                if (group3 != null && group3.indexOf(DOLLAR) > -1) {
-                    if (getVariable(group2).indexOf(DOLLAR) == -1)
-                        return parseValue(group1, depth + 1) + getVariable(group2) + parseValue(group3, depth + 1);
-                    else
-                        return parseValue(group1, depth + 1) + parseValue(getVariable(group2), depth + 1)
-                                + parseValue(group3, depth + 1);
-                }
-
-                if (getVariable(group2).indexOf(DOLLAR) == -1)
-                    return parseValue(group1, depth + 1) + getVariable(group2) + group3;
-
-                return parseValue(group1, depth + 1) + parseValue(getVariable(group2), depth + 1) + group3;
+            if (c == '\'') {
+                inSingleQuote = !inSingleQuote;
+                out.append(c);
+                i++;
+                continue;
             }
-            return group1 + group3;
+            if (c == DOLLAR && !inSingleQuote) {
+                i = appendExpansion(value, i, out, depth);
+                continue;
+            }
+            out.append(c);
+            i++;
         }
-        return null;
+        return out.toString();
+    }
+
+    /**
+     * Expand the variable reference starting at {@code value.charAt(start)}
+     * (which is a dollar), appending to {@code out}.
+     *
+     * @return the index of the first unconsumed character
+     */
+    private int appendExpansion(String value, int start, StringBuilder out, int depth) {
+        int i = start + 1;
+        if (i >= value.length())
+            return copyDollar(out, start, i);
+        char next = value.charAt(i);
+        if (next == '{') {
+            int close = findClosingBrace(value, start);
+            if (close < 0)
+                return copyDollar(out, start, i);
+            appendName(value.substring(i + 1, close), out, depth);
+            return close + 1;
+        }
+        if (next == '?') {
+            out.append(lastExitCode);
+            return i + 1;
+        }
+        if (next == DOLLAR) {
+            out.append(jvmPid());
+            return i + 1;
+        }
+        if (isNameChar(next)) {
+            int end = i;
+            while (end < value.length() && isNameChar(value.charAt(end)))
+                end++;
+            appendName(value.substring(i, end), out, depth);
+            return end;
+        }
+        return copyDollar(out, start, i);
+    }
+
+    private int copyDollar(StringBuilder out, int start, int next) {
+        out.append(DOLLAR);
+        return next;
+    }
+
+    private static boolean isNameChar(char c) {
+        return c == '_' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9';
+    }
+
+    private void appendName(String name, StringBuilder out, int depth) {
+        if (!containsKey(name))
+            return;
+        String resolved = getVariable(name);
+        if (resolved != null && resolved.indexOf(DOLLAR) > -1)
+            resolved = parseValue(resolved, depth + 1);
+        if (resolved != null)
+            out.append(resolved);
+    }
+
+    private static String jvmPid() {
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        int at = name.indexOf('@');
+        return at > 0 ? name.substring(0, at) : name;
     }
 
     public String listAllVariables() {

@@ -58,6 +58,8 @@ public class CommandResult {
      * Command abandoned after repeated interrupts were ignored (exit code 137 = 128 + 9).
      * Unlike {@link #INTERRUPTED}, the command did not stop cooperatively: the shell
      * reclaimed the prompt while the worker thread was still running.
+     *
+     * @since 3.19
      */
     public static final CommandResult KILLED = new CommandResult(137);
 
