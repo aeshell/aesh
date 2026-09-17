@@ -19,6 +19,7 @@
  */
 package org.aesh;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -790,20 +791,36 @@ public class AeshRuntimeRunner {
      * <li>{@code --aesh-doc} — AsciiDoc to stdout (default)</li>
      * <li>{@code --aesh-doc asciidoc} — AsciiDoc to stdout</li>
      * <li>{@code --aesh-doc markdown} — Markdown to stdout</li>
+     * <li>{@code --aesh-doc asciidoc --output-dir docs} — one file per
+     * command under {@code docs} (must already exist)</li>
      * </ul>
      */
     @SuppressWarnings("unchecked")
     private CommandResult handleBuiltinDoc(CommandRegistry commandRegistry) {
         org.aesh.command.DocFormat format = org.aesh.command.DocFormat.ASCIIDOC;
+        File outputDir = null;
 
         for (int i = 1; i < args.length; i++) {
+            if ("--output-dir".equals(args[i])) {
+                if (i + 1 >= args.length) {
+                    System.err.println("Missing directory after --output-dir");
+                    return CommandResult.FAILURE;
+                }
+                outputDir = new File(args[++i]);
+                continue;
+            }
             try {
                 format = org.aesh.command.DocFormat.valueOf(args[i].toUpperCase());
             } catch (IllegalArgumentException e) {
                 System.err.println("Unknown doc format: " + args[i]
-                        + ". Supported: asciidoc, markdown");
+                        + ". Supported: asciidoc, markdown, skill");
                 return CommandResult.FAILURE;
             }
+        }
+
+        if (outputDir != null && !outputDir.isDirectory()) {
+            System.err.println("Output directory does not exist: " + outputDir);
+            return CommandResult.FAILURE;
         }
 
         try {
@@ -812,11 +829,16 @@ public class AeshRuntimeRunner {
                     .getCommand(commandName, "");
 
             String programName = completionProgramName != null ? completionProgramName : commandName;
-            String doc = org.aesh.util.doc.DocumentationGenerator.builder()
+            org.aesh.util.doc.DocumentationGenerator.Builder builder = org.aesh.util.doc.DocumentationGenerator
+                    .builder()
                     .parser(container.getParser())
                     .programName(programName)
-                    .format(format)
-                    .generateSingle();
+                    .format(format);
+            if (outputDir != null) {
+                builder.outputDir(outputDir).generate();
+                return CommandResult.SUCCESS;
+            }
+            String doc = builder.generateSingle();
             System.out.print(doc);
             return CommandResult.SUCCESS;
         } catch (Exception e) {

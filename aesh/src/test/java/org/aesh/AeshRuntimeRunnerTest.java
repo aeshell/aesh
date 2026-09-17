@@ -723,6 +723,106 @@ public class AeshRuntimeRunnerTest {
         assertTrue("Should report unknown format", stderr.contains("Unknown doc format"));
     }
 
+    // -- Built-in --aesh-doc --output-dir tests --
+
+    @CommandDefinition(name = "docchilda", description = "first child")
+    public static class DocChildA implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "docchildb", description = "second child")
+    public static class DocChildB implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "docparent", description = "parent command", groupCommands = { DocChildA.class, DocChildB.class })
+    public static class DocParent implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static String readFile(java.io.File file) throws java.io.IOException {
+        return new String(java.nio.file.Files.readAllBytes(file.toPath()));
+    }
+
+    @Test
+    public void testAeshDocOutputDirAsciidoc() throws Exception {
+        java.io.File dir = java.nio.file.Files.createTempDirectory("aesh-doc").toFile();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "asciidoc", "--output-dir", dir.getAbsolutePath())
+                .execute();
+
+        assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
+        java.io.File parent = new java.io.File(dir, "docparent.adoc");
+        java.io.File childA = new java.io.File(dir, "docparent-docchilda.adoc");
+        java.io.File childB = new java.io.File(dir, "docparent-docchildb.adoc");
+        assertTrue("Parent doc missing", parent.isFile());
+        assertTrue("Child A doc missing", childA.isFile());
+        assertTrue("Child B doc missing", childB.isFile());
+        assertTrue(readFile(childA).contains("first child"));
+        assertTrue("Parent should link the child file",
+                readFile(parent).contains("docparent-docchilda.adoc"));
+    }
+
+    @Test
+    public void testAeshDocOutputDirMarkdown() throws Exception {
+        java.io.File dir = java.nio.file.Files.createTempDirectory("aesh-doc").toFile();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "markdown", "--output-dir", dir.getAbsolutePath())
+                .execute();
+
+        assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
+        assertTrue(new java.io.File(dir, "docparent.md").isFile());
+        assertTrue(new java.io.File(dir, "docparent-docchilda.md").isFile());
+        assertTrue(new java.io.File(dir, "docparent-docchildb.md").isFile());
+    }
+
+    @Test
+    public void testAeshDocOutputDirSkill() throws Exception {
+        java.io.File dir = java.nio.file.Files.createTempDirectory("aesh-doc").toFile();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "skill", "--output-dir", dir.getAbsolutePath())
+                .execute();
+
+        assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
+        assertTrue(new java.io.File(dir, "docparent.md").isFile());
+        assertTrue(new java.io.File(dir, "docparent-docchilda.md").isFile());
+    }
+
+    @Test
+    public void testAeshDocOutputDirMissing() {
+        java.io.File missing = new java.io.File(
+                System.getProperty("java.io.tmpdir"), "aesh-doc-nope-" + System.nanoTime());
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "asciidoc", "--output-dir", missing.getAbsolutePath())
+                .execute());
+
+        assertTrue("Should report missing directory", stderr.contains("does not exist"));
+        assertFalse("Must not create the directory", missing.exists());
+    }
+
+    @Test
+    public void testAeshDocOutputDirMissingArg() {
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "--output-dir")
+                .execute());
+
+        assertTrue("Should report missing argument", stderr.contains("Missing directory"));
+    }
+
     @Test
     public void testAeshDocFlagNotInCompletionCandidates() {
         String output = captureStdout(() -> AeshRuntimeRunner.builder()
