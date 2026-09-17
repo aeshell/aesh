@@ -22,10 +22,8 @@ package org.aesh.io;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -68,8 +66,8 @@ public class PathResolver {
         if (cwd == null)
             cwd = new File(Config.getHomeDir());
 
-        //if incPath start with eg: ./, remove it
-        if (incPath.toString().startsWith(CURRENT_WITH_SEPARATOR)) {
+        //if incPath start with eg: ./, remove it (repeatedly: ././x)
+        while (incPath.toString().startsWith(CURRENT_WITH_SEPARATOR)) {
             incPath = new File(incPath.toString().substring(CURRENT_WITH_SEPARATOR.length()));
         }
 
@@ -89,15 +87,16 @@ public class PathResolver {
             }
         }
 
-        //  foo1/./foo2 is changed to foo1/foo2
-        if (incPath.toString().indexOf(SEPARATOR_CURRENT_SEPARATOR) > -1) {
-            int index = incPath.toString().indexOf(SEPARATOR_CURRENT_SEPARATOR);
-            if (index == 0) {
+        //  foo1/./foo2 is changed to foo1/foo2 (repeatedly: a/./b/./c)
+        int dotIndex = incPath.toString().indexOf(SEPARATOR_CURRENT_SEPARATOR);
+        while (dotIndex > -1) {
+            if (dotIndex == 0) {
                 incPath = new File(incPath.toString().substring(SEPARATOR_CURRENT_SEPARATOR.length() - 1));
             } else {
-                incPath = new File(incPath.toString().substring(0, index) +
-                        incPath.toString().substring(index + 2, incPath.toString().length()));
+                incPath = new File(incPath.toString().substring(0, dotIndex) +
+                        incPath.toString().substring(dotIndex + 2, incPath.toString().length()));
             }
+            dotIndex = incPath.toString().indexOf(SEPARATOR_CURRENT_SEPARATOR);
         }
 
         //parentPath do not start with / or by a windows driver letter and cwd is not / either
@@ -111,11 +110,15 @@ public class PathResolver {
 
         if (incPath.toString().indexOf(PARENT_WITH_SEPARATOR) > -1) {
             String tmp = incPath.toString();
-            while (tmp.indexOf(PARENT_WITH_SEPARATOR) > -1) {
-                int index = tmp.indexOf(PARENT_WITH_SEPARATOR);
+            int searchFrom = 0;
+            while (true) {
+                int index = tmp.indexOf(PARENT_WITH_SEPARATOR, searchFrom);
+                if (index < 0)
+                    break;
                 if (index == 0) {
                     tmp = tmp.substring(PARENT_WITH_SEPARATOR.length());
-                } else {
+                    searchFrom = 0;
+                } else if (tmp.charAt(index - 1) == SEPARATOR) {
                     File tmpFile = new File(tmp.substring(0, index));
                     tmpFile = tmpFile.getParentFile();
                     if (tmpFile == null)
@@ -123,12 +126,17 @@ public class PathResolver {
                     tmpFile = new File(tmpFile.toString() + tmp.substring(index + PARENT_WITH_SEPARATOR.length() - 1));
                     //tmp = tmp.substring(0, index) + tmp.substring(index+PARENT_WITH_SEPARATOR.length());
                     tmp = tmpFile.toString();
+                    searchFrom = 0;
+                } else {
+                    // ".." is part of a longer name (e.g. ".../"), not a parent ref
+                    searchFrom = index + 1;
                 }
             }
             incPath = new File(tmp);
         }
 
-        if (incPath.toString().endsWith(PARENT)) {
+        if (incPath.toString().equals(PARENT)
+                || incPath.toString().endsWith(SEPARATOR + PARENT)) {
             incPath = new File(incPath.toString().substring(0, incPath.toString().length() - PARENT.length()));
             incPath = incPath.getParentFile();
             if (incPath == null)
@@ -173,20 +181,9 @@ public class PathResolver {
         }
     }
 
-    private static List<File> parseWildcard(File incPath) {
-        ArrayList<File> files = new ArrayList<>();
-        int index = -1;
-        while (incPath.toString().indexOf(STAR) > -1) {
-
-        }
-
-        return files;
-    }
-
     private static List<File> findFiles(File incPath, String searchArgument, boolean findDirectory) {
         ArrayList<File> files = new ArrayList<>();
 
-        final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**");
         /*
          * DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
          *
@@ -251,16 +248,18 @@ public class PathResolver {
             return new PathCriteria(String.valueOf(SEPARATOR), "", path.toString());
         else {
             int parentSeparatorIndex = index - 1;
-            while (path.toString().charAt(parentSeparatorIndex) != SEPARATOR && parentSeparatorIndex > -1)
+            while (parentSeparatorIndex > -1
+                    && path.toString().charAt(parentSeparatorIndex) != SEPARATOR)
                 parentSeparatorIndex--;
 
             int childSeparatorIndex = index + 1;
             if (childSeparatorIndex < path.toString().length())
-                while (path.toString().charAt(childSeparatorIndex) != SEPARATOR
-                        && parentSeparatorIndex < path.toString().length())
+                while (childSeparatorIndex < path.toString().length()
+                        && path.toString().charAt(childSeparatorIndex) != SEPARATOR)
                     childSeparatorIndex++;
 
-            String parentPath = path.toString().substring(0, parentSeparatorIndex);
+            String parentPath = parentSeparatorIndex < 0 ? ""
+                    : path.toString().substring(0, parentSeparatorIndex);
             String criteria = path.toString().substring(parentSeparatorIndex + 1, childSeparatorIndex);
             String childPath = path.toString().substring(childSeparatorIndex, path.toString().length());
 

@@ -143,6 +143,37 @@ public class PathResolverTest {
     }
 
     @Test
+    public void testWildcardWithExtensionDoesNotThrow() throws IOException {
+        File tmp = tempDir.toFile();
+        // used to throw StringIndexOutOfBoundsException in parsePath
+        List<File> files = PathResolver.resolvePath(
+                new File(tmp.getAbsolutePath() + Config.getPathSeparator() + "*.txt"), tmp);
+        assertTrue(files.isEmpty());
+    }
+
+    @Test
+    public void testDotDotDotNamesArePreserved() {
+        File tmp = tempDir.toFile();
+        String sep = Config.getPathSeparator();
+        // "..." is a valid file name, not a parent reference
+        assertEquals(new File(tmp, "..."),
+                PathResolver.resolvePath(new File(tmp + sep + "..."), tmp).get(0));
+        assertEquals(new File(tmp + sep + "..." + sep + "x"),
+                PathResolver.resolvePath(new File(tmp + sep + "..." + sep + "x"), tmp).get(0));
+    }
+
+    @Test
+    public void testRepeatedCurrentDirSegments() {
+        File tmp = tempDir.toFile();
+        String sep = Config.getPathSeparator();
+        assertEquals(new File(tmp, "x"),
+                PathResolver.resolvePath(new File("." + sep + "." + sep + "x"), tmp).get(0));
+        assertEquals(new File(tmp, "a" + sep + "b" + sep + "c"),
+                PathResolver.resolvePath(
+                        new File("a" + sep + "." + sep + "b" + sep + "." + sep + "c"), tmp).get(0));
+    }
+
+    @Test
     public void testSearchFiles() throws IOException {
         File child1 = new File(tempDir + Config.getPathSeparator() + "child1");
         File child2 = new File(tempDir + Config.getPathSeparator() + "child2");

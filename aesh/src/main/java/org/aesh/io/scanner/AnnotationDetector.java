@@ -21,7 +21,6 @@ package org.aesh.io.scanner;
 
 import java.io.DataInput;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -36,6 +35,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.aesh.terminal.utils.LoggerUtil;
 
 /**
  * {@code AnnotationDetector} reads Java Class File (".class") files and reports the
@@ -185,6 +188,8 @@ public final class AnnotationDetector {
     private static final int ANNOTATION = '@';
     private static final int ARRAY = '[';
 
+    private static final Logger LOGGER = LoggerUtil.getLogger(AnnotationDetector.class.getName());
+
     // The buffer is reused during the life cycle of this AnnotationDetector instance
     private final ClassFileBuffer cpBuffer = new ClassFileBuffer();
     // the annotation types to report, see {@link #annotations()}
@@ -206,6 +211,8 @@ public final class AnnotationDetector {
      */
     public AnnotationDetector(final Reporter reporter) {
         final Class<? extends Annotation>[] a = reporter.annotations();
+        if (a == null)
+            throw new IllegalArgumentException("Reporter.annotations() must not return null");
         annotations = new HashMap<>(a.length);
         // map "raw" type names to Class object
         for (int i = 0; i < a.length; ++i) {
@@ -261,6 +268,10 @@ public final class AnnotationDetector {
                     } else {
                         throw new AssertionError("Not a recognized file URL: " + url);
                     }
+                } else if ("jrt".equals(url.getProtocol())) {
+                    // Java 9+ module path (e.g. scanning java.* packages):
+                    // no jar to open, and app commands never live there.
+                    LOGGER.fine("Skipping module-path URL during scan: " + url);
                 } else {
                     final File jarFile = toFile(openJarURLConnection(url).getJarFileURL());
                     if (jarFile.isFile()) {
@@ -352,7 +363,6 @@ public final class AnnotationDetector {
         }
     }
 
-    @SuppressWarnings("illegalcatch")
     private void detect(final ResourceIterator iterator) throws IOException {
         InputStream stream;
         while ((stream = iterator.next()) != null) {
@@ -361,17 +371,11 @@ public final class AnnotationDetector {
                 if (hasCafebabe(cpBuffer)) {
                     detect(cpBuffer);
                 } // else ignore
-            } catch (Throwable t) {
-                // catch all errors
-                if (!(stream instanceof FileInputStream)) {
-                    // in case of an error we close the ZIP File here
-                    stream.close();
-                }
+            } catch (IOException | RuntimeException e) {
+                // corrupt classes are skipped, not fatal to the scan
+                LOGGER.log(Level.FINE, "Skipping unreadable class file", e);
             } finally {
-                // closing InputStream from ZIP Entry is handled by ZipFileIterator
-                if (stream instanceof FileInputStream) {
-                    stream.close();
-                }
+                stream.close();
             }
         }
     }

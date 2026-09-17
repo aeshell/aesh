@@ -12,18 +12,14 @@ import org.junit.Test;
 public class AnnotationDetectorTest {
 
     @Test
-    public void testAnnotationDetector() {
+    public void testAnnotationDetector() throws IOException {
         AnnotationReporter reporter = new AnnotationReporter();
         AnnotationDetector detector = new AnnotationDetector(reporter);
-        try {
-            detector.detect("org.aesh.command.foo");
-            assertFalse(reporter.foundManCommand);
+        detector.detect("org.aesh.command.foo");
+        assertFalse(reporter.foundManCommand);
 
-            detector.detect("org.aesh.command.man");
-            assertTrue(reporter.foundManCommand);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        detector.detect("org.aesh.command.man");
+        assertTrue(reporter.foundManCommand);
 
     }
 

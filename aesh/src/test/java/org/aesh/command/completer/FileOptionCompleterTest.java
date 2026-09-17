@@ -33,6 +33,8 @@ import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.console.AeshContext;
 import org.aesh.console.DefaultAeshContext;
 import org.aesh.io.FileResource;
+import org.aesh.io.filter.DirectoryResourceFilter;
+import org.aesh.io.filter.LeafResourceFilter;
 import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.utils.Config;
 import org.junit.Test;
@@ -139,6 +141,46 @@ public class FileOptionCompleterTest {
         assertEquals(2, data.getCompleterValues().size());
         assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + Config.getPathSeparator(), true)));
         assertTrue(data.getCompleterValues().contains(new TerminalString(child2.getName() + Config.getPathSeparator(), true)));
+    }
+
+    @Test
+    public void testCompleterDirectoryFilter() throws IOException {
+        File file = Files.createTempDirectory("tmp" + ".tmp").toFile();
+        file.deleteOnExit();
+        File child = new File(file, "child");
+        child.mkdir();
+        child.deleteOnExit();
+        File plain = new File(file, "plain.txt");
+        plain.createNewFile();
+        plain.deleteOnExit();
+        FileOptionCompleter completer = new FileOptionCompleter(new DirectoryResourceFilter());
+        aeshContext.setCurrentWorkingDirectory(new FileResource(file));
+
+        CompleterData data = new CompleterData(aeshContext, "", null);
+        completer.complete(data);
+        assertNotNull(data.getCompleterValues());
+        assertEquals(1, data.getCompleterValues().size());
+        assertTrue(data.getCompleterValues().contains(new TerminalString(child.getName() + Config.getPathSeparator(), true)));
+    }
+
+    @Test
+    public void testCompleterLeafFilter() throws IOException {
+        File file = Files.createTempDirectory("tmp" + ".tmp").toFile();
+        file.deleteOnExit();
+        File child = new File(file, "child");
+        child.mkdir();
+        child.deleteOnExit();
+        File plain = new File(file, "plain.txt");
+        plain.createNewFile();
+        plain.deleteOnExit();
+        FileOptionCompleter completer = new FileOptionCompleter(new LeafResourceFilter());
+        aeshContext.setCurrentWorkingDirectory(new FileResource(file));
+
+        CompleterData data = new CompleterData(aeshContext, "", null);
+        completer.complete(data);
+        assertNotNull(data.getCompleterValues());
+        assertEquals(1, data.getCompleterValues().size());
+        assertTrue(data.getCompleterValues().contains(new TerminalString(plain.getName(), true)));
     }
 
 }

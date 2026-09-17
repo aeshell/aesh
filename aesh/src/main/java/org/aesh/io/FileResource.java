@@ -91,10 +91,12 @@ public class FileResource implements Resource {
 
     @Override
     public Resource readSymbolicLink() throws IOException {
-        if (isSymbolicLink())
-            return new FileResource(Files.readSymbolicLink(file.toPath()).toFile());
-        else
-            return new FileResource("");
+        if (!isSymbolicLink())
+            return null;
+        File target = Files.readSymbolicLink(file.toPath()).toFile();
+        if (!target.isAbsolute() && file.getParentFile() != null)
+            target = new File(file.getParentFile(), target.getPath());
+        return new FileResource(target);
     }
 
     @Override
@@ -112,15 +114,25 @@ public class FileResource implements Resource {
         return file.delete();
     }
 
+    private static FileResource requireFileResource(Resource target, String operation) throws IOException {
+        if (!(target instanceof FileResource))
+            throw new IOException(operation + " target must be a FileResource, got: "
+                    + (target == null ? "null" : target.getClass().getName()));
+        return (FileResource) target;
+    }
+
     @Override
     public void move(Resource target) throws IOException {
-        FileResource destination = (FileResource) target;
+        FileResource destination = requireFileResource(target, "move");
         Files.move(this.file.toPath(), destination.file.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
     public Resource getParent() {
-        return new FileResource(file.getParentFile());
+        File parent = file.getParentFile();
+        if (parent == null)
+            return null;
+        return new FileResource(parent);
     }
 
     @Override
@@ -139,9 +151,11 @@ public class FileResource implements Resource {
 
     @Override
     public List<Resource> list(ResourceFilter filter) {
+        if (filter == null)
+            return list();
         List<Resource> files = new ArrayList<>();
         for (Resource f : list()) {
-            if (filter != null && filter.accept(f))
+            if (filter.accept(f))
                 files.add(f);
         }
 
@@ -168,9 +182,10 @@ public class FileResource implements Resource {
 
     @Override
     public InputStream read() throws FileNotFoundException {
-        if (file.getPath().startsWith("~" + File.separatorChar))
-            file = new File(System.getProperty("user.home") + file.getPath().substring(1));
-        return new FileInputStream(file);
+        File target = file;
+        if (target.getPath().startsWith("~" + File.separatorChar))
+            target = new File(System.getProperty("user.home") + target.getPath().substring(1));
+        return new FileInputStream(target);
     }
 
     @Override
@@ -195,8 +210,9 @@ public class FileResource implements Resource {
 
     @Override
     public Resource copy(Resource destination) throws IOException {
-        return new FileResource(
-                Files.copy(file.toPath(), new FileResource(destination.getAbsolutePath()).getFile().toPath()).toFile());
+        Path target = requireFileResource(destination, "copy").getFile().toPath();
+        return new FileResource(Files.copy(file.toPath(), target,
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES).toFile());
     }
 
     @Override
@@ -212,7 +228,7 @@ public class FileResource implements Resource {
     @Override
     public void setLastAccessed(long time) throws IOException {
         FileTime fileTime = FileTime.fromMillis(time);
-        Files.setAttribute(file.toPath(), "lastAccessTime", fileTime);
+        Files.setAttribute(file.toPath(), "basic:lastAccessTime", fileTime);
     }
 
     @Override

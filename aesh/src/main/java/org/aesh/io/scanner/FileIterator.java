@@ -100,7 +100,9 @@ final class FileIterator {
                 if (stack.size() < rootCount) {
                     rootCount = stack.size();
                 }
-                addReverse(current.listFiles());
+                File[] children = current.listFiles();
+                if (children != null)
+                    addReverse(children);
                 return next();
             } else {
                 return current;
