@@ -1553,6 +1553,84 @@ public class ProcessorTest {
                 result.success);
     }
 
+    // --- Test: TYPE_USE annotations on option fields must not leak into generated code (#627) ---
+
+    private static final String TYPE_USE_ANNO_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.lang.annotation.ElementType;\n" +
+            "import java.lang.annotation.Retention;\n" +
+            "import java.lang.annotation.RetentionPolicy;\n" +
+            "import java.lang.annotation.Target;\n" +
+            "\n" +
+            "@Retention(RetentionPolicy.RUNTIME)\n" +
+            "@Target(ElementType.TYPE_USE)\n" +
+            "public @interface TypeUseAnno {\n" +
+            "}\n";
+
+    private static final String TYPE_USE_MIXIN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class TypeUseMixin {\n" +
+            "    @Option(name = \"mixed\", description = \"Mixin option\")\n" +
+            "    @TypeUseAnno\n" +
+            "    public String mixed;\n" +
+            "}\n";
+
+    private static final String TYPE_USE_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Mixin;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"typeuse\", description = \"Type-use annotation test\")\n" +
+            "public class TypeUseCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"name\", description = \"A name\")\n" +
+            "    @TypeUseAnno\n" +
+            "    String name;\n" +
+            "\n" +
+            "    @OptionList(name = \"items\", description = \"Items\")\n" +
+            "    List<@TypeUseAnno String> items;\n" +
+            "\n" +
+            "    @Mixin\n" +
+            "    TypeUseMixin mixin;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testTypeUseAnnotationsOnOptions() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.TypeUseAnno", TYPE_USE_ANNO_SOURCE),
+                new InMemorySource("test.TypeUseMixin", TYPE_USE_MIXIN_SOURCE),
+                new InMemorySource("test.TypeUseCommand", TYPE_USE_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed (type-use annotations must be stripped): " + result.diagnostics,
+                result.success);
+
+        // The generated source must reference clean class literals
+        java.nio.file.Path generatedSource = result.outputDir.resolve("test/TypeUseCommand_AeshMetadata.java");
+        String source = new String(java.nio.file.Files.readAllBytes(generatedSource),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue("Generated code should reference java.lang.String.class",
+                source.contains("java.lang.String.class"));
+        assertFalse("Generated code must not contain the type-use annotation: " + source,
+                source.contains("TypeUseAnno"));
+
+        // Runtime behavior must match the reflection path
+        Class<?> commandClass = result.classLoader.loadClass("test.TypeUseCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.TypeUseCommand_AeshMetadata");
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     // --- Test: Compile-time validation catches abstract class ---
 
     private static final String ABSTRACT_COMMAND_SOURCE = "package test;\n" +

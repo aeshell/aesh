@@ -243,7 +243,7 @@ final class CodeGenerator {
         for (VariableElement field : fields) {
             if (field.getAnnotation(ParentCommand.class) != null) {
                 parentInfo = new FieldAccessorInfo(-1, field.getSimpleName().toString(),
-                        field.asType().toString(), null, isPrivateField(field), simpleName);
+                        erasedTypeName(field.asType(), typeUtils), null, isPrivateField(field), simpleName);
                 break;
             }
         }
@@ -622,7 +622,7 @@ final class CodeGenerator {
         if (!(mixinType instanceof DeclaredType))
             return;
         TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
-        String mixinTypeName = mixinType.toString();
+        String mixinTypeName = erasedTypeName(mixinType, typeUtils);
 
         if (!forHelp) {
             if (isPrivateField(mixinField)) {
@@ -656,7 +656,7 @@ final class CodeGenerator {
         }
         // Recurse into superclass
         TypeMirror superclass = typeElement.getSuperclass();
-        if (superclass.getKind() != TypeKind.NONE && !superclass.toString().equals("java.lang.Object")) {
+        if (superclass.getKind() != TypeKind.NONE && !erasedTypeName(superclass, typeUtils).equals("java.lang.Object")) {
             if (superclass instanceof DeclaredType) {
                 TypeElement superElement = (TypeElement) ((DeclaredType) superclass).asElement();
                 generateMixinFields(sb, simpleName, mixinFieldName, superElement, elementUtils, typeUtils, accessorInfos,
@@ -670,7 +670,7 @@ final class CodeGenerator {
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
-        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
         if (isOptionalWrapped) {
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         }
@@ -681,7 +681,7 @@ final class CodeGenerator {
 
         // Accessor index
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
+        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         // Emit: ProcessedOption opt_N = ProcessedOption.createDirect(...)
@@ -772,7 +772,7 @@ final class CodeGenerator {
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
-        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
         if (isOptionalWrapped) {
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         }
@@ -780,7 +780,7 @@ final class CodeGenerator {
         String optionName = ol.name().length() < 1 ? fieldName : ol.name();
 
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
+        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         String var = "opt_" + accIdx;
@@ -853,7 +853,7 @@ final class CodeGenerator {
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
-        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
         if (isOptionalWrapped) {
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         }
@@ -863,7 +863,7 @@ final class CodeGenerator {
                 : og.name();
 
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
+        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         String var = "opt_" + accIdx;
@@ -935,14 +935,14 @@ final class CodeGenerator {
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
-        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
         if (isOptionalWrapped) {
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         }
         String elementType = getGenericTypeArgument(effectiveType, 0, typeUtils);
 
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
+        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         String var = "argsOpt_" + accIdx;
@@ -1002,14 +1002,14 @@ final class CodeGenerator {
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
-        boolean isOptionalWrapped = isOptionalType(effectiveType);
+        boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
         if (isOptionalWrapped) {
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         }
         String fieldType = getBoxedTypeName(effectiveType, typeUtils);
 
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, field.asType().toString(),
+        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         String var = "argOpt_" + accIdx;
@@ -1268,7 +1268,7 @@ final class CodeGenerator {
             org.aesh.command.option.CompletionFallback commandFallback) {
         // Delegate to the TypeMirror overload using the field's effective type
         TypeMirror fieldType = field.asType();
-        if (isOptionalType(fieldType))
+        if (isOptionalType(fieldType, typeUtils))
             fieldType = unwrapOptionalTypeMirror(fieldType);
         emitCompleteFallbackSetter(sb, var, value, fieldType, typeUtils, commandFallback);
     }
@@ -1296,7 +1296,7 @@ final class CodeGenerator {
                     resolved = org.aesh.command.option.CompletionFallback.NONE;
                 } else {
                     // String, File, Path -> FILES; other types -> NONE
-                    String typeName = fieldType.toString();
+                    String typeName = erasedTypeName(fieldType, typeUtils);
                     if (typeName.equals("java.lang.String") || typeName.equals("java.io.File")
                             || typeName.equals("java.nio.file.Path")
                             || typeName.equals("org.aesh.io.Resource")) {
@@ -1470,19 +1470,19 @@ final class CodeGenerator {
                 continue; // custom converter, not shared
             if (field.getAnnotation(Option.class) != null || field.getAnnotation(Argument.class) != null) {
                 TypeMirror effectiveType = field.asType();
-                if (isOptionalType(effectiveType))
+                if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
                 converterTypes.add(getBoxedTypeName(effectiveType, typeUtils));
                 if (isBooleanType(effectiveType, typeUtils))
                     needsBooleanCompleter = true;
             } else if (field.getAnnotation(OptionList.class) != null || field.getAnnotation(Arguments.class) != null) {
                 TypeMirror effectiveType = field.asType();
-                if (isOptionalType(effectiveType))
+                if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
                 converterTypes.add(getGenericTypeArgument(effectiveType, 0, typeUtils));
             } else if (field.getAnnotation(OptionGroup.class) != null) {
                 TypeMirror effectiveType = field.asType();
-                if (isOptionalType(effectiveType))
+                if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
                 converterTypes.add(getGenericTypeArgument(effectiveType, 1, typeUtils));
             }
@@ -1529,7 +1529,7 @@ final class CodeGenerator {
         }
         // Recurse into superclass
         TypeMirror superclass = typeElement.getSuperclass();
-        if (superclass.getKind() != TypeKind.NONE && !superclass.toString().equals("java.lang.Object")) {
+        if (superclass.getKind() != TypeKind.NONE && !erasedTypeName(superclass, typeUtils).equals("java.lang.Object")) {
             if (superclass instanceof DeclaredType) {
                 collectConverterTypes(types, (TypeElement) ((DeclaredType) superclass).asElement(),
                         elementUtils, typeUtils);
@@ -1689,9 +1689,9 @@ final class CodeGenerator {
     private static void emitInitialValueFactory(StringBuilder sb, String var,
             TypeMirror fieldType, Types typeUtils) {
         TypeMirror effectiveType = fieldType;
-        if (isOptionalType(effectiveType))
+        if (isOptionalType(effectiveType, typeUtils))
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
-        String erasedName = typeUtils.erasure(effectiveType).toString();
+        String erasedName = erasedTypeName(effectiveType, typeUtils);
         String factoryExpr = collectionFactoryExpression(erasedName);
         if (factoryExpr != null) {
             sb.append("            ").append(var)
@@ -1728,8 +1728,106 @@ final class CodeGenerator {
 
     // --- Type utility methods ---
 
-    private static boolean isOptionalType(TypeMirror type) {
-        return type.toString().startsWith("java.util.Optional");
+    /**
+     * Returns the erased qualified name of a type, stripping any type-use
+     * annotations (#627).
+     * <p>
+     * {@code TypeMirror.toString()} includes type-use annotations (e.g. a field
+     * declared {@code @NotBlank String} yields
+     * {@code java.lang.@jakarta.validation.constraints.NotBlank String}).
+     * Emitting that into generated code produces uncompilable output, and
+     * string comparisons against it silently fail. This helper resolves the
+     * {@link TypeElement} qualified name instead, which never carries
+     * annotations.
+     */
+    private static String erasedTypeName(TypeMirror type, Types typeUtils) {
+        if (type instanceof DeclaredType) {
+            javax.lang.model.element.Element element = ((DeclaredType) type).asElement();
+            if (element instanceof TypeElement) {
+                return ((TypeElement) element).getQualifiedName().toString();
+            }
+        }
+        if (type.getKind() == TypeKind.ARRAY && type instanceof javax.lang.model.type.ArrayType) {
+            return erasedTypeName(((javax.lang.model.type.ArrayType) type).getComponentType(), typeUtils) + "[]";
+        }
+        // Fallback for type variables, wildcards and error types: erase, then
+        // strip any remaining annotations textually.
+        String erased;
+        try {
+            erased = typeUtils.erasure(type).toString();
+        } catch (IllegalArgumentException e) {
+            erased = type.toString();
+        }
+        return stripTypeAnnotations(erased);
+    }
+
+    /**
+     * Removes {@code @Annotation} segments (with optional argument lists) from
+     * a type name string. Fallback for type mirrors that cannot be resolved to
+     * a {@link TypeElement}.
+     */
+    private static String stripTypeAnnotations(String typeName) {
+        StringBuilder sb = new StringBuilder(typeName.length());
+        int i = 0;
+        while (i < typeName.length()) {
+            char c = typeName.charAt(i);
+            if (c != '@') {
+                sb.append(c);
+                i++;
+                continue;
+            }
+            // Skip the annotation qualified name
+            i++;
+            while (i < typeName.length()) {
+                char d = typeName.charAt(i);
+                if (Character.isJavaIdentifierPart(d) || d == '.') {
+                    i++;
+                } else {
+                    break;
+                }
+            }
+            // Skip an optional argument list, honouring string literals
+            if (i < typeName.length() && typeName.charAt(i) == '(') {
+                int depth = 0;
+                boolean inString = false;
+                while (i < typeName.length()) {
+                    char d = typeName.charAt(i);
+                    if (inString) {
+                        if (d == '\\') {
+                            i += 2;
+                            continue;
+                        }
+                        if (d == '"') {
+                            inString = false;
+                        }
+                        i++;
+                    } else if (d == '"') {
+                        inString = true;
+                        i++;
+                    } else if (d == '(') {
+                        depth++;
+                        i++;
+                    } else if (d == ')') {
+                        depth--;
+                        i++;
+                        if (depth == 0) {
+                            break;
+                        }
+                    } else {
+                        i++;
+                    }
+                }
+            }
+            // Skip the separating whitespace between annotation and type
+            while (i < typeName.length() && typeName.charAt(i) == ' ') {
+                i++;
+            }
+        }
+        return sb.toString();
+    }
+
+    private static boolean isOptionalType(TypeMirror type, Types typeUtils) {
+        return erasedTypeName(type, typeUtils).equals("java.util.Optional");
     }
 
     /**
@@ -1749,12 +1847,11 @@ final class CodeGenerator {
     private static boolean isBooleanType(TypeMirror type, Types typeUtils) {
         if (type.getKind() == TypeKind.BOOLEAN)
             return true;
-        String name = type.toString();
-        return name.equals("java.lang.Boolean");
+        return erasedTypeName(type, typeUtils).equals("java.lang.Boolean");
     }
 
     private static boolean isFileOrResourceType(TypeMirror type, Types typeUtils) {
-        String name = type.toString();
+        String name = erasedTypeName(type, typeUtils);
         return name.equals("java.io.File") || name.equals("java.nio.file.Path")
                 || name.equals("org.aesh.io.Resource");
     }
@@ -1778,7 +1875,7 @@ final class CodeGenerator {
             case CHAR:
                 return "char";
             default:
-                return typeUtils.erasure(type).toString();
+                return erasedTypeName(type, typeUtils);
         }
     }
 
@@ -1801,7 +1898,7 @@ final class CodeGenerator {
             DeclaredType declaredType = (DeclaredType) type;
             List<? extends TypeMirror> typeArgs = declaredType.getTypeArguments();
             if (typeArgs.size() > index) {
-                return typeArgs.get(index).toString();
+                return erasedTypeName(typeArgs.get(index), typeUtils);
             }
         }
         return "Object";
