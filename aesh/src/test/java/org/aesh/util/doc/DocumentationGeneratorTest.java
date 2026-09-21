@@ -37,6 +37,7 @@ import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
+import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
@@ -549,15 +550,20 @@ public class DocumentationGeneratorTest {
         assertTrue("Should contain description field", doc.contains("description:"));
         assertTrue("Should close YAML front matter", doc.contains("\n---\n"));
 
+        // Identity: command (full path) and name fields
+        assertTrue("Should contain command field", doc.contains("command: deploy"));
+        // Heading
+        assertTrue("Should contain heading with command path", doc.contains("# deploy"));
+
         // Structured options table
         assertTrue("Should contain Options table header",
-                doc.contains("| Option | Type | Required | Default | Description |"));
+                doc.contains("| Forms | Type | Required | Default | Description |"));
         assertTrue("Should contain --environment option", doc.contains("--environment"));
         assertTrue("Should contain --force option", doc.contains("--force"));
 
         // Arguments table
         assertTrue("Should contain Arguments table header",
-                doc.contains("| Argument | Type | Required | Description |"));
+                doc.contains("| Argument | Type | Required | Default | Description |"));
         assertTrue("Should contain application argument", doc.contains("<application>"));
 
         // Synopsis
@@ -575,15 +581,20 @@ public class DocumentationGeneratorTest {
         assertTrue("Should have YAML front matter", doc.startsWith("---\n"));
         assertTrue("Should have name: app", doc.contains("name: app"));
 
-        // Commands table
+        // Identity: command field with full path
+        assertTrue("Should have command: app", doc.contains("command: app"));
+        // Heading
+        assertTrue("Should have heading # app", doc.contains("# app"));
+
+        // Commands table with full invocation paths
         assertTrue("Should contain Commands table header",
                 doc.contains("| Command | Description |"));
-        assertTrue("Should contain sub1 in commands table", doc.contains("| `sub1`"));
-        assertTrue("Should contain sub2 in commands table", doc.contains("| `sub2`"));
+        assertTrue("Should contain sub1 with full path", doc.contains("| `app sub1`"));
+        assertTrue("Should contain sub2 with full path", doc.contains("| `app sub2`"));
 
         // Subcommand docs should be inline (generateSingle renders recursively)
-        assertTrue("Should contain sub1 YAML front matter", doc.contains("name: sub1"));
-        assertTrue("Should contain sub2 YAML front matter", doc.contains("name: sub2"));
+        assertTrue("Should contain sub1 command path", doc.contains("command: app sub1"));
+        assertTrue("Should contain sub2 command path", doc.contains("command: app sub2"));
     }
 
     // --- Test: Format-aware HelpSectionProvider ---
@@ -683,8 +694,9 @@ public class DocumentationGeneratorTest {
                 .format(DocFormat.SKILL)
                 .generateSingle();
 
-        // HIDDEN options should be included in skill format
+        // HIDDEN options should be included in skill format with label
         assertTrue("Skill format should include HIDDEN option 'secret'", doc.contains("--secret"));
+        assertTrue("Skill format should label HIDDEN option", doc.contains("**hidden**"));
         assertTrue("Skill format should include FULL option 'advanced'", doc.contains("--advanced"));
         assertTrue("Skill format should include BRIEF option 'name'", doc.contains("--name"));
     }
@@ -802,6 +814,155 @@ public class DocumentationGeneratorTest {
         // Negated long form should also appear
         assertTrue("Markdown synopsis should include --[no-]offline: " + doc,
                 doc.contains("[--[no-]offline]"));
+    }
+
+    // --- Skill format improvement tests (#627) ---
+
+    @Test
+    public void testSkillExtensionDoesNotCollideWithMarkdown() {
+        assertFalse("SKILL extension should differ from MARKDOWN",
+                DocFormat.SKILL.extension().equals(DocFormat.MARKDOWN.extension()));
+        assertEquals("SKILL extension should be skill.md", "skill.md", DocFormat.SKILL.extension());
+    }
+
+    @Test
+    public void testSkillFormatCliTypeNames() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(DeployCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        // Boolean/flag options should show "flag" not "boolean"
+        assertTrue("Force option should be type 'flag': " + doc, doc.contains("| flag |"));
+        // Integer options should show "integer" not "int"
+        assertTrue("Timeout option should be type 'integer': " + doc, doc.contains("| integer |"));
+        // String options should show "string"
+        assertTrue("String option should be type 'string': " + doc, doc.contains("| string |"));
+        // OptionList should show "list"
+        assertTrue("OptionList should be type 'list': " + doc, doc.contains("| list |"));
+        // OptionGroup should show "map"
+        assertTrue("OptionGroup should be type 'map': " + doc, doc.contains("| map |"));
+    }
+
+    @Test
+    public void testSkillFormatOptionFormsColumn() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(DeployCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        // Long + short combined in one code span
+        assertTrue("Forms should combine long and short: " + doc,
+                doc.contains("--environment, -e"));
+    }
+
+    @Test
+    public void testSkillFormatNegatableForms() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(NegatableCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        assertTrue("Negatable should show [no-] form: " + doc,
+                doc.contains("--[no-]cds"));
+    }
+
+    @Test
+    public void testSkillYamlQuotingEdgeCases() {
+        // Colons
+        assertEquals("Should quote colons", "\"host:8080\"",
+                SkillRenderer.quoteYaml("host:8080"));
+        // Hashes
+        assertEquals("Should quote hashes", "\"line # comment\"",
+                SkillRenderer.quoteYaml("line # comment"));
+        // Leading dash
+        assertEquals("Should quote leading dash", "\"- item\"",
+                SkillRenderer.quoteYaml("- item"));
+        // Boolean word
+        assertEquals("Should quote 'true'", "\"true\"",
+                SkillRenderer.quoteYaml("true"));
+        assertEquals("Should quote 'yes'", "\"yes\"",
+                SkillRenderer.quoteYaml("yes"));
+        assertEquals("Should quote 'off'", "\"off\"",
+                SkillRenderer.quoteYaml("off"));
+        // Plain safe string stays unquoted
+        assertEquals("Safe string stays plain", "hello",
+                SkillRenderer.quoteYaml("hello"));
+        // Empty string
+        assertEquals("Empty string should be quoted", "\"\"",
+                SkillRenderer.quoteYaml(""));
+        // Internal double-quote
+        assertEquals("Should escape internal quotes", "\"say \\\"hello\\\"\"",
+                SkillRenderer.quoteYaml("say \"hello\""));
+    }
+
+    @CommandDefinition(name = "aritytest", description = "Arity test")
+    public static class ArityTestCommand implements Command<CommandInvocation> {
+        @Arguments(description = "Input files", arity = "1..*")
+        List<String> files;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testSkillFormatArgumentArity() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(ArityTestCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        assertTrue("Should show arity for argument: " + doc,
+                doc.contains("arity: 1..*"));
+    }
+
+    @Test
+    public void testSkillFormatFileGeneration() throws CommandLineParserException, IOException {
+        Path tempDir = Files.createTempDirectory("aesh-skill-ext-test");
+        try {
+            DocumentationGenerator.builder()
+                    .commandClass(AppCommand.class)
+                    .format(DocFormat.SKILL)
+                    .outputDir(tempDir.toFile())
+                    .generate();
+
+            // Files should use .skill.md extension
+            assertTrue("Should create app.skill.md",
+                    new File(tempDir.toFile(), "app.skill.md").exists());
+            assertTrue("Should create app-sub1.skill.md",
+                    new File(tempDir.toFile(), "app-sub1.skill.md").exists());
+            assertTrue("Should create app-sub2.skill.md",
+                    new File(tempDir.toFile(), "app-sub2.skill.md").exists());
+        } finally {
+            Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
+                    .map(Path::toFile).forEach(File::delete);
+        }
+    }
+
+    @CommandDefinition(name = "allowed-test", description = "Allowed values test")
+    public static class AllowedValuesCommand implements Command<CommandInvocation> {
+        @Option(name = "format", allowedValues = { "json", "xml", "yaml" }, description = "Output format")
+        String format;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testSkillFormatAllowedValues() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(AllowedValuesCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        assertTrue("Should contain Allowed values: " + doc, doc.contains("Allowed:"));
+        assertTrue("Should contain json allowed value", doc.contains("`json`"));
+        assertTrue("Should contain xml allowed value", doc.contains("`xml`"));
+        assertTrue("Should contain yaml allowed value", doc.contains("`yaml`"));
     }
 
     private static int countOccurrences(String text, String search) {

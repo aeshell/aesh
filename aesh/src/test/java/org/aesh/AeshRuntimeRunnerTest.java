@@ -796,8 +796,8 @@ public class AeshRuntimeRunnerTest {
                 .execute();
 
         assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
-        assertTrue(new java.io.File(dir, "docparent.md").isFile());
-        assertTrue(new java.io.File(dir, "docparent-docchilda.md").isFile());
+        assertTrue(new java.io.File(dir, "docparent.skill.md").isFile());
+        assertTrue(new java.io.File(dir, "docparent-docchilda.skill.md").isFile());
     }
 
     @Test

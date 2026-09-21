@@ -27,7 +27,7 @@ public enum DocFormat {
     ASCIIDOC("adoc"),
     MARKDOWN("md"),
     /** Structured Markdown with YAML front matter, optimized for AI agent consumption. */
-    SKILL("md");
+    SKILL("skill.md");
 
     private final String extension;
 
