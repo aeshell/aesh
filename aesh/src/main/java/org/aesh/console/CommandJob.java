@@ -64,6 +64,12 @@ public final class CommandJob implements Consumer<Signal> {
     private volatile String[] pipelineStageNames;
     private volatile Throwable[] upstreamStageErrors;
     private volatile long[] upstreamStageDurations;
+    // Guard for upstream outcome recording, shared with the threads running
+    // the upstream stages (see ProcessManager.launchPipeline). Settle and
+    // task handler race after a join timeout; see awaitUpstreamPipeThreads.
+    // Null when upstream outcomes were never wired (unit tests).
+    private volatile Object upstreamOutcomeLock;
+    private volatile boolean[] upstreamSettled;
     private volatile boolean finished;
     private final InterruptEscalation escalation = new InterruptEscalation();
 
@@ -230,6 +236,16 @@ public final class CommandJob implements Consumer<Signal> {
         this.upstreamStageDurations = durations;
     }
 
+    /**
+     * Shares the outcome guard created by {@code ProcessManager.launchPipeline}
+     * with this job, so the join-timeout settle path and the upstream stage
+     * threads record outcomes deterministically.
+     */
+    void setUpstreamSettlementGuard(Object outcomeLock, boolean[] settled) {
+        this.upstreamOutcomeLock = outcomeLock;
+        this.upstreamSettled = settled;
+    }
+
     int upstreamStageCount() {
         return upstreamStages == null ? 0 : upstreamStages.size();
     }
@@ -290,16 +306,39 @@ public final class CommandJob implements Consumer<Signal> {
         }
         if (upstreamStages != null) {
             for (int i = 0; i < upstreamStages.size(); i++) {
-                Execution<? extends CommandInvocation> stage = upstreamStages.get(i);
-                if (stage.getResult() == null) {
-                    if (upstreamStageErrors != null && upstreamStageErrors[i] == null) {
-                        upstreamStageErrors[i] = new TimeoutException(
-                                "Upstream stage join timed out");
-                    }
-                    stage.setResult(CommandResult.FAILURE);
-                }
+                claimTimedOutStage(i);
             }
         }
+    }
+
+    private void claimTimedOutStage(int i) {
+        Execution<? extends CommandInvocation> stage = upstreamStages.get(i);
+        Object outcomeLock = upstreamOutcomeLock;
+        boolean[] settled = upstreamSettled;
+        if (outcomeLock != null && settled != null && i < settled.length) {
+            synchronized (outcomeLock) {
+                settled[i] = true;
+                // A task that is still running cannot have a terminal result:
+                // a recorded INTERRUPTED here is the transient artifact of
+                // our own cancel propagating through ExecutionImpl (the
+                // constructor is private, so identity comparison is sound),
+                // about to be replaced by the task handler — which is now
+                // suppressed. Claim FAILURE with the timeout instead.
+                if (stage.getResult() == null || stage.getResult() == CommandResult.INTERRUPTED) {
+                    recordUpstreamTimeout(stage, i);
+                }
+            }
+        } else if (stage.getResult() == null) {
+            recordUpstreamTimeout(stage, i);
+        }
+    }
+
+    private void recordUpstreamTimeout(Execution<? extends CommandInvocation> stage, int i) {
+        if (upstreamStageErrors != null && upstreamStageErrors[i] == null) {
+            upstreamStageErrors[i] = new TimeoutException(
+                    "Upstream stage join timed out");
+        }
+        stage.setResult(CommandResult.FAILURE);
     }
 
     private void runJob() {

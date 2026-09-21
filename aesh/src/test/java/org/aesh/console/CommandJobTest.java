@@ -27,9 +27,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -524,6 +526,72 @@ public class CommandJobTest {
         assertTrue("Join must time out, took: " + elapsed, elapsed < 10000);
         blocker.join(5000);
         assertFalse(blocker.isAlive());
+    }
+
+    @Test
+    public void testSettleOverwritesTransientInterruptedUpstream() throws Exception {
+        FakeExecution stage = new FakeExecution();
+        Throwable[] errors = new Throwable[1];
+        long[] durations = new long[1];
+        Object outcomeLock = new Object();
+        boolean[] settled = new boolean[1];
+        CountDownLatch wroteInterrupted = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        Thread unwinding = new Thread(() -> {
+            // Mimic ExecutionImpl mid-unwind: transient INTERRUPTED recorded
+            // while propagating our cancel, terminal record still pending.
+            stage.setResult(CommandResult.INTERRUPTED);
+            wroteInterrupted.countDown();
+            // Stay parked (swallowing settle interrupts) until released.
+            while (true) {
+                try {
+                    release.await();
+                    break;
+                } catch (InterruptedException e) {
+                    // stay parked
+                }
+            }
+            // Mimic the task handler's terminal record through the guard.
+            synchronized (outcomeLock) {
+                if (!settled[0]) {
+                    errors[0] = new InterruptedException("late");
+                    stage.setResult(CommandResult.FAILURE);
+                }
+            }
+        });
+        unwinding.setDaemon(true);
+
+        ProcessManager manager = new ProcessManager(null) {
+            @Override
+            public void processFinished(CommandJob job) {
+            }
+        };
+        CommandJob job = new CommandJob(manager, new TestConnection(), new FakeExecution(), "test", null);
+        job.setUpstreamPipeThreads(Collections.singletonList(unwinding));
+        job.setUpstreamOutcomes(new ArrayList<>(Collections.singletonList(stage)),
+                new String[] { "blocker" }, errors, durations);
+        job.setUpstreamSettlementGuard(outcomeLock, settled);
+        job.setPipelineConfig(new PipelineConfig(16, 8192, 200, true));
+
+        unwinding.start();
+        assertTrue(wroteInterrupted.await(5, TimeUnit.SECONDS));
+
+        long start = System.currentTimeMillis();
+        job.awaitUpstreamPipeThreads();
+        long elapsed = System.currentTimeMillis() - start;
+        assertTrue("Join must time out, took: " + elapsed, elapsed < 10000);
+
+        // Settle must claim FAILURE + timeout despite the transient 130.
+        assertEquals(CommandResult.FAILURE, stage.getResult());
+        assertNotNull(errors[0]);
+        assertTrue(errors[0] instanceof TimeoutException);
+
+        // The task's late terminal write is suppressed once settled.
+        release.countDown();
+        unwinding.join(5000);
+        assertFalse(unwinding.isAlive());
+        assertEquals(CommandResult.FAILURE, stage.getResult());
+        assertTrue(errors[0] instanceof TimeoutException);
     }
 
     @Test

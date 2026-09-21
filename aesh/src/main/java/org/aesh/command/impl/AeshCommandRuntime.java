@@ -309,6 +309,14 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         long[] stageDurations = new long[stageCount];
 
         List<Future<?>> futures = new ArrayList<>(chain.size() - 1);
+        // Guards upstream outcome recording. After a join timeout the settle
+        // path and the pool-task handler race to record the stage outcome:
+        // the task may still be unwinding from our cancel (its Execution
+        // briefly records INTERRUPTED while propagating, before the handler
+        // records the terminal result). Once settle claims a stage, the
+        // task's late writes are suppressed so the snapshot is deterministic.
+        final Object outcomeLock = new Object();
+        final boolean[] upstreamSettled = new boolean[chain.size() - 1];
         try {
             for (int i = 0; i < chain.size() - 1; i++) {
                 final int stageIndex = i;
@@ -318,11 +326,15 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     try {
                         stage.execute();
                     } catch (Throwable e) {
-                        stageErrors[stageIndex] = e;
-                        if (PipeOperator.isPipeBroken(e))
-                            stage.setResult(CommandResult.PIPE_BROKEN);
-                        else
-                            stage.setResult(CommandResult.FAILURE);
+                        synchronized (outcomeLock) {
+                            if (!upstreamSettled[stageIndex]) {
+                                stageErrors[stageIndex] = e;
+                                if (PipeOperator.isPipeBroken(e))
+                                    stage.setResult(CommandResult.PIPE_BROKEN);
+                                else
+                                    stage.setResult(CommandResult.FAILURE);
+                            }
+                        }
                     } finally {
                         stageDurations[stageIndex] = System.currentTimeMillis() - start;
                     }
@@ -343,7 +355,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 stageDurations[stageCount - 1] = System.currentTimeMillis() - lastStart;
             }
 
-            settleUpstream(chain, futures, stageErrors);
+            settleUpstream(chain, futures, stageErrors, outcomeLock, upstreamSettled);
 
             recordPipelineResult(chain, stageNames, stageErrors, stageDurations, result);
             return result;
@@ -356,7 +368,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     private void settleUpstream(List<Execution> chain, List<Future<?>> futures,
-            Throwable[] stageErrors) {
+            Throwable[] stageErrors, Object outcomeLock, boolean[] upstreamSettled) {
         long timeoutMs = pipelineConfig.upstreamJoinTimeoutMs();
         for (int i = 0; i < futures.size(); i++) {
             Future<?> future = futures.get(i);
@@ -384,16 +396,27 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     if (secondChance instanceof InterruptedException)
                         Thread.currentThread().interrupt();
                 }
-                settleTimedOutStage(chain.get(i), stageErrors, i, e);
+                settleTimedOutStage(chain.get(i), stageErrors, i, e, outcomeLock, upstreamSettled);
             }
         }
     }
 
-    private void settleTimedOutStage(Execution stage, Throwable[] stageErrors, int index, Throwable timeout) {
-        if (stage.getResult() == null) {
-            if (stageErrors[index] == null)
-                stageErrors[index] = timeout;
-            stage.setResult(CommandResult.FAILURE);
+    private void settleTimedOutStage(Execution stage, Throwable[] stageErrors, int index, Throwable timeout,
+            Object outcomeLock, boolean[] upstreamSettled) {
+        synchronized (outcomeLock) {
+            upstreamSettled[index] = true;
+            CommandResult current = stage.getResult();
+            // A task that is still running cannot have a terminal result: a
+            // recorded INTERRUPTED here is the transient artifact of our own
+            // cancel propagating through ExecutionImpl (the constructor is
+            // private, so identity comparison is sound), about to be replaced
+            // by the task handler — which is now suppressed. Claim FAILURE
+            // with the timeout instead.
+            if (current == null || current == CommandResult.INTERRUPTED) {
+                if (stageErrors[index] == null)
+                    stageErrors[index] = timeout;
+                stage.setResult(CommandResult.FAILURE);
+            }
         }
     }
 

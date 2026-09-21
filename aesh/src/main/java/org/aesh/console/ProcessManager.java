@@ -232,6 +232,10 @@ public class ProcessManager {
             stageNames[i] = PipelineStages.commandName(pipeChain.get(i), i);
         Throwable[] stageErrors = new Throwable[upstreamCount];
         long[] stageDurations = new long[upstreamCount];
+        // Shared with the job's join-timeout settle path so a still-unwinding
+        // task cannot overwrite the claimed timeout outcome (transient 130).
+        final Object outcomeLock = new Object();
+        final boolean[] upstreamSettled = new boolean[upstreamCount];
         List<Thread> upstreamThreads = new ArrayList<>(upstreamCount);
         for (int i = 0; i < upstreamCount; i++) {
             final int stageIndex = i;
@@ -241,11 +245,15 @@ public class ProcessManager {
                 try {
                     stage.execute();
                 } catch (Throwable e) {
-                    stageErrors[stageIndex] = e;
-                    if (PipeOperator.isPipeBroken(e))
-                        stage.setResult(CommandResult.PIPE_BROKEN);
-                    else
-                        stage.setResult(CommandResult.FAILURE);
+                    synchronized (outcomeLock) {
+                        if (!upstreamSettled[stageIndex]) {
+                            stageErrors[stageIndex] = e;
+                            if (PipeOperator.isPipeBroken(e))
+                                stage.setResult(CommandResult.PIPE_BROKEN);
+                            else
+                                stage.setResult(CommandResult.FAILURE);
+                        }
+                    }
                     LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
                 } finally {
                     stageDurations[stageIndex] = System.currentTimeMillis() - start;
@@ -264,6 +272,7 @@ public class ProcessManager {
         mainJob.setUpstreamPipeThreads(upstreamThreads);
         mainJob.setUpstreamOutcomes(new ArrayList<Execution<? extends CommandInvocation>>(
                 pipeChain.subList(0, upstreamCount)), stageNames, stageErrors, stageDurations);
+        mainJob.setUpstreamSettlementGuard(outcomeLock, upstreamSettled);
         activeJob = mainJob;
         mainJob.start();
     }
