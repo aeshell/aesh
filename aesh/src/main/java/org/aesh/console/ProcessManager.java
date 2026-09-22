@@ -141,8 +141,15 @@ public class ProcessManager {
             long[] durations = job.getUpstreamStageDurations();
             List<StageOutcome> stages = new ArrayList<>(stageCount);
             for (int i = 0; i < upstreamCount; i++) {
+                // Prefer the claimed outcome for settled stages: a live
+                // re-read can observe the worker's transient post-timeout
+                // INTERRUPTED write landing after the claim.
+                CommandResult settledResult = job.upstreamSettledResult(i);
+                CommandResult stageResult = settledResult != null
+                        ? settledResult
+                        : upstream.get(i).getResult();
                 stages.add(new StageOutcome(i, stageCount, names[i], upstream.get(i),
-                        upstream.get(i).getResult(), errors[i], durations[i]));
+                        stageResult, errors[i], durations[i]));
             }
             stages.add(new StageOutcome(upstreamCount, stageCount, names[upstreamCount],
                     job.execution(), job.result(), job.error(), job.duration().toMillis()));

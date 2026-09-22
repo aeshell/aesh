@@ -583,6 +583,8 @@ public class CommandJobTest {
 
         // Settle must claim FAILURE + timeout despite the transient 130.
         assertEquals(CommandResult.FAILURE, stage.getResult());
+        assertEquals("Claimed outcome must be FAILURE",
+                CommandResult.FAILURE, job.upstreamSettledResult(0));
         assertNotNull(errors[0]);
         assertTrue(errors[0] instanceof TimeoutException);
 
@@ -592,6 +594,12 @@ public class CommandJobTest {
         assertFalse(unwinding.isAlive());
         assertEquals(CommandResult.FAILURE, stage.getResult());
         assertTrue(errors[0] instanceof TimeoutException);
+
+        // A worker INTERRUPTED write landing between settle and snapshot
+        // must not leak into the claimed outcome used for event dispatch.
+        stage.setResult(CommandResult.INTERRUPTED);
+        assertEquals("Claimed outcome must survive a late live 130 write",
+                CommandResult.FAILURE, job.upstreamSettledResult(0));
     }
 
     @Test
