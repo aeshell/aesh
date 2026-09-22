@@ -36,11 +36,11 @@ public enum TableStyle {
     POSTGRES {
         @Override
         public Map<String, String> characters() {
-            Map<String, String> map = new HashMap<>();
-            map.put(VERTICAL, "|");
-            map.put(HORIZONTAL, "-");
-            map.put(INTERSECT, "+");
-            return Collections.unmodifiableMap(map);
+            Map<String, String> base = new HashMap<>();
+            base.put(VERTICAL, "|");
+            base.put(HORIZONTAL, "-");
+            base.put(INTERSECT, "+");
+            return Collections.unmodifiableMap(convertToFullNames(base, false));
         }
     },
 

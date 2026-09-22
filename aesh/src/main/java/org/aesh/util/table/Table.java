@@ -236,7 +236,7 @@ public class Table<T> {
             if (i > 0) {
                 topBorderFormat.append(String.format(" %s ", characters.get(HEADER_TOP_INTERSECT)));
                 bottomBorderFormat.append(String.format(" %s ", characters.get(TABLE_BOTTOM_INTERSECT)));
-                headerFormat.append(String.format(" %s ", characters.get(HEADER_BORDER_VERTICAL)));
+                headerFormat.append(String.format(" %s ", characters.get(HEADER_COLUMN_SEPARATOR)));
                 rowFormat.append(String.format(" %s ", characters.get(TABLE_COLUMN_SEPARATOR)));
             }
             int width = columnWidths[i];
@@ -327,7 +327,7 @@ public class Table<T> {
                                 .replace(characters.get(HEADER_TOP_RIGHT), characters.get(TABLE_TOP_RIGHT))
                                 .replace(characters.get(HEADER_TOP_INTERSECT),
                                         characters.get(TABLE_TOP_INTERSECT)));
-            } else {
+            } else if (hasVisibleSeparator(characters)) {
                 rtrn.append(String.format(headerFormat.toString(),
                         Collections.nCopies(columnCount, "").toArray())
                         .replace(" ", characters.get(TABLE_TOP_HORIZONTAL))
@@ -376,6 +376,17 @@ public class Table<T> {
      */
     public static <T> Builder<T> builder() {
         return new Builder<>();
+    }
+
+    /**
+     * Checks whether the header-body separator would render any visible
+     * character. Styles without a visible horizontal separator (e.g. PLAIN,
+     * which uses spaces) skip the separator line entirely instead of
+     * emitting a whitespace-only row (#633).
+     */
+    private static boolean hasVisibleSeparator(Map<String, String> characters) {
+        String horizontal = characters.get(TABLE_TOP_HORIZONTAL);
+        return horizontal != null && !horizontal.trim().isEmpty();
     }
 
     private static String repeat(String s, int count) {

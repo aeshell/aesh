@@ -157,11 +157,15 @@ public class TableTest {
                 p -> p.name, p -> p.email);
         Map<String, String> chars = TableStyle.POSTGRES.characters();
 
-        // POSTGRES is a shorthand-only style (V, H, X), which lacks full names
-        // It should still be valid after convertToFullNames or fallback to SQLITE
+        // POSTGRES expands shorthands to full names (no outside border),
+        // rendering psql-style output directly instead of falling back
         String output = Table.render(80, people, headers, accessors, chars);
         assertNotNull(output);
         assertTrue(output.contains("Alice"));
+        // Borderless: column separators but no outside border characters
+        assertTrue("POSTGRES should contain | separators", output.contains("|"));
+        assertTrue("POSTGRES should contain - separator row", output.contains("-"));
+        assertFalse("POSTGRES should not contain + corners", output.contains("+"));
     }
 
     @Test
@@ -322,7 +326,7 @@ public class TableTest {
         assertTrue("DOUBLE should have outside border",
                 TableCharacters.hasOutsideBorder(TableStyle.DOUBLE.characters()));
 
-        // POSTGRES shorthand-only should NOT have outside border
+        // POSTGRES has no outside border keys
         assertFalse("POSTGRES should not have outside border",
                 TableCharacters.hasOutsideBorder(TableStyle.POSTGRES.characters()));
     }
@@ -347,8 +351,8 @@ public class TableTest {
         assertTrue("DOUBLE should be valid",
                 TableCharacters.isValid(TableStyle.DOUBLE.characters()));
 
-        // POSTGRES is shorthand-only (V, H, X) — not valid without conversion
-        assertFalse("POSTGRES shorthand should not be valid",
+        // POSTGRES expands shorthands to full names — valid, no outside border
+        assertTrue("POSTGRES should be valid",
                 TableCharacters.isValid(TableStyle.POSTGRES.characters()));
 
         // Empty map should not be valid
@@ -554,6 +558,65 @@ public class TableTest {
 
         assertNotNull(output);
         assertFalse("PLAIN via builder should not contain borders", output.contains("|"));
+        assertTrue("Should contain Alice", output.contains("Alice"));
+    }
+
+    // --- Test: PLAIN must not emit a null row after the header (#633) ---
+
+    @Test
+    public void testPlainStyleHasNoNullRow() {
+        String output = Table.<Person> builder()
+                .maxWidth(80)
+                .style(TableStyle.PLAIN)
+                .column("ID", p -> p.name)
+                .column("Type", p -> p.email)
+                .column("Host", p -> String.valueOf(p.age))
+                .build()
+                .render(Collections.singletonList(
+                        new Person("test-01", "TYPE_A", 2, 0.0)));
+
+        assertNotNull(output);
+        String[] lines = output.split(System.lineSeparator());
+        // Header immediately followed by the single data row: no separator,
+        // no blank line, and no null row in between.
+        assertEquals("PLAIN output should be exactly header + data lines", 2, lines.length);
+        assertTrue("First line should be the header",
+                lines[0].contains("ID") && lines[0].contains("Type") && lines[0].contains("Host"));
+        assertTrue("Second line should be the data row",
+                lines[1].contains("test-01") && lines[1].contains("TYPE_A"));
+        for (String line : lines) {
+            assertFalse("No line should contain null text: " + line, line.contains("null"));
+            assertFalse("No line should be blank", line.trim().isEmpty());
+        }
+    }
+
+    @Test
+    public void testBorderlessCustomMapSeparatorHasNoNull() {
+        // A valid borderless map with visible separators (what POSTGRES
+        // intends): the header-body separator must render dashes, not nulls.
+        Map<String, String> borderless = new HashMap<>();
+        borderless.put(TableCharacters.HEADER_COLUMN_SEPARATOR, "|");
+        borderless.put(TableCharacters.TABLE_COLUMN_SEPARATOR, "|");
+        borderless.put(TableCharacters.TABLE_TOP_HORIZONTAL, "-");
+        borderless.put(TableCharacters.TABLE_TOP_INTERSECT, "+");
+
+        String output = Table.<Person> builder()
+                .maxWidth(80)
+                .characters(borderless)
+                .column("Name", p -> p.name)
+                .column("Email", p -> p.email)
+                .build()
+                .render(Collections.singletonList(
+                        new Person("Alice", "alice@example.com", 30, 95.5)));
+
+        assertNotNull(output);
+        String[] lines = output.split(System.lineSeparator());
+        assertEquals("Should be header + separator + data lines", 3, lines.length);
+        assertTrue("Separator should render dashes: " + lines[1], lines[1].contains("---"));
+        assertTrue("Separator should render column separators: " + lines[1], lines[1].contains("|"));
+        for (String line : lines) {
+            assertFalse("No line should contain null text: " + line, line.contains("null"));
+        }
         assertTrue("Should contain Alice", output.contains("Alice"));
     }
 }
