@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,6 +64,20 @@ public class ProcessManager {
     private ExecutionPlanner<? extends CommandInvocation> planner;
     private final Queue<Session> sessions = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean scheduling = new AtomicBoolean();
+    /**
+     * Thread currently holding the drain turn, for same-thread re-entrancy
+     * detection. Written after acquiring {@code scheduling}, cleared before
+     * releasing it.
+     */
+    private volatile Thread drainOwner;
+    /**
+     * Bound for a completed job waiting to take its post-completion drain
+     * turn when the launcher thread is still inside its launch call (#634).
+     * The holder's remaining work is microseconds of thread startup; this
+     * is orders of magnitude of margin. Expiry falls back to the historic
+     * skip-and-return behavior.
+     */
+    private static final long DRAIN_TAKEOVER_TIMEOUT_MS = 10000;
     private CommandExecutionListener executionListener;
     private String commandLine;
     private volatile CommandJob activeJob;
@@ -125,7 +140,7 @@ public class ProcessManager {
         if (activeJob == job)
             activeJob = null;
         firePipelineEvents(job);
-        drain();
+        drainAfterCompletion();
     }
 
     private void firePipelineEvents(CommandJob job) {
@@ -179,43 +194,89 @@ public class ProcessManager {
     private void drain() {
         if (!scheduling.compareAndSet(false, true))
             return;
+        drainOwner = Thread.currentThread();
         try {
-            while (true) {
-                if (planner == null) {
-                    Session session = sessions.poll();
-                    if (session == null)
-                        return;
-                    this.conn = session.connection;
-                    this.executor = session.executor;
-                    this.commandLine = session.commandLine;
-                    this.planner = new ExecutionPlanner<>(executor.getExecutions());
-                }
-                ExecutionPlanner.Unit<? extends CommandInvocation> unit = planner.nextUnit();
-                if (unit == null) {
-                    if (planner.hasSkipped())
-                        planner.clearSkipped();
-                    planner = null;
-                    if (console.running() && !console.isClosePending())
-                        console.read();
-                    else
-                        conn.close();
-                    continue;
-                }
-                if (unit.isPipeline()) {
-                    launchPipeline(unit.executions());
-                    scheduling.set(false);
-                    return;
-                }
-                Execution<? extends CommandInvocation> exec = unit.executions().get(0);
-                if (!synchronous) {
-                    launchSingle(exec);
-                    scheduling.set(false);
-                    return;
-                }
-                runInline(exec);
-            }
+            drainLoop();
         } finally {
+            drainOwner = null;
             scheduling.set(false);
+        }
+    }
+
+    /**
+     * Post-completion drain: a just-finished job must re-arm readline (or
+     * close), so unlike {@link #drain()} it must not silently skip when the
+     * launcher thread is still inside its launch call.
+     * <p>
+     * After {@code job.start()} returns, the launcher releases the turn one
+     * statement later — but under CPU contention the fresh worker routinely
+     * wins the race: it runs the whole (tiny) command and reaches this drain
+     * while the launcher is still preempted inside the launch, CAS-fails,
+     * and the re-arm is skipped forever, wedging the session with no error
+     * (#634). So wait (bounded) for the turn instead of skipping.
+     * <p>
+     * Same-thread re-entrancy (synchronous inline execution) keeps the
+     * historic fail-fast behavior: the outer drain will pick up queued work.
+     */
+    private void drainAfterCompletion() {
+        if (!scheduling.compareAndSet(false, true)) {
+            if (drainOwner == Thread.currentThread())
+                return;
+            long deadline = System.currentTimeMillis() + DRAIN_TAKEOVER_TIMEOUT_MS;
+            while (!scheduling.compareAndSet(false, true)) {
+                if (System.currentTimeMillis() >= deadline) {
+                    LOGGER.warning("Timed out waiting for drain turn after command completion;"
+                            + " readline may not be re-armed");
+                    return;
+                }
+                if (Thread.currentThread().isInterrupted()) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+                LockSupport.parkNanos(100_000);
+            }
+        }
+        drainOwner = Thread.currentThread();
+        try {
+            drainLoop();
+        } finally {
+            drainOwner = null;
+            scheduling.set(false);
+        }
+    }
+
+    private void drainLoop() {
+        while (true) {
+            if (planner == null) {
+                Session session = sessions.poll();
+                if (session == null)
+                    return;
+                this.conn = session.connection;
+                this.executor = session.executor;
+                this.commandLine = session.commandLine;
+                this.planner = new ExecutionPlanner<>(executor.getExecutions());
+            }
+            ExecutionPlanner.Unit<? extends CommandInvocation> unit = planner.nextUnit();
+            if (unit == null) {
+                if (planner.hasSkipped())
+                    planner.clearSkipped();
+                planner = null;
+                if (console.running() && !console.isClosePending())
+                    console.read();
+                else
+                    conn.close();
+                continue;
+            }
+            if (unit.isPipeline()) {
+                launchPipeline(unit.executions());
+                return;
+            }
+            Execution<? extends CommandInvocation> exec = unit.executions().get(0);
+            if (!synchronous) {
+                launchSingle(exec);
+                return;
+            }
+            runInline(exec);
         }
     }
 
