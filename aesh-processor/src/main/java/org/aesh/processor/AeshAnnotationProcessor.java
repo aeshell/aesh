@@ -34,7 +34,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedOptions;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -67,7 +66,6 @@ import org.aesh.command.CommandDefinition;
         AeshAnnotationProcessor.OPT_PROJECT,
         AeshAnnotationProcessor.OPT_DISABLE_NATIVE_IMAGE
 })
-@SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class AeshAnnotationProcessor extends AbstractProcessor {
 
     /** Processor option: subdirectory name for native-image config output. */
@@ -85,6 +83,16 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     private boolean registryGenerated;
     /** Private fields needing reflection config, grouped by declaring class name. */
     private final Map<String, Set<String>> reflectConfigEntries = new LinkedHashMap<>();
+
+    /**
+     * Reported dynamically instead of via {@code @SupportedSourceVersion} so that javac
+     * does not warn that the processor supports a source version older than {@code -source}.
+     * The generated code only uses Java 8 constructs, so any newer source level is fine.
+     */
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+        return SourceVersion.latestSupported();
+    }
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
