@@ -47,7 +47,7 @@ import org.aesh.command.option.OptionVisibility;
  * <li>Format-specific description/sections from HelpSectionProvider</li>
  * </ul>
  *
- * @since 3.19
+ * @since 3.18
  */
 class SkillRenderer implements DocRenderer {
 

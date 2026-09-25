@@ -26,7 +26,7 @@ import org.aesh.command.option.OptionVisibility;
  *         CompletionFilter.defaults().and(noVmFilter));
  * </pre>
  *
- * @since 3.19
+ * @since 3.18
  */
 public interface CompletionFilter {
 

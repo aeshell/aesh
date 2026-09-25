@@ -59,7 +59,7 @@ public class CommandResult {
      * Unlike {@link #INTERRUPTED}, the command did not stop cooperatively: the shell
      * reclaimed the prompt while the worker thread was still running.
      *
-     * @since 3.19
+     * @since 3.18
      */
     public static final CommandResult KILLED = new CommandResult(137);
 
