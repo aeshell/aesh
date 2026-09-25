@@ -22,6 +22,7 @@ package org.aesh.console;
 import java.util.function.Consumer;
 
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.StdinLease;
 import org.aesh.terminal.tty.Signal;
 
 public final class HandlerScope implements AutoCloseable {
@@ -29,21 +30,19 @@ public final class HandlerScope implements AutoCloseable {
     private final Connection connection;
     private final boolean signal;
     private final Consumer<Signal> savedSignalHandler;
-    private final Consumer<int[]> savedStdinHandler;
+    private final StdinLease stdinLease;
     private boolean closed;
 
     private HandlerScope(Connection connection, boolean signal,
-            Consumer<Signal> savedSignalHandler, Consumer<int[]> savedStdinHandler) {
+            Consumer<Signal> savedSignalHandler, StdinLease stdinLease) {
         this.connection = connection;
         this.signal = signal;
         this.savedSignalHandler = savedSignalHandler;
-        this.savedStdinHandler = savedStdinHandler;
+        this.stdinLease = stdinLease;
     }
 
     public static HandlerScope stdin(Connection connection, Consumer<int[]> handler) {
-        Consumer<int[]> saved = connection.stdinHandler();
-        connection.setStdinHandler(handler);
-        return new HandlerScope(connection, false, null, saved);
+        return new HandlerScope(connection, false, null, connection.captureStdin(handler));
     }
 
     public static HandlerScope signal(Connection connection, Consumer<Signal> handler) {
@@ -59,7 +58,7 @@ public final class HandlerScope implements AutoCloseable {
         closed = true;
         if (signal)
             connection.setSignalHandler(savedSignalHandler);
-        else
-            connection.setStdinHandler(savedStdinHandler);
+        else if (stdinLease != null)
+            stdinLease.close();
     }
 }

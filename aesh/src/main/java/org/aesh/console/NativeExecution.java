@@ -35,6 +35,7 @@ import org.aesh.command.Execution;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.StdinLease;
 import org.aesh.terminal.utils.Config;
 import org.aesh.terminal.utils.LoggerUtil;
 
@@ -81,7 +82,6 @@ public final class NativeExecution implements Execution<CommandInvocation> {
         builder.redirectErrorStream(true);
         java.lang.Process process = null;
         InputStream stream = null;
-        Consumer<int[]> savedHandler = connection.stdinHandler();
         try {
             process = builder.start();
             stream = process.getInputStream();
@@ -89,12 +89,15 @@ public final class NativeExecution implements Execution<CommandInvocation> {
             Thread pump = new Thread(() -> pumpStream(pipeStream), "aesh-native-pump");
             pump.setDaemon(true);
             pump.start();
-            connection.setStdinHandler(new StdinForwarder(process));
-            try {
-                result = CommandResult.valueOf(process.waitFor());
-                return result;
-            } finally {
-                closeQuietly(stream);
+            // Lease restores the previous handler on every exit path,
+            // including interruption and start failure.
+            try (StdinLease ignored = connection.captureStdin(new StdinForwarder(process))) {
+                try {
+                    result = CommandResult.valueOf(process.waitFor());
+                    return result;
+                } finally {
+                    closeQuietly(stream);
+                }
             }
         } catch (InterruptedException e) {
             if (process != null) {
@@ -113,7 +116,6 @@ public final class NativeExecution implements Execution<CommandInvocation> {
             result = CommandResult.FAILURE;
             return result;
         } finally {
-            connection.setStdinHandler(savedHandler);
             closeQuietly(stream);
         }
     }
