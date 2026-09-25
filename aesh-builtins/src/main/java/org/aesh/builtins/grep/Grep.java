@@ -17,12 +17,14 @@
  */
 package org.aesh.builtins.grep;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -133,10 +135,14 @@ public class Grep implements Command<CommandInvocation> {
         }
 
         try {
-            //do we have data from a pipe/redirect?
-            if (commandInvocation.getConfiguration().getPipedData() != null
-                    && commandInvocation.getConfiguration().getPipedData().available() > 0) {
-                java.util.Scanner s = new java.util.Scanner(commandInvocation.getConfiguration().getPipedData()).useDelimiter("\\A");
+            //do we have data from a pipe/redirect? Presence of the stream
+            // decides — never InputStream.available(), which is a
+            // point-in-time check that loses the race against a slow
+            // upstream still producing (#637). Reading blocks to EOF.
+            BufferedInputStream pipedData =
+                    commandInvocation.getConfiguration().getPipedData();
+            if (pipedData != null) {
+                Scanner s = new Scanner(pipedData).useDelimiter("\\A");
                 String input = s.hasNext() ? s.next() : "";
                 for(String line : input.split("\\R")) {
                     numberOfLines++;

@@ -17,11 +17,18 @@
  */
 package org.aesh.builtins.grep;
 
+import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandResult;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.builtins.common.AeshTestCommons;
 import org.junit.Test;
 
 import java.io.IOException;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
@@ -32,6 +39,36 @@ public class GrepTest extends AeshTestCommons {
     public void testGrep() throws IOException, CommandRegistryException {
         prepare(Grep.class);
         pushToOutput("grep -i 'foo' /tmp\n");
+        finish();
+    }
+
+    @CommandDefinition(name = "slow", description = "producer that sleeps before first output")
+    public static class SlowCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return CommandResult.FAILURE;
+            }
+            ci.println("alpha one\nbeta two\nalpha three");
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testGrepSlowUpstreamPipe() throws IOException, CommandRegistryException {
+        // The producer has not flushed anything when grep starts; grep must
+        // block reading to EOF rather than report "no file or input given"
+        // based on a point-in-time available() check (#637).
+        prepare(SlowCommand.class, Grep.class);
+        pushToOutput("slow | grep two\n");
+        String output = getStream();
+        assertTrue("Slow pipe output should contain the match, got: " + output,
+                output.contains("beta two"));
+        assertFalse("Slow pipe output must not report missing input, got: " + output,
+                output.contains("no file or input given"));
         finish();
     }
 }
