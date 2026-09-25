@@ -43,6 +43,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.Executable;
 import org.aesh.command.Execution;
 import org.aesh.command.PipelineConfig;
+import org.aesh.command.impl.UpstreamOutcomeSupervisor;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.registry.CommandRegistry;
@@ -533,8 +534,7 @@ public class CommandJobTest {
         FakeExecution stage = new FakeExecution();
         Throwable[] errors = new Throwable[1];
         long[] durations = new long[1];
-        Object outcomeLock = new Object();
-        boolean[] settled = new boolean[1];
+        UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
         CountDownLatch wroteInterrupted = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
         Thread unwinding = new Thread(() -> {
@@ -551,13 +551,9 @@ public class CommandJobTest {
                     // stay parked
                 }
             }
-            // Mimic the task handler's terminal record through the guard.
-            synchronized (outcomeLock) {
-                if (!settled[0]) {
-                    errors[0] = new InterruptedException("late");
-                    stage.setResult(CommandResult.FAILURE);
-                }
-            }
+            // Mimic the task handler's terminal record through the supervisor.
+            supervisor.recordTaskOutcome(0, errors, stage,
+                    new InterruptedException("late"), CommandResult.FAILURE);
         });
         unwinding.setDaemon(true);
 
@@ -570,7 +566,7 @@ public class CommandJobTest {
         job.setUpstreamPipeThreads(Collections.singletonList(unwinding));
         job.setUpstreamOutcomes(new ArrayList<>(Collections.singletonList(stage)),
                 new String[] { "blocker" }, errors, durations);
-        job.setUpstreamSettlementGuard(outcomeLock, settled);
+        job.setUpstreamSupervisor(supervisor);
         job.setPipelineConfig(new PipelineConfig(16, 8192, 200, true));
 
         unwinding.start();

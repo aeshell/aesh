@@ -309,18 +309,10 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         long[] stageDurations = new long[stageCount];
 
         List<Future<?>> futures = new ArrayList<>(chain.size() - 1);
-        // Guards upstream outcome recording. After a join timeout the settle
-        // path and the pool-task handler race to record the stage outcome:
-        // the task may still be unwinding from our cancel (its Execution
-        // briefly records INTERRUPTED while propagating, before the handler
-        // records the terminal result). Once settle claims a stage, the
-        // task's late writes are suppressed so the snapshot is deterministic.
-        // Claimed outcomes are snapshotted from settledResults, never re-read
-        // live: the worker thread stays alive after the timeout and its
-        // unguarded INTERRUPTED write can land between settle and snapshot.
-        final Object outcomeLock = new Object();
-        final boolean[] upstreamSettled = new boolean[chain.size() - 1];
-        final CommandResult[] settledResults = new CommandResult[chain.size() - 1];
+        // Shared outcome coordination (see UpstreamOutcomeSupervisor): after
+        // a join timeout the settle path and the pool-task handler race, and
+        // snapshots use claimed values so late worker writes stay invisible.
+        final UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(chain.size() - 1);
         try {
             for (int i = 0; i < chain.size() - 1; i++) {
                 final int stageIndex = i;
@@ -330,15 +322,12 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     try {
                         stage.execute();
                     } catch (Throwable e) {
-                        synchronized (outcomeLock) {
-                            if (!upstreamSettled[stageIndex]) {
-                                stageErrors[stageIndex] = e;
-                                if (PipeOperator.isPipeBroken(e))
-                                    stage.setResult(CommandResult.PIPE_BROKEN);
-                                else
-                                    stage.setResult(CommandResult.FAILURE);
-                            }
-                        }
+                        if (PipeOperator.isPipeBroken(e))
+                            supervisor.recordTaskOutcome(stageIndex, stageErrors, stage, e,
+                                    CommandResult.PIPE_BROKEN);
+                        else
+                            supervisor.recordTaskOutcome(stageIndex, stageErrors, stage, e,
+                                    CommandResult.FAILURE);
                     } finally {
                         stageDurations[stageIndex] = System.currentTimeMillis() - start;
                     }
@@ -359,10 +348,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 stageDurations[stageCount - 1] = System.currentTimeMillis() - lastStart;
             }
 
-            settleUpstream(chain, futures, stageErrors, outcomeLock, upstreamSettled, settledResults);
+            settleUpstream(chain, futures, stageErrors, supervisor);
 
-            recordPipelineResult(chain, stageNames, stageErrors, stageDurations, result,
-                    outcomeLock, upstreamSettled, settledResults);
+            recordPipelineResult(chain, stageNames, stageErrors, stageDurations, result, supervisor);
             return result;
         } finally {
             for (Future<?> future : futures) {
@@ -373,8 +361,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     private void settleUpstream(List<Execution> chain, List<Future<?>> futures,
-            Throwable[] stageErrors, Object outcomeLock, boolean[] upstreamSettled,
-            CommandResult[] settledResults) {
+            Throwable[] stageErrors, UpstreamOutcomeSupervisor supervisor) {
         long timeoutMs = pipelineConfig.upstreamJoinTimeoutMs();
         for (int i = 0; i < futures.size(); i++) {
             Future<?> future = futures.get(i);
@@ -402,56 +389,36 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                     if (secondChance instanceof InterruptedException)
                         Thread.currentThread().interrupt();
                 }
-                settleTimedOutStage(chain.get(i), stageErrors, i, e, outcomeLock, upstreamSettled,
-                        settledResults);
+                settleTimedOutStage(chain.get(i), stageErrors, i, e, supervisor);
             }
         }
     }
 
     private void settleTimedOutStage(Execution stage, Throwable[] stageErrors, int index, Throwable timeout,
-            Object outcomeLock, boolean[] upstreamSettled, CommandResult[] settledResults) {
-        synchronized (outcomeLock) {
-            upstreamSettled[index] = true;
-            CommandResult current = stage.getResult();
-            // A task that is still running cannot have a terminal result: a
-            // recorded INTERRUPTED here is the transient artifact of our own
-            // cancel propagating through ExecutionImpl (the constructor is
-            // private, so identity comparison is sound), about to be replaced
-            // by the task handler — which is now suppressed. Claim FAILURE
-            // with the timeout instead. The claimed value is snapshotted from
-            // settledResults, never re-read live (see recordPipelineResult).
-            if (current == null || current == CommandResult.INTERRUPTED) {
-                if (stageErrors[index] == null)
-                    stageErrors[index] = timeout;
-                stage.setResult(CommandResult.FAILURE);
-                settledResults[index] = CommandResult.FAILURE;
-            } else {
-                settledResults[index] = current;
-            }
-        }
+            UpstreamOutcomeSupervisor supervisor) {
+        supervisor.claimTimeout(index, stage, stageErrors, timeout);
     }
 
     private void recordPipelineResult(List<Execution> chain, String[] stageNames,
             Throwable[] stageErrors, long[] stageDurations, CommandResult result,
-            Object outcomeLock, boolean[] upstreamSettled, CommandResult[] settledResults) {
+            UpstreamOutcomeSupervisor supervisor) {
         List<StageOutcome> stages = new ArrayList<>(chain.size());
         for (int i = 0; i < chain.size(); i++) {
             Execution stage = chain.get(i);
             CommandResult stageResult;
             Throwable stageError;
-            if (i < upstreamSettled.length) {
-                synchronized (outcomeLock) {
-                    if (upstreamSettled[i]) {
-                        // Settled: use the claimed outcome. The worker thread
-                        // is still alive and its unguarded INTERRUPTED write
-                        // may land after the claim — a live re-read here
-                        // could snapshot the transient 130.
-                        stageResult = settledResults[i];
-                        stageError = stageErrors[i];
-                    } else {
-                        stageResult = stage.getResult();
-                        stageError = stageErrors[i];
-                    }
+            if (i < chain.size() - 1) {
+                // Settled stages snapshot the claimed outcome: the worker
+                // thread is still alive and its unguarded INTERRUPTED write
+                // may land after the claim — a live re-read here could
+                // snapshot the transient 130.
+                CommandResult claimed = supervisor.claimedResult(i);
+                if (claimed != null) {
+                    stageResult = claimed;
+                    stageError = stageErrors[i];
+                } else {
+                    stageResult = stage.getResult();
+                    stageError = stageErrors[i];
                 }
             } else {
                 // Last stage runs on the calling thread: no race.

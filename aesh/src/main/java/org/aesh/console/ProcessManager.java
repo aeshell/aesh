@@ -39,6 +39,7 @@ import org.aesh.command.StageOutcome;
 import org.aesh.command.impl.ExecutionPlanner;
 import org.aesh.command.impl.PipeThreads;
 import org.aesh.command.impl.PipelineStages;
+import org.aesh.command.impl.UpstreamOutcomeSupervisor;
 import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.terminal.Connection;
@@ -194,6 +195,13 @@ public class ProcessManager {
     private void drain() {
         if (!scheduling.compareAndSet(false, true))
             return;
+        runDrainLoopAsOwner();
+    }
+
+    /**
+     * Runs the drain loop as the turn owner, releasing the turn afterwards.
+     */
+    private void runDrainLoopAsOwner() {
         drainOwner = Thread.currentThread();
         try {
             drainLoop();
@@ -236,13 +244,7 @@ public class ProcessManager {
                 LockSupport.parkNanos(100_000);
             }
         }
-        drainOwner = Thread.currentThread();
-        try {
-            drainLoop();
-        } finally {
-            drainOwner = null;
-            scheduling.set(false);
-        }
+        runDrainLoopAsOwner();
     }
 
     private void drainLoop() {
@@ -302,8 +304,7 @@ public class ProcessManager {
         long[] stageDurations = new long[upstreamCount];
         // Shared with the job's join-timeout settle path so a still-unwinding
         // task cannot overwrite the claimed timeout outcome (transient 130).
-        final Object outcomeLock = new Object();
-        final boolean[] upstreamSettled = new boolean[upstreamCount];
+        final UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(upstreamCount);
         List<Thread> upstreamThreads = new ArrayList<>(upstreamCount);
         for (int i = 0; i < upstreamCount; i++) {
             final int stageIndex = i;
@@ -313,15 +314,12 @@ public class ProcessManager {
                 try {
                     stage.execute();
                 } catch (Throwable e) {
-                    synchronized (outcomeLock) {
-                        if (!upstreamSettled[stageIndex]) {
-                            stageErrors[stageIndex] = e;
-                            if (PipeOperator.isPipeBroken(e))
-                                stage.setResult(CommandResult.PIPE_BROKEN);
-                            else
-                                stage.setResult(CommandResult.FAILURE);
-                        }
-                    }
+                    if (PipeOperator.isPipeBroken(e))
+                        supervisor.recordTaskOutcome(stageIndex, stageErrors, stage, e,
+                                CommandResult.PIPE_BROKEN);
+                    else
+                        supervisor.recordTaskOutcome(stageIndex, stageErrors, stage, e,
+                                CommandResult.FAILURE);
                     LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
                 } finally {
                     stageDurations[stageIndex] = System.currentTimeMillis() - start;
@@ -340,7 +338,7 @@ public class ProcessManager {
         mainJob.setUpstreamPipeThreads(upstreamThreads);
         mainJob.setUpstreamOutcomes(new ArrayList<Execution<? extends CommandInvocation>>(
                 pipeChain.subList(0, upstreamCount)), stageNames, stageErrors, stageDurations);
-        mainJob.setUpstreamSettlementGuard(outcomeLock, upstreamSettled);
+        mainJob.setUpstreamSupervisor(supervisor);
         activeJob = mainJob;
         mainJob.start();
     }

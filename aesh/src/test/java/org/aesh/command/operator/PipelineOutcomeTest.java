@@ -363,6 +363,75 @@ public class PipelineOutcomeTest {
     }
 
     @Test
+    public void testInteractiveJoinTimeoutBoundsBlockedUpstream() throws Exception {
+        // Same contract as testJoinTimeoutBoundsBlockedUpstream, exercised
+        // through the interactive path (ProcessManager/CommandJob) instead
+        // of the batch runtime path (#638).
+        BlockerCommand.runs.set(0);
+        TestConnection connection = new TestConnection();
+        CountDownLatch terminalLatch = new CountDownLatch(1);
+        CountDownLatch pipelineLatch = new CountDownLatch(1);
+        List<StageOutcome> stageEvents = new ArrayList<>();
+        List<PipelineResult> pipelineEvents = new ArrayList<>();
+
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
+                .command(BlockerCommand.class)
+                .command(OkPipeCommand.class)
+                .create();
+
+        File historyFile = File.createTempFile("aesh-pipeline-timeout-history", ".txt");
+        historyFile.deleteOnExit();
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .connection(connection)
+                .enableOperatorParser(true)
+                .commandRegistry(registry)
+                .historyFile(historyFile)
+                .pipelineConfig(new PipelineConfig(16, 8192, 200, true))
+                .commandExecutionListener(new PipelineExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                        terminalLatch.countDown();
+                    }
+
+                    @Override
+                    public void onStageComplete(StageOutcome stage) {
+                        stageEvents.add(stage);
+                    }
+
+                    @Override
+                    public void onPipelineComplete(PipelineResult result) {
+                        pipelineEvents.add(result);
+                        pipelineLatch.countDown();
+                    }
+                })
+                .logging(true)
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        long start = System.currentTimeMillis();
+        connection.read("blocker | okpipe" + Config.getLineSeparator());
+        assertTrue("Terminal command should complete", terminalLatch.await(10, TimeUnit.SECONDS));
+        assertTrue("Pipeline event should fire", pipelineLatch.await(10, TimeUnit.SECONDS));
+        long elapsed = System.currentTimeMillis() - start;
+
+        try {
+            assertTrue("Join must time out, took: " + elapsed, elapsed < 10000);
+            assertEquals(1, BlockerCommand.runs.get());
+            assertEquals(2, stageEvents.size());
+            assertEquals(CommandResult.FAILURE, stageEvents.get(0).result());
+            assertNotNull(stageEvents.get(0).error());
+            assertEquals(CommandResult.SUCCESS, stageEvents.get(1).result());
+            assertEquals(1, pipelineEvents.size());
+            assertEquals(CommandResult.SUCCESS, pipelineEvents.get(0).pipelineResult());
+        } finally {
+            console.stop();
+        }
+    }
+
+    @Test
     public void testPipelineConfigValidation() {
         try {
             new PipelineConfig(0, 8192, 2000, true);

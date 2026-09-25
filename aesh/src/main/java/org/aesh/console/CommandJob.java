@@ -33,6 +33,7 @@ import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandResult;
 import org.aesh.command.Execution;
 import org.aesh.command.PipelineConfig;
+import org.aesh.command.impl.UpstreamOutcomeSupervisor;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidatorException;
@@ -64,16 +65,10 @@ public final class CommandJob implements Consumer<Signal> {
     private volatile String[] pipelineStageNames;
     private volatile Throwable[] upstreamStageErrors;
     private volatile long[] upstreamStageDurations;
-    // Guard for upstream outcome recording, shared with the threads running
-    // the upstream stages (see ProcessManager.launchPipeline). Settle and
-    // task handler race after a join timeout; see awaitUpstreamPipeThreads.
+    // Outcome coordination shared with the threads running the upstream
+    // stages (see ProcessManager.launchPipeline and UpstreamOutcomeSupervisor).
     // Null when upstream outcomes were never wired (unit tests).
-    private volatile Object upstreamOutcomeLock;
-    private volatile boolean[] upstreamSettled;
-    // Claimed outcome per settled stage. Snapshotted by event dispatch
-    // instead of re-reading the Execution live: the worker stays alive after
-    // the timeout and its unguarded INTERRUPTED write can land in between.
-    private volatile CommandResult[] upstreamSettledResults;
+    private volatile UpstreamOutcomeSupervisor upstreamSupervisor;
     private volatile boolean finished;
     private final InterruptEscalation escalation = new InterruptEscalation();
 
@@ -241,14 +236,12 @@ public final class CommandJob implements Consumer<Signal> {
     }
 
     /**
-     * Shares the outcome guard created by {@code ProcessManager.launchPipeline}
+     * Shares the outcome supervisor created by {@code ProcessManager.launchPipeline}
      * with this job, so the join-timeout settle path and the upstream stage
      * threads record outcomes deterministically.
      */
-    void setUpstreamSettlementGuard(Object outcomeLock, boolean[] settled) {
-        this.upstreamOutcomeLock = outcomeLock;
-        this.upstreamSettled = settled;
-        this.upstreamSettledResults = settled != null ? new CommandResult[settled.length] : null;
+    void setUpstreamSupervisor(UpstreamOutcomeSupervisor supervisor) {
+        this.upstreamSupervisor = supervisor;
     }
 
     /**
@@ -258,11 +251,10 @@ public final class CommandJob implements Consumer<Signal> {
      * post-timeout INTERRUPTED write.
      */
     CommandResult upstreamSettledResult(int i) {
-        CommandResult[] claimed = upstreamSettledResults;
-        boolean[] settled = upstreamSettled;
-        if (claimed == null || settled == null || i < 0 || i >= claimed.length || !settled[i])
+        UpstreamOutcomeSupervisor supervisor = upstreamSupervisor;
+        if (supervisor == null)
             return null;
-        return claimed[i];
+        return supervisor.claimedResult(i);
     }
 
     int upstreamStageCount() {
@@ -331,29 +323,12 @@ public final class CommandJob implements Consumer<Signal> {
     }
 
     private void claimTimedOutStage(int i) {
-        Execution<? extends CommandInvocation> stage = upstreamStages.get(i);
-        Object outcomeLock = upstreamOutcomeLock;
-        boolean[] settled = upstreamSettled;
-        CommandResult[] claimed = upstreamSettledResults;
-        if (outcomeLock != null && settled != null && claimed != null && i < settled.length) {
-            synchronized (outcomeLock) {
-                settled[i] = true;
-                // A task that is still running cannot have a terminal result:
-                // a recorded INTERRUPTED here is the transient artifact of
-                // our own cancel propagating through ExecutionImpl (the
-                // constructor is private, so identity comparison is sound),
-                // about to be replaced by the task handler — which is now
-                // suppressed. Claim FAILURE with the timeout instead.
-                CommandResult current = stage.getResult();
-                if (current == null || current == CommandResult.INTERRUPTED) {
-                    recordUpstreamTimeout(stage, i);
-                    claimed[i] = CommandResult.FAILURE;
-                } else {
-                    claimed[i] = current;
-                }
-            }
-        } else if (stage.getResult() == null) {
-            recordUpstreamTimeout(stage, i);
+        UpstreamOutcomeSupervisor supervisor = upstreamSupervisor;
+        if (supervisor != null) {
+            supervisor.claimTimeout(i, upstreamStages.get(i), upstreamStageErrors,
+                    new TimeoutException("Upstream stage join timed out"));
+        } else if (upstreamStages.get(i).getResult() == null) {
+            recordUpstreamTimeout(upstreamStages.get(i), i);
         }
     }
 
