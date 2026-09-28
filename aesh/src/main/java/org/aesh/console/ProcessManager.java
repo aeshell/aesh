@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.LockSupport;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,19 +65,22 @@ public class ProcessManager {
     private final Queue<Session> sessions = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean scheduling = new AtomicBoolean();
     /**
+     * Pending-work handoff for the drain turn. Every drain request
+     * ({@link #execute}, {@link #executeNext}, {@link #processFinished})
+     * sets this flag before attempting to take the turn, and the turn owner
+     * clears it when a turn starts and re-checks it after releasing the
+     * turn. A request published before the release is therefore always
+     * observed by the owner; a request published after observes a free turn
+     * in its own acquire attempt. Exactly one of the two drains, so no
+     * wakeup is ever dropped (#638).
+     */
+    private final AtomicBoolean drainPending = new AtomicBoolean();
+    /**
      * Thread currently holding the drain turn, for same-thread re-entrancy
      * detection. Written after acquiring {@code scheduling}, cleared before
      * releasing it.
      */
     private volatile Thread drainOwner;
-    /**
-     * Bound for a completed job waiting to take its post-completion drain
-     * turn when the launcher thread is still inside its launch call (#634).
-     * The holder's remaining work is microseconds of thread startup; this
-     * is orders of magnitude of margin. Expiry falls back to the historic
-     * skip-and-return behavior.
-     */
-    private static final long DRAIN_TAKEOVER_TIMEOUT_MS = 10000;
     private CommandExecutionListener executionListener;
     private String commandLine;
     private volatile CommandJob activeJob;
@@ -117,9 +119,13 @@ public class ProcessManager {
         return job != null && job.isRunning();
     }
 
+    /**
+     * Queues a session for execution and requests a drain turn. The turn
+     * protocol itself lives in {@link #requestDrain()}.
+     */
     public void execute(Executor<? extends CommandInvocation> executor, Connection conn, String commandLine) {
         sessions.add(new Session(executor, conn, commandLine));
-        drain();
+        requestDrain();
     }
 
     public CommandResult runNative(Execution<? extends CommandInvocation> execution, Connection conn,
@@ -135,13 +141,24 @@ public class ProcessManager {
         return planner != null && planner.hasMoreUnits();
     }
 
+    /**
+     * Post-completion handoff: a just-finished job must have its planner
+     * continuation (or the readline re-arm/close) run, so completion always
+     * records a drain request. The turn protocol itself lives in
+     * {@link #requestDrain()}.
+     * <p>
+     * Callers must clear this job from {@code activeJob} before requesting
+     * the drain (done above): the release path treats {@code activeJob ==
+     * null} as proof that no launched job is still in flight (see
+     * {@link #safeToRedrain()}).
+     */
     public void processFinished(CommandJob job) {
         // Identity check: an abandoned worker may finish after a newer job
         // became active; it must not clear another job's slot.
         if (activeJob == job)
             activeJob = null;
         firePipelineEvents(job);
-        drainAfterCompletion();
+        requestDrain();
     }
 
     private void firePipelineEvents(CommandJob job) {
@@ -189,21 +206,58 @@ public class ProcessManager {
 
     @SuppressWarnings("unchecked")
     public void executeNext() {
-        drain();
-    }
-
-    private void drain() {
-        if (!scheduling.compareAndSet(false, true))
-            return;
-        runDrainLoopAsOwner();
+        requestDrain();
     }
 
     /**
-     * Runs the drain loop as the turn owner, releasing the turn afterwards.
+     * The single drain handoff shared by {@link #execute},
+     * {@link #executeNext} and {@link #processFinished} (#638).
+     * <p>
+     * Every caller records its request in {@code drainPending} before
+     * attempting to take the turn, and the owner re-checks the flag after
+     * releasing the turn (see {@link #drainWhilePending}). A request
+     * published before the release is observed by the owner; a request
+     * published after observes a free turn in its own acquire attempt —
+     * either way exactly one side drains, so no wakeup is dropped, with no
+     * takeover timeout, parking, or extra drain thread.
+     * <p>
+     * A contended caller never blocks: it returns immediately and the owner
+     * picks the request up. Same-thread re-entrancy (synchronous inline
+     * execution, buffered readline input) returns outright — the outer
+     * drain loop observes the queued work itself.
+     * <p>
+     * The turn is never released before worker start: launching only hands
+     * work to already-started threads, and a completion that lands during
+     * the launch window simply leaves its request flag for the release
+     * path, which runs the post-completion drain as a follow-up turn
+     * (#634).
      */
-    private void runDrainLoopAsOwner() {
+    private void requestDrain() {
+        if (drainOwner == Thread.currentThread())
+            return;
+        drainPending.set(true);
+        if (scheduling.compareAndSet(false, true))
+            drainWhilePending();
+    }
+
+    /**
+     * Runs owned drain turns until quiescent: each turn claims the pending
+     * requests up front, so arrivals during the turn re-arm the flag for
+     * the release check below.
+     */
+    private void drainWhilePending() {
+        do {
+            runDrainTurn();
+        } while (acquireFollowupTurn());
+    }
+
+    /**
+     * Runs a single owned drain turn, releasing the turn afterwards.
+     */
+    private void runDrainTurn() {
         drainOwner = Thread.currentThread();
         try {
+            drainPending.set(false);
             drainLoop();
         } finally {
             drainOwner = null;
@@ -212,39 +266,60 @@ public class ProcessManager {
     }
 
     /**
-     * Post-completion drain: a just-finished job must re-arm readline (or
-     * close), so unlike {@link #drain()} it must not silently skip when the
-     * launcher thread is still inside its launch call.
-     * <p>
-     * After {@code job.start()} returns, the launcher releases the turn one
-     * statement later — but under CPU contention the fresh worker routinely
-     * wins the race: it runs the whole (tiny) command and reaches this drain
-     * while the launcher is still preempted inside the launch, CAS-fails,
-     * and the re-arm is skipped forever, wedging the session with no error
-     * (#634). So wait (bounded) for the turn instead of skipping.
-     * <p>
-     * Same-thread re-entrancy (synchronous inline execution) keeps the
-     * historic fail-fast behavior: the outer drain will pick up queued work.
+     * Release-path re-check: takes a follow-up turn when a request arrived
+     * during (or just before the release of) the previous turn. The check
+     * runs after the release, pairing with the publish-before-acquire order
+     * in {@link #requestDrain} so neither side can miss the other. When the
+     * acquire fails, the new owner owns the still-set flag.
+     *
+     * @return true when a follow-up turn was acquired
      */
-    private void drainAfterCompletion() {
-        if (!scheduling.compareAndSet(false, true)) {
-            if (drainOwner == Thread.currentThread())
-                return;
-            long deadline = System.currentTimeMillis() + DRAIN_TAKEOVER_TIMEOUT_MS;
-            while (!scheduling.compareAndSet(false, true)) {
-                if (System.currentTimeMillis() >= deadline) {
-                    LOGGER.warning("Timed out waiting for drain turn after command completion;"
-                            + " readline may not be re-armed");
-                    return;
-                }
-                if (Thread.currentThread().isInterrupted()) {
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-                LockSupport.parkNanos(100_000);
-            }
+    private boolean acquireFollowupTurn() {
+        return drainPending.get() && safeToRedrain() && scheduling.compareAndSet(false, true);
+    }
+
+    /**
+     * Guards the follow-up turn against continuing a planner whose launched
+     * job is still in flight: {@code nextUnit()} keys off a null result, so
+     * re-entering now would return the in-flight unit again and launch it a
+     * second time. A recorded completion clears {@code activeJob} before
+     * requesting its drain, so a null job (or no planner at all) proves the
+     * continuation is safe to run. A skipped follow-up leaves its flag set
+     * for the in-flight job's own completion drain, preserving launch order.
+     *
+     * @return true when re-entering the drain loop is safe
+     */
+    private boolean safeToRedrain() {
+        return planner == null || activeJob == null;
+    }
+
+    /**
+     * Test hook: takes the drain turn as a simulated launcher inside its
+     * launch call. The caller must later hand it back via
+     * {@link #releaseDrainTurnForTest()}, which runs the production
+     * release path.
+     *
+     * @return true when the turn was acquired
+     */
+    boolean acquireDrainTurnForTest() {
+        if (scheduling.compareAndSet(false, true)) {
+            drainOwner = Thread.currentThread();
+            return true;
         }
-        runDrainLoopAsOwner();
+        return false;
+    }
+
+    /**
+     * Test hook: releases a turn taken with
+     * {@link #acquireDrainTurnForTest()} through the production
+     * release-then-recheck path, so a request recorded while the turn was
+     * held is drained exactly as a racing launcher release would drain it.
+     */
+    void releaseDrainTurnForTest() {
+        drainOwner = null;
+        scheduling.set(false);
+        if (acquireFollowupTurn())
+            drainWhilePending();
     }
 
     private void drainLoop() {
