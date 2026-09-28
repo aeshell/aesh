@@ -57,6 +57,14 @@ public final class CommandJob implements Consumer<Signal> {
     private volatile JobState state = JobState.CREATED;
     private volatile Thread worker;
     private volatile Throwable error;
+    /**
+     * Terminal outcome frozen by {@link #finish()}. An abandoned worker may
+     * keep running and overwrite the mutable {@code Execution} result after
+     * finalization; job-level observers must not see those late writes, so
+     * the finalized result and error are snapshotted once, here (#643).
+     */
+    private volatile CommandResult finalResult;
+    private volatile Throwable finalError;
     private volatile long startTime;
     private volatile long endTime;
     private volatile PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
@@ -101,11 +109,15 @@ public final class CommandJob implements Consumer<Signal> {
     }
 
     public CommandResult result() {
-        return execution.getResult();
+        CommandResult snapshot = finalResult;
+        return snapshot != null ? snapshot : execution.getResult();
     }
 
     public Throwable error() {
-        return error;
+        // A snapshot exists exactly when the job finalized; before that the
+        // live error is reported. The error field is only ever written
+        // before finish except by late abandoned workers.
+        return finalResult != null ? finalError : error;
     }
 
     public Duration duration() {
@@ -369,6 +381,8 @@ public final class CommandJob implements Consumer<Signal> {
 
     private void finish() {
         endTime = System.currentTimeMillis();
+        CommandResult snapshotResult;
+        Throwable snapshotError;
         synchronized (this) {
             if (finished)
                 return;
@@ -381,12 +395,18 @@ public final class CommandJob implements Consumer<Signal> {
             } else if (state == JobState.RUNNING) {
                 state = error == null ? JobState.COMPLETED : JobState.FAILED;
             }
+            // Freeze the terminal outcome: a late abandoned worker must not
+            // move it afterwards through the mutable Execution (#643).
+            finalResult = execution.getResult();
+            finalError = error;
+            snapshotResult = finalResult;
+            snapshotError = finalError;
         }
         manager.processFinished(this);
         if (executionListener != null) {
             try {
-                executionListener.onCommandComplete(commandLine, execution.getResult(),
-                        endTime - startTime, error);
+                executionListener.onCommandComplete(commandLine, snapshotResult,
+                        endTime - startTime, snapshotError);
             } catch (Exception e) {
                 LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", e);
             }

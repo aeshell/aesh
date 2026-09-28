@@ -35,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -615,5 +616,68 @@ public class CommandJobTest {
         assertFalse(process.isAlive());
         assertTrue(process.pid() >= 1);
         assertEquals(1, execution.runs.get());
+    }
+
+    @Test
+    public void testAbandonedWorkerLateFinishKeepsFinalizedResultAndHandler() throws Exception {
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch returned = new CountDownLatch(1);
+        AtomicBoolean stop = new AtomicBoolean();
+        FakeExecution execution = new FakeExecution() {
+            @Override
+            public CommandResult execute() {
+                entered.countDown();
+                while (!stop.get())
+                    Thread.yield();
+                result = CommandResult.SUCCESS;
+                returned.countDown();
+                return result;
+            }
+        };
+        CountDownLatch completed = new CountDownLatch(1);
+        AtomicInteger completions = new AtomicInteger();
+        AtomicReference<CommandResult> completionResult = new AtomicReference<>();
+        TestConnection connection = new TestConnection();
+        // Real manager (not a no-op override): the late finish must still
+        // pass through processFinished exactly once without disturbing the
+        // finalized outcome. With no queued sessions the drain is a no-op.
+        ProcessManager manager = new ProcessManager(null);
+        CommandJob job = new CommandJob(manager, connection, execution, "test",
+                (line, result, durationMs) -> {
+                    completions.incrementAndGet();
+                    completionResult.set(result);
+                    completed.countDown();
+                });
+
+        job.start();
+        assertTrue(entered.await(5, TimeUnit.SECONDS));
+        job.accept(Signal.INT);
+        job.accept(Signal.INT);
+        job.accept(Signal.INT);
+        assertTrue("unresponsive job should be abandoned", job.awaitCompletion(10, TimeUnit.SECONDS));
+        assertEquals(JobState.KILLED, job.state());
+        assertEquals(CommandResult.KILLED, job.result());
+
+        // A new owner installs its handler, representing the next readline
+        // cycle or command.
+        Consumer<Signal> nextHandler = signal -> {
+        };
+        connection.setSignalHandler(nextHandler);
+
+        stop.set(true);
+        assertTrue("abandoned worker should return", returned.await(10, TimeUnit.SECONDS));
+
+        // The worker's late close must observe the aftermath, not preempt
+        // it: poll briefly so the assertion lands after the close ran.
+        long deadline = System.currentTimeMillis() + 5000;
+        while (connection.signalHandler() != nextHandler && System.currentTimeMillis() < deadline)
+            Thread.sleep(10);
+        assertEquals("late worker must not restore over the new handler",
+                nextHandler, connection.signalHandler());
+        assertEquals(JobState.KILLED, job.state());
+        assertEquals("finalized KILLED result must survive the late SUCCESS",
+                CommandResult.KILLED, job.result());
+        assertEquals(1, completions.get());
+        assertEquals(CommandResult.KILLED, completionResult.get());
     }
 }

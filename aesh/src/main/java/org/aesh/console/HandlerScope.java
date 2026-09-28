@@ -29,26 +29,29 @@ public final class HandlerScope implements AutoCloseable {
 
     private final Connection connection;
     private final boolean signal;
+    private final Consumer<Signal> installedSignalHandler;
     private final Consumer<Signal> savedSignalHandler;
     private final StdinLease stdinLease;
     private boolean closed;
 
     private HandlerScope(Connection connection, boolean signal,
-            Consumer<Signal> savedSignalHandler, StdinLease stdinLease) {
+            Consumer<Signal> installedSignalHandler, Consumer<Signal> savedSignalHandler,
+            StdinLease stdinLease) {
         this.connection = connection;
         this.signal = signal;
+        this.installedSignalHandler = installedSignalHandler;
         this.savedSignalHandler = savedSignalHandler;
         this.stdinLease = stdinLease;
     }
 
     public static HandlerScope stdin(Connection connection, Consumer<int[]> handler) {
-        return new HandlerScope(connection, false, null, connection.captureStdin(handler));
+        return new HandlerScope(connection, false, null, null, connection.captureStdin(handler));
     }
 
     public static HandlerScope signal(Connection connection, Consumer<Signal> handler) {
         Consumer<Signal> saved = connection.signalHandler();
         connection.setSignalHandler(handler);
-        return new HandlerScope(connection, true, saved, null);
+        return new HandlerScope(connection, true, handler, saved, null);
     }
 
     @Override
@@ -56,9 +59,15 @@ public final class HandlerScope implements AutoCloseable {
         if (closed)
             return;
         closed = true;
-        if (signal)
-            connection.setSignalHandler(savedSignalHandler);
-        else if (stdinLease != null)
+        if (signal) {
+            // Restore only while still the owner: a newer readline cycle or
+            // job may have installed its own handler since (notably the late
+            // close of an abandoned worker), which must be left alone (#643).
+            // Nested synchronous scopes still unwind LIFO, each finding
+            // itself current in turn.
+            if (connection.signalHandler() == installedSignalHandler)
+                connection.setSignalHandler(savedSignalHandler);
+        } else if (stdinLease != null)
             stdinLease.close();
     }
 }
