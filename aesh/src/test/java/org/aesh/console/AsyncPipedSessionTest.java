@@ -21,16 +21,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.aesh.AeshConsoleRunner;
@@ -39,22 +36,14 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
-import org.aesh.terminal.AbstractConnection;
-import org.aesh.terminal.Attributes;
-import org.aesh.terminal.BaseDevice;
-import org.aesh.terminal.Device;
-import org.aesh.terminal.EventDecoder;
-import org.aesh.terminal.tty.Capability;
-import org.aesh.terminal.tty.Size;
-import org.aesh.terminal.utils.Parser;
+import org.aesh.terminal.StreamConnection;
 import org.junit.Test;
 
 /**
- * Mirrors the downstream harness shape from #634: a custom
- * {@link AbstractConnection} with its own blocking reader thread feeding the
- * connection {@link EventDecoder}, reporting interactive (async execution),
- * driven over real piped streams with each command written immediately when
- * the previous completion fires (no readiness gate between commands).
+ * Drives the console over readline's stock {@link StreamConnection},
+ * proving it under the exact back-to-back, no-readiness-gate shape from
+ * #634: each command is written immediately when the previous completion
+ * fires, over real piped streams.
  */
 public class AsyncPipedSessionTest {
 
@@ -76,128 +65,21 @@ public class AsyncPipedSessionTest {
     }
 
     /**
-     * Minimal stream-backed connection: own blocking reader thread delivering
-     * through the {@link EventDecoder} (which buffers when no stdin handler
-     * is set), async execution via {@code isInteractive() == true}.
+     * Stock readline connection with a stdin-handler install counter, kept
+     * for the re-arm assertion (every completion must be preceded by a
+     * re-arm, which installs a fresh handler — #634).
      */
-    static class ReaderThreadConnection extends AbstractConnection {
-        private final Device device = new BaseDevice("test");
-        private final Size size = new Size(120, 40);
-        private final InputStream input;
-        private final OutputStream output;
-        private volatile boolean closed = false;
-        private Thread readerThread;
-        final java.util.concurrent.atomic.AtomicInteger stdinHandlerSets = new java.util.concurrent.atomic.AtomicInteger();
+    static class CountingStreamConnection extends StreamConnection {
+        final AtomicInteger stdinHandlerSets = new AtomicInteger();
 
-        ReaderThreadConnection(InputStream input, OutputStream output) {
-            this.input = input;
-            this.output = output;
-            this.attributes = new Attributes();
-            this.eventDecoder = new EventDecoder(this.attributes);
-            this.stdout = data -> {
-                try {
-                    output.write(Parser.fromCodePoints(data).getBytes(StandardCharsets.UTF_8));
-                    output.flush();
-                } catch (IOException e) {
-                    // Connection closed
-                }
-            };
-        }
-
-        @Override
-        public Device device() {
-            return device;
-        }
-
-        @Override
-        public Size size() {
-            return size;
-        }
-
-        @Override
-        public void close() {
-            closed = true;
-            try {
-                input.close();
-            } catch (IOException e) {
-                // Ignore
-            }
-            if (closeHandler != null) {
-                closeHandler.accept(null);
-            }
-        }
-
-        @Override
-        public void openBlocking() {
-            startReader();
-            try {
-                if (readerThread != null) {
-                    readerThread.join();
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        @Override
-        public void openNonBlocking() {
-            startReader();
+        CountingStreamConnection(PipedInputStream input, ByteArrayOutputStream output) {
+            super(StandardCharsets.UTF_8, input, output);
         }
 
         @Override
         public void setStdinHandler(java.util.function.Consumer<int[]> handler) {
             stdinHandlerSets.incrementAndGet();
             super.setStdinHandler(handler);
-        }
-
-        @Override
-        public boolean put(Capability capability, Object... params) {
-            return false;
-        }
-
-        @Override
-        public Charset inputEncoding() {
-            return StandardCharsets.UTF_8;
-        }
-
-        @Override
-        public Charset outputEncoding() {
-            return StandardCharsets.UTF_8;
-        }
-
-        @Override
-        public boolean supportsAnsi() {
-            return false;
-        }
-
-        @Override
-        public boolean isInteractive() {
-            return true;
-        }
-
-        private void startReader() {
-            if (readerThread != null) {
-                return;
-            }
-            readerThread = new Thread(() -> {
-                byte[] buffer = new byte[1024];
-                try {
-                    while (!closed) {
-                        int n = input.read(buffer);
-                        if (n == -1) {
-                            break;
-                        }
-                        if (n > 0) {
-                            String text = new String(buffer, 0, n, StandardCharsets.UTF_8);
-                            eventDecoder.accept(Parser.toCodePoints(text));
-                        }
-                    }
-                } catch (IOException e) {
-                    // Stream closed, exit reader
-                }
-            }, "aesh-test-reader");
-            readerThread.setDaemon(true);
-            readerThread.start();
         }
     }
 
@@ -212,7 +94,11 @@ public class AsyncPipedSessionTest {
         PipedInputStream pipeIn = new PipedInputStream(4096);
         PipedOutputStream testOut = new PipedOutputStream(pipeIn);
         ByteArrayOutputStream consoleOut = new ByteArrayOutputStream();
-        ReaderThreadConnection connection = new ReaderThreadConnection(pipeIn, consoleOut);
+        // Stock readline connection; unlike the old hand-rolled harness it
+        // never closes caller-owned streams, so pipeIn is closed explicitly.
+        CountingStreamConnection connection = new CountingStreamConnection(pipeIn, consoleOut);
+        AtomicReference<Throwable> readerDeath = new AtomicReference<>();
+        connection.setReaderDeathHook(readerDeath::set);
 
         CountDownLatch readyLatch = new CountDownLatch(1);
         AtomicReference<CountDownLatch> completionLatch = new AtomicReference<>(new CountDownLatch(1));
@@ -245,15 +131,22 @@ public class AsyncPipedSessionTest {
                             + HelloCommand.executions.get() + " executedNames=" + HelloCommand.executedNames
                             + " completedLines=" + completedLines
                             + " stdinHandlerSets=" + connection.stdinHandlerSets.get()
+                            + " readerDeath=" + readerDeath.get()
                             + threadDump());
                 }
             }
+            assertTrue("Reader must stay alive for the whole session, death: " + readerDeath.get(),
+                    readerDeath.get() == null);
         } finally {
             try {
                 testOut.close();
             } catch (Exception ignored) {
             }
             connection.close();
+            try {
+                pipeIn.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 
