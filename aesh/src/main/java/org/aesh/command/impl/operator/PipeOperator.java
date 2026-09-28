@@ -54,6 +54,9 @@ public class PipeOperator extends EndOperator implements
     /** Sentinel value placed in the queue to signal EOF. */
     private static final byte[] EOF = new byte[0];
 
+    /** Bounded wait between queue-full retries, shared by writes and EOF. */
+    private static final long OFFER_WAIT_MS = 100;
+
     private final BlockingQueue<byte[]> queue;
     private final AeshContext context;
     private final AtomicLong truncatedBytes = new AtomicLong();
@@ -105,9 +108,8 @@ public class PipeOperator extends EndOperator implements
             try {
                 if (writer != null)
                     writer.close();
-                else if (!target.offer(EOF)) {
-                    target.clear();
-                    target.offer(EOF);
+                else {
+                    enqueueEof(target);
                 }
             } catch (IOException e) {
                 if (!isRoutinePipeClose(e)) {
@@ -129,6 +131,33 @@ public class PipeOperator extends EndOperator implements
 
     public long truncatedBytes() {
         return truncatedBytes.get();
+    }
+
+    /**
+     * Enqueues the EOF sentinel for a normally closing producer, waiting
+     * for room when the queue is full so accepted data is never dropped
+     * (#640). Exits promptly without touching the queue when the consumer
+     * is gone — there is nobody left to read the sentinel, and the
+     * producer outcome stands (genuine SIGPIPE already surfaces through
+     * {@link QueueOutputStream#write}). On interrupt (cancel path) EOF is
+     * forced exactly like the legacy close so a downstream take() can never
+     * hang on a missing sentinel, and the interruption is reported like a
+     * failed write.
+     *
+     * @param target the queue receiving the sentinel
+     * @throws IOException when interrupted while waiting for room
+     */
+    private void enqueueEof(BlockingQueue<byte[]> target) throws IOException {
+        try {
+            while (!target.offer(EOF, OFFER_WAIT_MS, TimeUnit.MILLISECONDS)) {
+                if (consumerGone)
+                    return;
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            discardForEof(target);
+            throw new IOException("Pipe closed");
+        }
     }
 
     private void discardForEof(BlockingQueue<byte[]> target) {
@@ -168,8 +197,6 @@ public class PipeOperator extends EndOperator implements
             write(new byte[] { (byte) b }, 0, 1);
         }
 
-        private static final long OFFER_WAIT_MS = 100;
-
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
             if (closed)
@@ -191,10 +218,7 @@ public class PipeOperator extends EndOperator implements
         public void close() throws IOException {
             if (!closed) {
                 closed = true;
-                // Use offer instead of put — if the queue is full and we're
-                // interrupted, offer returns false without blocking. Clear
-                // the queue first to make room for the EOF sentinel.
-                discardForEof(target);
+                enqueueEof(target);
             }
         }
     }
