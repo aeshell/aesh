@@ -94,6 +94,17 @@ public class CommandInvocationConfiguration {
         return dataProvider == null ? null : dataProvider.getData();
     }
 
+    /**
+     * Closes the piped input without manufacturing a reader: when the
+     * command obtained stdin the shared stream is closed, otherwise only
+     * the consumer-gone signal is published (see
+     * {@link DataProvider#closeData()}).
+     */
+    public void closePipedData() {
+        if (dataProvider != null)
+            dataProvider.closeData();
+    }
+
     public boolean hasOutputRedirection() {
         return getOutputRedirection() != null;
     }

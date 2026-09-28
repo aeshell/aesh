@@ -66,6 +66,14 @@ public class PipeOperator extends EndOperator implements
     private CommandInvocationConfiguration config;
     private BlockingQueue<byte[]> errorQueue;
     private PipeQueueDelegate errorDelegate;
+    /**
+     * The single shared stdin streams handed out by {@link #getData()} and
+     * {@link #getErrorData()}. Repeated getters must return the same
+     * stream: a fresh wrapper per call would strand buffered bytes in the
+     * previous wrapper while the new one consumes the EOF sentinel (#641).
+     */
+    private volatile BufferedInputStream dataStream;
+    private volatile BufferedInputStream errorDataStream;
 
     /**
      * Output delegate for pipe -- writes to the blocking queue without
@@ -321,10 +329,12 @@ public class PipeOperator extends EndOperator implements
         return new PipeQueueDelegate(queue);
     }
 
-    public BufferedInputStream getErrorData() {
+    public synchronized BufferedInputStream getErrorData() {
         if (errorQueue == null)
             return null;
-        return new BufferedInputStream(new QueueInputStream(errorQueue));
+        if (errorDataStream == null)
+            errorDataStream = new BufferedInputStream(new QueueInputStream(errorQueue));
+        return errorDataStream;
     }
 
     @Override
@@ -333,7 +343,44 @@ public class PipeOperator extends EndOperator implements
     }
 
     @Override
-    public BufferedInputStream getData() {
-        return new BufferedInputStream(new QueueInputStream(queue));
+    public synchronized BufferedInputStream getData() {
+        if (dataStream == null)
+            dataStream = new BufferedInputStream(new QueueInputStream(queue));
+        return dataStream;
+    }
+
+    /**
+     * Closes the stdin stream handed out by {@link #getData()}: the actual
+     * stream the command used, never a fresh wrapper. When no stream was
+     * ever created only the consumer-gone signal is published — without
+     * discarding queued data — which still releases producers blocked in
+     * writes or in the close wait.
+     */
+    @Override
+    public synchronized void closeData() {
+        if (dataStream != null) {
+            try {
+                dataStream.close();
+            } catch (IOException ignored) {
+            }
+        } else {
+            consumerGone = true;
+        }
+    }
+
+    /**
+     * Error-direction counterpart of {@link #closeData()}. No production
+     * path reads the error queue today; this keeps the same ownership rule
+     * for direct {@link #getErrorData()} users.
+     */
+    public synchronized void closeErrorData() {
+        if (errorDataStream != null) {
+            try {
+                errorDataStream.close();
+            } catch (IOException ignored) {
+            }
+        } else if (errorQueue != null) {
+            consumerGone = true;
+        }
     }
 }

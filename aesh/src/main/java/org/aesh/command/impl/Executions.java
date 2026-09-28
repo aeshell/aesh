@@ -293,12 +293,7 @@ class Executions {
                 if (invocationConfiguration.getInputRedirection() != null) {
                     invocationConfiguration.getInputRedirection().close();
                 }
-                if (invocationConfiguration.getPipedData() != null) {
-                    try {
-                        invocationConfiguration.getPipedData().close();
-                    } catch (IOException ignored) {
-                    }
-                }
+                invocationConfiguration.closePipedData();
             }
             return result;
         }

@@ -27,4 +27,13 @@ import java.io.BufferedInputStream;
  */
 public interface DataProvider {
     BufferedInputStream getData();
+
+    /**
+     * Closes the pipe input for the consumer. Providers that hand out a
+     * shared cached stream close that stream; providers that never created
+     * one only signal that the consumer is gone, without manufacturing a
+     * reader merely to close it.
+     */
+    default void closeData() {
+    }
 }
