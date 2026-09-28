@@ -22,6 +22,11 @@ package org.aesh.console;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CoderResult;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -82,11 +87,20 @@ public final class NativeExecution implements Execution<CommandInvocation> {
         builder.redirectErrorStream(true);
         java.lang.Process process = null;
         InputStream stream = null;
+        Thread pump = null;
         try {
             process = builder.start();
             stream = process.getInputStream();
             final InputStream pipeStream = stream;
-            Thread pump = new Thread(() -> pumpStream(pipeStream), "aesh-native-pump");
+            pump = new Thread(() -> {
+                try {
+                    pumpStream(pipeStream);
+                } catch (Throwable e) {
+                    // A dead pump delivers nothing further; the join below
+                    // still returns promptly, preserving bounded cleanup.
+                    LOGGER.log(Level.FINE, "Native output pump failed", e);
+                }
+            }, "aesh-native-pump");
             pump.setDaemon(true);
             pump.start();
             // Lease restores the previous handler on every exit path,
@@ -94,6 +108,11 @@ public final class NativeExecution implements Execution<CommandInvocation> {
             try (StdinLease ignored = connection.captureStdin(new StdinForwarder(process))) {
                 try {
                     result = CommandResult.valueOf(process.waitFor());
+                    // Child exit does not imply delivery: the pump may still
+                    // hold accepted bytes for a slow consumer or wait for
+                    // EOF. Join unbounded (interruptible) so success is
+                    // reported only after all output reached the terminal.
+                    pump.join();
                     return result;
                 } finally {
                     closeQuietly(stream);
@@ -106,6 +125,16 @@ public final class NativeExecution implements Execution<CommandInvocation> {
                 closeQuietly(process.getOutputStream());
                 try {
                     process.waitFor(5, TimeUnit.SECONDS);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            if (pump != null) {
+                // Unblock a read-parked pump, then wait bounded so cancel
+                // cleanup cannot hang on a stuck consumer.
+                closeQuietly(stream);
+                try {
+                    pump.join(5000);
                 } catch (InterruptedException interrupted) {
                     Thread.currentThread().interrupt();
                 }
@@ -167,16 +196,60 @@ public final class NativeExecution implements Execution<CommandInvocation> {
         }
     }
 
-    private void pumpStream(InputStream stream) {
+    /**
+     * Pumps process output to the terminal, decoding incrementally so a
+     * multibyte character split across reads round-trips intact. Decoding
+     * is UTF-8 with replacement on malformed input, matching the
+     * {@link StdinForwarder} encoding; the decoder is per-invocation state,
+     * so concurrent native executions stay isolated.
+     * <p>
+     * Unconsumed input stays in the buffer across reads
+     * ({@code compact} after each decode): wrapping a fresh buffer per read
+     * would silently drop a trailing partial sequence.
+     * <p>
+     * Package-private for direct deterministic tests (gated streams and
+     * crafted read boundaries need no child process).
+     */
+    void pumpStream(InputStream stream) {
+        CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPLACE)
+                .onUnmappableCharacter(CodingErrorAction.REPLACE);
+        // One read chunk plus room for a carried-over partial sequence.
+        ByteBuffer in = ByteBuffer.allocate(1028);
+        CharBuffer out = CharBuffer.allocate(2048);
         byte[] buffer = new byte[1024];
         try {
             int length;
             while ((length = stream.read(buffer)) != -1) {
-                connection.write(new String(buffer, 0, length));
+                in.put(buffer, 0, length);
+                in.flip();
+                decodeBuffer(decoder, in, false, out);
+                in.compact();
             }
+            in.flip();
+            decodeBuffer(decoder, in, true, out);
         } catch (IOException e) {
             LOGGER.log(Level.FINE, "Native output pump ended", e);
         }
+    }
+
+    /**
+     * Decodes buffered input, emitting a terminal write per filled output
+     * buffer. A 1024-byte read yields at most 1024 chars, so a single
+     * 2048-char buffer never overflows on one pass; the loop is
+     * belt-and-braces. With REPLACE the decoder only ever reports
+     * underflow (split sequences stay buffered for the next refill) or
+     * overflow.
+     */
+    private void decodeBuffer(CharsetDecoder decoder, ByteBuffer in, boolean endOfInput, CharBuffer out) {
+        CoderResult result;
+        do {
+            out.clear();
+            result = decoder.decode(in, out, endOfInput);
+            out.flip();
+            if (out.hasRemaining())
+                connection.write(out.toString());
+        } while (result.isOverflow());
     }
 
     private void closeQuietly(java.io.Closeable stream) {
