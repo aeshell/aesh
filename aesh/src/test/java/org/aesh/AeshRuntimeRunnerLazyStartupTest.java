@@ -54,7 +54,6 @@ import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
-import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.metadata.CommandMetadataProvider;
@@ -259,7 +258,9 @@ public class AeshRuntimeRunnerLazyStartupTest {
                 .execute();
 
         assertEquals(CommandResult.SUCCESS, result);
-        assertEquals(2, CountingContainerBuilder.calls);
+        // Registration builds root, execution forks it, then the selected
+        // child materializes; the skipped child is still never built (#642).
+        assertEquals(3, CountingContainerBuilder.calls);
         assertTrue(LazySelectedCommand.constructed);
         assertFalse(LazySkippedCommand.constructed);
     }
@@ -861,15 +862,20 @@ public class AeshRuntimeRunnerLazyStartupTest {
                 runtime.executeCommand("chainroot --rcfg=R mid --mcfg=M leaf"));
 
         assertEquals(Arrays.asList(
+                "construct:root",
+                // Execution-scoped fork of the class-registered root (#642);
+                // selection-time materialization order is unchanged.
                 "construct:root", "beforeParse:root",
                 "construct:mid", "beforeParse:mid",
                 "construct:leaf", "beforeParse:leaf",
                 "afterParse:root", "afterParse:leaf"),
                 ChainEvents.events);
 
-        CommandLineParser<CommandInvocation> mid = registry.getCommand("chainroot", "")
-                .getParser().getChildParser("mid");
-        assertEquals("R", ((ChainMidCommand) mid.getProcessedCommand().getCommand()).rcfg);
+        // Execution state now lives on per-execution forks; the registry
+        // container only carries definitions, so mid's populated field is no
+        // longer observable here. Inheritance itself is pinned by sawMcfg
+        // and the InheritGroup tests, which read through the public
+        // execution API.
         assertEquals("M", ChainLeafCommand.sawMcfg);
     }
 
@@ -888,7 +894,9 @@ public class AeshRuntimeRunnerLazyStartupTest {
 
         runtime.executeCommand("proot pmid pleaf");
 
-        assertEquals(3, ChainActivationCounter.enhancements);
+        // Root, mid and leaf each get providers once; the execution fork's
+        // root options are wired in addition (#642).
+        assertEquals(4, ChainActivationCounter.enhancements);
     }
 
     private static void registerProviderFixtures() {

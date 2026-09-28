@@ -55,6 +55,36 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     private DefaultValueProvider defaultValueProvider;
 
     private final List<CommandRegistrationListener> listeners = new ArrayList<>();
+    /**
+     * How each registered command was sourced, keyed by canonical command
+     * name. Class-registered commands can be rebuilt per execution for
+     * stage isolation (#642); user-supplied instances and prebuilt
+     * containers keep the shared container under an explicit share policy.
+     */
+    private final Map<String, CommandSource> sources = new HashMap<>();
+
+    private enum CommandSourceKind {
+        CLASS,
+        SHARED
+    }
+
+    private static final class CommandSource {
+        final CommandSourceKind kind;
+        final Class<? extends Command> clazz;
+
+        private CommandSource(CommandSourceKind kind, Class<? extends Command> clazz) {
+            this.kind = kind;
+            this.clazz = clazz;
+        }
+
+        static CommandSource forClass(Class<? extends Command> clazz) {
+            return new CommandSource(CommandSourceKind.CLASS, clazz);
+        }
+
+        static CommandSource shared() {
+            return new CommandSource(CommandSourceKind.SHARED, null);
+        }
+    }
 
     public void setCommandContainerBuilder(CommandContainerBuilder<CI> containerBuilder) {
         this.containerBuilder = containerBuilder;
@@ -122,13 +152,20 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
 
     @Override
     public void addCommand(CommandContainer<CI> container) {
+        sources.put(container.getParser().getProcessedCommand().name(), CommandSource.shared());
         putIntoRegistry(container);
     }
 
     @Override
     public void addCommand(Command command) throws CommandRegistryException {
         try {
-            putIntoRegistry(getBuilder().create(command));
+            CommandContainer<CI> container = getBuilder().create(command);
+            // The instance is user-supplied: no factory can mint isolated
+            // copies, so executions share it under an explicit policy.
+            // Sequential reuse keeps working; concurrent pipeline stages
+            // observe last-write-wins on its fields.
+            sources.put(container.getParser().getProcessedCommand().name(), CommandSource.shared());
+            putIntoRegistry(container);
         } catch (CommandLineParserException e) {
             throw new CommandRegistryException(e.getMessage(), e.getCause());
         }
@@ -137,7 +174,9 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     @Override
     public void addCommand(Class<? extends Command> command) throws CommandRegistryException {
         try {
-            putIntoRegistry(getBuilder().create(command));
+            CommandContainer<CI> container = getBuilder().create(command);
+            sources.put(container.getParser().getProcessedCommand().name(), CommandSource.forClass(command));
+            putIntoRegistry(container);
         } catch (CommandLineParserException e) {
             throw new CommandRegistryException(e.getMessage(), e.getCause());
         }
@@ -221,11 +260,36 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     public void removeCommand(String name) {
         if (registry.containsKey(name)) {
             CommandContainer<CI> container = registry.remove(name);
+            sources.remove(name);
             ProcessedCommand<? extends Command<CI>, CI> command = container.getParser().getProcessedCommand();
             for (String alias : command.getAliases()) {
                 aliases.remove(alias);
             }
             emit(name, REGISTRATION_ACTION.REMOVED);
+        }
+    }
+
+    /**
+     * Materializes an execution-scoped container for a class-registered
+     * command through the same builder that registered it (fresh parser,
+     * parse state and command instance, with the builder's lazy and
+     * default-value wiring). Anything else keeps the shared container.
+     */
+    @Override
+    public CommandContainer<CI> createExecutionContainer(CommandContainer<CI> shared) {
+        CommandSource source = sources.get(shared.getParser().getProcessedCommand().name());
+        if (source == null || source.kind != CommandSourceKind.CLASS)
+            return shared;
+        try {
+            CommandContainer<CI> fork = (CommandContainer<CI>) getBuilder().create(source.clazz);
+            if (defaultValueProvider != null)
+                injectDefaultValueProvider(fork.getParser());
+            return fork;
+        } catch (CommandLineParserException e) {
+            // Registration already built this definition successfully, so a
+            // rebuild failure is unexpected (e.g. a nondeterministic dynamic
+            // group). Share rather than break execution.
+            return shared;
         }
     }
 

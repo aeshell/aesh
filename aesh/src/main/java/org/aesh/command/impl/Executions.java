@@ -24,6 +24,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.aesh.command.Command;
@@ -79,6 +82,31 @@ import org.aesh.util.doc.DocumentationGenerator;
 @SuppressWarnings("unchecked")
 class Executions {
 
+    /**
+     * Test-only coordination for populate-vs-execute interleavings: lets a
+     * test hold the second stage's population until the first stage's
+     * execution has begun, then observe what the first stage reads after
+     * the overwrite. Null unless a test installs one; a single volatile
+     * read per population when absent.
+     */
+    static final class PopulateProbe {
+        final AtomicInteger populates = new AtomicInteger();
+        final CountDownLatch firstExecuteBegun = new CountDownLatch(1);
+        final CountDownLatch secondPopulated = new CountDownLatch(1);
+        final CountDownLatch bothPopulated = new CountDownLatch(2);
+
+        static volatile PopulateProbe installed;
+
+        boolean await(CountDownLatch latch) {
+            try {
+                return latch.await(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+    }
+
     private static class ExecutionImpl<T extends CommandInvocation> implements Execution<T> {
 
         private final ExecutableOperator<T> executable;
@@ -124,6 +152,13 @@ class Executions {
         @Override
         public void populateCommand() throws CommandLineParserException, OptionValidatorException {
             if (!populated) {
+                PopulateProbe probe = PopulateProbe.installed;
+                int nth = 0;
+                if (probe != null) {
+                    nth = probe.populates.incrementAndGet();
+                    if (nth == 2)
+                        probe.await(probe.firstExecuteBegun);
+                }
                 // Get command context for inherited option injection
                 CommandContext cmdContext = getCommandInvocation().getCommandContext();
                 cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext(), cmdContext);
@@ -132,6 +167,11 @@ class Executions {
                 callAfterParseOnParents(commandContainer.getParser());
                 if (cmd.getCommand() instanceof CommandLifecycle) {
                     ((CommandLifecycle) cmd.getCommand()).afterParse();
+                }
+                if (probe != null) {
+                    probe.bothPopulated.countDown();
+                    if (nth == 2)
+                        probe.secondPopulated.countDown();
                 }
             }
         }

@@ -469,7 +469,18 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     private void updateCommand(String commandName) throws CommandNotFoundException {
-        CommandLineParser<CI> parser = registry.getCommand(commandName, "").getParser();
+        updateContainer(registry.getCommand(commandName, ""));
+    }
+
+    /**
+     * Applies the runtime invocation providers to a container, mirroring
+     * {@link #updateCommand(String)} for execution-scoped forks that were
+     * built after registration. Child handling stays on already-materialized
+     * parsers so lazy children keep resolving on demand with stored
+     * providers.
+     */
+    private void updateContainer(CommandContainer<CI> container) throws CommandNotFoundException {
+        CommandLineParser<CI> parser = container.getParser();
         parser.getProcessedCommand().updateInvocationProviders(invocationProviders);
         if (parser instanceof AeshCommandLineParser) {
             AeshCommandLineParser<CI> aeshParser = (AeshCommandLineParser<CI>) parser;
@@ -483,7 +494,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 }
             }
         } else {
-            List<CommandLineParser<CI>> childParsers = registry.getChildCommandParsers(commandName);
+            List<CommandLineParser<CI>> childParsers = parser.getAllChildParsers();
             for (CommandLineParser<?> child : childParsers) {
                 child.getProcessedCommand().updateInvocationProviders(invocationProviders);
             }
@@ -504,6 +515,15 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 .enhanceCommandInvocation(commandInvocationBuilder.build(this, config, commandContainer));
     }
 
+    /**
+     * Resolves the shared registered container, then materializes an
+     * execution-scoped container holding exactly this line.
+     * Class-registered commands get a fresh container per execution (fresh
+     * parser, parse state and command instance, with stored providers
+     * applied) so concurrent pipeline stages cannot share mutable fields
+     * (#642); anything else keeps the shared container under the registry's
+     * explicit share policy.
+     */
     CommandContainer<CI> findCommandContainer(ParsedLine aeshLine) throws CommandNotFoundException {
         if (aeshLine.words().isEmpty()) {
             return null;
@@ -513,8 +533,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         if (container == null) {
             throw new CommandNotFoundException("No command handler for '" + name + "'.", name);
         }
-        container.addLine(aeshLine);
-        return container;
+        CommandContainer<CI> executionContainer = registry.createExecutionContainer(container);
+        if (executionContainer != container)
+            updateContainer(executionContainer);
+        executionContainer.addLine(aeshLine);
+        return executionContainer;
     }
 
     void populateAskedOption(ProcessedOption option) {

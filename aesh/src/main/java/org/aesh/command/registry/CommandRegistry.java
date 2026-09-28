@@ -133,4 +133,22 @@ public interface CommandRegistry<CI extends CommandInvocation> {
         }
         return false;
     }
+
+    /**
+     * Materializes an execution-scoped container from a shared registered
+     * container. Registries that track how a command was registered rebuild
+     * class-registered commands (fresh parser, parse state and command
+     * instance per execution, so concurrent pipeline stages cannot share
+     * mutable fields); user-supplied instances and prebuilt containers keep
+     * the shared container under an explicit share policy.
+     * <p>
+     * The default returns the shared container (historic behavior) for
+     * registries without source tracking.
+     *
+     * @param shared the registered container resolved for the command
+     * @return an execution-scoped container, or {@code shared} itself
+     */
+    default CommandContainer<CI> createExecutionContainer(CommandContainer<CI> shared) {
+        return shared;
+    }
 }
