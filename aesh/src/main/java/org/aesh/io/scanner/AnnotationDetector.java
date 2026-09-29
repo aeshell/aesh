@@ -170,7 +170,10 @@ public final class AnnotationDetector {
     private static final int CP_NAME_AND_TYPE = 12;
     private static final int CP_METHOD_HANDLE = 15;
     private static final int CP_METHOD_TYPE = 16;
+    private static final int CP_DYNAMIC = 17;
     private static final int CP_INVOKE_DYNAMIC = 18;
+    private static final int CP_MODULE = 19;
+    private static final int CP_PACKAGE = 20;
 
     // AnnotationElementValue
     private static final int BYTE = 'B';
@@ -371,7 +374,7 @@ public final class AnnotationDetector {
                 if (hasCafebabe(cpBuffer)) {
                     detect(cpBuffer);
                 } // else ignore
-            } catch (IOException | RuntimeException e) {
+            } catch (IOException | RuntimeException | ClassFormatError e) {
                 // corrupt classes are skipped, not fatal to the scan
                 LOGGER.log(Level.FINE, "Skipping unreadable class file", e);
             } finally {
@@ -440,6 +443,7 @@ public final class AnnotationDetector {
             case CP_REF_METHOD:
             case CP_REF_INTERFACE:
             case CP_NAME_AND_TYPE:
+            case CP_DYNAMIC:
             case CP_INVOKE_DYNAMIC:
                 di.skipBytes(4); // readInt() / readFloat() / readUnsignedShort() * 2
                 return false;
@@ -452,6 +456,8 @@ public final class AnnotationDetector {
                 return false;
             case CP_CLASS:
             case CP_STRING:
+            case CP_MODULE:
+            case CP_PACKAGE:
                 // reference to CP_UTF8 entry. The referenced index can have a higher number!
                 constantPool[index] = di.readUnsignedShort();
                 return false;
