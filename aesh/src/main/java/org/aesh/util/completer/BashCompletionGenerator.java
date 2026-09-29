@@ -19,6 +19,12 @@
  */
 package org.aesh.util.completer;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -51,11 +57,22 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
     private void generateCommandFunctions(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser, String prefix,
             CompletionFilter filter) {
-        generateCommandFunction(out, parser, prefix, filter);
+        generateCommandFunctions(out, parser, prefix,
+                Collections.<CommandLineParser<? extends CommandInvocation>> emptyList(), filter);
+    }
+
+    private void generateCommandFunctions(StringBuilder out,
+            CommandLineParser<? extends CommandInvocation> parser, String prefix,
+            List<CommandLineParser<? extends CommandInvocation>> ancestors,
+            CompletionFilter filter) {
+        generateCommandFunction(out, parser, prefix, ancestors, filter);
         for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
                 filter)) {
             String childPrefix = prefix + "_" + child.getProcessedCommand().name().toLowerCase();
-            generateCommandFunctions(out, child, childPrefix, filter);
+            // Nearest parent first, matching the dynamic completion order.
+            List<CommandLineParser<? extends CommandInvocation>> childAncestors = new ArrayList<>(ancestors);
+            childAncestors.add(0, parser);
+            generateCommandFunctions(out, child, childPrefix, childAncestors, filter);
         }
     }
 
@@ -68,28 +85,7 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
         sb.append(NL);
 
         if (parser.isGroupCommand()) {
-            sb.append("    local subcmd=\"\"").append(NL);
-            sb.append("    local i").append(NL);
-            sb.append("    for ((i=1; i < cword; i++)); do").append(NL);
-            sb.append("        case \"${words[i]}\" in").append(NL);
-            for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
-                    filter)) {
-                sb.append("            ").append(child.getProcessedCommand().name().toLowerCase())
-                        .append(") subcmd=\"").append(child.getProcessedCommand().name().toLowerCase())
-                        .append("\"; break;;").append(NL);
-            }
-            sb.append("        esac").append(NL);
-            sb.append("    done").append(NL);
-            sb.append(NL);
-            sb.append("    case \"$subcmd\" in").append(NL);
-            for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
-                    filter)) {
-                String childName = child.getProcessedCommand().name().toLowerCase();
-                sb.append("        ").append(childName).append(") _cmd_")
-                        .append(programName).append("_").append(childName).append("; return;;").append(NL);
-            }
-            sb.append("    esac").append(NL);
-            sb.append(NL);
+            generateSubcommandDispatch(sb, parser, programName, filter);
         }
 
         sb.append("    _cmd_").append(programName).append(NL);
@@ -97,17 +93,70 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
         return sb.toString();
     }
 
+    /**
+     * Emits the scan-and-dispatch prologue shared by the main function and
+     * every nested group function: the first matching child word wins and
+     * control passes to the deeper function, otherwise the caller falls
+     * through to its own completion body.
+     */
+    private void generateSubcommandDispatch(StringBuilder sb,
+            CommandLineParser<? extends CommandInvocation> parser, String prefix,
+            CompletionFilter filter) {
+        sb.append("    local subcmd=\"\"").append(NL);
+        sb.append("    local i").append(NL);
+        sb.append("    for ((i=1; i < cword; i++)); do").append(NL);
+        sb.append("        case \"${words[i]}\" in").append(NL);
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
+            sb.append("            ").append(child.getProcessedCommand().name().toLowerCase())
+                    .append(") subcmd=\"").append(child.getProcessedCommand().name().toLowerCase())
+                    .append("\"; break;;").append(NL);
+        }
+        sb.append("        esac").append(NL);
+        sb.append("    done").append(NL);
+        sb.append(NL);
+        sb.append("    case \"$subcmd\" in").append(NL);
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
+            String childName = child.getProcessedCommand().name().toLowerCase();
+            sb.append("        ").append(childName).append(") _cmd_")
+                    .append(prefix).append("_").append(childName).append("; return;;").append(NL);
+        }
+        sb.append("    esac").append(NL);
+        sb.append(NL);
+    }
+
     private void generateCommandFunction(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser, String prefix,
+            List<CommandLineParser<? extends CommandInvocation>> ancestors,
             CompletionFilter filter) {
         String funcName = "_cmd_" + prefix;
         out.append(funcName).append("() {").append(NL);
+
+        // Own options plus inherited options from ancestors (nearest
+        // first), mirroring the dynamic completion path. A redefined name
+        // on the child wins over the inherited one.
+        List<ProcessedOption> options = new ArrayList<>(
+                CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter));
+        Set<String> emittedNames = new HashSet<>();
+        for (ProcessedOption option : options) {
+            if (option.name() != null)
+                emittedNames.add(option.name());
+        }
+        for (CommandLineParser<? extends CommandInvocation> ancestor : ancestors) {
+            for (ProcessedOption option : CompletionFilter.visibleOptions(
+                    ancestor.getProcessedCommand(), filter)) {
+                if (option.isInherited() && option.name() != null
+                        && emittedNames.add(option.name()))
+                    options.add(option);
+            }
+        }
 
         StringBuilder noValueOpts = new StringBuilder();
         StringBuilder valueOpts = new StringBuilder();
         boolean hasFileOption = false;
 
-        for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
+        for (ProcessedOption option : options) {
             StringBuilder target = option.hasValue() ? valueOpts : noValueOpts;
 
             target.append(" --").append(option.name());
@@ -138,15 +187,19 @@ public class BashCompletionGenerator implements ShellCompletionGenerator {
             out.append("    local subcmds=\"").append(childNames).append("\"").append(NL);
         out.append(NL);
 
+        if (parser.isGroupCommand()) {
+            generateSubcommandDispatch(out, parser, prefix, filter);
+        }
+
         boolean hasValueOptions = false;
-        for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
+        for (ProcessedOption option : options) {
             if (option.hasValue())
                 hasValueOptions = true;
         }
 
         if (hasValueOptions) {
             out.append("    case \"$prev\" in").append(NL);
-            for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
+            for (ProcessedOption option : options) {
                 if (!option.hasValue())
                     continue;
 
