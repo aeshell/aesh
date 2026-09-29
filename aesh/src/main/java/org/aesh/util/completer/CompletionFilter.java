@@ -95,8 +95,12 @@ public interface CompletionFilter {
 
             @Override
             public boolean includeOption(ProcessedCommand<?, ?> command, ProcessedOption option) {
-                return option.getVisibility() != OptionVisibility.HIDDEN
-                        && option.isActivated(new ParsedCommand(command));
+                // Shared rule with the dynamic path; state-free consumers
+                // evaluate activation against a fresh parsed state (#660).
+                // Generation-time options never carry values, so the
+                // already-set and exclusive dimensions are vacuous here.
+                return ProcessedCommand.isCompletionEligible(command, option,
+                        new ParsedCommand(command));
             }
         };
     }

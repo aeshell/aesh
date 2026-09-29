@@ -1001,10 +1001,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     private boolean isExcludedBySetOption(ProcessedOption option) {
+        return isExcludedBySetOption(this, option);
+    }
+
+    private static boolean isExcludedBySetOption(ProcessedCommand<?, ?> command,
+            ProcessedOption option) {
         if (option.getExclusiveWith().isEmpty())
             return false;
         for (String exclusiveName : option.getExclusiveWith()) {
-            ProcessedOption other = findLongOptionNoActivatorCheck(exclusiveName);
+            ProcessedOption other = command.findLongOptionNoActivatorCheck(exclusiveName);
             if (other != null && other.getValue() != null)
                 return true;
         }
@@ -1012,7 +1017,31 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     /**
-     * Single eligibility rule for completion candidates (#658): hidden
+     * Single eligibility rule for completion candidates (#658, #660): hidden
+     * options never complete; deactivated options never complete; options
+     * that already have a value never complete; options excluded by an
+     * already-set exclusive counterpart never complete.
+     * <p>
+     * Activation is evaluated against the given parsed state: the dynamic
+     * path passes the live state (activation may depend on already-parsed
+     * values), while state-free consumers pass a fresh
+     * {@code ParsedCommand}.
+     *
+     * @param command the owning command
+     * @param option the option to check
+     * @param parsed the parsed state for activation checks
+     * @return true when the option may be suggested
+     */
+    public static boolean isCompletionEligible(ProcessedCommand<?, ?> command,
+            ProcessedOption option, ParsedCommand parsed) {
+        return option.getVisibility() != OptionVisibility.HIDDEN
+                && option.getValues().size() == 0
+                && option.isActivated(parsed)
+                && !isExcludedBySetOption(command, option);
+    }
+
+    /**
+     * Single eligibility rule for completion candidates (#658, #660): hidden
      * options never complete; deactivated options never complete; options
      * that already have a value never complete; options excluded by an
      * already-set exclusive counterpart never complete. Activation is
@@ -1023,10 +1052,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return true when the option may be suggested
      */
     public boolean isCompletionEligible(ProcessedOption option) {
-        return option.getVisibility() != OptionVisibility.HIDDEN
-                && option.getValues().size() == 0
-                && option.isActivated(parsedCommand())
-                && !isExcludedBySetOption(option);
+        return isCompletionEligible(this, option, parsedCommand());
     }
 
     public List<String> findPossibleLongNames(String name) {
