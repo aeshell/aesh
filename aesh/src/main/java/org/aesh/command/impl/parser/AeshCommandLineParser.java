@@ -362,17 +362,100 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public void doPopulate(ProcessedCommand<Command<CI>, CI> processedCommand, InvocationProviders invocationProviders,
             AeshContext aeshContext, Mode mode) throws CommandLineParserException, OptionValidatorException {
+        populateSelectedPath(processedCommand, invocationProviders, aeshContext, mode);
+        propagateDownSelectedPath();
+    }
+
+    /**
+     * Phase 1: populate this level, then only the selected child — never
+     * unselected siblings, so their converters, default providers and field
+     * resets never run for a command that was not invoked. Never resolves
+     * lazy children itself: selection materializes them during parse.
+     */
+    private void populateSelectedPath(ProcessedCommand<Command<CI>, CI> processedCommand,
+            InvocationProviders invocationProviders, AeshContext aeshContext, Mode mode)
+            throws CommandLineParserException, OptionValidatorException {
         getCommandPopulator().populateObject(processedCommand, invocationProviders, aeshContext, mode);
-        if (isGroupCommand() && childParsers != null) {
-            for (CommandLineParser<CI> parser : childParsers) {
+        if (!isGroupCommand() || childParsers == null)
+            return;
+        CommandLineParser<CI> selected = selectedChildParser();
+        for (CommandLineParser<CI> child : childParsers) {
+            if (child == selected) {
                 // Mark child populators so inherited options skip DefaultValueProvider (#488)
-                CommandPopulator<Object, CI> childPopulator = parser.getCommandPopulator();
+                CommandPopulator<Object, CI> childPopulator = child.getCommandPopulator();
                 if (childPopulator instanceof AeshCommandPopulator) {
                     ((AeshCommandPopulator<?, CI>) childPopulator).setChildCommand(true);
                 }
-                parser.doPopulate(parser.getProcessedCommand(), invocationProviders, aeshContext, mode);
+                if (child instanceof AeshCommandLineParser)
+                    ((AeshCommandLineParser<CI>) child).populateSelectedPath(
+                            child.getProcessedCommand(), invocationProviders, aeshContext, mode);
+                else
+                    // Foreign parser implementations keep their legacy full behavior.
+                    child.doPopulate(child.getProcessedCommand(), invocationProviders, aeshContext, mode);
+            } else {
+                // Never populate unselected siblings — but reset their
+                // subtrees so re-populating one parser does not leak a
+                // previous selection's fields. Reset touches fields only:
+                // no converters, defaults, providers or validation run.
+                resetUnselectedSubtree(child);
             }
-            propagateInheritedOptions();
+        }
+    }
+
+    /**
+     * Phase 2: push inherited values top-down along the selected path, after
+     * the whole path populated from its own tokens. Each level reads its
+     * parent's final values — which already include everything inherited
+     * from above — so grandchildren and deeper descendants receive the full
+     * chain. Runs after populating (never before descending) because
+     * populating resets fields for valueless options. Explicit child values
+     * win via the parsed-values check in {@link #propagateInheritedOptions()}.
+     */
+    private void propagateDownSelectedPath() {
+        if (!isGroupCommand())
+            return;
+        propagateInheritedOptions();
+        CommandLineParser<CI> selected = selectedChildParser();
+        if (selected instanceof AeshCommandLineParser)
+            ((AeshCommandLineParser<CI>) selected).propagateDownSelectedPath();
+    }
+
+    /**
+     * Returns the directly-selected child parser on the parsed path, or null
+     * when this level is the leaf or nothing was selected. A selected group
+     * reports its descendant through {@code parsedCommand()}, while
+     * unselected children report null — so exactly the path is followed.
+     */
+    private CommandLineParser<CI> selectedChildParser() {
+        if (!isGroupCommand() || childParsers == null)
+            return null;
+        for (CommandLineParser<CI> child : childParsers) {
+            if (child.parsedCommand() != null)
+                return child;
+        }
+        return null;
+    }
+
+    /**
+     * Restores a deselected subtree to its initial field state, recursing
+     * through its children. Only field resets run — no value injection,
+     * converters, static or dynamic defaults, providers or validation — so
+     * an unselected command can neither fail nor observe population. Uses
+     * the non-resolving child accessor so lazy subtrees stay unresolved.
+     */
+    private void resetUnselectedSubtree(CommandLineParser<CI> parser)
+            throws CommandLineParserException, OptionValidatorException {
+        ProcessedCommand<Command<CI>, CI> processedCommand = parser.getProcessedCommand();
+        Command<CI> command = parser.getCommand();
+        for (ProcessedOption option : processedCommand.getOptions())
+            option.resetField(command);
+        if (processedCommand.getArguments() != null)
+            processedCommand.getArguments().resetField(command);
+        for (ProcessedOption argument : processedCommand.getArgumentOptions())
+            argument.resetField(command);
+        if (parser.isGroupCommand() && parser.getChildParsers() != null) {
+            for (CommandLineParser<CI> child : parser.getChildParsers())
+                resetUnselectedSubtree(child);
         }
     }
 
