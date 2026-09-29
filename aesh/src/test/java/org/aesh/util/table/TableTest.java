@@ -126,6 +126,91 @@ public class TableTest {
     }
 
     @Test
+    public void testNullInIntegerColumnRendersBlank() {
+        List<Integer[]> rows = Arrays.<Integer[]> asList(new Integer[] { 12 }, new Integer[] { null });
+        List<String> headers = Arrays.asList("N");
+        List<Function<Integer[], Object>> accessors = Arrays.<Function<Integer[], Object>> asList(
+                (Integer[] a) -> a[0]);
+
+        // Used to throw IllegalFormatConversionException: d != java.lang.String
+        String output = Table.render(80, rows, headers, accessors,
+                TableStyle.PLAIN.characters());
+        String[] lines = output.split(System.lineSeparator());
+        assertEquals(3, lines.length);
+        assertEquals("N ", lines[0]);
+        assertEquals("12", lines[1]);
+        assertEquals("  ", lines[2]);
+    }
+
+    @Test
+    public void testClippedIntegerRendersText() {
+        List<Integer[]> rows = Arrays.<Integer[]> asList(new Integer[] { 123456 });
+        List<String> headers = Arrays.asList("N");
+        List<Function<Integer[], Object>> accessors = Arrays.<Function<Integer[], Object>> asList(
+                (Integer[] a) -> a[0]);
+
+        // Used to throw IllegalFormatConversionException once clipping
+        // rewrote the number to text while %d remained.
+        String output = Table.render(4, rows, headers, accessors,
+                TableStyle.PLAIN.characters());
+        for (String line : output.split(System.lineSeparator())) {
+            assertTrue("Every line must fit maxWidth 4, got: [" + line + "]",
+                    line.length() <= 4);
+        }
+        assertTrue("Clipped value must render as text", output.contains("1..."));
+    }
+
+    @Test
+    public void testLongAndDoubleColumnsWithNulls() {
+        List<Object[]> rows = Arrays.asList(
+                new Object[] { 123456789012345L, 3.14159, null },
+                new Object[] { null, null, "x" });
+        List<String> headers = Arrays.asList("Big", "Pi", "Note");
+        List<Function<Object[], Object>> accessors = Arrays.<Function<Object[], Object>> asList(
+                a -> a[0], a -> a[1], a -> a[2]);
+
+        for (TableStyle style : new TableStyle[] { TableStyle.DUCKDB, TableStyle.PLAIN,
+                TableStyle.SQLITE }) {
+            String output = Table.render(80, rows, headers, accessors, style.characters());
+            assertTrue(style + " must render the long", output.contains("123456789012345"));
+            assertTrue(style + " must format the double", output.contains("3.14"));
+            assertFalse(style + " must not leak nulls", output.contains("null"));
+        }
+    }
+
+    @Test
+    public void testAllNullColumnRendersBlank() {
+        List<String[]> rows = Arrays.asList(new String[] { null }, new String[] { null });
+        List<String> headers = Arrays.asList("N");
+        List<Function<String[], Object>> accessors = Arrays.<Function<String[], Object>> asList(
+                a -> a[0]);
+
+        String output = Table.render(80, rows, headers, accessors,
+                TableStyle.PLAIN.characters());
+        String[] lines = output.split(System.lineSeparator());
+        assertEquals(3, lines.length);
+        assertEquals("N", lines[0]);
+        assertEquals(" ", lines[1]);
+        assertEquals(" ", lines[2]);
+    }
+
+    @Test
+    public void testIntegerStaysRightAligned() {
+        List<Integer[]> rows = Arrays.<Integer[]> asList(new Integer[] { 5 }, new Integer[] { 42 });
+        List<String> headers = Arrays.asList("N");
+        List<Function<Integer[], Object>> accessors = Arrays.<Function<Integer[], Object>> asList(
+                (Integer[] a) -> a[0]);
+
+        String output = Table.render(80, rows, headers, accessors,
+                TableStyle.PLAIN.characters());
+        String[] lines = output.split(System.lineSeparator());
+        // Right-alignment preserved: single digit padded on the left.
+        assertEquals("N ", lines[0]);
+        assertEquals(" 5", lines[1]);
+        assertEquals("42", lines[2]);
+    }
+
+    @Test
     public void testEmptyDataList() {
         List<Person> empty = Collections.emptyList();
         List<String> headers = Arrays.asList("Name", "Email");

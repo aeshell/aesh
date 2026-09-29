@@ -128,6 +128,10 @@ public class Table<T> {
                     if (columnFormats[a] == null) {
                         columnFormats[a] = "d";
                     }
+                    // Format to text up front: the "d" marker below only
+                    // controls right-alignment, never a %d conversion, so
+                    // nulls (already "") and clipped cells cannot throw (#655).
+                    c = c.toString();
                 } else if (c instanceof Double || c instanceof Float) {
                     if (columnFormats[a] == null || columnFormats[a].equals("d")) {
                         columnFormats[a] = "f";
@@ -250,9 +254,10 @@ public class Table<T> {
             bottomBorderFormat.append("%" + width + "s");
             switch (format) {
                 case "d":
-                    rowFormat.append("%" + width + "d");
-                    break;
                 case "f":
+                    // Numeric columns are pre-formatted to text; %s keeps
+                    // the right-alignment of %d without its type conversion,
+                    // which null and clipped cells cannot satisfy (#655).
                     rowFormat.append("%" + width + "s");
                     break;
                 default:
