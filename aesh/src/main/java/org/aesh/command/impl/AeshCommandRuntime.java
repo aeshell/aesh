@@ -110,14 +110,28 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             CommandInvocationBuilder<CI> commandInvocationBuilder,
             boolean parseBrackets,
             EnumSet<OperatorType> operators) {
+        this(ctx, registry, commandInvocationProvider, commandNotFoundHandler,
+                new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
+                        validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider),
+                commandInvocationBuilder, parseBrackets, operators);
+    }
+
+    public AeshCommandRuntime(AeshContext ctx,
+            CommandRegistry<CI> registry,
+            CommandInvocationProvider<CI> commandInvocationProvider,
+            CommandNotFoundHandler commandNotFoundHandler,
+            InvocationProviders invocationProviders,
+            CommandInvocationBuilder<CI> commandInvocationBuilder,
+            boolean parseBrackets,
+            EnumSet<OperatorType> operators) {
         this.ctx = ctx;
         this.registry = registry;
         commandResolver = new AeshCommandResolver<>(registry);
         this.commandInvocationProvider = commandInvocationProvider;
         this.commandNotFoundHandler = commandNotFoundHandler;
         this.commandInvocationBuilder = commandInvocationBuilder;
-        this.invocationProviders = new AeshInvocationProviders(converterInvocationProvider, completerInvocationProvider,
-                validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider);
+        this.invocationProviders = invocationProviders != null ? invocationProviders
+                : new AeshInvocationProviders();
         processAfterInit();
         registry.addRegistrationListener(this);
         this.parseBrackets = parseBrackets;

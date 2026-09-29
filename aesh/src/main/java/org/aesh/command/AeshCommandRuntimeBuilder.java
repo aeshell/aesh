@@ -28,11 +28,13 @@ import org.aesh.command.activator.OptionActivatorProvider;
 import org.aesh.command.completer.CompleterInvocationProvider;
 import org.aesh.command.converter.ConverterInvocationProvider;
 import org.aesh.command.impl.AeshCommandRuntime;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.invocation.DefaultCommandInvocationBuilder;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationProvider;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
@@ -59,6 +61,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     private ValidatorInvocationProvider validatorInvocationProvider;
     private OptionActivatorProvider optionActivatorProvider;
     private CommandActivatorProvider commandActivatorProvider;
+    private InvocationProviders invocationProviders;
     private AeshContext ctx;
     private CommandInvocationBuilder<CI> commandInvocationBuilder;
     private Shell shell;
@@ -136,6 +139,18 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Sets the full composite of invocation providers. Individual provider
+     * setters called afterwards override just their slot; calling
+     * {@link #settings(Settings)} afterwards replaces the whole composite.
+     *
+     * @param invocationProviders the composite providers, or null for defaults
+     */
+    public AeshCommandRuntimeBuilder<CI> invocationProviders(InvocationProviders invocationProviders) {
+        this.invocationProviders = invocationProviders;
+        return this;
+    }
+
     public AeshCommandRuntimeBuilder<CI> shell(Shell shell) {
         this.shell = shell;
         return this;
@@ -170,6 +185,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         this.validatorInvocationProvider = settings.validatorInvocationProvider();
         this.optionActivatorProvider = settings.optionActivatorProvider();
         this.commandActivatorProvider = settings.commandActivatorProvider();
+        this.invocationProviders = settings.invocationProviders();
         this.registry = (CommandRegistry<CI>) settings.commandRegistry();
         this.ctx = settings.aeshContext();
         this.operators = settings.operatorParserEnabled() ? EnumSet.allOf(OperatorType.class) : null;
@@ -207,9 +223,34 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
             operators = NO_OPERATORS;
         }
 
+        InvocationProviders resolvedProviders = invocationProviders;
+        if (resolvedProviders != null
+                && (converterInvocationProvider != null || completerInvocationProvider != null
+                        || validatorInvocationProvider != null || optionActivatorProvider != null
+                        || commandActivatorProvider != null)) {
+            // Individual setters called alongside a composite override just
+            // their slot, falling back to the composite's providers.
+            resolvedProviders = new AeshInvocationProviders(
+                    converterInvocationProvider != null ? converterInvocationProvider
+                            : resolvedProviders.getConverterProvider(),
+                    completerInvocationProvider != null ? completerInvocationProvider
+                            : resolvedProviders.getCompleterProvider(),
+                    validatorInvocationProvider != null ? validatorInvocationProvider
+                            : resolvedProviders.getValidatorProvider(),
+                    optionActivatorProvider != null ? optionActivatorProvider
+                            : resolvedProviders.getOptionActivatorProvider(),
+                    commandActivatorProvider != null ? commandActivatorProvider
+                            : resolvedProviders.getCommandActivatorProvider());
+        } else if (resolvedProviders == null) {
+            // Historic path: individuals only (nulls become defaults).
+            resolvedProviders = new AeshInvocationProviders(converterInvocationProvider,
+                    completerInvocationProvider, validatorInvocationProvider, optionActivatorProvider,
+                    commandActivatorProvider);
+        }
+        // Otherwise the composite is used as-is (identity preserved, no allocation).
+
         AeshCommandRuntime<CI> runtime = new AeshCommandRuntime<>(ctx, registry, commandInvocationProvider,
-                commandNotFoundHandler, completerInvocationProvider, converterInvocationProvider,
-                validatorInvocationProvider, optionActivatorProvider, commandActivatorProvider,
+                commandNotFoundHandler, resolvedProviders,
                 commandInvocationBuilder, parseBrackets, operators);
         if (pipelineConfig != null)
             runtime.setPipelineConfig(pipelineConfig);
