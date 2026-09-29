@@ -576,7 +576,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 String optionName = input.substring(2);
                 ProcessedOption currentOption = findLongOptionNoActivatorCheck(optionName);
                 if (currentOption == null && optionName.indexOf(EQUALS) >= 0)
-                    currentOption = startWithLongOptionNoActivatorCheck(optionName);
+                    currentOption = findLongOptionWithValueBoundary(optionName);
                 // Check for negated options (e.g., --no-verbose)
                 if (currentOption == null) {
                     currentOption = findNegatedOptionNoActivatorCheck(optionName);
@@ -745,6 +745,34 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             }
         }
         return longestMatch;
+    }
+
+    /**
+     * Resolves {@code --name=value} input without prefix guessing: the name
+     * before the first {@code =} must match a primary name or alias exactly
+     * (negated names included). Unknown suffixes such as
+     * {@code --timeoutTypo=42} resolve to null and surface the normal
+     * unknown-option error instead of populating the prefix-matched option
+     * — or, for alias matches, failing later on a misaligned substring.
+     * <p>
+     * Property (GROUP) options keep the attached-key form
+     * ({@code --manifestFoo=Bar}), which has no {@code =} boundary by
+     * design and is validated by the property parser itself.
+     *
+     * @param optionName the input after the leading dashes, containing {@code =}
+     * @return the matching option, or null
+     */
+    public ProcessedOption findLongOptionWithValueBoundary(String optionName) {
+        String namePart = optionName.substring(0, optionName.indexOf(EQUALS));
+        ProcessedOption exact = findLongOptionNoActivatorCheck(namePart);
+        if (exact == null)
+            exact = findNegatedOptionNoActivatorCheck(namePart);
+        if (exact != null)
+            return exact;
+        ProcessedOption prefix = startWithLongOptionNoActivatorCheck(optionName);
+        if (prefix != null && prefix.isProperty())
+            return prefix;
+        return null;
     }
 
     private static boolean startsWithAlias(ProcessedOption option, String name) {

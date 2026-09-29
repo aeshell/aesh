@@ -109,7 +109,7 @@ public class MapProcessedCommand<CI extends CommandInvocation> extends Processed
         if (input.startsWith("--")) {
             ProcessedOption currentOption = findLongOptionNoActivatorCheck(input.substring(2));
             if (currentOption == null && input.contains("=")) {
-                currentOption = startWithLongOptionNoActivatorCheck(input.substring(2));
+                currentOption = findLongOptionWithValueBoundary(input.substring(2));
             }
             if (currentOption != null) {
                 currentOption.setLongNameUsed(true);
