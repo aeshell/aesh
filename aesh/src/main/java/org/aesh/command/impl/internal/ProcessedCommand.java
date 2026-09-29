@@ -676,9 +676,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (o.name() != null && o.acceptNameWithoutDashes()
-                    && o.getValues().size() == 0
-                    && o.isActivated(parsedCommand())) {
+            if (o.name() != null && o.acceptNameWithoutDashes() && isCompletionEligible(o)) {
                 if (o.name().startsWith(name)) {
                     names.add(new TerminalString("--" + o.name(), true));
                 }
@@ -700,9 +698,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (o.name() != null && o.acceptNameWithoutDashes()
-                    && o.getValues().size() == 0
-                    && o.isActivated(parsedCommand())) {
+            if (o.name() != null && o.acceptNameWithoutDashes() && isCompletionEligible(o)) {
                 if (o.name().startsWith(name)) {
                     names.add(new TerminalString(o.name(), true));
                 }
@@ -961,11 +957,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (o.getVisibility() == OptionVisibility.HIDDEN)
-                continue;
-            if (o.getValues().size() == 0 &&
-                    o.isActivated(parsedCommand()) &&
-                    !isExcludedBySetOption(o)) {
+            if (isCompletionEligible(o)) {
                 names.add(o.getRenderedNameWithDashes());
                 names.addAll(o.getRenderedAliasNamesWithDashes());
                 // Also add the negated form for negatable options
@@ -983,28 +975,22 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         List<ProcessedOption> opts = getDisplayOptions();
         List<TerminalString> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (o.getVisibility() == OptionVisibility.HIDDEN)
+            if (!isCompletionEligible(o))
                 continue;
-            if (isExcludedBySetOption(o))
-                continue;
-            if (((o.shortName() != null && o.shortName().equals(name) &&
-                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
-                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                    o.isActivated(parsedCommand()))
+            if ((o.shortName() != null && o.shortName().equals(name) &&
+                    !o.isLongNameUsed()) ||
+                    o.name().startsWith(name))
                 // Always use -- prefix here: user explicitly typed "--"
                 names.add(new TerminalString("--" + o.name(), true));
             // Check aliases
-            if (o.getValues().size() == 0 && o.isActivated(parsedCommand())) {
-                for (String alias : o.getAliases()) {
-                    if (alias.startsWith(name)) {
-                        names.add(new TerminalString("--" + alias, true));
-                    }
+            for (String alias : o.getAliases()) {
+                if (alias.startsWith(name)) {
+                    names.add(new TerminalString("--" + alias, true));
                 }
             }
             // Also check negated option names for negatable options
             if (o.isNegatable() && o.getNegatedName() != null &&
-                    o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
-                    o.isActivated(parsedCommand())) {
+                    o.getNegatedName().startsWith(name)) {
                 TerminalString negated = o.getRenderedNegatedNameWithDashes();
                 if (negated != null) {
                     names.add(negated);
@@ -1025,28 +1011,44 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return false;
     }
 
+    /**
+     * Single eligibility rule for completion candidates (#658): hidden
+     * options never complete; deactivated options never complete; options
+     * that already have a value never complete; options excluded by an
+     * already-set exclusive counterpart never complete. Activation is
+     * evaluated against the live parsed state, since it may depend on
+     * already-parsed values.
+     *
+     * @param option the option to check
+     * @return true when the option may be suggested
+     */
+    public boolean isCompletionEligible(ProcessedOption option) {
+        return option.getVisibility() != OptionVisibility.HIDDEN
+                && option.getValues().size() == 0
+                && option.isActivated(parsedCommand())
+                && !isExcludedBySetOption(option);
+    }
+
     public List<String> findPossibleLongNames(String name) {
         if (name.startsWith("--"))
             name = name.substring(2);
         List<ProcessedOption> opts = getDisplayOptions();
         List<String> names = new ArrayList<>(opts.size());
         for (ProcessedOption o : opts) {
-            if (((o.shortName() != null && o.shortName().equals(name) &&
-                    !o.isLongNameUsed() && o.getValues().size() == 0) ||
-                    (o.name().startsWith(name) && o.getValues().size() == 0)) &&
-                    o.isActivated(parsedCommand()))
+            if (!isCompletionEligible(o))
+                continue;
+            if ((o.shortName() != null && o.shortName().equals(name) &&
+                    !o.isLongNameUsed()) ||
+                    o.name().startsWith(name))
                 names.add(o.name());
             // Check aliases
-            if (o.getValues().size() == 0 && o.isActivated(parsedCommand())) {
-                for (String alias : o.getAliases()) {
-                    if (alias.startsWith(name))
-                        names.add(alias);
-                }
+            for (String alias : o.getAliases()) {
+                if (alias.startsWith(name))
+                    names.add(alias);
             }
             // Also check negated option names for negatable options
             if (o.isNegatable() && o.getNegatedName() != null &&
-                    o.getNegatedName().startsWith(name) && o.getValues().size() == 0 &&
-                    o.isActivated(parsedCommand()))
+                    o.getNegatedName().startsWith(name))
                 names.add(o.getNegatedName());
         }
         return names;

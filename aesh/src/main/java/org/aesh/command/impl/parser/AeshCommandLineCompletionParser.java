@@ -322,6 +322,8 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
     /**
      * Add inherited options from parent parsers to the completion candidates.
      * Only includes options marked with inherited=true that haven't already been set.
+     * Eligibility (visibility, activation, exclusivity) follows the single
+     * completion rule, evaluated against the owning parent command (#658).
      */
     private void addInheritedOptions(List<TerminalString> candidates, String value) {
         AeshCommandLineParser<CI> p = parser.isChild() ? parser.getParentParser() : null;
@@ -329,9 +331,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             for (ProcessedOption o : p.getProcessedCommand().getOptions()) {
                 if (!o.isInherited())
                     continue;
-                if (o.getVisibility() == org.aesh.command.option.OptionVisibility.HIDDEN)
-                    continue;
-                if (o.getValues().size() > 0)
+                if (!p.getProcessedCommand().isCompletionEligible(o))
                     continue;
                 String prefix = value.startsWith("--") ? value.substring(2) : (value.length() < 3 ? "" : value);
                 if (!prefix.isEmpty() && !o.name().startsWith(prefix))
