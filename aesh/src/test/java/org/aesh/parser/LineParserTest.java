@@ -179,9 +179,11 @@ public class LineParserTest {
         assertEquals("..\\..\\..\\..\\..\\..\\..\\temp\\foo.txt", line.words().get(0).word());
 
         line = lineParser.parseLine("ls -f 'foo','bar' arg");
-        assertEquals("foo", line.words().get(2).word());
-        assertEquals(",bar", line.words().get(3).word());
-        assertEquals("arg", line.words().get(4).word());
+        assertEquals("ls", line.words().get(0).word());
+        assertEquals("-f", line.words().get(1).word());
+        // Closing quotes do not split words: 'foo','bar' is one token (#651)
+        assertEquals("foo,bar", line.words().get(2).word());
+        assertEquals("arg", line.words().get(3).word());
 
         line = lineParser.parseLine("create cache aot {\"distributed-cache\":{}}", 0, true);
         assertEquals("aot", line.words().get(2).word());
@@ -234,21 +236,21 @@ public class LineParserTest {
         assertEquals(line.words().toString(), 1, line.words().size());
         assertEquals(line.words().toString(), "\\\"String with double quotes\\\"", line.words().get(0).word());
 
-        // A word and a word containing only a double quote.
+        // Closing quotes do not split words: the trailing lone quote opens
+        // a new (unclosed) quoted section contributing nothing (#651).
         line = lineParser.parseLine("\"\\\"String with double quotes\"\\\"");
-        assertEquals(line.words().toString(), 2, line.words().size());
-        assertEquals(line.words().toString(), "\\\"String with double quotes", line.words().get(0).word());
-        assertEquals(line.words().toString(), "\"", line.words().get(1).word());
+        assertEquals(line.words().toString(), 1, line.words().size());
+        assertEquals(line.words().toString(), "\\\"String with double quotes\"", line.words().get(0).word());
 
         line = lineParser.parseLine("'\\'String with single quotes\\''");
         assertEquals(line.words().toString(), 1, line.words().size());
         assertEquals(line.words().toString(), "\\'String with single quotes\\'", line.words().get(0).word());
 
-        // A word and a word containing only a single quote.
+        // Closing quotes do not split words: the trailing lone quote opens
+        // a new (unclosed) quoted section contributing nothing (#651).
         line = lineParser.parseLine("'\\'String with single quotes'\\'");
-        assertEquals(line.words().toString(), 2, line.words().size());
-        assertEquals(line.words().toString(), "\\'String with single quotes", line.words().get(0).word());
-        assertEquals(line.words().toString(), "'", line.words().get(1).word());
+        assertEquals(line.words().toString(), 1, line.words().size());
+        assertEquals(line.words().toString(), "\\'String with single quotes'", line.words().get(0).word());
     }
 
     @Test

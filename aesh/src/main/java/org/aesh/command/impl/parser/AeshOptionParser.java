@@ -194,8 +194,11 @@ public class AeshOptionParser implements OptionParser {
         //we know that the option will accept a value, so we can poll the value
         doAddValueToOption(currOption, iterator.pollWord());
         //lets try to parse the rest of the optionList if there are more
+        //Empty words (e.g. from preserved '' arguments) never open a
+        //separator continuation; peeking at char 0 would crash (#651).
         while (status != Status.NULL &&
-                iterator.hasNextWord() && iterator.peekWord().charAt(0) == currOption.getValueSeparator()) {
+                iterator.hasNextWord() && !iterator.peekWord().isEmpty()
+                && iterator.peekWord().charAt(0) == currOption.getValueSeparator()) {
             doAddValueToOption(currOption, iterator.pollWord());
         }
         if (currOption.getValueSeparator() != ' ')

@@ -50,6 +50,20 @@ public class LineParser {
     private boolean haveCurlyBracket = false;
     private boolean haveSquareBracket = false;
     private StringBuilder builder = new StringBuilder();
+    /**
+     * A quote pair just closed over an empty builder (outside the ternary
+     * path). The token exists despite having no text, so emission points
+     * must not consult {@code builder.length()} alone (#651).
+     */
+    private boolean quotedEmpty = false;
+    /**
+     * Line index captured when quotes close over content, carried to the
+     * later flush. Closing quotes advance the index without growing the
+     * builder, so a later flush would otherwise misplace the word; the
+     * carried value reproduces the historical close-time position. Unset
+     * (-1) when no quotes closed since the token began.
+     */
+    private int pendingIndex = -1;
     private char prev = NULL_CHAR;
     private int index = 0;
     private int cursorWord = -1;
@@ -124,9 +138,15 @@ public class LineParser {
             c = text.charAt(index);
             //if the previous char was a space, there is no word "connected" to cursor
             if (cursor == index && (prev != SPACE_CHAR || haveEscape)) {
-                cursorWord = textList.size();
+                // A token completed by a closing quote is flushed only by
+                // the following space/end/operator; if the cursor sits on
+                // that separator it is already past the token (#651).
+                int completed = (pendingIndex >= 0 && c == SPACE_CHAR) ? 1 : 0;
+                cursorWord = textList.size() + completed;
                 if (haveEscape) //if we have escape the builder is shorter than cursor
                     wordCursor = builder.length() + 1;
+                else if (completed == 1)
+                    wordCursor = 0;
                 else
                     wordCursor = builder.length();
             }
@@ -179,8 +199,11 @@ public class LineParser {
             c = text.charAt(index);
             //if the previous char was a space, there is no word "connected" to cursor
             if (cursor == index && (prev != SPACE_CHAR || haveEscape)) {
-                cursorWord = textList.size();
-                wordCursor = builder.length();
+                // As above: a quote-completed token pending flush counts as
+                // complete when the cursor sits on the separator (#651).
+                int completed = (pendingIndex >= 0 && c == SPACE_CHAR) ? 1 : 0;
+                cursorWord = textList.size() + completed;
+                wordCursor = completed == 1 ? 0 : builder.length();
             }
             if (c == SPACE_CHAR) {
                 c = handleSpace(c);
@@ -264,13 +287,20 @@ public class LineParser {
             builder.append(BACK_SLASH);
 
         if (builder.length() > 0) {
+            int lineIndex = pendingIndex >= 0 ? pendingIndex : index - builder.length();
             if (haveDoubleQuote || haveSingleQuote)
-                textList.add(new ParsedWord(builder.toString(), index - builder.length(), ParsedWord.Status.OPEN_QUOTE));
+                textList.add(new ParsedWord(builder.toString(), lineIndex, ParsedWord.Status.OPEN_QUOTE));
             else if (haveSquareBracket || haveCurlyBracket)
-                textList.add(new ParsedWord(builder.toString(), index - builder.length(), ParsedWord.Status.OPEN_BRACKET));
+                textList.add(new ParsedWord(builder.toString(), lineIndex, ParsedWord.Status.OPEN_BRACKET));
             else
-                textList.add(new ParsedWord(builder.toString(), index - builder.length()));
+                textList.add(new ParsedWord(builder.toString(), lineIndex));
+        } else if (quotedEmpty) {
+            // A quote pair closed over an empty builder: the token exists
+            // despite having no text (e.g. probe '' keeps its argument).
+            textList.add(new ParsedWord("", index));
         }
+        quotedEmpty = false;
+        pendingIndex = -1;
 
         if (cursor == totalTextLength &&
                 (prev != SPACE_CHAR || (haveEscape || isQuoted()))) {
@@ -328,13 +358,26 @@ public class LineParser {
             haveDoubleQuote = true;
     }
 
+    /**
+     * Emits the accumulated token, using the close-time index carried past
+     * any closing quotes when present.
+     */
+    private void emitToken() {
+        int lineIndex = pendingIndex >= 0 ? pendingIndex : index - builder.length();
+        textList.add(new ParsedWord(builder.toString(), lineIndex));
+        builder = new StringBuilder();
+        quotedEmpty = false;
+        pendingIndex = -1;
+    }
+
     private void handleHaveDoubleQuote() {
         if (!ternaryQuote && prev == DOUBLE_QUOTE) {
             if (builder.length() > 0) {
-                // "" is attached to existing content (e.g., --option="")
-                // Treat as closing an empty quoted string
-                textList.add(new ParsedWord(builder.toString(), index - builder.length()));
-                builder = new StringBuilder();
+                // "" attached to existing content (e.g., --option=""):
+                // closing the quotes must not split the word, the content
+                // is emitted by the space/end/operator handling, positioned
+                // as if emitted here (#651).
+                pendingIndex = index - builder.length();
                 haveDoubleQuote = false;
             } else {
                 ternaryQuote = true;
@@ -345,13 +388,17 @@ public class LineParser {
                 textList.add(new ParsedWord(builder.toString(), index - builder.length()));
                 builder = new StringBuilder();
             }
+            quotedEmpty = false;
+            pendingIndex = -1;
             haveDoubleQuote = false;
             ternaryQuote = false;
         } else {
-            if (builder.length() > 0) {
-                textList.add(new ParsedWord(builder.toString(), index - builder.length()));
-                builder = new StringBuilder();
-            }
+            // Closing quotes do not imply a word boundary: ab"cd"ef is one
+            // word. An empty close still denotes a token (see quotedEmpty).
+            if (builder.length() == 0)
+                quotedEmpty = true;
+            else
+                pendingIndex = index - builder.length();
             haveDoubleQuote = false;
         }
     }
@@ -368,10 +415,12 @@ public class LineParser {
             builder.append(c);
             haveEscape = false;
         } else if (haveSingleQuote) {
-            if (builder.length() > 0) {
-                textList.add(new ParsedWord(builder.toString(), index - builder.length()));
-                builder = new StringBuilder();
-            }
+            // Closing quotes do not imply a word boundary; an empty close
+            // still denotes a token (see quotedEmpty).
+            if (builder.length() == 0)
+                quotedEmpty = true;
+            else
+                pendingIndex = index - builder.length();
             haveSingleQuote = false;
         } else if (haveDoubleQuote) {
             builder.append(c);
@@ -389,9 +438,8 @@ public class LineParser {
             c = NULL_CHAR;
         } else if (haveSingleQuote || haveDoubleQuote || haveCurlyBracket) {
             builder.append(c);
-        } else if (builder.length() > 0) {
-            textList.add(new ParsedWord(builder.toString(), index - builder.length()));
-            builder = new StringBuilder();
+        } else if (builder.length() > 0 || quotedEmpty) {
+            emitToken();
         }
 
         return c;
@@ -400,9 +448,8 @@ public class LineParser {
     private void handleFoundOperator(List<ParsedLine> lines, String text, int cursor) {
         ParserStatus parserStatus = ParserStatus.OK;
         String errorMessage = "";
-        if (builder.length() > 0) {
-            textList.add(new ParsedWord(builder.toString(), index - builder.length()));
-            builder = new StringBuilder();
+        if (builder.length() > 0 || quotedEmpty) {
+            emitToken();
         }
         //if textList.size == 0, we have an empty line before the operator
         else if (textList.size() == 0) {
@@ -443,6 +490,8 @@ public class LineParser {
         haveCurlyBracket = false;
         haveSquareBracket = false;
         builder = new StringBuilder();
+        quotedEmpty = false;
+        pendingIndex = -1;
         prev = NULL_CHAR;
         index = 0;
         cursorWord = -1;
