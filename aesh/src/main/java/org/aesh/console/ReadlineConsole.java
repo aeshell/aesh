@@ -186,15 +186,17 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
 
         processManager = new ProcessManager(this);
         CommandExecutionListener userListener = settings.commandExecutionListener();
-        ExportManager exitCodeSource = exportManager;
-        // Forward each arity to the user's same arity: some consumers
-        // override only the 4-arg variant, which a 3-arg call would bypass.
+        // The session exit status is published by the ProcessManager ahead
+        // of the drain (#646); this wrapper only forwards arities.
         // Implements PipelineExecutionListener so stage/pipeline events keep
         // flowing when the user listener provides them.
+        if (exportManager != null) {
+            ExportManager exitCodes = exportManager;
+            processManager.setExitCodeRecorder(exitCodes::setLastExitCode);
+        }
         processManager.setExecutionListener(new PipelineExecutionListener() {
             @Override
             public void onCommandComplete(String line, CommandResult result, long durationMs) {
-                recordExitCode(result);
                 if (userListener != null)
                     userListener.onCommandComplete(line, result, durationMs);
             }
@@ -202,14 +204,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             @Override
             public void onCommandComplete(String line, CommandResult result, long durationMs,
                     Throwable error) {
-                recordExitCode(result);
                 if (userListener != null)
                     userListener.onCommandComplete(line, result, durationMs, error);
-            }
-
-            private void recordExitCode(CommandResult result) {
-                if (exitCodeSource != null && result != null)
-                    exitCodeSource.setLastExitCode(result.getResultValue());
             }
 
             @Override

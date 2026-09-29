@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.IntConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,6 +83,13 @@ public class ProcessManager {
      */
     private volatile Thread drainOwner;
     private CommandExecutionListener executionListener;
+    /**
+     * Receives the terminal exit value of every finished job before pipeline
+     * events fire and the drain runs, so session state derived from it (such
+     * as {@code $?} expansion for the next buffered command) is fresh when
+     * the next command parses. Null by default (no recording).
+     */
+    private volatile IntConsumer exitCodeRecorder;
     private String commandLine;
     private volatile CommandJob activeJob;
     private boolean synchronous;
@@ -102,6 +110,18 @@ public class ProcessManager {
 
     public void setExecutionListener(CommandExecutionListener listener) {
         this.executionListener = listener;
+    }
+
+    /**
+     * Records the terminal exit value of finished jobs ahead of the drain,
+     * before the next buffered command parses. Listener callbacks keep
+     * their documented stage, pipeline and command ordering; this is state
+     * publication, not a callback.
+     *
+     * @param recorder receives exit values, or null to record nothing
+     */
+    public void setExitCodeRecorder(IntConsumer recorder) {
+        this.exitCodeRecorder = recorder;
     }
 
     public void setPipelineConfig(PipelineConfig pipelineConfig) {
@@ -157,8 +177,29 @@ public class ProcessManager {
         // became active; it must not clear another job's slot.
         if (activeJob == job)
             activeJob = null;
+        publishExitCode(job);
         firePipelineEvents(job);
         requestDrain();
+    }
+
+    /**
+     * Publishes the finalized exit value before pipeline events fire and
+     * the drain runs, so a buffered next command expands a fresh
+     * {@code $?} when it parses (#646). Uses the finalized job result;
+     * listener callbacks are unaffected and keep their order.
+     */
+    private void publishExitCode(CommandJob job) {
+        IntConsumer recorder = exitCodeRecorder;
+        if (recorder == null)
+            return;
+        CommandResult result = job.result();
+        if (result == null)
+            return;
+        try {
+            recorder.accept(result.getResultValue());
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Exit code recorder threw exception", e);
+        }
     }
 
     private void firePipelineEvents(CommandJob job) {
