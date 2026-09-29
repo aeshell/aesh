@@ -898,6 +898,153 @@ public class DocumentationGeneratorTest {
                 SkillRenderer.quoteYaml("say \"hello\""));
     }
 
+    @Test
+    public void testSkillYamlNumericQuoting() {
+        // Numbers a parser would mistype must quote to stay strings
+        assertEquals("\"1.0\"", SkillRenderer.quoteYaml("1.0"));
+        assertEquals("\"-42\"", SkillRenderer.quoteYaml("-42"));
+        assertEquals("\"0x1F\"", SkillRenderer.quoteYaml("0x1F"));
+        assertEquals("\"1e3\"", SkillRenderer.quoteYaml("1e3"));
+        assertEquals("\"2.5\"", SkillRenderer.quoteYaml("2.5"));
+        assertEquals("\".inf\"", SkillRenderer.quoteYaml(".inf"));
+        assertEquals("\"2024-01-15\"", SkillRenderer.quoteYaml("2024-01-15"));
+        assertEquals("\"2024-01\"", SkillRenderer.quoteYaml("2024-01"));
+        // Near-misses stay plain
+        assertEquals("v1", SkillRenderer.quoteYaml("v1"));
+        assertEquals("1.0.0", SkillRenderer.quoteYaml("1.0.0"));
+        assertEquals("hello", SkillRenderer.quoteYaml("hello"));
+    }
+
+    @Test
+    public void testSkillYamlControlEscapes() {
+        assertEquals("\"a\\nb\"", SkillRenderer.quoteYaml("a\nb"));
+        assertEquals("\"a\\rb\"", SkillRenderer.quoteYaml("a\rb"));
+        assertEquals("\"a\\tb\"", SkillRenderer.quoteYaml("a\tb"));
+        assertEquals("\"a\\0b\"", SkillRenderer.quoteYaml("a\0b"));
+        assertEquals("\"a\\u007Fb\"", SkillRenderer.quoteYaml("a\u007Fb"));
+        assertEquals("\"a\\u0085b\"", SkillRenderer.quoteYaml("a\u0085b"));
+        assertEquals("\"a\\\\b\"", SkillRenderer.quoteYaml("a\\b"));
+    }
+
+    public static class TrickyFrontMatterProvider implements HelpSectionProvider {
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return java.util.Collections.emptyMap();
+        }
+
+        @Override
+        public Map<String, String> getFrontMatter(DocFormat format) {
+            Map<String, String> frontMatter = new LinkedHashMap<>();
+            frontMatter.put("version", "1.0");
+            frontMatter.put("compatibility", "line one\nline two");
+            frontMatter.put("control", "a\0b");
+            frontMatter.put("flag", "yes");
+            frontMatter.put("when", "2024-01-15");
+            return frontMatter;
+        }
+    }
+
+    @CommandDefinition(name = "tricky", description = "Tricky metadata", helpSectionProvider = TrickyFrontMatterProvider.class)
+    public static class TrickyMetadataCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testSkillFrontMatterRoundTrips() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(TrickyMetadataCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        // Parse the YAML front-matter block with a real parser and assert
+        // exact values and string types (not substrings).
+        int open = doc.indexOf("---\n");
+        int close = doc.indexOf("\n---", open + 4);
+        assertTrue("Skill doc must have a front-matter block, got: " + doc,
+                open >= 0 && close > open);
+        // Exclude the closing marker: a trailing --- would open a second
+        // (empty) document for the parser.
+        Map<String, Object> frontMatter = new org.yaml.snakeyaml.Yaml()
+                .load(doc.substring(open, close + 1));
+        assertEquals("1.0", frontMatter.get("version"));
+        assertTrue("version must stay a string, got: "
+                + frontMatter.get("version").getClass(),
+                frontMatter.get("version") instanceof String);
+        assertEquals("line one\nline two", frontMatter.get("compatibility"));
+        assertEquals("a\0b", frontMatter.get("control"));
+        assertEquals("yes", frontMatter.get("flag"));
+        assertEquals("2024-01-15", frontMatter.get("when"));
+    }
+
+    @CommandDefinition(name = "piped", description = "Piped defaults")
+    public static class PipedDefaultsCommand implements Command<CommandInvocation> {
+        @Option(name = "choice", defaultValue = "a|b", description = "Pick one")
+        String choice;
+
+        @Option(name = "wrapped", defaultValue = "x``y", description = "Backticks")
+        String wrapped;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static int tableColumnCount(String row) {
+        // Split on unescaped pipes: escaped \| is content, not a delimiter.
+        int columns = 0;
+        boolean inEscape = false;
+        for (int i = 0; i < row.length(); i++) {
+            char c = row.charAt(i);
+            if (inEscape) {
+                inEscape = false;
+            } else if (c == '\\') {
+                inEscape = true;
+            } else if (c == '|') {
+                columns++;
+            }
+        }
+        // N delimiters bound N+1 cells; outer pipes included.
+        return columns - 1;
+    }
+
+    @Test
+    public void testSkillTableStructureWithSpecialValues() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(PipedDefaultsCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        assertTrue("Piped default must be escaped, got: " + doc,
+                doc.contains("`a\\|b`"));
+        assertTrue("Backtick run must be fenced wider, got: " + doc,
+                doc.contains("``` x``y ```"));
+
+        // Structural check: every table row has the header column count.
+        String[] lines = doc.split("\\r?\\n");
+        int expected = -1;
+        for (String line : lines) {
+            if (!line.startsWith("|"))
+                continue;
+            if (line.startsWith("|---") || line.startsWith("| ---")
+                    || line.matches("\\|[\\s\\-|:]+\\|")) {
+                continue;
+            }
+            int columns = tableColumnCount(line);
+            if (expected < 0) {
+                expected = columns;
+            } else {
+                assertEquals("Row must have " + expected + " columns, got: " + line,
+                        expected, columns);
+            }
+        }
+        assertTrue("Must have found table rows, got: " + doc, expected > 0);
+    }
+
     @CommandDefinition(name = "aritytest", description = "Arity test")
     public static class ArityTestCommand implements Command<CommandInvocation> {
         @Arguments(description = "Input files", arity = "1..*")

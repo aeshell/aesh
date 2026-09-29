@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.aesh.command.HelpEntry;
 import org.aesh.command.impl.internal.OptionType;
@@ -199,7 +200,7 @@ class SkillRenderer implements DocRenderer {
 
         // Default
         if (!opt.getDefaultValues().isEmpty()) {
-            sb.append(mdCode(join(opt.getDefaultValues(), ", ")));
+            sb.append(mdTableCode(join(opt.getDefaultValues(), ", ")));
         } else {
             sb.append("-");
         }
@@ -222,7 +223,7 @@ class SkillRenderer implements DocRenderer {
             desc.append(" Aliases: ");
             List<String> aliasNames = new ArrayList<>(opt.getAliases().size());
             for (String alias : opt.getAliases()) {
-                aliasNames.add("`--" + alias + "`");
+                aliasNames.add(mdTableCode("--" + alias));
             }
             desc.append(join(aliasNames, ", "));
         }
@@ -294,7 +295,7 @@ class SkillRenderer implements DocRenderer {
 
         // Default
         if (!pos.getDefaultValues().isEmpty()) {
-            sb.append(mdCode(join(pos.getDefaultValues(), ", ")));
+            sb.append(mdTableCode(join(pos.getDefaultValues(), ", ")));
         } else {
             sb.append("-");
         }
@@ -355,12 +356,52 @@ class SkillRenderer implements DocRenderer {
         return text.replace("|", "\\|").replace("\n", " ");
     }
 
-    /** Wrap a value in a Markdown code span, escaping backticks. */
+    private static final Pattern YAML_INT = Pattern.compile("[+-]?[0-9]+|0o[0-7]+|0x[0-9a-fA-F]+");
+    private static final Pattern YAML_FLOAT = Pattern.compile(
+            "[+-]?([0-9]+\\.[0-9]*|\\.[0-9]+)([eE][+-]?[0-9]+)?|[+-]?[0-9]+[eE][+-]?[0-9]+|[+-]?\\.(inf|Inf|INF|nan|NaN|NAN)");
+    private static final Pattern YAML_TIMESTAMP = Pattern.compile(
+            "[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}([Tt ].*)?|[0-9]{4}-[0-9]{1,2}");
+
+    /**
+     * True when a YAML parser would resolve the text to something other
+     * than a string (numbers, timestamps), so it must be quoted.
+     */
+    private static boolean looksLikeNonString(String text) {
+        return YAML_INT.matcher(text).matches()
+                || YAML_FLOAT.matcher(text).matches()
+                || YAML_TIMESTAMP.matcher(text).matches();
+    }
+
+    /** Wrap a value in a Markdown code span, fencing arbitrary backtick runs. */
     private static String mdCode(String text) {
-        if (text.indexOf('`') >= 0) {
-            return "`` " + text + " ``";
+        // GFM rule: fence with one more backtick than the longest run in
+        // the text; pad with spaces when the text starts or ends with one.
+        int longestRun = 0;
+        int run = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == '`') {
+                run++;
+                if (run > longestRun)
+                    longestRun = run;
+            } else {
+                run = 0;
+            }
         }
-        return "`" + text + "`";
+        if (longestRun == 0)
+            return "`" + text + "`";
+        StringBuilder fence = new StringBuilder(longestRun + 1);
+        for (int i = 0; i <= longestRun; i++)
+            fence.append('`');
+        return fence + " " + text + " " + fence;
+    }
+
+    /**
+     * Wrap a value in a Markdown code span for use inside a table cell.
+     * Pipes are escaped so they cannot act as column delimiters, and
+     * newlines fold to spaces so the row stays intact.
+     */
+    private static String mdTableCode(String text) {
+        return mdCode(text.replace("|", "\\|").replace("\n", " "));
     }
 
     /** Render a list of values as comma-separated Markdown code spans. */
@@ -369,7 +410,7 @@ class SkillRenderer implements DocRenderer {
         for (int i = 0; i < values.size(); i++) {
             if (i > 0)
                 sb.append(", ");
-            sb.append(mdCode(values.get(i)));
+            sb.append(mdTableCode(values.get(i)));
         }
         return sb.toString();
     }
@@ -389,7 +430,9 @@ class SkillRenderer implements DocRenderer {
      * Quote a YAML scalar value safely.
      * Always double-quotes if the value contains characters that are ambiguous
      * in plain YAML (colons, hashes, quotes, brackets, leading indicators,
-     * reserved words). Plain scalars are returned unquoted.
+     * reserved words, numbers and timestamps a parser would mistype, control
+     * characters). Plain scalars are returned unquoted. Quoted output uses
+     * YAML double-quoted escapes throughout, so it round-trips exactly.
      */
     static String quoteYaml(String text) {
         if (text == null || text.isEmpty())
@@ -408,13 +451,14 @@ class SkillRenderer implements DocRenderer {
             needsQuote = true;
         }
 
-        // Scan for inline ambiguity characters
+        // Scan for inline ambiguity characters, including every C0/C1
+        // control and DEL (all must escape in double-quoted style).
         if (!needsQuote) {
             for (int i = 0; i < text.length(); i++) {
                 char c = text.charAt(i);
                 if (c == ':' || c == '#' || c == '"' || c == '\''
-                        || c == '\n' || c == '\r' || c == '\t'
-                        || c == '\\' || c == '\0') {
+                        || c == '\\' || c < 0x20 || c == 0x7F
+                        || (c >= 0x80 && c <= 0x9F)) {
                     needsQuote = true;
                     break;
                 }
@@ -440,18 +484,62 @@ class SkillRenderer implements DocRenderer {
             }
         }
 
+        // Numbers, timestamps and friends a YAML parser would mistype:
+        // quote them so they round-trip as strings.
+        if (!needsQuote && looksLikeNonString(text)) {
+            needsQuote = true;
+        }
+
         if (!needsQuote)
             return text;
 
-        // Double-quote and escape internal double-quotes and backslashes
+        // Double-quote with full YAML escapes, so every control character
+        // round-trips instead of folding (newline) or invalidating (NUL).
         StringBuilder sb = new StringBuilder(text.length() + 4);
         sb.append('"');
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
-            if (c == '"' || c == '\\') {
-                sb.append('\\');
+            switch (c) {
+                case '"':
+                    sb.append("\\\"");
+                    break;
+                case '\\':
+                    sb.append("\\\\");
+                    break;
+                case '\0':
+                    sb.append("\\0");
+                    break;
+                case '\u0007':
+                    sb.append("\\a");
+                    break;
+                case '\b':
+                    sb.append("\\b");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\u000B':
+                    sb.append("\\v");
+                    break;
+                case '\f':
+                    sb.append("\\f");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\u001B':
+                    sb.append("\\e");
+                    break;
+                default:
+                    if (c < 0x20 || c == 0x7F || (c >= 0x80 && c <= 0x9F)) {
+                        sb.append(String.format("\\u%04X", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
             }
-            sb.append(c);
         }
         sb.append('"');
         return sb.toString();
