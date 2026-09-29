@@ -170,19 +170,17 @@ public class ProcessManager {
             int stageCount = upstreamCount + 1;
             String[] names = job.getPipelineStageNames();
             List<Execution<? extends CommandInvocation>> upstream = job.getUpstreamStages();
-            Throwable[] errors = job.getUpstreamStageErrors();
-            long[] durations = job.getUpstreamStageDurations();
             List<StageOutcome> stages = new ArrayList<>(stageCount);
             for (int i = 0; i < upstreamCount; i++) {
-                // Prefer the claimed outcome for settled stages: a live
-                // re-read can observe the worker's transient post-timeout
-                // INTERRUPTED write landing after the claim.
-                CommandResult settledResult = job.upstreamSettledResult(i);
-                CommandResult stageResult = settledResult != null
-                        ? settledResult
-                        : upstream.get(i).getResult();
+                // Finalized outcomes only: a live re-read can observe the
+                // worker's transient post-timeout INTERRUPTED write landing
+                // after the claim. Await finalized every stage, so the
+                // snapshot is always present here.
+                UpstreamOutcomeSupervisor.Outcome outcome = job.upstreamOutcome(i);
+                if (outcome == null)
+                    throw new IllegalStateException("Unsettled upstream stage " + i);
                 stages.add(new StageOutcome(i, stageCount, names[i], upstream.get(i),
-                        stageResult, errors[i], durations[i]));
+                        outcome.result(), outcome.error(), outcome.durationMs()));
             }
             stages.add(new StageOutcome(upstreamCount, stageCount, names[upstreamCount],
                     job.execution(), job.result(), job.error(), job.duration().toMillis()));
@@ -375,29 +373,27 @@ public class ProcessManager {
         String[] stageNames = new String[pipeChain.size()];
         for (int i = 0; i < pipeChain.size(); i++)
             stageNames[i] = PipelineStages.commandName(pipeChain.get(i), i);
-        Throwable[] stageErrors = new Throwable[upstreamCount];
-        long[] stageDurations = new long[upstreamCount];
-        // Shared with the job's join-timeout settle path so a still-unwinding
-        // task cannot overwrite the claimed timeout outcome (transient 130).
+        // Shared with the job's join-timeout settle path: the supervisor owns
+        // completion state and immutable outcomes, so snapshots never read
+        // live Execution fields a still-unwinding task may be writing.
         final UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(upstreamCount);
         List<Thread> upstreamThreads = new ArrayList<>(upstreamCount);
         for (int i = 0; i < upstreamCount; i++) {
             final int stageIndex = i;
             Execution<T> stage = pipeChain.get(i);
             Thread t = PipeThreads.newThread(() -> {
-                long start = System.currentTimeMillis();
+                supervisor.stageStarted(stageIndex);
                 try {
                     stage.execute();
+                    supervisor.completeStage(stageIndex, stage, stage.getResult(), null);
                 } catch (Throwable e) {
                     if (PipeOperator.isPipeBroken(e))
-                        supervisor.recordTaskOutcome(stageIndex, stageErrors, stage, e,
-                                CommandResult.PIPE_BROKEN);
+                        supervisor.completeStage(stageIndex, stage,
+                                CommandResult.PIPE_BROKEN, e);
                     else
-                        supervisor.recordTaskOutcome(stageIndex, stageErrors, stage, e,
-                                CommandResult.FAILURE);
+                        supervisor.completeStage(stageIndex, stage,
+                                CommandResult.FAILURE, e);
                     LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
-                } finally {
-                    stageDurations[stageIndex] = System.currentTimeMillis() - start;
                 }
             }, "aesh-pipe-" + i);
             upstreamThreads.add(t);
@@ -412,7 +408,7 @@ public class ProcessManager {
         mainJob.setPipelineConfig(pipelineConfig);
         mainJob.setUpstreamPipeThreads(upstreamThreads);
         mainJob.setUpstreamOutcomes(new ArrayList<Execution<? extends CommandInvocation>>(
-                pipeChain.subList(0, upstreamCount)), stageNames, stageErrors, stageDurations);
+                pipeChain.subList(0, upstreamCount)), stageNames);
         mainJob.setUpstreamSupervisor(supervisor);
         activeJob = mainJob;
         mainJob.start();

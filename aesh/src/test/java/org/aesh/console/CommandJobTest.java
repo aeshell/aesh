@@ -533,8 +533,6 @@ public class CommandJobTest {
     @Test
     public void testSettleOverwritesTransientInterruptedUpstream() throws Exception {
         FakeExecution stage = new FakeExecution();
-        Throwable[] errors = new Throwable[1];
-        long[] durations = new long[1];
         UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
         CountDownLatch wroteInterrupted = new CountDownLatch(1);
         CountDownLatch release = new CountDownLatch(1);
@@ -553,8 +551,8 @@ public class CommandJobTest {
                 }
             }
             // Mimic the task handler's terminal record through the supervisor.
-            supervisor.recordTaskOutcome(0, errors, stage,
-                    new InterruptedException("late"), CommandResult.FAILURE);
+            supervisor.completeStage(0, stage,
+                    CommandResult.FAILURE, new InterruptedException("late"));
         });
         unwinding.setDaemon(true);
 
@@ -566,7 +564,7 @@ public class CommandJobTest {
         CommandJob job = new CommandJob(manager, new TestConnection(), new FakeExecution(), "test", null);
         job.setUpstreamPipeThreads(Collections.singletonList(unwinding));
         job.setUpstreamOutcomes(new ArrayList<>(Collections.singletonList(stage)),
-                new String[] { "blocker" }, errors, durations);
+                new String[] { "blocker" });
         job.setUpstreamSupervisor(supervisor);
         job.setPipelineConfig(new PipelineConfig(16, 8192, 200, true));
 
@@ -579,24 +577,113 @@ public class CommandJobTest {
         assertTrue("Join must time out, took: " + elapsed, elapsed < 10000);
 
         // Settle must claim FAILURE + timeout despite the transient 130.
+        // The thread is still alive and never completed, so it is claimed.
         assertEquals(CommandResult.FAILURE, stage.getResult());
-        assertEquals("Claimed outcome must be FAILURE",
-                CommandResult.FAILURE, job.upstreamSettledResult(0));
-        assertNotNull(errors[0]);
-        assertTrue(errors[0] instanceof TimeoutException);
+        UpstreamOutcomeSupervisor.Outcome outcome = job.upstreamOutcome(0);
+        assertNotNull(outcome);
+        assertEquals("Claimed outcome must be FAILURE", CommandResult.FAILURE, outcome.result());
+        assertNotNull(outcome.error());
+        assertTrue(outcome.error() instanceof TimeoutException);
 
-        // The task's late terminal write is suppressed once settled.
+        // The task's late terminal write is suppressed once finalized.
         release.countDown();
         unwinding.join(5000);
         assertFalse(unwinding.isAlive());
         assertEquals(CommandResult.FAILURE, stage.getResult());
-        assertTrue(errors[0] instanceof TimeoutException);
+        outcome = job.upstreamOutcome(0);
+        assertTrue(outcome.error() instanceof TimeoutException);
 
         // A worker INTERRUPTED write landing between settle and snapshot
-        // must not leak into the claimed outcome used for event dispatch.
+        // must not leak into the finalized outcome used for event dispatch.
         stage.setResult(CommandResult.INTERRUPTED);
-        assertEquals("Claimed outcome must survive a late live 130 write",
-                CommandResult.FAILURE, job.upstreamSettledResult(0));
+        assertEquals("Finalized outcome must survive a late live 130 write",
+                CommandResult.FAILURE, job.upstreamOutcome(0).result());
+    }
+
+    @Test
+    public void testJoinedGenuineInterruptedUpstreamIsPreserved() throws Exception {
+        FakeExecution stage = new FakeExecution();
+        UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
+        // An upstream stage that cooperatively returns INTERRUPTED: its
+        // thread reports completion through the supervisor like any
+        // terminal, then dies (#645 probe).
+        Thread cooperative = new Thread(() -> {
+            supervisor.stageStarted(0);
+            stage.setResult(CommandResult.INTERRUPTED);
+            supervisor.completeStage(0, stage, CommandResult.INTERRUPTED, null);
+        });
+        cooperative.setDaemon(true);
+
+        ProcessManager manager = new ProcessManager(null) {
+            @Override
+            public void processFinished(CommandJob job) {
+            }
+        };
+        CommandJob job = new CommandJob(manager, new TestConnection(), new FakeExecution(), "test", null);
+        job.setUpstreamPipeThreads(Collections.singletonList(cooperative));
+        job.setUpstreamOutcomes(new ArrayList<>(Collections.singletonList(stage)),
+                new String[] { "coop" });
+        job.setUpstreamSupervisor(supervisor);
+        job.setPipelineConfig(new PipelineConfig(16, 8192, 200, true));
+
+        cooperative.start();
+        cooperative.join(5000);
+        assertFalse(cooperative.isAlive());
+
+        job.awaitUpstreamPipeThreads();
+
+        // Joined with a genuine INTERRUPTED: kept as-is, no timeout error.
+        UpstreamOutcomeSupervisor.Outcome outcome = job.upstreamOutcome(0);
+        assertNotNull(outcome);
+        assertEquals(CommandResult.INTERRUPTED, outcome.result());
+        assertNull("Completed stages receive no timeout error", outcome.error());
+        assertEquals(CommandResult.INTERRUPTED, stage.getResult());
+    }
+
+    @Test
+    public void testCooperativeInterruptedUpstreamPreservedWithinGrace() throws Exception {
+        FakeExecution stage = new FakeExecution();
+        UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
+        // Answer the settle interrupts by finishing inside the second join
+        // bound with a genuine INTERRUPTED, like a cooperative command.
+        Thread worker = new Thread(() -> {
+            supervisor.stageStarted(0);
+            long deadline = System.currentTimeMillis() + 300;
+            while (System.currentTimeMillis() < deadline) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    // ignore: keep working until the deadline
+                }
+            }
+            stage.setResult(CommandResult.INTERRUPTED);
+            supervisor.completeStage(0, stage, CommandResult.INTERRUPTED, null);
+        });
+        worker.setDaemon(true);
+
+        ProcessManager manager = new ProcessManager(null) {
+            @Override
+            public void processFinished(CommandJob job) {
+            }
+        };
+        CommandJob job = new CommandJob(manager, new TestConnection(), new FakeExecution(), "test", null);
+        job.setUpstreamPipeThreads(Collections.singletonList(worker));
+        job.setUpstreamOutcomes(new ArrayList<>(Collections.singletonList(stage)),
+                new String[] { "coop" });
+        job.setUpstreamSupervisor(supervisor);
+        job.setPipelineConfig(new PipelineConfig(16, 8192, 200, true));
+
+        worker.start();
+        long start = System.currentTimeMillis();
+        job.awaitUpstreamPipeThreads();
+        long elapsed = System.currentTimeMillis() - start;
+
+        assertTrue("Must settle within the unwind grace, took: " + elapsed, elapsed < 10000);
+        assertFalse(worker.isAlive());
+        UpstreamOutcomeSupervisor.Outcome outcome = job.upstreamOutcome(0);
+        assertNotNull(outcome);
+        assertEquals(CommandResult.INTERRUPTED, outcome.result());
+        assertNull("Finished inside the grace: no timeout error", outcome.error());
     }
 
     @Test

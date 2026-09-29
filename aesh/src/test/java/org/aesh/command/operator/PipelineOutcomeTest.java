@@ -194,6 +194,49 @@ public class PipelineOutcomeTest {
         }
     }
 
+    @CommandDefinition(name = "interruptible", description = "upstream genuinely returning INTERRUPTED")
+    public static class InterruptibleCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.INTERRUPTED;
+        }
+    }
+
+    @CommandDefinition(name = "slowinterrupt", description = "upstream returning INTERRUPTED past the first join")
+    public static class SlowInterruptCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            // Sleep past the first join bound but inside the unwind grace,
+            // swallowing the cancel interrupt, then report genuinely.
+            long deadline = System.currentTimeMillis() + 300;
+            while (System.currentTimeMillis() < deadline) {
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    // ignore: keep working until the deadline
+                }
+            }
+            return CommandResult.INTERRUPTED;
+        }
+    }
+
+    @CommandDefinition(name = "stubborn", description = "upstream ignoring interrupts forever")
+    public static class StubbornCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            // Parked, not spinning: the thread outlives the suite fork,
+            // which exits via the surefire System.exit.
+            CountDownLatch latch = new CountDownLatch(1);
+            while (true) {
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    // ignore: never finish
+                }
+            }
+        }
+    }
+
     private static CommandRuntime<CommandInvocation> buildRuntime() throws Exception {
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
                 .command(FailPipeCommand.class)
@@ -363,8 +406,85 @@ public class PipelineOutcomeTest {
     }
 
     @Test
-    public void testInteractiveJoinTimeoutBoundsBlockedUpstream() throws Exception {
-        // Same contract as testJoinTimeoutBoundsBlockedUpstream, exercised
+    public void testGenuineInterruptedUpstreamPreserved() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
+                .command(InterruptibleCommand.class)
+                .command(OkPipeCommand.class)
+                .create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                .commandRegistry(registry)
+                .operators(EnumSet.allOf(OperatorType.class))
+                .pipelineConfig(new PipelineConfig(16, 8192, 200, true))
+                .build();
+
+        CommandResult result = runtime.executeCommand("interruptible | okpipe");
+
+        assertEquals(CommandResult.SUCCESS, result);
+        PipelineResult pipeline = ((AeshCommandRuntime<CommandInvocation>) runtime)
+                .lastPipelineResult();
+        assertNotNull(pipeline);
+        // A stage that genuinely returned INTERRUPTED is completed: no
+        // timeout may be attached and the value must stand (#645).
+        assertEquals(CommandResult.INTERRUPTED, pipeline.stages().get(0).result());
+        assertNull(pipeline.stages().get(0).error());
+        assertEquals(CommandResult.SUCCESS, pipeline.stages().get(1).result());
+    }
+
+    @Test
+    public void testCooperativeInterruptedUpstreamPreservedWithinGrace() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
+                .command(SlowInterruptCommand.class)
+                .command(OkPipeCommand.class)
+                .create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                .commandRegistry(registry)
+                .operators(EnumSet.allOf(OperatorType.class))
+                .pipelineConfig(new PipelineConfig(16, 8192, 200, true))
+                .build();
+
+        long start = System.currentTimeMillis();
+        CommandResult result = runtime.executeCommand("slowinterrupt | okpipe");
+        long elapsed = System.currentTimeMillis() - start;
+
+        assertEquals(CommandResult.SUCCESS, result);
+        assertTrue("Must settle within the unwind grace, took: " + elapsed, elapsed < 10000);
+        PipelineResult pipeline = ((AeshCommandRuntime<CommandInvocation>) runtime)
+                .lastPipelineResult();
+        assertNotNull(pipeline);
+        // Finished inside the explicit unwind join: genuine outcome kept,
+        // no timeout error.
+        assertEquals(CommandResult.INTERRUPTED, pipeline.stages().get(0).result());
+        assertNull(pipeline.stages().get(0).error());
+    }
+
+    @Test
+    public void testIgnoredInterruptUpstreamClaimedAsTimeout() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
+                .command(StubbornCommand.class)
+                .command(OkPipeCommand.class)
+                .create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                .commandRegistry(registry)
+                .operators(EnumSet.allOf(OperatorType.class))
+                .pipelineConfig(new PipelineConfig(16, 8192, 200, true))
+                .build();
+
+        long start = System.currentTimeMillis();
+        CommandResult result = runtime.executeCommand("stubborn | okpipe");
+        long elapsed = System.currentTimeMillis() - start;
+
+        assertEquals(CommandResult.SUCCESS, result);
+        assertTrue("Join must time out, took: " + elapsed, elapsed < 10000);
+        PipelineResult pipeline = ((AeshCommandRuntime<CommandInvocation>) runtime)
+                .lastPipelineResult();
+        assertNotNull(pipeline);
+        assertEquals(CommandResult.FAILURE, pipeline.stages().get(0).result());
+        assertTrue("Only actual timeouts receive timeout errors",
+                pipeline.stages().get(0).error() instanceof java.util.concurrent.TimeoutException);
+    }
+
+    @Test
+    public void testInteractiveJoinTimeoutBoundsBlockedUpstream() throws Exception { // Same contract as testJoinTimeoutBoundsBlockedUpstream, exercised
         // through the interactive path (ProcessManager/CommandJob) instead
         // of the batch runtime path (#638).
         BlockerCommand.runs.set(0);

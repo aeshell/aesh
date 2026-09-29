@@ -17,20 +17,30 @@
  */
 package org.aesh.command.impl;
 
+import java.util.concurrent.TimeoutException;
+
 import org.aesh.command.CommandResult;
 import org.aesh.command.Execution;
 
 /**
- * Coordinates upstream pipeline stage outcomes between the thread running a
- * stage and the thread settling it after a join timeout.
+ * Owns upstream pipeline stage outcomes for both execution paths.
  * <p>
- * A cancelled stage keeps unwinding after the join timeout expires: its
- * {@code Execution} briefly records {@code INTERRUPTED} while propagating,
- * before the task handler records the terminal result. Without coordination
- * the settle path (or a later snapshot) can observe that transient value
- * instead of the timeout outcome. Once settle claims a stage, the task's
- * late writes are suppressed and snapshots use the claimed value, so the
- * recorded outcome is deterministic.
+ * The task thread reports lifecycle transitions ({@link #stageStarted},
+ * {@link #completeStage}) while the settle thread finalizes unfinished
+ * stages ({@link #claimTimeout}); snapshots ({@link #snapshot}) publish an
+ * immutable result/error/duration that late task writes cannot change.
+ * <p>
+ * Completion is explicit state, never an exit-code guess: a stage that
+ * genuinely returned {@code INTERRUPTED} is completed, so a later claim is
+ * a no-op and the value is preserved. Only a stage that never completed
+ * can be claimed as timed out, receiving {@code FAILURE} plus a timeout
+ * error allocated on that path alone. The transient {@code INTERRUPTED} a
+ * cancelled task writes to its {@code Execution} mid-unwind never reaches
+ * a snapshot — snapshots are built from supervisor state, not live reads.
+ * <p>
+ * The {@code Execution} result write inside {@link #completeStage} is the
+ * planner cursor ({@code ExecutionPlanner} relaunches units with null
+ * results), not the outcome record; it must stay.
  * <p>
  * Shared by the batch path ({@code AeshCommandRuntime}) and the interactive
  * path ({@code ProcessManager}/{@code CommandJob}) so the settle contract
@@ -38,9 +48,41 @@ import org.aesh.command.Execution;
  */
 public final class UpstreamOutcomeSupervisor {
 
+    /**
+     * Immutable finalized outcome of one upstream stage.
+     */
+    public static final class Outcome {
+        private final CommandResult result;
+        private final Throwable error;
+        private final long durationMs;
+
+        Outcome(CommandResult result, Throwable error, long durationMs) {
+            this.result = result;
+            this.error = error;
+            this.durationMs = durationMs;
+        }
+
+        public CommandResult result() {
+            return result;
+        }
+
+        public Throwable error() {
+            return error;
+        }
+
+        public long durationMs() {
+            return durationMs;
+        }
+    }
+
     private final Object outcomeLock = new Object();
-    private final boolean[] settled;
-    private final CommandResult[] claimed;
+    private final boolean[] completed;
+    private final boolean[] finalized;
+    private final CommandResult[] results;
+    private final Throwable[] errors;
+    private final long[] durationsMs;
+    private final long[] startMs;
+    private final Thread[] workers;
 
     /**
      * Creates a supervisor for the given number of upstream stages.
@@ -48,72 +90,133 @@ public final class UpstreamOutcomeSupervisor {
      * @param upstreamCount number of upstream stages (excludes the terminal stage)
      */
     public UpstreamOutcomeSupervisor(int upstreamCount) {
-        this.settled = new boolean[upstreamCount];
-        this.claimed = new CommandResult[upstreamCount];
+        this.completed = new boolean[upstreamCount];
+        this.finalized = new boolean[upstreamCount];
+        this.results = new CommandResult[upstreamCount];
+        this.errors = new Throwable[upstreamCount];
+        this.durationsMs = new long[upstreamCount];
+        this.startMs = new long[upstreamCount];
+        this.workers = new Thread[upstreamCount];
     }
 
     /**
-     * Records a task thread's terminal outcome unless settle already claimed
-     * the stage.
+     * Records that the task thread started running a stage, capturing the
+     * worker thread (for explicit unwind joins on the settle path) and the
+     * start time durations are measured from.
      *
      * @param index stage index
-     * @param stageErrors caller-owned error array, may be updated
-     * @param stage the upstream stage execution
-     * @param error the thrown error, recorded when not settled
-     * @param terminalResult the terminal result to record when not settled
-     * @return true when recorded, false when suppressed (stage settled)
      */
-    public boolean recordTaskOutcome(int index, Throwable[] stageErrors, Execution stage,
-            Throwable error, CommandResult terminalResult) {
+    public void stageStarted(int index) {
         synchronized (outcomeLock) {
-            if (settled[index]) {
+            if (finalized[index])
+                return;
+            startMs[index] = System.currentTimeMillis();
+            workers[index] = Thread.currentThread();
+        }
+    }
+
+    /**
+     * Records a task thread's terminal outcome — for every terminal,
+     * including normally returned results — unless settle already finalized
+     * the stage. A null result maps to {@code SUCCESS}, matching
+     * {@code ExecutionImpl}'s own default.
+     *
+     * @param index stage index
+     * @param stage the upstream stage execution (result write is the planner cursor)
+     * @param result the terminal result to record when not finalized
+     * @param error the thrown error, recorded when not finalized
+     * @return true when recorded, false when suppressed (stage finalized)
+     */
+    public boolean completeStage(int index, Execution stage, CommandResult result, Throwable error) {
+        synchronized (outcomeLock) {
+            if (finalized[index]) {
                 return false;
             }
-            stageErrors[index] = error;
-            stage.setResult(terminalResult);
+            if (result == null)
+                result = CommandResult.SUCCESS;
+            completed[index] = true;
+            finalized[index] = true;
+            results[index] = result;
+            errors[index] = error;
+            durationsMs[index] = durationSinceStart(index);
+            stage.setResult(result);
             return true;
         }
     }
 
     /**
-     * Claims a stage after its join timed out. Overwrites a missing result
-     * or a transient {@code INTERRUPTED} (which a still-running task cannot
-     * have produced terminally — it is our own cancel propagating) with
-     * {@code FAILURE} plus the timeout error, and snapshots the claimed
-     * value. A genuine terminal result is kept as-is.
+     * Finalizes a stage that never completed as timed out: {@code FAILURE}
+     * plus a timeout error (allocated here, so normal joins allocate none)
+     * and the duration up to the claim. A completed stage — including a
+     * genuine {@code INTERRUPTED} — is left untouched.
+     * <p>
+     * The {@code Execution} write is the planner cursor only:
+     * {@code ExecutionPlanner} relaunches units whose result is still null,
+     * so a claimed-yet-running stage must read as finished. Snapshots never
+     * read this field.
      *
      * @param index stage index
-     * @param stage the upstream stage execution
-     * @param stageErrors caller-owned error array, may be updated
-     * @param timeout the timeout error to record when claiming
+     * @param stage the upstream stage execution (cursor write on claim)
      */
-    public void claimTimeout(int index, Execution stage, Throwable[] stageErrors, Throwable timeout) {
+    public void claimTimeout(int index, Execution stage) {
         synchronized (outcomeLock) {
-            settled[index] = true;
-            CommandResult current = stage.getResult();
-            if (current == null || current == CommandResult.INTERRUPTED) {
-                if (stageErrors[index] == null)
-                    stageErrors[index] = timeout;
-                stage.setResult(CommandResult.FAILURE);
-                claimed[index] = CommandResult.FAILURE;
-            } else {
-                claimed[index] = current;
+            if (finalized[index]) {
+                return;
             }
+            finalized[index] = true;
+            results[index] = CommandResult.FAILURE;
+            if (errors[index] == null)
+                errors[index] = new TimeoutException("Upstream stage join timed out");
+            durationsMs[index] = durationSinceStart(index);
+            stage.setResult(CommandResult.FAILURE);
         }
     }
 
     /**
-     * Returns the claimed outcome for a settled stage, or null when the
-     * stage was never settled. Callers must re-read live state when null.
+     * Returns the finalized outcome for a stage, or null when it was never
+     * finalized. Late task writes cannot change a returned outcome.
      *
      * @param index stage index
-     * @return the claimed result, or null
+     * @return the finalized outcome, or null
      */
-    public CommandResult claimedResult(int index) {
+    public Outcome snapshot(int index) {
         synchronized (outcomeLock) {
-            if (index < 0 || index >= settled.length || !settled[index])
+            if (index < 0 || index >= finalized.length || !finalized[index])
                 return null;
-            return claimed[index];
+            return new Outcome(results[index], errors[index], durationsMs[index]);
         }
+    }
+
+    /**
+     * Returns the worker thread captured by {@link #stageStarted}, or null
+     * when the task never started.
+     *
+     * @param index stage index
+     * @return the worker thread, or null
+     */
+    public Thread worker(int index) {
+        synchronized (outcomeLock) {
+            if (index < 0 || index >= workers.length)
+                return null;
+            return workers[index];
+        }
+    }
+
+    /**
+     * Returns true once the task thread recorded its terminal outcome,
+     * whether normally or by throwing.
+     *
+     * @param index stage index
+     * @return true when completed
+     */
+    public boolean isCompleted(int index) {
+        synchronized (outcomeLock) {
+            return index >= 0 && index < completed.length && completed[index];
+        }
+    }
+
+    private long durationSinceStart(int index) {
+        long start = startMs[index];
+        return start == 0 ? 0 : System.currentTimeMillis() - start;
     }
 }

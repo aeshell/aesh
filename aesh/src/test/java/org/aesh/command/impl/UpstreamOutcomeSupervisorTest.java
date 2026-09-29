@@ -35,7 +35,7 @@ import org.aesh.command.result.ResultHandler;
 import org.junit.Test;
 
 /**
- * Contract tests for the shared upstream-stage settle logic (#638).
+ * Contract tests for the shared upstream-stage settle logic (#638, #645).
  * Every interleaving is driven deterministically by direct calls — no
  * threads, no timing. Both the batch path (AeshCommandRuntime) and the
  * interactive path (CommandJob) delegate to this code, so one suite pins
@@ -91,89 +91,156 @@ public class UpstreamOutcomeSupervisorTest {
     }
 
     @Test
-    public void testTaskOutcomeRecordedWhenUnsettled() {
+    public void testCompleteStageRecordsOutcome() {
         UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
         StubExecution stage = new StubExecution();
-        Throwable[] errors = new Throwable[1];
         RuntimeException failure = new RuntimeException("boom");
 
-        assertTrue(supervisor.recordTaskOutcome(0, errors, stage, failure, CommandResult.FAILURE));
+        supervisor.stageStarted(0);
+        assertTrue(supervisor.completeStage(0, stage, CommandResult.FAILURE, failure));
+        assertTrue(supervisor.isCompleted(0));
+        // Planner cursor plus immutable outcome, published atomically.
         assertEquals(CommandResult.FAILURE, stage.getResult());
-        assertSame(failure, errors[0]);
-        assertNull("Unsettled stage has no claimed outcome", supervisor.claimedResult(0));
+        UpstreamOutcomeSupervisor.Outcome outcome = supervisor.snapshot(0);
+        assertEquals(CommandResult.FAILURE, outcome.result());
+        assertSame(failure, outcome.error());
+        assertTrue(outcome.durationMs() >= 0);
     }
 
     @Test
-    public void testClaimTimeoutOnIdleStage() {
+    public void testCompleteStageMapsNullToSuccess() {
         UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
         StubExecution stage = new StubExecution();
-        Throwable[] errors = new Throwable[1];
-        TimeoutException timeout = new TimeoutException("join timed out");
 
-        supervisor.claimTimeout(0, stage, errors, timeout);
-        assertEquals(CommandResult.FAILURE, stage.getResult());
-        assertSame(timeout, errors[0]);
-        assertEquals(CommandResult.FAILURE, supervisor.claimedResult(0));
+        assertTrue(supervisor.completeStage(0, stage, null, null));
+        assertEquals("Null terminal maps to SUCCESS like ExecutionImpl",
+                CommandResult.SUCCESS, supervisor.snapshot(0).result());
+        assertNull(supervisor.snapshot(0).error());
     }
 
     @Test
-    public void testClaimOverwritesTransientInterrupted() {
+    public void testStageStartedCapturesWorker() {
+        UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
+
+        assertNull(supervisor.worker(0));
+        assertNull(supervisor.worker(1));
+        supervisor.stageStarted(0);
+        assertSame(Thread.currentThread(), supervisor.worker(0));
+        assertFalse(supervisor.isCompleted(0));
+    }
+
+    @Test
+    public void testClaimTimeoutOnUnfinishedStage() {
         UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
         StubExecution stage = new StubExecution();
-        Throwable[] errors = new Throwable[1];
-        // Mid-unwind artifact of our own cancel propagating (#632).
+
+        supervisor.stageStarted(0);
+        supervisor.claimTimeout(0, stage);
+        UpstreamOutcomeSupervisor.Outcome outcome = supervisor.snapshot(0);
+        assertEquals(CommandResult.FAILURE, outcome.result());
+        assertTrue("Only actual timeouts receive timeout errors",
+                outcome.error() instanceof TimeoutException);
+        assertTrue(outcome.durationMs() >= 0);
+        // Planner cursor is marked so the stage is not relaunched.
+        assertEquals(CommandResult.FAILURE, stage.getResult());
+    }
+
+    @Test
+    public void testClaimWithoutStartHasZeroDuration() {
+        UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
+        StubExecution stage = new StubExecution();
+
+        supervisor.claimTimeout(0, stage);
+        assertEquals(0, supervisor.snapshot(0).durationMs());
+    }
+
+    @Test
+    public void testClaimIgnoresTransientInterruptedOnUnfinishedStage() {
+        UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
+        StubExecution stage = new StubExecution();
+        supervisor.stageStarted(0);
+        // Mid-unwind artifact of our own cancel propagating (#632): the
+        // stage never completed, so the live INTERRUPTED is transient by
+        // definition. The claim overwrites it without reading it.
         stage.setResult(CommandResult.INTERRUPTED);
 
-        supervisor.claimTimeout(0, stage, errors, new TimeoutException("join timed out"));
+        supervisor.claimTimeout(0, stage);
+
+        UpstreamOutcomeSupervisor.Outcome outcome = supervisor.snapshot(0);
+        assertEquals(CommandResult.FAILURE, outcome.result());
+        assertTrue(outcome.error() instanceof TimeoutException);
         assertEquals(CommandResult.FAILURE, stage.getResult());
-        assertTrue(errors[0] instanceof TimeoutException);
-        assertEquals(CommandResult.FAILURE, supervisor.claimedResult(0));
     }
 
     @Test
-    public void testClaimKeepsGenuineTerminalResult() {
+    public void testClaimIsNoOpOnCompletedInterrupted() {
         UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
         StubExecution stage = new StubExecution();
-        Throwable[] errors = new Throwable[1];
-        stage.setResult(CommandResult.PIPE_BROKEN);
+        // A stage that genuinely returned INTERRUPTED (#645): completed,
+        // so no timeout may be attached and the value must stand.
+        supervisor.stageStarted(0);
+        assertTrue(supervisor.completeStage(0, stage, CommandResult.INTERRUPTED, null));
 
-        supervisor.claimTimeout(0, stage, errors, new TimeoutException("join timed out"));
+        supervisor.claimTimeout(0, stage);
+
+        UpstreamOutcomeSupervisor.Outcome outcome = supervisor.snapshot(0);
+        assertEquals(CommandResult.INTERRUPTED, outcome.result());
+        assertNull("Completed stages receive no timeout error", outcome.error());
+    }
+
+    @Test
+    public void testClaimKeepsCompletedPipeBroken() {
+        UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
+        StubExecution stage = new StubExecution();
+        RuntimeException broken = new RuntimeException("broken");
+
+        supervisor.stageStarted(0);
+        assertTrue(supervisor.completeStage(0, stage, CommandResult.PIPE_BROKEN, broken));
+        supervisor.claimTimeout(0, stage);
+
+        UpstreamOutcomeSupervisor.Outcome outcome = supervisor.snapshot(0);
         assertEquals("Genuine terminal result must survive the claim",
-                CommandResult.PIPE_BROKEN, stage.getResult());
-        assertEquals(CommandResult.PIPE_BROKEN, supervisor.claimedResult(0));
-        assertNull("No timeout error when the terminal result stands", errors[0]);
+                CommandResult.PIPE_BROKEN, outcome.result());
+        assertSame(broken, outcome.error());
     }
 
     @Test
-    public void testClaimPreservesExistingError() {
+    public void testLateCompleteSuppressedOnceClaimed() {
         UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
         StubExecution stage = new StubExecution();
-        Throwable[] errors = new Throwable[1];
-        RuntimeException original = new RuntimeException("original");
-        errors[0] = original;
 
-        supervisor.claimTimeout(0, stage, errors, new TimeoutException("join timed out"));
-        assertSame("Pre-existing error must not be overwritten", original, errors[0]);
-        assertEquals(CommandResult.FAILURE, supervisor.claimedResult(0));
+        supervisor.stageStarted(0);
+        supervisor.claimTimeout(0, stage);
+        assertFalse(supervisor.completeStage(0, stage,
+                CommandResult.FAILURE, new InterruptedException("late")));
+        UpstreamOutcomeSupervisor.Outcome outcome = supervisor.snapshot(0);
+        assertEquals("Finalized outcome must stand", CommandResult.FAILURE, outcome.result());
+        assertTrue(outcome.error() instanceof TimeoutException);
+        assertEquals("Late writes cannot move the cursor either",
+                CommandResult.FAILURE, stage.getResult());
     }
 
     @Test
-    public void testLateTaskWriteSuppressedOnceSettled() {
+    public void testLateLiveWriteInvisibleToSnapshot() {
         UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
         StubExecution stage = new StubExecution();
-        Throwable[] errors = new Throwable[1];
 
-        supervisor.claimTimeout(0, stage, errors, new TimeoutException("join timed out"));
-        assertFalse(supervisor.recordTaskOutcome(0, errors, stage,
-                new InterruptedException("late"), CommandResult.FAILURE));
-        assertEquals("Settled outcome must stand", CommandResult.FAILURE, stage.getResult());
-        assertTrue(errors[0] instanceof TimeoutException);
+        supervisor.stageStarted(0);
+        supervisor.claimTimeout(0, stage);
+        // The worker's unguarded post-timeout write lands on the live
+        // Execution only (#632 second window).
+        stage.setResult(CommandResult.INTERRUPTED);
+
+        UpstreamOutcomeSupervisor.Outcome outcome = supervisor.snapshot(0);
+        assertEquals(CommandResult.FAILURE, outcome.result());
+        assertTrue(outcome.error() instanceof TimeoutException);
     }
 
     @Test
-    public void testClaimedResultBounds() {
+    public void testSnapshotBounds() {
         UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(1);
-        assertNull(supervisor.claimedResult(-1));
-        assertNull(supervisor.claimedResult(1));
+        assertNull(supervisor.snapshot(-1));
+        assertNull(supervisor.snapshot(1));
+        assertNull("Unfinalized stage has no snapshot", supervisor.snapshot(0));
     }
 }

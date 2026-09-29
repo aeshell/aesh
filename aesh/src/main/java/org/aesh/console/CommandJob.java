@@ -23,7 +23,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -71,11 +70,11 @@ public final class CommandJob implements Consumer<Signal> {
     private volatile List<Thread> upstreamPipeThreads;
     private volatile List<Execution<? extends CommandInvocation>> upstreamStages;
     private volatile String[] pipelineStageNames;
-    private volatile Throwable[] upstreamStageErrors;
-    private volatile long[] upstreamStageDurations;
     // Outcome coordination shared with the threads running the upstream
     // stages (see ProcessManager.launchPipeline and UpstreamOutcomeSupervisor).
-    // Null when upstream outcomes were never wired (unit tests).
+    // The supervisor owns completion state and immutable outcomes; there is
+    // no separate error/duration store. Required once upstream threads are
+    // wired (see setUpstreamSupervisor).
     private volatile UpstreamOutcomeSupervisor upstreamSupervisor;
     private volatile boolean finished;
     private final InterruptEscalation escalation = new InterruptEscalation();
@@ -240,11 +239,9 @@ public final class CommandJob implements Consumer<Signal> {
     }
 
     void setUpstreamOutcomes(List<Execution<? extends CommandInvocation>> stages,
-            String[] stageNames, Throwable[] errors, long[] durations) {
+            String[] stageNames) {
         this.upstreamStages = stages;
         this.pipelineStageNames = stageNames;
-        this.upstreamStageErrors = errors;
-        this.upstreamStageDurations = durations;
     }
 
     /**
@@ -257,16 +254,12 @@ public final class CommandJob implements Consumer<Signal> {
     }
 
     /**
-     * Returns the outcome claimed for a settled upstream stage, or null when
-     * the stage was never settled. Preferred over a live
-     * {@code getResult()} read, which can observe the worker's transient
-     * post-timeout INTERRUPTED write.
+     * Returns the finalized outcome for an upstream stage. Snapshots are
+     * built from supervisor state, never live reads, so a worker's
+     * transient post-timeout INTERRUPTED write stays invisible.
      */
-    CommandResult upstreamSettledResult(int i) {
-        UpstreamOutcomeSupervisor supervisor = upstreamSupervisor;
-        if (supervisor == null)
-            return null;
-        return supervisor.claimedResult(i);
+    UpstreamOutcomeSupervisor.Outcome upstreamOutcome(int i) {
+        return upstreamSupervisor.snapshot(i);
     }
 
     int upstreamStageCount() {
@@ -279,14 +272,6 @@ public final class CommandJob implements Consumer<Signal> {
 
     String[] getPipelineStageNames() {
         return pipelineStageNames;
-    }
-
-    Throwable[] getUpstreamStageErrors() {
-        return upstreamStageErrors;
-    }
-
-    long[] getUpstreamStageDurations() {
-        return upstreamStageDurations;
     }
 
     private void joinUpstream(List<Thread> threads, long timeoutMs) {
@@ -327,29 +312,16 @@ public final class CommandJob implements Consumer<Signal> {
             LOGGER.warning("Pipeline upstream stages ignored interrupt, re-interrupting");
             joinUpstream(threads, timeoutMs);
         }
+        // Claim only stages that never finished: joined threads recorded
+        // their genuine terminal outcome (including INTERRUPTED) through
+        // the supervisor, which a claim must preserve as-is.
         if (upstreamStages != null) {
+            UpstreamOutcomeSupervisor supervisor = upstreamSupervisor;
             for (int i = 0; i < upstreamStages.size(); i++) {
-                claimTimedOutStage(i);
+                if (threads.get(i).isAlive() && !supervisor.isCompleted(i))
+                    supervisor.claimTimeout(i, upstreamStages.get(i));
             }
         }
-    }
-
-    private void claimTimedOutStage(int i) {
-        UpstreamOutcomeSupervisor supervisor = upstreamSupervisor;
-        if (supervisor != null) {
-            supervisor.claimTimeout(i, upstreamStages.get(i), upstreamStageErrors,
-                    new TimeoutException("Upstream stage join timed out"));
-        } else if (upstreamStages.get(i).getResult() == null) {
-            recordUpstreamTimeout(upstreamStages.get(i), i);
-        }
-    }
-
-    private void recordUpstreamTimeout(Execution<? extends CommandInvocation> stage, int i) {
-        if (upstreamStageErrors != null && upstreamStageErrors[i] == null) {
-            upstreamStageErrors[i] = new TimeoutException(
-                    "Upstream stage join timed out");
-        }
-        stage.setResult(CommandResult.FAILURE);
     }
 
     private void runJob() {
