@@ -49,13 +49,37 @@ public final class MetadataProviderRegistry {
     private static volatile ClassLoader registriesClassLoader;
 
     /**
+     * Bumped every time the meaning of the registry set changes
+     * ({@link #register} adding a registry, {@link #reset}, or a
+     * classloader-triggered reload). Cached entries computed under an older
+     * generation are recomputed on next lookup.
+     */
+    private static volatile long cacheGeneration;
+
+    /**
+     * Cached lookup plus the generation it was computed under. Comparing
+     * the generation on read invalidates entries without enumerating
+     * {@code ClassValue} keys and without giving up per-classloader
+     * garbage collection.
+     */
+    private static final class CacheEntry {
+        final CommandMetadataProvider<?> provider;
+        final long generation;
+
+        CacheEntry(CommandMetadataProvider<?> provider, long generation) {
+            this.provider = provider;
+            this.generation = generation;
+        }
+    }
+
+    /**
      * Per-class cache using ClassValue. Entries are automatically removed
      * when the class's classloader is garbage-collected, preventing stale
      * cross-classloader references (#519).
      */
-    private static final ClassValue<CommandMetadataProvider<?>> cache = new ClassValue<CommandMetadataProvider<?>>() {
+    private static final ClassValue<CacheEntry> cache = new ClassValue<CacheEntry>() {
         @Override
-        protected CommandMetadataProvider<?> computeValue(Class<?> cls) {
+        protected CacheEntry computeValue(Class<?> cls) {
             // Walk the class hierarchy to support CDI interceptor/proxy
             // subclasses whose runtime class differs from the original
             // @CommandDefinition-annotated class (#608)
@@ -66,12 +90,12 @@ public final class MetadataProviderRegistry {
                     @SuppressWarnings("rawtypes")
                     CommandMetadataProvider provider = registry.get(className);
                     if (provider != null) {
-                        return provider;
+                        return new CacheEntry(provider, cacheGeneration);
                     }
                 }
                 current = current.getSuperclass();
             }
-            return ABSENT;
+            return new CacheEntry(ABSENT, cacheGeneration);
         }
     };
 
@@ -116,8 +140,9 @@ public final class MetadataProviderRegistry {
      * <li>Testing with mock registries</li>
      * </ul>
      * <p>
-     * Registered instances are consulted alongside (and before) registries
-     * discovered via {@link java.util.ServiceLoader}.
+     * Registered instances are consulted before registries discovered via
+     * {@link java.util.ServiceLoader}; among explicit registrations the
+     * most recently registered wins.
      *
      * @param registry the registry to register
      * @since 3.16
@@ -130,10 +155,15 @@ public final class MetadataProviderRegistry {
             // then add the manual registration alongside them
             List<MetadataRegistry> current = getRegistries();
             if (!current.contains(registry)) {
-                // Create a new list to avoid ConcurrentModificationException
-                List<MetadataRegistry> updated = new ArrayList<>(current);
+                // Create a new list to avoid ConcurrentModificationException.
+                // Prepend so explicit registrations take precedence over
+                // discovery; cached lookups from the older generation are
+                // recomputed on next read.
+                List<MetadataRegistry> updated = new ArrayList<>(current.size() + 1);
                 updated.add(registry);
+                updated.addAll(current);
                 registries = updated;
+                cacheGeneration++;
             }
         }
     }
@@ -146,6 +176,10 @@ public final class MetadataProviderRegistry {
      * subsequent lookups. Negative results (no provider found) are
      * also cached to avoid repeated registry iteration.
      * <p>
+     * Entries computed before the latest {@link #register} or
+     * {@link #reset} are recomputed on next lookup, so both negative and
+     * positive entries always reflect registry changes.
+     * <p>
      * The cache is per-classloader: when a classloader is garbage-collected,
      * all cached entries for its classes are automatically removed.
      *
@@ -155,8 +189,15 @@ public final class MetadataProviderRegistry {
      */
     @SuppressWarnings("unchecked")
     public static <C extends Command> CommandMetadataProvider<C> getProvider(Class<C> commandClass) {
-        CommandMetadataProvider<?> result = cache.get(commandClass);
-        return result == ABSENT ? null : (CommandMetadataProvider<C>) result;
+        CacheEntry entry = cache.get(commandClass);
+        if (entry.generation != cacheGeneration) {
+            // Races only cause a benign duplicate recompute: lookup is
+            // side-effect free, and the fresher generation always wins on
+            // the next read.
+            cache.remove(commandClass);
+            entry = cache.get(commandClass);
+        }
+        return entry.provider == ABSENT ? null : (CommandMetadataProvider<C>) entry.provider;
     }
 
     private static List<MetadataRegistry> getRegistries() {
@@ -170,6 +211,10 @@ public final class MetadataProviderRegistry {
                     result = loadRegistries();
                     registries = result;
                     registriesClassLoader = currentCL;
+                    // The list identity changed out from under cached
+                    // entries (explicit registrations included); force them
+                    // to recompute.
+                    cacheGeneration++;
                 }
             }
         }
@@ -227,12 +272,14 @@ public final class MetadataProviderRegistry {
      * not needed for classloader changes — the cache is automatically
      * GC'd when the classloader is collected. This method is still useful
      * for test frameworks that reuse the same classloader but need to
-     * force re-discovery of registries.
+     * force re-discovery of registries. Cached entries from before the
+     * reset are recomputed on next lookup.
      */
     public static void reset() {
         synchronized (MetadataProviderRegistry.class) {
             registries = null;
             registriesClassLoader = null;
+            cacheGeneration++;
         }
     }
 }

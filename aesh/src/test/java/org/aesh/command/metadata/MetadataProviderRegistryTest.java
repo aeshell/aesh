@@ -19,14 +19,21 @@ package org.aesh.command.metadata;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -137,6 +144,206 @@ public class MetadataProviderRegistryTest {
         MetadataProviderRegistry.register(null);
     }
 
+    // --- Invalidation on register/reset (#647) ---
+
+    @Test
+    public void testStaleAbsentInvalidatedByRegister() {
+        MetadataProviderRegistry.reset();
+        // Caches the ABSENT sentinel for this class.
+        assertNull(MetadataProviderRegistry.getProvider(InvalidationProbeCommand.class));
+
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(InvalidationProbeCommand.class.getName()))
+                return new InvalidationProbeProvider();
+            return null;
+        });
+
+        CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(InvalidationProbeCommand.class);
+        assertNotNull("Registered provider must become visible", provider);
+        assertEquals("invalidation-probe", provider.commandName());
+    }
+
+    @Test
+    public void testStalePositiveInvalidatedByResetAndRegister() {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(PrecedenceProbeCommand.class.getName()))
+                return new PrecedenceProviderA();
+            return null;
+        });
+        CommandMetadataProvider<?> first = MetadataProviderRegistry.getProvider(PrecedenceProbeCommand.class);
+        assertNotNull(first);
+        assertEquals("probe-a", first.commandName());
+
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(PrecedenceProbeCommand.class.getName()))
+                return new PrecedenceProviderB();
+            return null;
+        });
+
+        CommandMetadataProvider<?> second = MetadataProviderRegistry.getProvider(PrecedenceProbeCommand.class);
+        assertNotNull(second);
+        assertEquals("Replacement provider must win after reset", "probe-b", second.commandName());
+        assertNotSame(first, second);
+    }
+
+    @Test
+    public void testLatestExplicitRegistrationWins() {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(PrecedenceProbeCommand.class.getName()))
+                return new PrecedenceProviderA();
+            return null;
+        });
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(PrecedenceProbeCommand.class.getName()))
+                return new PrecedenceProviderB();
+            return null;
+        });
+
+        // Explicit registrations are consulted before discovery, most
+        // recently registered first.
+        CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(PrecedenceProbeCommand.class);
+        assertNotNull(provider);
+        assertEquals("probe-b", provider.commandName());
+    }
+
+    @Test(timeout = 30000)
+    public void testConcurrentLookupRegisterReset() throws Exception {
+        MetadataProviderRegistry.reset();
+        // Warm up a stale ABSENT entry: without invalidation the final
+        // assertion below could never observe the replacement.
+        assertNull(MetadataProviderRegistry.getProvider(ConcurrentProbeCommand.class));
+
+        int lookupThreads = 4;
+        int iterations = 200;
+        CountDownLatch started = new CountDownLatch(lookupThreads + 1);
+        CountDownLatch release = new CountDownLatch(1);
+        AtomicReference<Throwable> failure = new AtomicReference<>();
+        ExecutorService executor = Executors.newFixedThreadPool(lookupThreads + 1);
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+            for (int t = 0; t < lookupThreads; t++) {
+                futures.add(executor.submit(() -> {
+                    started.countDown();
+                    try {
+                        if (!release.await(30, TimeUnit.SECONDS))
+                            throw new IllegalStateException("test gate was never released");
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return null;
+                    }
+                    for (int i = 0; i < iterations; i++) {
+                        // Mid-churn answers vary; only absence of failure matters.
+                        MetadataProviderRegistry.getProvider(ConcurrentProbeCommand.class);
+                    }
+                    return null;
+                }));
+            }
+            futures.add(executor.submit(() -> {
+                started.countDown();
+                try {
+                    if (!release.await(30, TimeUnit.SECONDS))
+                        throw new IllegalStateException("test gate was never released");
+                    // Churn registrations with distinct instances so each one
+                    // actually changes the registry set.
+                    for (int i = 0; i < 20; i++) {
+                        MetadataProviderRegistry.register(commandClassName -> null);
+                        MetadataProviderRegistry.reset();
+                    }
+                } catch (Throwable e) {
+                    failure.set(e);
+                }
+                return null;
+            }));
+
+            assertTrue(started.await(10, TimeUnit.SECONDS));
+            release.countDown();
+            for (Future<?> f : futures) {
+                f.get();
+            }
+            assertNull("Churn must stay quiet, got: " + failure.get(), failure.get());
+        } finally {
+            executor.shutdownNow();
+        }
+
+        // Quiesced final state is deterministic: the replacement is visible.
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(ConcurrentProbeCommand.class.getName()))
+                return new ConcurrentProbeProvider();
+            return null;
+        });
+        CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(ConcurrentProbeCommand.class);
+        assertNotNull(provider);
+        assertEquals("concurrent-probe", provider.commandName());
+    }
+
+    @Test
+    public void testReloadedClassResolvesWithoutCrossLoaderLeak() throws Exception {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(LoaderProbeCommand.class.getName()))
+                return new LoaderProbeProvider();
+            return null;
+        });
+        assertEquals("loader-probe",
+                MetadataProviderRegistry.getProvider(LoaderProbeCommand.class).commandName());
+
+        // Same binary name through an isolated child loader: an independent
+        // cache entry with the same name-keyed answer, no linkage errors.
+        Class<?> reloaded = childFirstLoad(LoaderProbeCommand.class.getName());
+        assertNotSame(LoaderProbeCommand.class, reloaded);
+        assertEquals("loader-probe", lookup(reloaded).commandName());
+
+        // Invalidation applies across loaders afterwards.
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(LoaderProbeCommand.class.getName()))
+                return new LoaderProbeReplacement();
+            return null;
+        });
+        assertEquals("loader-probe-2",
+                MetadataProviderRegistry.getProvider(LoaderProbeCommand.class).commandName());
+        assertEquals("loader-probe-2", lookup(reloaded).commandName());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static CommandMetadataProvider<?> lookup(Class<?> commandClass) {
+        return MetadataProviderRegistry.getProvider((Class<? extends Command>) commandClass);
+    }
+
+    /**
+     * Loads one class child-first from the test-classes output, delegating
+     * everything else to the parent loader.
+     */
+    private static Class<?> childFirstLoad(String className) throws Exception {
+        URL classesDir = LoaderProbeCommand.class.getProtectionDomain().getCodeSource().getLocation();
+        ClassLoader parent = MetadataProviderRegistryTest.class.getClassLoader();
+        ClassLoader child = new URLClassLoader(new URL[] { classesDir }, parent) {
+            @Override
+            protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+                synchronized (getClassLoadingLock(name)) {
+                    Class<?> loaded = findLoadedClass(name);
+                    if (loaded == null && name.equals(className)) {
+                        try {
+                            loaded = findClass(name);
+                        } catch (ClassNotFoundException e) {
+                            // fall through to parent below
+                        }
+                    }
+                    if (loaded == null)
+                        loaded = super.loadClass(name, false);
+                    if (resolve)
+                        resolveClass(loaded);
+                    return loaded;
+                }
+            }
+        };
+        return Class.forName(className, false, child);
+    }
+
     @CommandDefinition(name = "register-test", description = "Test for explicit registration")
     public static class RegisterTestCommand implements Command<CommandInvocation> {
         @Override
@@ -188,6 +395,122 @@ public class MetadataProviderRegistryTest {
         @Override
         public CommandResult execute(CommandInvocation ci) {
             return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- Invalidation fixtures (#647): dedicated classes per case so no
+    // other test can pre-populate their cache entries ---
+
+    public static class InvalidationProbeCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class PrecedenceProbeCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class ConcurrentProbeCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    /**
+     * Self-contained on purpose: reloaded through an isolated child loader,
+     * so it must not reference the enclosing test class.
+     */
+    public static class LoaderProbeCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private abstract static class NamedProvider<C extends Command> implements CommandMetadataProvider<C> {
+        private final Class<C> type;
+        private final String name;
+
+        NamedProvider(Class<C> type, String name) {
+            this.type = type;
+            this.name = name;
+        }
+
+        @Override
+        public Class<C> commandType() {
+            return type;
+        }
+
+        @Override
+        public C newInstance() {
+            try {
+                return type.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        @Override
+        public org.aesh.command.impl.internal.ProcessedCommand buildProcessedCommand(C instance) {
+            return null;
+        }
+
+        @Override
+        public boolean isGroupCommand() {
+            return false;
+        }
+
+        @Override
+        @SuppressWarnings("rawtypes")
+        public Class[] groupCommandClasses() {
+            return new Class[0];
+        }
+
+        @Override
+        public String commandName() {
+            return name;
+        }
+    }
+
+    private static class InvalidationProbeProvider extends NamedProvider<InvalidationProbeCommand> {
+        InvalidationProbeProvider() {
+            super(InvalidationProbeCommand.class, "invalidation-probe");
+        }
+    }
+
+    private static class PrecedenceProviderA extends NamedProvider<PrecedenceProbeCommand> {
+        PrecedenceProviderA() {
+            super(PrecedenceProbeCommand.class, "probe-a");
+        }
+    }
+
+    private static class PrecedenceProviderB extends NamedProvider<PrecedenceProbeCommand> {
+        PrecedenceProviderB() {
+            super(PrecedenceProbeCommand.class, "probe-b");
+        }
+    }
+
+    private static class ConcurrentProbeProvider extends NamedProvider<ConcurrentProbeCommand> {
+        ConcurrentProbeProvider() {
+            super(ConcurrentProbeCommand.class, "concurrent-probe");
+        }
+    }
+
+    private static class LoaderProbeProvider extends NamedProvider<LoaderProbeCommand> {
+        LoaderProbeProvider() {
+            super(LoaderProbeCommand.class, "loader-probe");
+        }
+    }
+
+    private static class LoaderProbeReplacement extends NamedProvider<LoaderProbeCommand> {
+        LoaderProbeReplacement() {
+            super(LoaderProbeCommand.class, "loader-probe-2");
         }
     }
 }
