@@ -22,7 +22,6 @@ package org.aesh.command.impl.operator;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -36,28 +35,53 @@ import java.io.IOException;
  */
 public class InputDelegate {
 
-    private final String path;
+    private final File file;
     private BufferedInputStream cachedStream;
 
-    InputDelegate(String path) {
-        this.path = path;
+    InputDelegate(File file) {
+        if (file == null)
+            throw new NullPointerException("input redirection requires a file");
+        this.file = file;
+    }
+
+    /**
+     * The resolved file this delegate reads, for diagnostics.
+     *
+     * @return the input file
+     */
+    public File file() {
+        return file;
+    }
+
+    /**
+     * Opens the input, failing fast on missing or unreadable files. The
+     * opened stream is cached, so a later {@link #read()} reuses it.
+     *
+     * @throws IOException when the file cannot be opened
+     */
+    void verify() throws IOException {
+        readOrThrow();
     }
 
     /**
      * Returns the input stream for the redirected file.
      * Opens the file on first call, returns the cached stream on subsequent calls.
      *
-     * @return the input stream, or null if the file does not exist
+     * @return the input stream, or null if the file cannot be opened
+     *         (e.g. removed between verification and first read)
      */
     public BufferedInputStream read() {
-        if (cachedStream != null)
-            return cachedStream;
         try {
-            cachedStream = new BufferedInputStream(new FileInputStream(new File(path)));
-            return cachedStream;
-        } catch (FileNotFoundException e) {
+            return readOrThrow();
+        } catch (IOException e) {
             return null;
         }
+    }
+
+    private BufferedInputStream readOrThrow() throws IOException {
+        if (cachedStream == null)
+            cachedStream = new BufferedInputStream(new FileInputStream(file));
+        return cachedStream;
     }
 
     /**

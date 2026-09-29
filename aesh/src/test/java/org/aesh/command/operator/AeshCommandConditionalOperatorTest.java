@@ -177,6 +177,9 @@ public class AeshCommandConditionalOperatorTest {
         latchRef.set(new CountDownLatch(3));
         File outFile2 = new File(tmpDir, "conditional_out2.txt");
         File inFile = new File(tmpDir, "conditional_in.txt");
+        // Input redirection opens its file at build time: the file must
+        // exist (missing input is a failure, not absent stdin, since #653).
+        Files.write(inFile.toPath(), new byte[0]);
         connection.read("success < " + inFile.getAbsolutePath() + " && success < "
                 + inFile.getAbsolutePath() + " || success < " + inFile.getAbsolutePath()
                 + " && success > " + outFile2.getAbsolutePath() + Config.getLineSeparator());
@@ -185,6 +188,7 @@ public class AeshCommandConditionalOperatorTest {
         List<String> output2 = Files.readAllLines(outFile2.toPath());
         assertEquals("success2", output2.get(0));
         Files.delete(outFile2.toPath());
+        Files.delete(inFile.toPath());
         reset(connection);
 
         console.stop();

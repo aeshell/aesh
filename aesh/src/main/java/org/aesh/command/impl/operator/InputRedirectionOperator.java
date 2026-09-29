@@ -19,6 +19,7 @@
  */
 package org.aesh.command.impl.operator;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.aesh.command.invocation.CommandInvocationConfiguration;
@@ -40,7 +41,22 @@ public class InputRedirectionOperator implements ConfigurationOperator {
     @Override
     public CommandInvocationConfiguration getConfiguration() throws IOException {
         if (config == null) {
-            config = new CommandInvocationConfiguration(context, new InputDelegate(argument));
+            if (argument == null)
+                throw new IOException("input redirection requires a file argument");
+            // Resolve relative paths against the aesh working directory,
+            // mirroring output redirection (FileOutputDelegate).
+            File file = new File(argument);
+            if (!file.isAbsolute()) {
+                file = new File(context.getCurrentWorkingDirectory().getAbsolutePath(), argument);
+            }
+            InputDelegate delegate = new InputDelegate(file);
+            try {
+                delegate.verify();
+            } catch (IOException e) {
+                throw new IOException("Cannot redirect input from '" + argument
+                        + "' (resolved: " + file.getAbsolutePath() + ")", e);
+            }
+            config = new CommandInvocationConfiguration(context, delegate);
         }
         return config;
     }
