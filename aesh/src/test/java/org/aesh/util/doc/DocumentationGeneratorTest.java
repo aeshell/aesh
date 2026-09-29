@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -171,9 +172,10 @@ public class DocumentationGeneratorTest {
         assertTrue("Should contain subcommand description", doc.contains("First subcommand"));
         assertTrue("Should contain [COMMAND] in synopsis", doc.contains("[COMMAND]"));
 
-        // Subcommand documentation should be included inline (#483)
-        assertTrue("Should contain sub1 title", doc.contains("= APP-SUB1"));
-        assertTrue("Should contain sub2 title", doc.contains("= APP-SUB2"));
+        // Subcommand documentation should be included inline (#483).
+        // Titles use the display path with tokens preserved exactly (#656).
+        assertTrue("Should contain sub1 title", doc.contains("= APP SUB1"));
+        assertTrue("Should contain sub2 title", doc.contains("= APP SUB2"));
         assertTrue("Should contain sub1 NAME section", doc.contains("app sub1 -- First subcommand"));
         assertTrue("Should contain sub2 NAME section", doc.contains("app sub2 -- Second subcommand"));
     }
@@ -1143,5 +1145,200 @@ public class DocumentationGeneratorTest {
             }
         }
         return "";
+    }
+
+    // --- Hyphenated command names (#656) ---
+
+    @CommandDefinition(name = "leaf", description = "Leaf op")
+    public static class HyphenLeafCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub", description = "Sub op for ${ROOT-COMMAND-NAME}", groupCommands = {
+            HyphenLeafCommand.class })
+    public static class HyphenSubCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "my-tool", description = "Hyphenated tool", groupCommands = { HyphenSubCommand.class })
+    public static class HyphenToolCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testHyphenatedNamesPreservedInAllFormats() throws CommandLineParserException {
+        for (DocFormat format : new DocFormat[] { DocFormat.ASCIIDOC, DocFormat.MARKDOWN,
+                DocFormat.SKILL }) {
+            String doc = DocumentationGenerator.builder()
+                    .commandClass(HyphenToolCommand.class)
+                    .format(format)
+                    .generateSingle();
+
+            assertTrue(format + " must show the exact root token, got: " + doc,
+                    doc.contains("my-tool"));
+            assertFalse(format + " must not mangle the root token, got: " + doc,
+                    doc.contains("my tool sub") || doc.contains("= MY TOOL"));
+            assertTrue(format + " must show the exact child path, got: " + doc,
+                    doc.contains("my-tool sub"));
+            assertTrue(format + " must show the exact leaf path, got: " + doc,
+                    doc.contains("my-tool sub leaf"));
+            assertTrue(format + " must resolve the root variable exactly, got: " + doc,
+                    doc.contains("Sub op for my-tool"));
+        }
+    }
+
+    @Test
+    public void testHyphenatedSkillFrontMatter() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(HyphenToolCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        assertTrue("SKILL command must be the exact path, got: " + doc,
+                doc.contains("command: my-tool sub leaf") || doc.contains("command: my-tool"));
+        assertFalse("SKILL command must not mangle tokens, got: " + doc,
+                doc.contains("command: my tool"));
+    }
+
+    @Test
+    public void testHyphenatedFilesAndNav() throws CommandLineParserException, IOException {
+        Path tempDir = Files.createTempDirectory("aesh-doc-hyphen-test");
+        try {
+            File navFile = new File(tempDir.toFile(), "nav.adoc");
+            DocumentationGenerator.builder()
+                    .commandClass(HyphenToolCommand.class)
+                    .format(DocFormat.ASCIIDOC)
+                    .outputDir(tempDir.toFile())
+                    .navFile(navFile)
+                    .generate();
+
+            assertTrue("Should create my-tool.adoc",
+                    new File(tempDir.toFile(), "my-tool.adoc").exists());
+            assertTrue("Should create my-tool-sub.adoc",
+                    new File(tempDir.toFile(), "my-tool-sub.adoc").exists());
+            assertTrue("Should create my-tool-sub-leaf.adoc",
+                    new File(tempDir.toFile(), "my-tool-sub-leaf.adoc").exists());
+
+            String nav = new String(Files.readAllBytes(navFile.toPath()));
+            assertTrue("Nav must link the leaf slug, got: " + nav,
+                    nav.contains("my-tool-sub-leaf.adoc"));
+            assertTrue("Nav must display the leaf segment, got: " + nav,
+                    nav.contains("[leaf]"));
+        } finally {
+            Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
+                    .map(Path::toFile).forEach(File::delete);
+        }
+    }
+
+    @Test
+    public void testCustomHyphenatedProgramName() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(HyphenSubCommand.class)
+                .programName("my-tool")
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+
+        assertTrue("Custom program name must stay verbatim, got: " + doc,
+                doc.contains("# MY-TOOL"));
+        assertTrue("Child path must use the program name, got: " + doc,
+                doc.contains("my-tool leaf"));
+        assertFalse("Program name must not be truncated, got: " + doc,
+                doc.contains("my leaf"));
+    }
+
+    @CommandDefinition(name = "sub", aliases = { "sb-x" }, description = "Aliased sub")
+    public static class HyphenAliasSubCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "my-tool", description = "Tool with alias", groupCommands = { HyphenAliasSubCommand.class })
+    public static class HyphenAliasToolCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testHyphenatedAliasPreserved() throws CommandLineParserException {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(HyphenAliasToolCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+
+        assertTrue("Hyphenated alias must render exactly, got: " + doc,
+                doc.contains("- sb-x"));
+    }
+
+    @CommandDefinition(name = "b-c", description = "Ambiguous leaf")
+    public static class AmbiguousLeafCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "a", description = "Ambiguous root", groupCommands = { AmbiguousLeafCommand.class })
+    public static class AmbiguousRootCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "c", description = "Other leaf")
+    public static class OtherLeafCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "a-b", description = "Other root", groupCommands = { OtherLeafCommand.class })
+    public static class OtherRootCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testFilenameCollisionFailsClearly() throws CommandLineParserException, IOException {
+        Path tempDir = Files.createTempDirectory("aesh-doc-collision-test");
+        try {
+            // a-b/c and a/b-c map to the same slug: the second tree must
+            // fail clearly instead of silently overwriting the first page.
+            DocumentationGenerator.builder()
+                    .commandClass(OtherRootCommand.class)
+                    .format(DocFormat.MARKDOWN)
+                    .outputDir(tempDir.toFile())
+                    .generate();
+            try {
+                DocumentationGenerator.builder()
+                        .commandClass(AmbiguousRootCommand.class)
+                        .format(DocFormat.MARKDOWN)
+                        .outputDir(tempDir.toFile())
+                        .generate();
+                fail("Expected IOException for colliding documentation filenames");
+            } catch (IOException e) {
+                assertTrue("Error must name the slug, got: " + e.getMessage(),
+                        e.getMessage().contains("a-b-c.md"));
+            }
+        } finally {
+            Files.walk(tempDir).sorted(java.util.Comparator.reverseOrder())
+                    .map(Path::toFile).forEach(File::delete);
+        }
     }
 }

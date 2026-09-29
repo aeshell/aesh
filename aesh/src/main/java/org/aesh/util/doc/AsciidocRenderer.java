@@ -60,9 +60,9 @@ class AsciidocRenderer implements DocRenderer {
         // Title
         sb.append("= ").append(fullName.toUpperCase()).append("\n\n");
 
-        // Name section
+        // Name section (fullName is the display path: tokens exact)
         sb.append("== NAME\n\n");
-        sb.append(fullName.replace('-', ' ')).append(" -- ").append(description).append("\n\n");
+        sb.append(fullName).append(" -- ").append(description).append("\n\n");
 
         // Synopsis section
         sb.append("== SYNOPSIS\n\n");
@@ -114,13 +114,13 @@ class AsciidocRenderer implements DocRenderer {
                 sb.append("== COMMANDS\n\n");
                 for (CommandLineParser<?> child : children) {
                     String childName = child.getProcessedCommand().name();
-                    String childFullName = fullName + "-" + childName;
+                    String childFullName = fullName + " " + childName;
                     // Resolve variables in child description using the child's context
                     String childDesc = resolveDescription(child.getProcessedCommand(),
                             child.getProcessedCommand().description(),
                             new DocumentationGenerator.NameContext(childName, childFullName,
                                     nameCtx.rootName, fullName));
-                    String fileName = childFullName + ".adoc";
+                    String fileName = DocumentationGenerator.fileSlug(childFullName) + ".adoc";
 
                     if (!crossRefPrefix.isEmpty()) {
                         sb.append("* xref:").append(crossRefPrefix).append(fileName)
@@ -237,7 +237,7 @@ class AsciidocRenderer implements DocRenderer {
     private String buildSynopsis(CommandLineParser<?> parser, String fullName) {
         StringBuilder sb = new StringBuilder();
         sb.append("[source]\n----\n");
-        sb.append(fullName.replace('-', ' '));
+        sb.append(fullName);
         sb.append(parser.getProcessedCommand().buildSynopsisString(false, parser.isGroupCommand()));
         sb.append("\n----");
         return sb.toString();
@@ -268,10 +268,11 @@ class AsciidocRenderer implements DocRenderer {
                 stars.append('*');
             String prefix = stars.toString() + " ";
             String displayName = entry.fullName;
-            // Use just the last segment for display
-            int lastDash = displayName.lastIndexOf('-');
-            if (lastDash > 0 && entry.parentName != null) {
-                displayName = displayName.substring(lastDash + 1);
+            // Display the leaf segment: strip the parent display prefix
+            // (lastIndexOf would corrupt hyphenated names).
+            if (entry.parentName != null
+                    && displayName.startsWith(entry.parentName + " ")) {
+                displayName = displayName.substring(entry.parentName.length() + 1);
             }
 
             if (!crossRefPrefix.isEmpty()) {
@@ -296,10 +297,10 @@ class AsciidocRenderer implements DocRenderer {
             return raw;
         return cmd.resolveCommandDescription(raw,
                 ctx.commandName,
-                ctx.fullName != null ? ctx.fullName.replace('-', ' ') : ctx.commandName,
+                ctx.fullName != null ? ctx.fullName : ctx.commandName,
                 ctx.rootName,
                 ctx.parentName,
-                ctx.parentName != null ? ctx.parentName.replace('-', ' ') : null);
+                ctx.parentName);
     }
 
     @SuppressWarnings("unchecked")

@@ -22,6 +22,8 @@ package org.aesh.util.doc;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -86,23 +88,52 @@ public class DocumentationGenerator {
     public String generateSingle() {
         DocRenderer renderer = createRenderer();
         StringBuilder sb = new StringBuilder();
-        generateSingleRecursive(parser, programName, null, renderer, sb);
+        List<String> segments = new ArrayList<>();
+        segments.add(programName);
+        generateSingleRecursive(parser, segments, renderer, sb);
         return sb.toString();
     }
 
-    private void generateSingleRecursive(CommandLineParser<?> parser, String fullName,
-            String parentName, DocRenderer renderer, StringBuilder sb) {
+    private void generateSingleRecursive(CommandLineParser<?> parser, List<String> segments,
+            DocRenderer renderer, StringBuilder sb) {
+        String fullName = displayPath(segments);
+        String parentName = parentDisplayPath(segments);
         HelpSectionContent helpContent = resolveHelpContent(parser, fullName, parentName);
         NameContext nameCtx = buildNameContext(parser, fullName, parentName);
         sb.append(renderer.renderCommand(parser, fullName, parentName, helpContent, nameCtx));
 
         if (parser.isGroupCommand()) {
             for (CommandLineParser<?> child : parser.getAllChildParsers()) {
-                String childFullName = fullName + "-" + child.getProcessedCommand().name();
                 sb.append("\n");
-                generateSingleRecursive(child, childFullName, fullName, renderer, sb);
+                List<String> childSegments = new ArrayList<>(segments);
+                childSegments.add(child.getProcessedCommand().name());
+                generateSingleRecursive(child, childSegments, renderer, sb);
             }
         }
+    }
+
+    /**
+     * Joins path segments into the displayable invocation path, preserving
+     * every token exactly (hyphenated names stay hyphenated).
+     */
+    static String displayPath(List<String> segments) {
+        return String.join(" ", segments);
+    }
+
+    private static String parentDisplayPath(List<String> segments) {
+        if (segments.size() < 2)
+            return null;
+        return String.join(" ", segments.subList(0, segments.size() - 1));
+    }
+
+    /**
+     * Maps a display path to its documentation file slug. Segments never
+     * contain spaces, so this inverts {@link #displayPath} within one
+     * command tree; distinct segmentations can still collide (checked by
+     * the caller, which fails clearly instead of overwriting).
+     */
+    static String fileSlug(String displayPath) {
+        return displayPath.replace(' ', '-');
     }
 
     /**
@@ -119,20 +150,36 @@ public class DocumentationGenerator {
         DocRenderer renderer = createRenderer();
         List<NavEntry> navEntries = new ArrayList<>();
 
-        generateRecursive(parser, programName, null, renderer, navEntries);
+        List<String> segments = new ArrayList<>();
+        segments.add(programName);
+        generateRecursive(parser, segments, renderer, navEntries);
 
         if (navFile != null) {
             renderer.writeNavFile(navFile, navEntries);
         }
     }
 
-    private void generateRecursive(CommandLineParser<?> parser, String fullName,
-            String parentName, DocRenderer renderer, List<NavEntry> navEntries) throws IOException {
+    private void generateRecursive(CommandLineParser<?> parser, List<String> segments,
+            DocRenderer renderer, List<NavEntry> navEntries) throws IOException {
+        String fullName = displayPath(segments);
+        String parentName = parentDisplayPath(segments);
         HelpSectionContent helpContent = resolveHelpContent(parser, fullName, parentName);
         NameContext nameCtx = buildNameContext(parser, fullName, parentName);
         String content = renderer.renderCommand(parser, fullName, parentName, helpContent, nameCtx);
-        String fileName = fullName.replace(' ', '-') + "." + format.extension();
+        String fileName = fileSlug(fullName) + "." + format.extension();
         File outFile = new File(outputDir, fileName);
+        if (outFile.isFile()) {
+            // A different command page already owns this slug (distinct
+            // segmentations flatten equally, e.g. a-b/c vs a/b-c): fail
+            // clearly instead of silently overwriting it. Identical content
+            // rebuilds idempotently.
+            String existing = new String(Files.readAllBytes(outFile.toPath()), StandardCharsets.UTF_8);
+            if (!existing.equals(content)) {
+                throw new IOException("Documentation filename collision: '" + fullName
+                        + "' maps to '" + fileName + "', already generated with different content. "
+                        + "Rename one of the commands.");
+            }
+        }
 
         try (FileWriter writer = new FileWriter(outFile)) {
             writer.write(content);
@@ -142,8 +189,9 @@ public class DocumentationGenerator {
 
         if (parser.isGroupCommand()) {
             for (CommandLineParser<?> child : parser.getAllChildParsers()) {
-                String childFullName = fullName + "-" + child.getProcessedCommand().name();
-                generateRecursive(child, childFullName, fullName, renderer, navEntries);
+                List<String> childSegments = new ArrayList<>(segments);
+                childSegments.add(child.getProcessedCommand().name());
+                generateRecursive(child, childSegments, renderer, navEntries);
             }
         }
     }
@@ -201,28 +249,22 @@ public class DocumentationGenerator {
 
     private NameContext buildNameContext(CommandLineParser<?> parser, String fullName, String parentName) {
         String commandName = parser.getProcessedCommand().name();
-        String rootName = programName;
-        int dashIdx = rootName.indexOf('-');
-        if (dashIdx > 0)
-            rootName = rootName.substring(0, dashIdx);
-        return new NameContext(commandName, fullName, rootName, parentName);
+        // The program (root) name is used verbatim: truncating it at the
+        // first hyphen corrupted names like my-tool into my (#656).
+        return new NameContext(commandName, fullName, programName, parentName);
     }
 
     private String resolveVariables(String text, String commandName, String fullName, String parentName) {
         if (text == null || text.isEmpty())
             return text;
-        // Derive root command name from fullName (first segment)
-        String rootName = programName;
-        int dashIdx = rootName.indexOf('-');
-        if (dashIdx > 0)
-            rootName = rootName.substring(0, dashIdx);
-
+        // Names arrive as display paths (segments joined with spaces,
+        // tokens preserved exactly), matching the resolver contract.
         return parser.getProcessedCommand().resolveCommandDescription(text,
                 commandName,
-                fullName != null ? fullName.replace('-', ' ') : commandName,
-                rootName,
+                fullName != null ? fullName : commandName,
+                programName,
                 parentName,
-                parentName != null ? parentName.replace('-', ' ') : null);
+                parentName);
     }
 
     /**

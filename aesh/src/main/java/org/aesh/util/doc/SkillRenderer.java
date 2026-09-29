@@ -61,7 +61,7 @@ class SkillRenderer implements DocRenderer {
         ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
         StringBuilder sb = new StringBuilder();
 
-        String commandPath = fullName.replace('-', ' ');
+        String commandPath = fullName;
 
         // Resolve description: prefer format-specific override, then annotation description
         String description = helpContent.descriptionOverride != null
@@ -148,7 +148,7 @@ class SkillRenderer implements DocRenderer {
                 for (CommandLineParser<?> child : children) {
                     String childName = child.getProcessedCommand().name();
                     String childPath = commandPath + " " + childName;
-                    String childFullName = fullName + "-" + childName;
+                    String childFullName = fullName + " " + childName;
                     String childDesc = resolveDescription(child.getProcessedCommand(),
                             child.getProcessedCommand().description(),
                             new DocumentationGenerator.NameContext(childName, childFullName,
@@ -333,7 +333,7 @@ class SkillRenderer implements DocRenderer {
 
     private String buildSynopsis(CommandLineParser<?> parser, String fullName) {
         StringBuilder sb = new StringBuilder();
-        sb.append(fullName.replace('-', ' '));
+        sb.append(fullName);
         sb.append(parser.getProcessedCommand().buildSynopsisString(true, parser.isGroupCommand()));
         return sb.toString();
     }
@@ -344,10 +344,10 @@ class SkillRenderer implements DocRenderer {
             return raw;
         return cmd.resolveCommandDescription(raw,
                 ctx.commandName,
-                ctx.fullName != null ? ctx.fullName.replace('-', ' ') : ctx.commandName,
+                ctx.fullName != null ? ctx.fullName : ctx.commandName,
                 ctx.rootName,
                 ctx.parentName,
-                ctx.parentName != null ? ctx.parentName.replace('-', ' ') : null);
+                ctx.parentName);
     }
 
     /** Escape pipe characters and newlines in table cells. */

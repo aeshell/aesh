@@ -59,7 +59,7 @@ class MarkdownRenderer implements DocRenderer {
 
         // Name
         sb.append("## NAME\n\n");
-        sb.append(fullName.replace('-', ' ')).append(" -- ").append(description).append("\n\n");
+        sb.append(fullName).append(" -- ").append(description).append("\n\n");
 
         // Synopsis
         sb.append("## SYNOPSIS\n\n");
@@ -115,12 +115,12 @@ class MarkdownRenderer implements DocRenderer {
                 sb.append("## COMMANDS\n\n");
                 for (CommandLineParser<?> child : children) {
                     String childName = child.getProcessedCommand().name();
-                    String childFullName = fullName + "-" + childName;
+                    String childFullName = fullName + " " + childName;
                     String childDesc = resolveDescription(child.getProcessedCommand(),
                             child.getProcessedCommand().description(),
                             new DocumentationGenerator.NameContext(childName, childFullName,
                                     nameCtx.rootName, fullName));
-                    String fileName = childFullName + ".md";
+                    String fileName = DocumentationGenerator.fileSlug(childFullName) + ".md";
 
                     sb.append("- [**").append(childName).append("**](").append(fileName).append(")");
                     if (childDesc != null && !childDesc.isEmpty()) {
@@ -222,15 +222,15 @@ class MarkdownRenderer implements DocRenderer {
             return raw;
         return cmd.resolveCommandDescription(raw,
                 ctx.commandName,
-                ctx.fullName != null ? ctx.fullName.replace('-', ' ') : ctx.commandName,
+                ctx.fullName != null ? ctx.fullName : ctx.commandName,
                 ctx.rootName,
                 ctx.parentName,
-                ctx.parentName != null ? ctx.parentName.replace('-', ' ') : null);
+                ctx.parentName);
     }
 
     private String buildSynopsis(CommandLineParser<?> parser, String fullName) {
         StringBuilder sb = new StringBuilder();
-        sb.append(fullName.replace('-', ' '));
+        sb.append(fullName);
         sb.append(parser.getProcessedCommand().buildSynopsisString(false, parser.isGroupCommand()));
         return sb.toString();
     }
@@ -240,10 +240,12 @@ class MarkdownRenderer implements DocRenderer {
         StringBuilder sb = new StringBuilder();
         sb.append("# Commands\n\n");
         for (DocumentationGenerator.NavEntry entry : entries) {
+            // Display the leaf segment: strip the parent display prefix
+            // (lastIndexOf would corrupt hyphenated names).
             String displayName = entry.fullName;
-            int lastDash = displayName.lastIndexOf('-');
-            if (lastDash > 0 && entry.parentName != null) {
-                displayName = displayName.substring(lastDash + 1);
+            if (entry.parentName != null
+                    && displayName.startsWith(entry.parentName + " ")) {
+                displayName = displayName.substring(entry.parentName.length() + 1);
             }
 
             String indent = entry.parentName != null ? "  " : "";
