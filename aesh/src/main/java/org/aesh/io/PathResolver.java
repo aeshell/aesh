@@ -242,7 +242,16 @@ public class PathResolver {
         int starIndex = path.toString().indexOf(STAR);
         int wildcardIndex = path.toString().indexOf(WILDCARD);
 
-        int index = (starIndex < wildcardIndex || wildcardIndex < 0) ? starIndex : wildcardIndex;
+        // First present wildcard wins. The old ternary preferred the -1
+        // sentinel of an absent star over a real question-mark index,
+        // deriving invalid substring bounds for ?-only patterns (#652).
+        int index;
+        if (starIndex < 0)
+            index = wildcardIndex;
+        else if (wildcardIndex < 0)
+            index = starIndex;
+        else
+            index = Math.min(starIndex, wildcardIndex);
 
         if (index == 0 && path.toString().length() == 1)
             return new PathCriteria(String.valueOf(SEPARATOR), "", path.toString());

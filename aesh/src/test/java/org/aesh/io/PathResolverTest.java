@@ -152,6 +152,84 @@ public class PathResolverTest {
     }
 
     @Test
+    public void testQuestionMarkOnlyPatternFindsFile() throws IOException {
+        File tmp = tempDir.toFile();
+        // Used to throw StringIndexOutOfBoundsException: parsePath chose
+        // the absent star's -1 over the question-mark index (#652).
+        File match = new File(tmp, "a1.txt");
+        assertTrue(match.createNewFile());
+        match.deleteOnExit();
+
+        List<File> files = PathResolver.resolvePath(new File("a?.txt"), tmp);
+        assertEquals(1, files.size());
+        assertEquals(match.getAbsolutePath(), files.get(0).getAbsolutePath());
+    }
+
+    @Test
+    public void testQuestionMarkOnlyPatternNoMatchIsEmpty() throws IOException {
+        File tmp = tempDir.toFile();
+        File match = new File(tmp, "a1.txt");
+        assertTrue(match.createNewFile());
+        match.deleteOnExit();
+
+        List<File> files = PathResolver.resolvePath(new File("b?.txt"), tmp);
+        assertTrue(files.isEmpty());
+    }
+
+    @Test
+    public void testStarOnlyPatternFindsFile() throws IOException {
+        File tmp = tempDir.toFile();
+        File match = new File(tmp, "a1.txt");
+        assertTrue(match.createNewFile());
+        match.deleteOnExit();
+
+        List<File> files = PathResolver.resolvePath(new File("*.txt"), tmp);
+        assertEquals(1, files.size());
+        assertEquals(match.getAbsolutePath(), files.get(0).getAbsolutePath());
+    }
+
+    @Test
+    public void testMixedWildcardsTakeFirstPresent() throws IOException {
+        File tmp = tempDir.toFile();
+        File match = new File(tmp, "a1.txt");
+        assertTrue(match.createNewFile());
+        match.deleteOnExit();
+
+        // Star first, question mark later.
+        List<File> files = PathResolver.resolvePath(new File("*.t?t"), tmp);
+        assertEquals(1, files.size());
+        assertEquals(match.getAbsolutePath(), files.get(0).getAbsolutePath());
+
+        // Question mark first, star later.
+        files = PathResolver.resolvePath(new File("a?.*"), tmp);
+        assertEquals(1, files.size());
+        assertEquals(match.getAbsolutePath(), files.get(0).getAbsolutePath());
+    }
+
+    @Test
+    public void testWildcardInMiddleSegment() throws IOException {
+        File tmp = tempDir.toFile();
+        String sep = Config.getPathSeparator();
+        File sub = new File(tmp, "sub");
+        assertTrue(sub.mkdir());
+        sub.deleteOnExit();
+        File match = new File(sub, "a1.txt");
+        assertTrue(match.createNewFile());
+        match.deleteOnExit();
+
+        // Relative wildcard-bearing segment.
+        List<File> files = PathResolver.resolvePath(new File("sub" + sep + "a?.txt"), tmp);
+        assertEquals(1, files.size());
+        assertEquals(match.getAbsolutePath(), files.get(0).getAbsolutePath());
+
+        // Absolute form.
+        files = PathResolver.resolvePath(
+                new File(tmp.getAbsolutePath() + sep + "sub" + sep + "a?.txt"), tmp);
+        assertEquals(1, files.size());
+        assertEquals(match.getAbsolutePath(), files.get(0).getAbsolutePath());
+    }
+
+    @Test
     public void testDotDotDotNamesArePreserved() {
         File tmp = tempDir.toFile();
         String sep = Config.getPathSeparator();
