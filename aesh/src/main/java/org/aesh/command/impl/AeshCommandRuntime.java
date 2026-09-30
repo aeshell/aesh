@@ -34,7 +34,6 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandNotFoundHandler;
-import org.aesh.command.CommandResolver;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.Execution;
@@ -89,7 +88,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private static final Logger LOGGER = Logger.getLogger(AeshCommandRuntime.class.getName());
     private final CommandNotFoundHandler commandNotFoundHandler;
 
-    private final CommandResolver<CI> commandResolver;
+    private final AeshCommandResolver<CI> commandResolver;
     private final AeshContext ctx;
     private final CommandInvocationBuilder<CI> commandInvocationBuilder;
 
@@ -210,15 +209,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     private Executor<CI> buildExecutorFromArgs(String commandName, String[] args)
             throws CommandNotFoundException, CommandLineParserException, IOException {
-        // Build a display string for error messages
-        StringBuilder displayLine = new StringBuilder(commandName);
-        if (args != null) {
-            for (String arg : args) {
-                displayLine.append(' ').append(arg);
-            }
-        }
-
-        // Create ParsedLine directly from pre-tokenized args, bypassing LineParser
+        // Create ParsedLine directly from pre-tokenized args, bypassing LineParser.
+        // Words and offsets are computed arithmetically exactly as before
+        // (empty args keep their ParsedWord, see #651); only the display
+        // string is deferred to first read, which the success path never
+        // performs (#662).
         List<ParsedWord> words = new ArrayList<>();
         words.add(new ParsedWord(commandName, 0));
         int offset = commandName.length() + 1;
@@ -228,8 +223,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 offset += arg.length() + 1;
             }
         }
-        ParsedLine parsedLine = new ParsedLine(displayLine.toString(), words,
-                -1, -1, -1, ParserStatus.OK, "", OperatorType.NONE);
+        ParsedLine parsedLine = new LazyParsedLine(commandName, args, words);
 
         try {
             List<Execution<CI>> executions = Executions.buildExecution(
@@ -239,7 +233,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             throw e;
         } catch (CommandNotFoundException cmd) {
             if (commandNotFoundHandler != null) {
-                commandNotFoundHandler.handleCommandNotFound(displayLine.toString(),
+                commandNotFoundHandler.handleCommandNotFound(parsedLine.line(),
                         msg -> commandInvocationBuilder.build(this, null, null).getShell().writeln(msg),
                         cmd.getCommandName(), registry.getAllCommandNames());
             }
@@ -553,7 +547,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             return null;
         }
         final String name = aeshLine.firstWord().word();
-        CommandContainer<CI> container = commandResolver.resolveCommand(name, aeshLine.line());
+        // Name-only resolution: evaluating the display line here would
+        // materialize it on every pre-tokenized execution (#662).
+        CommandContainer<CI> container = commandResolver.resolveCommandByName(name);
         if (container == null) {
             throw new CommandNotFoundException("No command handler for '" + name + "'.", name);
         }

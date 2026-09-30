@@ -74,14 +74,29 @@ public class AeshCommandResolver<CI extends CommandInvocation> implements Comman
     }
 
     /**
+     * Resolves a command by name without requiring the input line.
+     * Used by the pre-tokenized execution path, which assembles no
+     * display buffer: evaluating {@code ParsedLine.line()} there would
+     * materialize it on every call (#662). Registry lookup never
+     * consults the line content (see {@link #resolveCommand(String, String)}).
+     *
+     * @param name command name
+     * @return the matching CommandContainer
+     * @throws CommandNotFoundException if no command matches
+     */
+    public CommandContainer<CI> resolveCommandByName(String name) throws CommandNotFoundException {
+        return getCommand(name, null);
+    }
+
+    /**
      * try to return the command in the given registry if the given registry do
      * not find the command, check if we have a internal registry and if its
      * there.
      *
      * @param commandName command name
      * @param line command line
-     * @return command
-     * @throws CommandNotFoundException
+     * @return the matching CommandContainer
+     * @throws CommandNotFoundException if no command matches
      */
     private CommandContainer<CI> getCommand(String commandName, String line) throws CommandNotFoundException {
         try {

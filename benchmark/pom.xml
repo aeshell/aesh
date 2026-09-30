@@ -54,6 +54,12 @@
          <artifactId>picocli</artifactId>
          <version>4.7.7</version>
       </dependency>
+
+      <dependency>
+         <groupId>org.openjdk.jmh</groupId>
+         <artifactId>jmh-core</artifactId>
+         <version>1.37</version>
+      </dependency>
    </dependencies>
 
    <build>
@@ -67,6 +73,11 @@
                      <groupId>org.aesh</groupId>
                      <artifactId>aesh-processor</artifactId>
                      <version>${project.version}</version>
+                  </path>
+                  <path>
+                     <groupId>org.openjdk.jmh</groupId>
+                     <artifactId>jmh-generator-annprocess</artifactId>
+                     <version>1.37</version>
                   </path>
                </annotationProcessorPaths>
             </configuration>
