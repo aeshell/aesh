@@ -214,6 +214,8 @@ public class PipeInputStabilityTest {
         });
         producer.setDaemon(true);
         producer.start();
+        // Load-bearing: the producer must be blocked in its second write
+        // before cleanup signals abandonment.
         Thread.sleep(500);
 
         config.closePipedData();
@@ -247,6 +249,8 @@ public class PipeInputStabilityTest {
         });
         producer.setDaemon(true);
         producer.start();
+        // Load-bearing: the producer must be blocked in its second write
+        // before cleanup signals abandonment.
         Thread.sleep(500);
 
         config.closePipedData();

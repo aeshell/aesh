@@ -99,21 +99,29 @@ public class AsyncPipedSessionTest {
         CountingStreamConnection connection = new CountingStreamConnection(pipeIn, consoleOut);
         AtomicReference<Throwable> readerDeath = new AtomicReference<>();
         connection.setReaderDeathHook(readerDeath::set);
+        AtomicReference<Throwable> replDeath = new AtomicReference<>();
 
         CountDownLatch readyLatch = new CountDownLatch(1);
         AtomicReference<CountDownLatch> completionLatch = new AtomicReference<>(new CountDownLatch(1));
         java.util.List<String> completedLines = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
 
-        Thread replThread = new Thread(() -> AeshConsoleRunner.builder()
-                .connection(connection)
-                .command(HelloCommand.class)
-                .commandExecutionListener((line, result, durationMs) -> {
-                    completedLines.add(line);
-                    completionLatch.get().countDown();
-                })
-                .onReady(readyLatch::countDown)
-                .start());
+        Thread replThread = new Thread(() -> {
+            try {
+                AeshConsoleRunner.builder()
+                        .connection(connection)
+                        .command(HelloCommand.class)
+                        .commandExecutionListener((line, result, durationMs) -> {
+                            completedLines.add(line);
+                            completionLatch.get().countDown();
+                        })
+                        .onReady(readyLatch::countDown)
+                        .start();
+            } catch (Throwable e) {
+                replDeath.set(e);
+            }
+        });
         replThread.setDaemon(true);
+        replThread.setName("aesh-test-repl");
         replThread.start();
 
         try {
@@ -138,15 +146,16 @@ public class AsyncPipedSessionTest {
             assertTrue("Reader must stay alive for the whole session, death: " + readerDeath.get(),
                     readerDeath.get() == null);
         } finally {
-            try {
-                testOut.close();
-            } catch (Exception ignored) {
-            }
-            connection.close();
-            try {
-                pipeIn.close();
-            } catch (Exception ignored) {
-            }
+            // Teardown failures must fail the test loudly: a quiet cleanup
+            // can hide a wedged reader, a dead REPL or a leaked worker (#661).
+            java.util.List<Throwable> cleanupErrors = TestSessions.errors();
+            TestSessions.closeQuietly(testOut::close, "testOut", cleanupErrors);
+            TestSessions.closeQuietly(connection::close, "connection", cleanupErrors);
+            TestSessions.closeQuietly(pipeIn::close, "pipeIn", cleanupErrors);
+            if (replDeath.get() != null)
+                cleanupErrors.add(replDeath.get());
+            TestSessions.joinQuietly(replThread, "repl", cleanupErrors);
+            TestSessions.assertQuiet(cleanupErrors);
         }
     }
 

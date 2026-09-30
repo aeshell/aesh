@@ -71,6 +71,9 @@ public class PipeTruncationTest {
         producer.setDaemon(true);
         producer.start();
 
+        // Load-bearing: the producer must be blocked in its second write
+        // (not merely started) before the consumer closes. No hook exists
+        // for offer-loop blockage, so this parks deterministically short.
         Thread.sleep(500);
         BufferedInputStream input = pipe.getData();
         input.close();
@@ -178,7 +181,8 @@ public class PipeTruncationTest {
         });
         closer.setDaemon(true);
         closer.start();
-        // No consumer ever reads, so the close parks waiting for room.
+        // Load-bearing: no consumer ever reads, so the close parks waiting
+        // for room; the alive-assert below proves waiting, not racing.
         Thread.sleep(500);
         assertTrue("close must wait for room instead of dropping data", closer.isAlive());
         closer.interrupt();

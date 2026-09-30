@@ -186,7 +186,8 @@ public class NativeExecutionTest {
 
         assertTrue("first chunk should be delivered",
                 connection.firstWrite.await(10, TimeUnit.SECONDS));
-        // Let the pump reach the gated write; only the first chunk may be out.
+        // Load-bearing: let the pump reach the gated write; only the first
+        // chunk may be out. Parking cannot be observed through a latch.
         Thread.sleep(500);
         assertTrue("pump must wait for the slow consumer", pump.isAlive());
         assertEquals(1024, connection.text.length());
@@ -264,8 +265,8 @@ public class NativeExecutionTest {
         worker.setDaemon(true);
         worker.start();
 
-        // The child exits in milliseconds; while writes are gated the worker
-        // must still be inside the delivery join.
+        // Load-bearing: the child exits in milliseconds; while writes are
+        // gated the worker must still be inside the delivery join.
         Thread.sleep(2000);
         assertTrue("execute must wait for delivery", worker.isAlive());
 

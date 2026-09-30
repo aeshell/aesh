@@ -81,14 +81,22 @@ public class PipedStreamSessionTest {
 
         CountDownLatch readyLatch = new CountDownLatch(1);
         AtomicReference<CountDownLatch> completionLatch = new AtomicReference<>(new CountDownLatch(1));
+        AtomicReference<Throwable> replDeath = new AtomicReference<>();
 
-        Thread replThread = new Thread(() -> AeshConsoleRunner.builder()
-                .connection(connection)
-                .command(HelloCommand.class)
-                .commandExecutionListener((line, result, durationMs) -> completionLatch.get().countDown())
-                .onReady(readyLatch::countDown)
-                .start());
+        Thread replThread = new Thread(() -> {
+            try {
+                AeshConsoleRunner.builder()
+                        .connection(connection)
+                        .command(HelloCommand.class)
+                        .commandExecutionListener((line, result, durationMs) -> completionLatch.get().countDown())
+                        .onReady(readyLatch::countDown)
+                        .start();
+            } catch (Throwable e) {
+                replDeath.set(e);
+            }
+        });
         replThread.setDaemon(true);
+        replThread.setName("aesh-test-repl");
         replThread.start();
 
         try {
@@ -106,11 +114,14 @@ public class PipedStreamSessionTest {
                 }
             }
         } finally {
-            try {
-                testOut.close();
-            } catch (Exception ignored) {
-            }
-            connection.close();
+            // Teardown failures must fail the test loudly (#661).
+            java.util.List<Throwable> cleanupErrors = TestSessions.errors();
+            TestSessions.closeQuietly(testOut::close, "testOut", cleanupErrors);
+            TestSessions.closeQuietly(connection::close, "connection", cleanupErrors);
+            if (replDeath.get() != null)
+                cleanupErrors.add(replDeath.get());
+            TestSessions.joinQuietly(replThread, "repl", cleanupErrors);
+            TestSessions.assertQuiet(cleanupErrors);
         }
     }
 

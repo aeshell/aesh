@@ -120,6 +120,7 @@ public class ExitStatusOrderTest {
         final ReadlineConsole console;
         final AtomicReference<CountDownLatch> completionLatch = new AtomicReference<>(new CountDownLatch(1));
         final AtomicReference<Throwable> readerDeath = new AtomicReference<>();
+        final Thread replThread;
 
         Session() throws Exception {
             this(null);
@@ -160,15 +161,17 @@ public class ExitStatusOrderTest {
             // start() blocks in openBlocking: run the REPL on its own thread.
             // Bytes written before arming wait in the pipe, so no readiness
             // gate is needed.
-            Thread replThread = new Thread(() -> {
+            Thread repl = new Thread(() -> {
                 try {
                     console.start();
                 } catch (Exception e) {
                     readerDeath.set(e);
                 }
             });
-            replThread.setDaemon(true);
-            replThread.start();
+            repl.setDaemon(true);
+            repl.setName("aesh-test-repl");
+            repl.start();
+            replThread = repl;
         }
 
         void writeChunk(String chunk) throws Exception {
@@ -178,22 +181,17 @@ public class ExitStatusOrderTest {
 
         @Override
         public void close() {
-            try {
-                console.stop();
-            } catch (Exception ignored) {
-            }
-            try {
-                testOut.close();
-            } catch (Exception ignored) {
-            }
-            try {
-                connection.close();
-            } catch (Exception ignored) {
-            }
-            try {
-                pipeIn.close();
-            } catch (Exception ignored) {
-            }
+            // Teardown problems fail loudly: swallowing them can hide a
+            // wedged reader or a leaked worker (#661).
+            List<Throwable> cleanupErrors = TestSessions.errors();
+            TestSessions.closeQuietly(() -> console.stop(), "console.stop", cleanupErrors);
+            TestSessions.closeQuietly(testOut::close, "testOut", cleanupErrors);
+            TestSessions.closeQuietly(connection::close, "connection", cleanupErrors);
+            TestSessions.closeQuietly(pipeIn::close, "pipeIn", cleanupErrors);
+            TestSessions.joinQuietly(replThread, "repl", cleanupErrors);
+            if (readerDeath.get() != null)
+                cleanupErrors.add(new IllegalStateException("reader death: " + readerDeath.get()));
+            TestSessions.assertQuiet(cleanupErrors);
         }
     }
 
