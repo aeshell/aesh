@@ -87,7 +87,11 @@ public class ExecutionPlanner<CI extends CommandInvocation> {
     }
 
     private final List<Execution<CI>> executions;
-    private final Set<Execution<CI>> skipped = new HashSet<>();
+    /**
+     * Executions skipped by operator gating. Allocated on first skip only;
+     * single commands and straight pipelines never create it (#663).
+     */
+    private Set<Execution<CI>> skipped;
 
     public ExecutionPlanner(List<Execution<CI>> executions) {
         this.executions = executions;
@@ -120,7 +124,7 @@ public class ExecutionPlanner<CI extends CommandInvocation> {
     }
 
     public boolean hasSkipped() {
-        return !skipped.isEmpty();
+        return skipped != null && !skipped.isEmpty();
     }
 
     public boolean hasMoreUnits() {
@@ -128,17 +132,31 @@ public class ExecutionPlanner<CI extends CommandInvocation> {
     }
 
     public List<Execution<CI>> skippedExecutions() {
+        if (skipped == null)
+            return Collections.emptyList();
         return Collections.unmodifiableList(new ArrayList<>(skipped));
     }
 
     public void clearSkipped() {
+        if (skipped == null)
+            return;
         for (Execution<CI> execution : skipped)
             execution.clearQueuedLine();
     }
 
+    private boolean isSkipped(Execution<CI> execution) {
+        return skipped != null && skipped.contains(execution);
+    }
+
+    private void markSkipped(Execution<CI> execution) {
+        if (skipped == null)
+            skipped = new HashSet<>();
+        skipped.add(execution);
+    }
+
     private int firstPendingIndex() {
         for (int i = 0; i < executions.size(); i++) {
-            if (executions.get(i).getResult() == null && !skipped.contains(executions.get(i)))
+            if (executions.get(i).getResult() == null && !isSkipped(executions.get(i)))
                 return i;
         }
         return -1;
@@ -155,7 +173,7 @@ public class ExecutionPlanner<CI extends CommandInvocation> {
             if (exec.getExecutable().canExecuteNext(lastResult))
                 return i + 1;
             i += 1;
-            skipped.add(executions.get(i));
+            markSkipped(executions.get(i));
         }
         return -1;
     }

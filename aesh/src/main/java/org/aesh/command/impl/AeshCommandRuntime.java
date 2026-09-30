@@ -241,13 +241,16 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private CommandResult runExecutor(Executor<CI> executor) throws CommandException,
             CommandValidatorException, CommandLineParserException, InterruptedException {
         ExecutionPlanner<CI> planner = new ExecutionPlanner<>(executor.getExecutions());
         CommandResult result = null;
         ExecutionPlanner.Unit<CI> unit;
         while ((unit = planner.nextUnit()) != null) {
-            List<Execution> pipeChain = new ArrayList<>(unit.executions());
+            // No copy: Single exposes a singleton list and Pipeline an
+            // unmodifiable list, and neither consumer mutates it (#663).
+            List<Execution> pipeChain = (List) unit.executions();
             if (unit.isPipeline()) {
                 result = executePipeChain(pipeChain);
             } else {
