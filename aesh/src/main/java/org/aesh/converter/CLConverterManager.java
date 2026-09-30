@@ -51,6 +51,23 @@ public class CLConverterManager {
 
     private final Map<Class, Converter> converters;
 
+    /**
+     * Implicitly computed enum converters, collected automatically with
+     * their defining classloader. Unlike the map above, these entries
+     * never pin reloaded application classes (#667).
+     */
+    private static final ClassValue<Converter> enumConverters = new ClassValue<Converter>() {
+        @Override
+        protected Converter computeValue(Class<?> type) {
+            if (!type.isEnum())
+                throw new IllegalArgumentException("Not an enum: " + type);
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Converter converter = new org.aesh.command.impl.converter.EnumConverter(
+                    (Class<? extends Enum>) type);
+            return converter;
+        }
+    };
+
     private static class CLConvertManagerHolder {
         static final CLConverterManager INSTANCE = new CLConverterManager();
     }
@@ -100,11 +117,16 @@ public class CLConverterManager {
     @SuppressWarnings("unchecked")
     public Converter getConverter(Class clazz) {
         Converter converter = converters.get(clazz);
-        if (converter == null && clazz.isEnum()) {
-            return (Converter) converters.computeIfAbsent(clazz,
-                    k -> new org.aesh.command.impl.converter.EnumConverter(k));
-        }
-        return converter;
+        if (converter != null)
+            return converter;
+        // Implicit enum converters live in the loader-collected cache, so
+        // reloaded applications are never pinned through this manager.
+        // Explicit setConverter overrides stay in the map above and keep
+        // precedence. hasConverter/getConvertedTypes intentionally report
+        // only registered and built-in converters.
+        if (clazz.isEnum())
+            return enumConverters.get(clazz);
+        return null;
     }
 
     public void setConverter(Class<?> clazz, Converter converter) {
