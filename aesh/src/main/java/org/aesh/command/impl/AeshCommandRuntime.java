@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -96,6 +97,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private final EnumSet<OperatorType> operators;
     private volatile PipelineResult lastPipelineResult;
     private volatile PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
+    private final AtomicBoolean closed = new AtomicBoolean();
 
     public AeshCommandRuntime(AeshContext ctx,
             CommandRegistry<CI> registry,
@@ -140,6 +142,16 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     @Override
     public CommandRegistry<CI> getCommandRegistry() {
         return registry;
+    }
+
+    /**
+     * Detaches this runtime from the registry's registration listeners.
+     * Idempotent: only the first call unregisters (#666).
+     */
+    @Override
+    public void close() {
+        if (closed.compareAndSet(false, true))
+            registry.removeRegistrationListener(this);
     }
 
     @Override
@@ -665,9 +677,4 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         }
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        registry.removeRegistrationListener(this);
-        super.finalize();
-    }
 }

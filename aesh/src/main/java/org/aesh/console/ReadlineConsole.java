@@ -236,6 +236,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         if (running) {
             running = false;
 
+            closeRuntime();
+
             if (settings.connectionClosedHandler() != null) {
                 connection.setCloseHandler(c -> {
                     settings.connectionClosedHandler().accept(null);
@@ -256,6 +258,21 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     @Override
     public void stop() {
         doStop(true);
+    }
+
+    /**
+     * Detaches the current runtime from the registry listeners, if any.
+     * Safe to call repeatedly and with no runtime installed.
+     */
+    private void closeRuntime() {
+        CommandRuntime<? extends CommandInvocation> current = runtime;
+        if (current != null) {
+            try {
+                current.close();
+            } catch (Exception e) {
+                LOGGER.log(Level.FINE, "Runtime close failed", e);
+            }
+        }
     }
 
     @Override
@@ -308,6 +325,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             }
         });
 
+        // Reconnects build a fresh runtime on the shared registry; detach
+        // the previous one first so listeners do not accumulate (#666).
+        closeRuntime();
         this.runtime = generateRuntime();
         if (!connection.isInteractive()) {
             processManager.setSynchronous(true);

@@ -403,8 +403,10 @@ public class AeshRuntimeRunner {
             System.err.println(e.getMessage());
             return CommandResult.FAILURE;
         } finally {
-            // Close the lazy shell to restore terminal attributes if a
+            // Detach the per-call runtime from the registry listeners (#666)
+            // and close the lazy shell to restore terminal attributes if a
             // TerminalConnection was initialized during command execution
+            runtime.close();
             if (effectiveShell instanceof LazyTerminalShell) {
                 ((LazyTerminalShell) effectiveShell).close();
             }

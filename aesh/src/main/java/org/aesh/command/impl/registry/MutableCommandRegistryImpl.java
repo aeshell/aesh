@@ -324,4 +324,14 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
         listeners.remove(listener);
     }
 
+    /**
+     * Number of registered listeners. Test hook for lifetime assertions:
+     * runtimes that are never closed accumulate here (#666).
+     *
+     * @return the listener count
+     */
+    int listenerCount() {
+        return listeners.size();
+    }
+
 }

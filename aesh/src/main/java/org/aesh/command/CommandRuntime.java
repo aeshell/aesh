@@ -37,7 +37,19 @@ import org.aesh.terminal.utils.Parser;
  *
  * @author Aesh team
  */
-public interface CommandRuntime<CI extends CommandInvocation> {
+public interface CommandRuntime<CI extends CommandInvocation> extends AutoCloseable {
+
+    /**
+     * Detaches this runtime from shared state (command registry listeners).
+     * Runtimes built over a long-lived registry must be closed when
+     * discarded; otherwise the registry retains them and keeps delivering
+     * registration events (#666). Idempotent: repeated calls have no effect.
+     * The default implementation does nothing; implementations holding
+     * shared registrations override it.
+     */
+    @Override
+    default void close() {
+    }
 
     /**
      * The registry in which commands are registered.
