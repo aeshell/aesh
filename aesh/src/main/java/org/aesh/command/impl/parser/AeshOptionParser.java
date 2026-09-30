@@ -103,19 +103,26 @@ public class AeshOptionParser implements OptionParser {
         if (word.indexOf(" ") < word.indexOf("="))
             word = Parser.switchSpacesToEscapedSpacesInWord(word);
         if (option.isLongNameUsed()) {
-            String optionPart = (word.length() > 1 && word.charAt(0) == DASH && word.charAt(1) == DASH)
-                    ? word.substring(2)
-                    : word;
-            // Determine which name was actually used: primary, alias, or negated
+            boolean dashed = word.length() > 1 && word.charAt(0) == DASH && word.charAt(1) == DASH;
+            // Determine which name was actually used: primary, alias, or negated.
+            // Without aliases there is nothing to resolve, so compare lengths
+            // arithmetically and strip only when attached content follows (#664).
             String nameToMatch;
+            String optionPart = null;
             if (option.isNegatedByUser() && option.getNegatedName() != null) {
                 nameToMatch = option.getNegatedName();
+            } else if (option.getAliases().isEmpty()) {
+                nameToMatch = option.name();
             } else {
+                optionPart = dashed ? word.substring(2) : word;
                 nameToMatch = resolveMatchedName(option, optionPart);
             }
-            if (optionPart.length() != nameToMatch.length())
+            int partLength = optionPart != null ? optionPart.length() : word.length() - (dashed ? 2 : 0);
+            if (partLength != nameToMatch.length()) {
+                if (optionPart == null)
+                    optionPart = dashed ? word.substring(2) : word;
                 processOption(option, optionPart, nameToMatch);
-            else if (option.getOptionType() == OptionType.BOOLEAN) {
+            } else if (option.getOptionType() == OptionType.BOOLEAN) {
                 // For negatable options, use "false" if specified in negated form
                 option.addValue(option.isNegatedByUser() ? "false" : "true");
                 status = Status.NULL;
@@ -292,9 +299,13 @@ public class AeshOptionParser implements OptionParser {
     }
 
     private static String resolveMatchedName(ProcessedOption option, String input) {
-        // Check if input matches or starts with an alias
+        // Check if input matches or starts with an alias, without building
+        // probe strings per alias (#664).
         for (String alias : option.getAliases()) {
-            if (input.equals(alias) || input.startsWith(alias + "="))
+            if (input.equals(alias))
+                return alias;
+            if (input.length() > alias.length() && input.charAt(alias.length()) == '='
+                    && input.startsWith(alias))
                 return alias;
         }
         return option.name();
