@@ -18,7 +18,10 @@
 package org.aesh.util.completer;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -75,7 +78,12 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
         out.append("    $candidates = @()").append(NL);
 
         ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
-        appendOptionCompletions(out, cmd, programName, parentName, "    ", filter);
+        emitValueCheck(out, mergedOptions(parser,
+                Collections.<CommandLineParser<? extends CommandInvocation>> emptyList(), filter),
+                cmd, programName, parentName, "    ");
+        appendOptionCompletions(out, mergedOptions(parser,
+                Collections.<CommandLineParser<? extends CommandInvocation>> emptyList(), filter),
+                cmd, programName, parentName, "    ", filter);
 
         // Arguments
         if (cmd.hasArgument() || cmd.hasArguments()) {
@@ -114,56 +122,215 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
         out.append("    $candidates = @()").append(NL);
         out.append(NL);
 
-        // Subcommands at position 1 — use cursorPosition to detect trailing space
-        // because $commandAst.ToString() strips trailing whitespace (#544)
-        out.append(
-                "    if ($elems.Count -le 1 -or ($elems.Count -eq 2 -and $cursorPosition -le $commandAst.ToString().Length)) {")
-                .append(NL);
+        // Detect trailing space: cursor is past the end of the AST text.
+        // $commandAst.ToString() strips trailing whitespace, so EndsWith(' ')
+        // does not work reliably (#544). Use cursorPosition instead.
+        out.append("    $isTrailing = $cursorPosition -gt $commandAst.ToString().Length").append(NL);
+        out.append(NL);
 
-        // Also offer root-level options
-        appendOptionCompletions(out, parser.getProcessedCommand(), programName, null, "        ", filter);
+        generateLevel(out, parser, programName, 1,
+                Collections.<CommandLineParser<? extends CommandInvocation>> emptyList(), filter,
+                "    ");
+        out.append("    $candidates").append(NL);
+    }
+
+    /**
+     * Emits completion for one group level. {@code depth} is the
+     * {@code $elems} index of the word selecting among this parser's children
+     * (1 for the root). The first prior word naming a child wins and control
+     * descends; otherwise the level offers its own options (plus inherited
+     * ones, nearest first) and its children's names (#671).
+     */
+    private void generateLevel(StringBuilder out,
+            CommandLineParser<? extends CommandInvocation> parser, String programName, int depth,
+            List<CommandLineParser<? extends CommandInvocation>> ancestors,
+            CompletionFilter filter, String indent) {
+        String subVar = depth == 1 ? "$sub" : "$sub" + depth;
+        String endVar = depth == 1 ? "$end" : "$end" + depth;
+        String idxVar = depth == 1 ? "$i" : "$i" + depth;
+
+        out.append(indent).append(subVar).append(" = \"\"").append(NL);
+        out.append(indent).append(endVar).append(" = $elems.Count - 1").append(NL);
+        out.append(indent).append("if (-not $isTrailing) { ").append(endVar).append("-- }").append(NL);
+        out.append(indent).append("for (").append(idxVar).append(" = ").append(depth).append("; ")
+                .append(idxVar).append(" -le ").append(endVar).append("; ").append(idxVar).append("++) {")
+                .append(NL);
+        out.append(indent).append("    if (").append(subVar).append(" -eq \"\" -and @(");
+        boolean first = true;
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
+            if (!first)
+                out.append(", ");
+            out.append("'").append(escapePwsh(child.getProcessedCommand().name())).append("'");
+            first = false;
+        }
+        out.append(") -contains $elems[").append(idxVar).append("].ToString()) {").append(NL);
+        out.append(indent).append("        ").append(subVar).append(" = $elems[").append(idxVar)
+                .append("].ToString()").append(NL);
+        out.append(indent).append("    }").append(NL);
+        out.append(indent).append("}").append(NL);
+
+        out.append(indent).append("if (").append(subVar).append(" -eq \"\") {").append(NL);
+        List<ProcessedOption> options = mergedOptions(parser, ancestors, filter);
+        ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
+        String parentName = ancestors.isEmpty() ? null : ancestors.get(0).getProcessedCommand().name();
+        emitValueCheck(out, options, cmd, programName, parentName, indent + "    ");
+        appendOptionCompletions(out, options, cmd, programName, parentName, indent + "    ", filter);
 
         for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
                 filter)) {
             String name = child.getProcessedCommand().name();
             String desc = escapePwsh(ProcessedCommand.resolveDescription(
                     child.getProcessedCommand(), child.getProcessedCommand().description(),
-                    programName, programName));
-            appendCandidate(out, name, desc, "        ");
+                    programName, ancestors.isEmpty() ? programName : cmd.name()));
+            appendCandidate(out, name, desc, indent + "    ");
         }
-        out.append("    } else {").append(NL);
+        emitFileArgumentCompletion(out, cmd, filter, indent + "    ");
 
-        // Options for each subcommand
-        out.append("        $sub = $elems[1].ToString()").append(NL);
-        out.append("        switch ($sub) {").append(NL);
+        out.append(indent).append("} else {").append(NL);
+        out.append(indent).append("    switch (").append(subVar).append(") {").append(NL);
         for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
                 filter)) {
             String childName = child.getProcessedCommand().name();
-            out.append("            '").append(escapePwsh(childName)).append("' {").append(NL);
-            appendOptionCompletions(out, child.getProcessedCommand(),
-                    programName, programName, "                ", filter);
+            out.append(indent).append("        '").append(escapePwsh(childName)).append("' {").append(NL);
+            List<CommandLineParser<? extends CommandInvocation>> childAncestors = new ArrayList<>(
+                    ancestors);
+            childAncestors.add(0, parser);
+            if (child.isGroupCommand()) {
+                generateLevel(out, child, programName, depth + 1, childAncestors, filter,
+                        indent + "            ");
+            } else {
+                ProcessedCommand<?, ?> childCmd = child.getProcessedCommand();
+                String childParentName = ancestors.isEmpty() ? programName : cmd.name();
+                List<ProcessedOption> childOptions = mergedOptions(child, childAncestors, filter);
+                emitValueCheck(out, childOptions, childCmd, programName, childParentName,
+                        indent + "            ");
+                appendOptionCompletions(out, childOptions, childCmd, programName, childParentName,
+                        indent + "            ", filter);
+                emitFileArgumentCompletion(out, childCmd, filter, indent + "            ");
+            }
+            out.append(indent).append("        }").append(NL);
+        }
+        out.append(indent).append("    }").append(NL);
+        out.append(indent).append("}").append(NL);
+    }
 
-            // Child arguments
-            ProcessedCommand<?, ?> childCmd = child.getProcessedCommand();
-            if (childCmd.hasArgument() || childCmd.hasArguments()) {
-                ProcessedOption arg = childCmd.hasArguments() ? childCmd.getArguments() : childCmd.getArgument();
-                if (arg.isTypeAssignableByResourcesOrFile()) {
-                    out.append("                # File argument completion").append(NL);
-                    out.append("                if (-not $wordToComplete.StartsWith('-')) {").append(NL);
-                    out.append("                    Get-ChildItem -Path \"$wordToComplete*\" -ErrorAction SilentlyContinue |")
-                            .append(NL);
-                    out.append(
-                            "                        ForEach-Object { $candidates += [System.Management.Automation.CompletionResult]::new(");
-                    out.append("$_.Name, $_.Name, 'ProviderItem', $_.FullName) }").append(NL);
-                    out.append("                }").append(NL);
+    /**
+     * Own options plus inherited options from ancestors (nearest first),
+     * mirroring the dynamic completion path and the bash/zsh generators. A
+     * redefined name on the child wins over the inherited one.
+     */
+    private static List<ProcessedOption> mergedOptions(
+            CommandLineParser<? extends CommandInvocation> parser,
+            List<CommandLineParser<? extends CommandInvocation>> ancestors,
+            CompletionFilter filter) {
+        List<ProcessedOption> options = new ArrayList<>(
+                CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter));
+        Set<String> emittedNames = new HashSet<>();
+        for (ProcessedOption option : options) {
+            if (option.name() != null)
+                emittedNames.add(option.name());
+        }
+        for (CommandLineParser<? extends CommandInvocation> ancestor : ancestors) {
+            for (ProcessedOption option : CompletionFilter.visibleOptions(
+                    ancestor.getProcessedCommand(), filter)) {
+                if (option.isInherited() && option.name() != null
+                        && emittedNames.add(option.name()))
+                    options.add(option);
+            }
+        }
+        return options;
+    }
+
+    /**
+     * When the word before the current one takes a value, offer that option's
+     * values exclusively, mirroring the dynamic completion path. Options
+     * without known values fall through to the regular option listing.
+     */
+    private void emitValueCheck(StringBuilder out, List<ProcessedOption> options,
+            ProcessedCommand<?, ?> cmd, String programName, String parentName, String indent) {
+        List<ProcessedOption> valued = new ArrayList<>();
+        for (ProcessedOption option : options) {
+            if (!option.hasValue())
+                continue;
+            if (option.hasAllowedValues() || option.hasDefaultValue()
+                    || option.isTypeAssignableByResourcesOrFile()
+                    || BashCompletionGenerator.isBooleanType(option))
+                valued.add(option);
+        }
+        if (valued.isEmpty())
+            return;
+
+        out.append(indent).append("$prev = \"\"").append(NL);
+        out.append(indent).append("if ($isTrailing) {").append(NL);
+        out.append(indent).append("    if ($elems.Count -ge 1) { $prev = $elems[$elems.Count - 1].ToString() }")
+                .append(NL);
+        out.append(indent).append("} elseif ($elems.Count -ge 2) {").append(NL);
+        out.append(indent).append("    $prev = $elems[$elems.Count - 2].ToString()").append(NL);
+        out.append(indent).append("}").append(NL);
+        out.append(indent).append("switch ($prev) {").append(NL);
+        for (ProcessedOption option : valued) {
+            emitValueArm(out, option, cmd, programName, parentName, indent + "    ");
+        }
+        out.append(indent).append("}").append(NL);
+    }
+
+    private void emitValueArm(StringBuilder out, ProcessedOption option,
+            ProcessedCommand<?, ?> cmd, String programName, String parentName, String indent) {
+        List<String> forms = new ArrayList<>();
+        forms.add("--" + option.name());
+        if (option.shortName() != null && !option.shortName().isEmpty())
+            forms.add("-" + option.shortName());
+        for (String alias : option.getAliases())
+            forms.add("--" + alias);
+        for (String form : forms) {
+            out.append(indent).append("'").append(escapePwsh(form)).append("' {").append(NL);
+            if (option.isTypeAssignableByResourcesOrFile()) {
+                out.append(indent).append("    if (-not $wordToComplete.StartsWith('-')) {").append(NL);
+                out.append(indent).append("        Get-ChildItem -Path \"$wordToComplete*\" -ErrorAction SilentlyContinue |")
+                        .append(NL);
+                out.append(indent).append(
+                        "            ForEach-Object { $candidates += [System.Management.Automation.CompletionResult]::new(");
+                out.append("$_.Name, $_.Name, 'ProviderItem', $_.FullName) }").append(NL);
+                out.append(indent).append("    }").append(NL);
+            } else {
+                List<String> vals = new ArrayList<>();
+                if (option.hasAllowedValues())
+                    vals.addAll(option.getAllowedValues());
+                else
+                    vals.addAll(option.getDefaultValues());
+                if (BashCompletionGenerator.isBooleanType(option)) {
+                    vals.add("true");
+                    vals.add("false");
+                }
+                for (String v : vals) {
+                    String desc = escapePwsh(ProcessedCommand.resolveOptionDesc(cmd, option, programName,
+                            parentName));
+                    if (desc.isEmpty())
+                        desc = v;
+                    appendCandidate(out, v, desc, indent + "    ");
                 }
             }
-
-            out.append("            }").append(NL);
+            out.append(indent).append("    return $candidates").append(NL);
+            out.append(indent).append("}").append(NL);
         }
-        out.append("        }").append(NL);
-        out.append("    }").append(NL);
-        out.append("    $candidates").append(NL);
+    }
+
+    private void emitFileArgumentCompletion(StringBuilder out, ProcessedCommand<?, ?> cmd,
+            CompletionFilter filter, String indent) {
+        if (!cmd.hasArgument() && !cmd.hasArguments())
+            return;
+        ProcessedOption arg = cmd.hasArguments() ? cmd.getArguments() : cmd.getArgument();
+        if (!filter.includeOption(cmd, arg) || !arg.isTypeAssignableByResourcesOrFile())
+            return;
+        out.append(indent).append("# File argument completion").append(NL);
+        out.append(indent).append("if (-not $wordToComplete.StartsWith('-')) {").append(NL);
+        out.append(indent).append("    Get-ChildItem -Path \"$wordToComplete*\" -ErrorAction SilentlyContinue |")
+                .append(NL);
+        out.append(indent)
+                .append("        ForEach-Object { $candidates += [System.Management.Automation.CompletionResult]::new(");
+        out.append("$_.Name, $_.Name, 'ProviderItem', $_.FullName) }").append(NL);
+        out.append(indent).append("}").append(NL);
     }
 
     /**
@@ -171,10 +338,10 @@ class PowerShellCompletionGenerator implements ShellCompletionGenerator {
      * Handles property filtering, aliases, short names, negatable options,
      * and value completion.
      */
-    private void appendOptionCompletions(StringBuilder out, ProcessedCommand<?, ?> cmd,
+    private void appendOptionCompletions(StringBuilder out, List<ProcessedOption> options,
+            ProcessedCommand<?, ?> cmd,
             String programName, String parentName, String indent, CompletionFilter filter) {
-        for (ProcessedOption opt : CompletionFilter.visibleOptions(cmd, filter)) {
-
+        for (ProcessedOption opt : options) {
             String desc = escapePwsh(ProcessedCommand.resolveOptionDesc(cmd, opt, programName, parentName));
             if (desc.isEmpty())
                 desc = opt.name();
