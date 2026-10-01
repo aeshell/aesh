@@ -259,7 +259,7 @@ public class ProcessedOptionBuilder {
         } else {
             // File/Resource completers are deferred — ProcessedOption.completer() lazy-creates them
             if (type == Boolean.class || type == boolean.class)
-                return new BooleanOptionCompleter();
+                return BooleanOptionCompleter.INSTANCE;
             else
                 return null;
         }

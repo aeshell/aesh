@@ -27,6 +27,10 @@ import org.aesh.command.completer.OptionCompleter;
  * @author Aesh team
  */
 public class BooleanOptionCompleter implements OptionCompleter<CompleterInvocation> {
+
+    /** Shared instance: completing booleans holds no per-option state. */
+    public static final BooleanOptionCompleter INSTANCE = new BooleanOptionCompleter();
+
     @Override
     public void complete(CompleterInvocation completerData) {
         if (completerData.getGivenCompleteValue().length() == 0) {

@@ -289,7 +289,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     private static void processCommand(ProcessedCommand processedCommand, Class clazz, boolean forHelp)
             throws CommandLineParserException {
-        for (Field field : clazz.getDeclaredFields())
+        for (Field field : ReflectionUtil.declaredFields(clazz))
             processField(processedCommand, field, forHelp);
 
         if (clazz.getSuperclass() != null)
@@ -639,7 +639,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     private static void processMixinClass(ProcessedCommand processedCommand, Class<?> clazz, String mixinFieldName,
             boolean forHelp)
             throws CommandLineParserException {
-        for (Field field : clazz.getDeclaredFields()) {
+        for (Field field : ReflectionUtil.declaredFields(clazz)) {
             processField(processedCommand, field, mixinFieldName, forHelp);
         }
         if (clazz.getSuperclass() != null && clazz.getSuperclass() != Object.class) {

@@ -20,8 +20,11 @@
 package org.aesh.util;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -31,6 +34,60 @@ import java.util.concurrent.ConcurrentMap;
 public class ReflectionUtil {
 
     private static final ConcurrentMap<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = new ConcurrentHashMap<>();
+
+    /**
+     * Declared fields per class, cached and collected with the defining
+     * classloader. Replaces repeated {@code getDeclaredFields} copies in
+     * build loops. Read-only: callers must not mutate the array.
+     */
+    private static final ClassValue<Field[]> DECLARED_FIELDS = new ClassValue<Field[]>() {
+        @Override
+        protected Field[] computeValue(Class<?> type) {
+            return type.getDeclaredFields();
+        }
+    };
+
+    /**
+     * Hierarchy-flattened field lookup per class (subclass first),
+     * collected with the defining classloader. Replaces repeated
+     * hierarchy walks. Shared instances are only ever made accessible,
+     * never mutated — read-only for callers.
+     */
+    private static final ClassValue<Map<String, Field>> FIELDS_BY_NAME = new ClassValue<Map<String, Field>>() {
+        @Override
+        protected Map<String, Field> computeValue(Class<?> type) {
+            Map<String, Field> fields = new HashMap<>();
+            for (Class<?> c = type; c != null; c = c.getSuperclass()) {
+                for (Field field : c.getDeclaredFields()) {
+                    fields.putIfAbsent(field.getName(), field);
+                }
+            }
+            return fields;
+        }
+    };
+
+    /**
+     * All declared fields of exactly {@code clazz}, cached per class.
+     *
+     * @param clazz the class
+     * @return its declared fields, shared read-only instance
+     */
+    public static Field[] declaredFields(Class<?> clazz) {
+        return DECLARED_FIELDS.get(clazz);
+    }
+
+    /**
+     * Finds a field by name, subclass-first through the hierarchy.
+     *
+     * @param clazz the class to search
+     * @param fieldName the field name, null/empty yields null
+     * @return the field, or null when absent
+     */
+    public static Field findField(Class<?> clazz, String fieldName) {
+        if (fieldName == null || fieldName.isEmpty())
+            return null;
+        return FIELDS_BY_NAME.get(clazz).get(fieldName);
+    }
 
     public static <T> T newInstance(final Class<T> clazz) {
         if (clazz.isAnonymousClass() || clazz.isInterface() || clazz.isAnnotation()) {

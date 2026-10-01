@@ -61,6 +61,7 @@ import org.aesh.selector.SelectorType;
 import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.util.PropertiesLookup;
+import org.aesh.util.ReflectionUtil;
 
 /**
  * @author Aesh team
@@ -134,8 +135,6 @@ public class ProcessedOption {
     protected boolean initialValueCaptured;
     protected Supplier<Object> initialValueFactory;
     private String mixinFieldName;
-    private Field cachedField;
-    private Class<?> cachedFieldClass;
     private AeshConverterInvocation cachedConverterInvocation;
 
     public ProcessedOption(char shortName, String name, String description,
@@ -1402,20 +1401,9 @@ public class ProcessedOption {
     }
 
     private Field getField(Class clazz, String fieldName) throws NoSuchFieldException {
-        if (fieldName == null || fieldName.isEmpty())
-            return null;
-        if (cachedField != null && cachedFieldClass == clazz)
-            return cachedField;
-        for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
-            for (Field f : c.getDeclaredFields()) {
-                if (f.getName().equals(fieldName)) {
-                    cachedField = f;
-                    cachedFieldClass = clazz;
-                    return f;
-                }
-            }
-        }
-        return null;
+        // Shared per-class cache (collected with the defining classloader);
+        // the single-entry cache it replaces is subsumed by it.
+        return ReflectionUtil.findField(clazz, fieldName);
     }
 
     public Object getFieldValue(Object instance) {

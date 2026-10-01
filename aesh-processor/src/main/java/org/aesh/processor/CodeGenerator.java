@@ -1500,7 +1500,7 @@ final class CodeGenerator {
         }
         if (needsBooleanCompleter) {
             sb.append("    private static final org.aesh.command.completer.OptionCompleter BOOLEAN_COMPLETER")
-                    .append(" = new org.aesh.command.impl.completer.BooleanOptionCompleter();\n");
+                    .append(" = org.aesh.command.impl.completer.BooleanOptionCompleter.INSTANCE;\n");
         }
         sb.append("\n");
     }
