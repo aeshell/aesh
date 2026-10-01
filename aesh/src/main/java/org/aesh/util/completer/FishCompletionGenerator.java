@@ -20,7 +20,10 @@
 package org.aesh.util.completer;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -52,7 +55,8 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
         if (parser.isGroupCommand()) {
             generateGroupCommand(out, parser, programName, filter);
         } else {
-            generateSimpleCommand(out, parser, programName, null, filter);
+            generateSimpleCommand(out, parser, programName, null,
+                    Collections.<CommandLineParser<? extends CommandInvocation>> emptyList(), filter);
         }
 
         return out.toString();
@@ -92,7 +96,9 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
         for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
                 filter)) {
             String childName = child.getProcessedCommand().name().toLowerCase();
-            generateSimpleCommand(out, child, programName, childName, filter);
+            List<CommandLineParser<? extends CommandInvocation>> childAncestors = new ArrayList<>();
+            childAncestors.add(parser);
+            generateSimpleCommand(out, child, programName, childName, childAncestors, filter);
 
             if (child.isGroupCommand()) {
                 List<String> nestedNames = new ArrayList<>();
@@ -122,13 +128,42 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
 
     private void generateSimpleCommand(StringBuilder out,
             CommandLineParser<? extends CommandInvocation> parser,
-            String programName, String subcommand, CompletionFilter filter) {
+            String programName, String subcommand,
+            List<CommandLineParser<? extends CommandInvocation>> ancestors,
+            CompletionFilter filter) {
 
         String parentName = subcommand != null ? programName : null;
-        for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
+        for (ProcessedOption option : mergedOptions(parser, ancestors, filter)) {
             appendFishOption(out, programName, subcommand, option,
                     parser.getProcessedCommand(), parentName);
         }
+    }
+
+    /**
+     * Own options plus inherited options from ancestors (nearest first),
+     * mirroring the dynamic completion path and the bash/zsh/pwsh generators.
+     * A redefined name on the child wins over the inherited one.
+     */
+    private static List<ProcessedOption> mergedOptions(
+            CommandLineParser<? extends CommandInvocation> parser,
+            List<CommandLineParser<? extends CommandInvocation>> ancestors,
+            CompletionFilter filter) {
+        List<ProcessedOption> options = new ArrayList<>(
+                CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter));
+        Set<String> emittedNames = new HashSet<>();
+        for (ProcessedOption option : options) {
+            if (option.name() != null)
+                emittedNames.add(option.name());
+        }
+        for (CommandLineParser<? extends CommandInvocation> ancestor : ancestors) {
+            for (ProcessedOption option : CompletionFilter.visibleOptions(
+                    ancestor.getProcessedCommand(), filter)) {
+                if (option.isInherited() && option.name() != null
+                        && emittedNames.add(option.name()))
+                    options.add(option);
+            }
+        }
+        return options;
     }
 
     private void appendFishOption(StringBuilder out, String programName,
