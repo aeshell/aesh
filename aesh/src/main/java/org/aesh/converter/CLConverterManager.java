@@ -33,6 +33,7 @@ import org.aesh.command.impl.converter.BooleanConverter;
 import org.aesh.command.impl.converter.ByteConverter;
 import org.aesh.command.impl.converter.CharacterConverter;
 import org.aesh.command.impl.converter.DoubleConverter;
+import org.aesh.command.impl.converter.EnumConverter;
 import org.aesh.command.impl.converter.FileConverter;
 import org.aesh.command.impl.converter.FileResourceConverter;
 import org.aesh.command.impl.converter.FloatConverter;
@@ -62,7 +63,7 @@ public class CLConverterManager {
             if (!type.isEnum())
                 throw new IllegalArgumentException("Not an enum: " + type);
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            Converter converter = new org.aesh.command.impl.converter.EnumConverter(
+            Converter converter = new EnumConverter(
                     (Class<? extends Enum>) type);
             return converter;
         }

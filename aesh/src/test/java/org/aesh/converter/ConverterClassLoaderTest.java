@@ -22,6 +22,7 @@ package org.aesh.converter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 
 import org.aesh.command.converter.Converter;
 import org.aesh.command.converter.ConverterInvocation;
@@ -87,7 +89,7 @@ public class ConverterClassLoaderTest {
         return Class.forName(className, false, child);
     }
 
-    private static void awaitGcClear(String what, java.util.function.BooleanSupplier cleared)
+    private static void awaitGcClear(String what, BooleanSupplier cleared)
             throws InterruptedException {
         boolean done = false;
         for (int i = 0; i < 100 && !done; i++) {
@@ -103,8 +105,8 @@ public class ConverterClassLoaderTest {
         Class<?> reloaded = childFirstLoad(ReloadableEnum.class.getName());
         assertTrue("fixture must load isolated", reloaded != ReloadableEnum.class);
         ClassLoader loader = reloaded.getClassLoader();
-        java.lang.ref.WeakReference<Class<?>> classRef = new java.lang.ref.WeakReference<>(reloaded);
-        java.lang.ref.WeakReference<ClassLoader> loaderRef = new java.lang.ref.WeakReference<>(loader);
+        WeakReference<Class<?>> classRef = new WeakReference<>(reloaded);
+        WeakReference<ClassLoader> loaderRef = new WeakReference<>(loader);
 
         Converter converter = CLConverterManager.getInstance().getConverter(reloaded);
         Object converted = converter.convert(invocationFor("A"));
@@ -127,8 +129,8 @@ public class ConverterClassLoaderTest {
     public void testConcurrentConversionThenReclaim() throws Exception {
         Class<?> reloaded = childFirstLoad(ReloadableEnum.class.getName());
         ClassLoader loader = reloaded.getClassLoader();
-        java.lang.ref.WeakReference<Class<?>> classRef = new java.lang.ref.WeakReference<>(reloaded);
-        java.lang.ref.WeakReference<ClassLoader> loaderRef = new java.lang.ref.WeakReference<>(loader);
+        WeakReference<Class<?>> classRef = new WeakReference<>(reloaded);
+        WeakReference<ClassLoader> loaderRef = new WeakReference<>(loader);
 
         // Isolated helper: its stack frame (holding the enum class) is gone
         // before reclamation is asserted below.
