@@ -76,6 +76,8 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
             appendFishOption(out, programName, null, option,
                     parser.getProcessedCommand(), null);
         }
+        emitPositionalCompletion(out, parser, programName, null,
+                Collections.<CommandLineParser<? extends CommandInvocation>> emptyList(), filter);
         out.append(NL);
 
         for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
@@ -133,10 +135,100 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
             CompletionFilter filter) {
 
         String parentName = subcommand != null ? programName : null;
-        for (ProcessedOption option : mergedOptions(parser, ancestors, filter)) {
+        List<ProcessedOption> options = mergedOptions(parser, ancestors, filter);
+        for (ProcessedOption option : options) {
             appendFishOption(out, programName, subcommand, option,
                     parser.getProcessedCommand(), parentName);
         }
+        emitPositionalCompletion(out, parser, programName, subcommand, ancestors, filter);
+    }
+
+    /**
+     * Positional (non-option) completion for commands without children, mirroring
+     * the dynamic path and the bash generator: a file-typed argument offers path
+     * completion, otherwise the bare word offers the eligible option forms. Both
+     * are limited to non-dash words outside a value position, so option and value
+     * completion never mix.
+     */
+    private void emitPositionalCompletion(StringBuilder out,
+            CommandLineParser<? extends CommandInvocation> parser,
+            String programName, String subcommand,
+            List<CommandLineParser<? extends CommandInvocation>> ancestors,
+            CompletionFilter filter) {
+        if (!CompletionFilter.visibleChildren(parser, filter).isEmpty())
+            return;
+        ProcessedCommand<?, ?> cmd = parser.getProcessedCommand();
+        String condition = positionalCondition(subcommand, mergedOptions(parser, ancestors, filter));
+
+        ProcessedOption arg = null;
+        if (cmd.hasArguments())
+            arg = cmd.getArguments();
+        else if (cmd.hasArgument())
+            arg = cmd.getArgument();
+        if (arg != null && filter.includeOption(cmd, arg) && arg.isTypeAssignableByResourcesOrFile()) {
+            String desc = escapeFish(ProcessedCommand.resolveOptionDesc(cmd, arg, programName,
+                    subcommand != null ? programName : null));
+            if (desc.isEmpty())
+                desc = "file";
+            out.append("complete -c ").append(programName);
+            out.append(" -n \"").append(condition).append("\"");
+            out.append(" -a '(__fish_complete_path)'");
+            out.append(" -d '").append(desc).append("'");
+            out.append(NL);
+            return;
+        }
+
+        for (ProcessedOption option : mergedOptions(parser, ancestors, filter)) {
+            String desc = escapeFish(ProcessedCommand.resolveOptionDesc(cmd, option, programName,
+                    subcommand != null ? programName : null));
+            if (desc.isEmpty())
+                desc = option.name();
+            emitPositionalForm(out, programName, condition, "--" + option.name(), desc);
+            for (String alias : option.getAliases())
+                emitPositionalForm(out, programName, condition, "--" + alias, desc);
+            if (option.isNegatable() && option.getNegatedName() != null)
+                emitPositionalForm(out, programName, condition, "--" + option.getNegatedName(),
+                        "Disable " + option.name());
+        }
+    }
+
+    private void emitPositionalForm(StringBuilder out, String programName, String condition,
+            String form, String desc) {
+        out.append("complete -c ").append(programName).append(" -f");
+        out.append(" -n \"").append(condition).append("\"");
+        out.append(" -a ").append(form);
+        out.append(" -d '").append(desc).append("'");
+        out.append(NL);
+    }
+
+    /**
+     * Builds the {@code -n} condition limiting positional entries to words that
+     * are not options and do not follow a value-taking option (whose own value
+     * completion applies instead).
+     */
+    private static String positionalCondition(String subcommand, List<ProcessedOption> options) {
+        StringBuilder condition = new StringBuilder();
+        if (subcommand != null)
+            condition.append("__fish_seen_subcommand_from ").append(subcommand).append("; and ");
+        condition.append("not string match -q -- '-*' (commandline -ct)");
+        List<String> valued = new ArrayList<>();
+        for (ProcessedOption option : options) {
+            if (!option.hasValue())
+                continue;
+            if (option.hasAllowedValues() || option.hasDefaultValue()
+                    || option.isTypeAssignableByResourcesOrFile()
+                    || BashCompletionGenerator.isBooleanType(option)) {
+                valued.add("--" + option.name());
+                if (option.shortName() != null && !option.shortName().isEmpty())
+                    valued.add("-" + option.shortName());
+                for (String alias : option.getAliases())
+                    valued.add("--" + alias);
+            }
+        }
+        if (!valued.isEmpty())
+            condition.append("; and not contains -- (commandline -opc)[-1] ")
+                    .append(String.join(" ", valued));
+        return condition.toString();
     }
 
     /**
