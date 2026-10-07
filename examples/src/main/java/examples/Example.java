@@ -314,7 +314,7 @@ public class Example {
             if (help) {
                 commandInvocation.getShell().writeln(commandInvocation.getHelpInfo("ls"));
             } else {
-                if (foo)
+                if (Boolean.TRUE.equals(foo))
                     commandInvocation.getShell().writeln("you set foo to: " + foo);
                 if (bar)
                     commandInvocation.getShell().writeln("you set bar to: " + bar);
