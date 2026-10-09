@@ -1484,6 +1484,47 @@ public class ProcessorTest {
     }
 
     @Test
+    public void testHelpBuildTouchesNoConverterOrReflection() throws Exception {
+        // Generated provider classes must not resolve converters, completers
+        // or reflection at class-init: LazyHelp walks every group child for a
+        // help-only listing, and provider lookup runs clinit (#675).
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CountingConverter", COUNTING_CONVERTER_SOURCE),
+                new InMemorySource("test.CountingHelpCommand", COUNTING_HELP_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        java.nio.file.Path generatedSource = result.outputDir
+                .resolve("test/CountingHelpCommand_AeshMetadata.java");
+        assertTrue("Generated source should be available", java.nio.file.Files.exists(generatedSource));
+        String source = new String(java.nio.file.Files.readAllBytes(generatedSource),
+                java.nio.charset.StandardCharsets.UTF_8);
+
+        // No shared static converter/completer fields (execution uses method locals)
+        assertFalse("No static CONVERTER_ fields, got statics",
+                source.contains("CONVERTER_"));
+        assertFalse("No static BOOLEAN_COMPLETER field", source.contains("BOOLEAN_COMPLETER"));
+        // Private-field reflection lives in the nested holder, never in a
+        // provider-level static block
+        assertTrue("Reflection holder must exist for the private field",
+                source.contains("static final class Fields"));
+        assertFalse("No provider-level static initializer",
+                source.contains("\n    static {\n"));
+
+        // Execution path resolves the shared Boolean converter once as a local
+        String execBody = source.substring(source.indexOf("buildProcessedCommand(CountingHelpCommand"));
+        assertTrue("Execution must resolve converters as method locals",
+                execBody.contains("Converter converter_java_lang_Boolean = "));
+        // Help path references neither converters, completers, callbacks nor accessors
+        String helpBody = source.substring(source.indexOf("buildHelpProcessedCommand()"));
+        for (String forbidden : new String[] { "converter_", "getConverter", "Converter(",
+                "Completer(", "setValidator(", "setActivator(", "setCompleter(", "setRenderer(",
+                "setParser(", ", new Accessor(" }) {
+            assertFalse("Help build must not reference " + forbidden + ", got: " + helpBody,
+                    helpBody.contains(forbidden));
+        }
+    }
+
+    @Test
     public void testAdvancedOptionProperties() throws Exception {
         CompilationResult result = compileWithProcessor(
                 new InMemorySource("test.AdvancedCommand", ADVANCED_OPTS_SOURCE));

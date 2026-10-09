@@ -34,8 +34,8 @@ import org.aesh.command.parser.CommandLineParserException;
  * when using the annotation processor. Public/package-private fields are
  * accessed directly in generated code with zero reflection. Private fields
  * work but incur {@code getDeclaredField()} and {@code setAccessible()}
- * overhead at provider instantiation time, and require additional
- * native-image reflection configuration.
+ * overhead on first accessor use (execution path, never help listings),
+ * and require additional native-image reflection configuration.
  *
  * @param <C> the command type
  * @author Aesh team

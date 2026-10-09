@@ -177,7 +177,7 @@ final class CodeGenerator {
         sb.append(" implements CommandMetadataProvider<").append(simpleName).append("> {\n\n");
 
         generatePrivateFieldConstants(sb, simpleName, qualifiedCommandName, fields);
-        generateSharedConvertersAndCompleters(sb, fields, elementUtils, typeUtils);
+        java.util.LinkedHashSet<String> sharedConverters = collectSharedConverterTypes(fields, elementUtils, typeUtils);
 
         // commandType()
         sb.append("    @Override\n");
@@ -253,7 +253,7 @@ final class CodeGenerator {
         sb.append("    public ProcessedCommand buildProcessedCommand(").append(simpleName).append(" instance)");
         sb.append(" throws CommandLineParserException {\n");
         generateBuildProcessedCommand(sb, simpleName, commandElement,
-                fields, isGroup, elementUtils, typeUtils, accessorInfos, false);
+                fields, isGroup, elementUtils, typeUtils, accessorInfos, false, sharedConverters);
         sb.append("    }\n\n");
 
         // buildHelpProcessedCommand()
@@ -261,7 +261,7 @@ final class CodeGenerator {
         sb.append("    public ProcessedCommand buildHelpProcessedCommand()");
         sb.append(" throws CommandLineParserException {\n");
         generateBuildProcessedCommand(sb, simpleName, commandElement,
-                fields, isGroup, elementUtils, typeUtils, new java.util.ArrayList<>(), true);
+                fields, isGroup, elementUtils, typeUtils, new java.util.ArrayList<>(), true, sharedConverters);
         sb.append("    }\n\n");
 
         // Generate the single Accessor inner class
@@ -392,7 +392,8 @@ final class CodeGenerator {
             TypeElement commandElement,
             List<VariableElement> fields, boolean isGroup,
             Elements elementUtils, Types typeUtils,
-            List<FieldAccessorInfo> accessorInfos, boolean forHelp) {
+            List<FieldAccessorInfo> accessorInfos, boolean forHelp,
+            java.util.LinkedHashSet<String> sharedConverters) {
 
         sb.append(
                 "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
@@ -445,6 +446,21 @@ final class CodeGenerator {
 
         sb.append("                .create();\n\n");
 
+        // Resolve shared converters as method locals on the execution path
+        // only (#675). Class-level statics would warm every converter type
+        // at provider class-init — including for help listings that never
+        // parse a value.
+        if (!forHelp) {
+            for (String type : sharedConverters) {
+                sb.append("        org.aesh.command.converter.Converter converter_")
+                        .append(converterConstantSuffix(type))
+                        .append(" = org.aesh.converter.CLConverterManager.getInstance().getConverter(")
+                        .append(type).append(".class);\n");
+            }
+            if (!sharedConverters.isEmpty())
+                sb.append("\n");
+        }
+
         // Set command-level completeFallback if not DEFAULT (#565)
         String cmdCompleteFallback = getAnnotationValue(commandElement, "completeFallback", elementUtils);
         org.aesh.command.option.CompletionFallback commandFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
@@ -485,9 +501,9 @@ final class CodeGenerator {
             sb.append("                    \"h\", \"help\", \"Display this help and exit\",\n");
             sb.append("                    Boolean.class, \"generatedHelp\", OptionType.BOOLEAN,\n");
             if (forHelp)
-                sb.append("                    CONVERTER_java_lang_Boolean, null);\n");
+                sb.append("                    null, null);\n");
             else
-                sb.append("                    CONVERTER_java_lang_Boolean, new Accessor(").append(helpIdx)
+                sb.append("                    converter_java_lang_Boolean, new Accessor(").append(helpIdx)
                         .append("));\n");
             sb.append("            helpOpt.setOverrideRequired(true);\n");
             sb.append("            processedCommand.addOptionDirect(helpOpt);\n");
@@ -504,9 +520,9 @@ final class CodeGenerator {
             sb.append("                    \"v\", \"version\", \"Displays version information of the command\",\n");
             sb.append("                    Boolean.class, \"generatedVersion\", OptionType.BOOLEAN,\n");
             if (forHelp)
-                sb.append("                    CONVERTER_java_lang_Boolean, null);\n");
+                sb.append("                    null, null);\n");
             else
-                sb.append("                    CONVERTER_java_lang_Boolean, new Accessor(").append(versionIdx)
+                sb.append("                    converter_java_lang_Boolean, new Accessor(").append(versionIdx)
                         .append("));\n");
             sb.append("            versionOpt.setOverrideRequired(true);\n");
             sb.append("            processedCommand.addOptionDirect(versionOpt);\n");
@@ -626,7 +642,7 @@ final class CodeGenerator {
 
         if (!forHelp) {
             if (isPrivateField(mixinField)) {
-                String constName = fieldConstantName(mixinFieldName);
+                String constName = fieldConstantRef(fieldConstantName(mixinFieldName));
                 sb.append("        try {\n");
                 sb.append("            if (").append(constName).append(".get(instance) == null) {\n");
                 sb.append("                ").append(constName).append(".set(instance, new ").append(mixinTypeName)
@@ -1093,9 +1109,9 @@ final class CodeGenerator {
                         .append(" = val != null && (Boolean) val;");
             } else if (info.mixinFieldName != null) {
                 if (info.isPrivate) {
-                    sb.append("{ Object m = ").append(fieldConstantName(info.mixinFieldName))
+                    sb.append("{ Object m = ").append(fieldConstantRef(fieldConstantName(info.mixinFieldName)))
                             .append(".get(inst); if (m != null) ")
-                            .append(fieldConstantName(info.mixinFieldName, info.fieldName))
+                            .append(fieldConstantRef(fieldConstantName(info.mixinFieldName, info.fieldName)))
                             .append(".set(m, val); }");
                 } else {
                     sb.append("if (((").append(info.commandSimpleName).append(") inst).")
@@ -1106,7 +1122,7 @@ final class CodeGenerator {
                 }
             } else {
                 if (info.isPrivate) {
-                    sb.append(fieldConstantName(info.fieldName)).append(".set(inst, val);");
+                    sb.append(fieldConstantRef(fieldConstantName(info.fieldName))).append(".set(inst, val);");
                 } else {
                     sb.append("((").append(info.commandSimpleName).append(") inst).")
                             .append(info.fieldName).append(" = (").append(info.fieldType).append(") val;");
@@ -1133,9 +1149,9 @@ final class CodeGenerator {
                 sb.append("return this.").append(info.fieldName).append(";");
             } else if (info.mixinFieldName != null) {
                 if (info.isPrivate) {
-                    sb.append("{ Object m = ").append(fieldConstantName(info.mixinFieldName))
+                    sb.append("{ Object m = ").append(fieldConstantRef(fieldConstantName(info.mixinFieldName)))
                             .append(".get(inst); return m != null ? ")
-                            .append(fieldConstantName(info.mixinFieldName, info.fieldName))
+                            .append(fieldConstantRef(fieldConstantName(info.mixinFieldName, info.fieldName)))
                             .append(".get(m) : null; }");
                 } else {
                     sb.append("return ((").append(info.commandSimpleName).append(") inst).")
@@ -1145,7 +1161,7 @@ final class CodeGenerator {
                 }
             } else {
                 if (info.isPrivate) {
-                    sb.append("return ").append(fieldConstantName(info.fieldName)).append(".get(inst);");
+                    sb.append("return ").append(fieldConstantRef(fieldConstantName(info.fieldName))).append(".get(inst);");
                 } else {
                     sb.append("return ((").append(info.commandSimpleName).append(") inst).")
                             .append(info.fieldName).append(";");
@@ -1165,7 +1181,7 @@ final class CodeGenerator {
         sb.append("        public void accept(Object cmd, Object parent) {\n");
         if (parentInfo != null) {
             if (parentInfo.isPrivate) {
-                sb.append("            try { ").append(fieldConstantName(parentInfo.fieldName))
+                sb.append("            try { ").append(fieldConstantRef(fieldConstantName(parentInfo.fieldName)))
                         .append(".set(cmd, parent);")
                         .append(" } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
             } else {
@@ -1190,7 +1206,7 @@ final class CodeGenerator {
         if (className != null && !className.equals(NULL_CONVERTER)) {
             sb.append("new ").append(className).append("()");
         } else {
-            sb.append("CONVERTER_").append(converterConstantSuffix(fieldType));
+            sb.append("converter_").append(converterConstantSuffix(fieldType));
         }
     }
 
@@ -1215,7 +1231,7 @@ final class CodeGenerator {
             sb.append("new org.aesh.command.impl.converter.EnumConverter(").append(fieldType).append(".class)");
             return;
         }
-        sb.append("CONVERTER_").append(converterConstantSuffix(fieldType));
+        sb.append("converter_").append(converterConstantSuffix(fieldType));
     }
 
     /** Emit completer setter if non-default. */
@@ -1228,7 +1244,8 @@ final class CodeGenerator {
         if (className != null && !className.equals(NULL_OPTION_COMPLETER)) {
             sb.append("            ").append(var).append(".setCompleter(new ").append(className).append("());\n");
         } else if (isBooleanType) {
-            sb.append("            ").append(var).append(".setCompleter(BOOLEAN_COMPLETER);\n");
+            sb.append("            ").append(var)
+                    .append(".setCompleter(org.aesh.command.impl.completer.BooleanOptionCompleter.INSTANCE);\n");
         } else if (isFileOrResource) {
             sb.append("            ").append(var)
                     .append(".setCompleter(new org.aesh.command.impl.completer.FileOptionCompleter());\n");
@@ -1378,6 +1395,11 @@ final class CodeGenerator {
         return "FIELD_" + fieldName.replace('.', '_');
     }
 
+    /** Holder-qualified reference; reflection lives in Fields and must not run at provider clinit (#675). */
+    private static String fieldConstantRef(String constName) {
+        return "Fields." + constName;
+    }
+
     private static String fieldConstantName(String mixinFieldName, String fieldName) {
         return "FIELD_" + mixinFieldName.replace('.', '_') + "_" + fieldName;
     }
@@ -1426,33 +1448,42 @@ final class CodeGenerator {
         if (privateFields.isEmpty())
             return;
 
+        // Reflection for private fields lives in a nested holder so it runs
+        // on first Accessor use (execution path), never at provider
+        // class-init (help path only builds metadata, #675).
+        sb.append("    private static final class Fields {\n");
         for (String[] pf : privateFields) {
-            sb.append("    private static final java.lang.reflect.Field ").append(pf[0]).append(";\n");
+            sb.append("        static final java.lang.reflect.Field ").append(pf[0]).append(";\n");
         }
-        sb.append("\n    static {\n");
-        sb.append("        try {\n");
+        sb.append("        static {\n");
+        sb.append("            try {\n");
         for (String[] pf : privateFields) {
-            sb.append("            ").append(pf[0]).append(" = ").append(pf[1])
+            sb.append("                ").append(pf[0]).append(" = ").append(pf[1])
                     .append(".class.getDeclaredField(\"").append(pf[2]).append("\");\n");
-            sb.append("            ").append(pf[0]).append(".setAccessible(true);\n");
+            sb.append("                ").append(pf[0]).append(".setAccessible(true);\n");
         }
-        sb.append("        } catch (NoSuchFieldException e) {\n");
-        sb.append("            throw new RuntimeException(e);\n");
+        sb.append("            } catch (NoSuchFieldException e) {\n");
+        sb.append("                throw new RuntimeException(e);\n");
+        sb.append("            }\n");
         sb.append("        }\n");
         sb.append("    }\n\n");
     }
 
     /**
-     * Pre-scan fields to find distinct converter types and completer needs,
-     * then emit shared static final constants to avoid per-option allocations.
+     * Pre-scan fields to find distinct converter types resolved through
+     * {@code CLConverterManager} at runtime. Callers emit one method-local
+     * lookup per type on the execution path; the help path emits none (#675).
+     * <p>
+     * {@code @Option} enums without custom converters are excluded: the
+     * emitter inlines a direct {@code EnumConverter} for them (#591) and
+     * never touches the local.
      */
-    private static void generateSharedConvertersAndCompleters(StringBuilder sb,
+    private static java.util.LinkedHashSet<String> collectSharedConverterTypes(
             List<VariableElement> fields, Elements elementUtils, Types typeUtils) {
         // Collect distinct default converter types (types that use CLConverterManager, not custom converters)
         java.util.LinkedHashSet<String> converterTypes = new java.util.LinkedHashSet<>();
         // Always include Boolean — needed for generated help/version options
         converterTypes.add("java.lang.Boolean");
-        boolean needsBooleanCompleter = false;
 
         for (VariableElement field : fields) {
             if (field.getAnnotation(Mixin.class) != null) {
@@ -1460,8 +1491,6 @@ final class CodeGenerator {
                 if (mixinType instanceof DeclaredType) {
                     TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
                     collectConverterTypes(converterTypes, mixinElement, elementUtils, typeUtils);
-                    if (hasBooleanOptions(mixinElement, typeUtils))
-                        needsBooleanCompleter = true;
                 }
                 continue;
             }
@@ -1472,9 +1501,10 @@ final class CodeGenerator {
                 TypeMirror effectiveType = field.asType();
                 if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
+                if (field.getAnnotation(Option.class) != null
+                        && getEnumConstantNames(effectiveType, typeUtils) != null)
+                    continue; // direct EnumConverter, no shared lookup (#591)
                 converterTypes.add(getBoxedTypeName(effectiveType, typeUtils));
-                if (isBooleanType(effectiveType, typeUtils))
-                    needsBooleanCompleter = true;
             } else if (field.getAnnotation(OptionList.class) != null || field.getAnnotation(Arguments.class) != null) {
                 TypeMirror effectiveType = field.asType();
                 if (isOptionalType(effectiveType, typeUtils))
@@ -1487,22 +1517,7 @@ final class CodeGenerator {
                 converterTypes.add(getGenericTypeArgument(effectiveType, 1, typeUtils));
             }
         }
-
-        if (converterTypes.isEmpty() && !needsBooleanCompleter)
-            return;
-
-        // Emit converter constants
-        for (String type : converterTypes) {
-            sb.append("    private static final org.aesh.command.converter.Converter CONVERTER_")
-                    .append(converterConstantSuffix(type))
-                    .append(" = org.aesh.converter.CLConverterManager.getInstance().getConverter(")
-                    .append(type).append(".class);\n");
-        }
-        if (needsBooleanCompleter) {
-            sb.append("    private static final org.aesh.command.completer.OptionCompleter BOOLEAN_COMPLETER")
-                    .append(" = org.aesh.command.impl.completer.BooleanOptionCompleter.INSTANCE;\n");
-        }
-        sb.append("\n");
+        return converterTypes;
     }
 
     /** Generate a safe Java identifier suffix from a type name. */
@@ -1520,11 +1535,23 @@ final class CodeGenerator {
             if (customConverter != null && !customConverter.equals(NULL_CONVERTER))
                 continue;
             if (f.getAnnotation(Option.class) != null || f.getAnnotation(Argument.class) != null) {
-                types.add(getBoxedTypeName(f.asType(), typeUtils));
+                TypeMirror effectiveType = f.asType();
+                if (isOptionalType(effectiveType, typeUtils))
+                    effectiveType = unwrapOptionalTypeMirror(effectiveType);
+                if (f.getAnnotation(Option.class) != null
+                        && getEnumConstantNames(effectiveType, typeUtils) != null)
+                    continue; // direct EnumConverter, no shared lookup (#591)
+                types.add(getBoxedTypeName(effectiveType, typeUtils));
             } else if (f.getAnnotation(OptionList.class) != null || f.getAnnotation(Arguments.class) != null) {
-                types.add(getGenericTypeArgument(f.asType(), 0, typeUtils));
+                TypeMirror effectiveType = f.asType();
+                if (isOptionalType(effectiveType, typeUtils))
+                    effectiveType = unwrapOptionalTypeMirror(effectiveType);
+                types.add(getGenericTypeArgument(effectiveType, 0, typeUtils));
             } else if (f.getAnnotation(OptionGroup.class) != null) {
-                types.add(getGenericTypeArgument(f.asType(), 1, typeUtils));
+                TypeMirror effectiveType = f.asType();
+                if (isOptionalType(effectiveType, typeUtils))
+                    effectiveType = unwrapOptionalTypeMirror(effectiveType);
+                types.add(getGenericTypeArgument(effectiveType, 1, typeUtils));
             }
         }
         // Recurse into superclass
@@ -1535,17 +1562,6 @@ final class CodeGenerator {
                         elementUtils, typeUtils);
             }
         }
-    }
-
-    private static boolean hasBooleanOptions(TypeElement typeElement, Types typeUtils) {
-        for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
-            if (enclosed instanceof VariableElement) {
-                VariableElement f = (VariableElement) enclosed;
-                if ((f.getAnnotation(Option.class) != null) && isBooleanType(f.asType(), typeUtils))
-                    return true;
-            }
-        }
-        return false;
     }
 
     private static void collectMixinPrivateFields(List<String[]> privateFields,
