@@ -1484,6 +1484,29 @@ public class ProcessorTest {
     }
 
     @Test
+    public void testGroupCommandHelpEntriesEmitted() throws Exception {
+        // Pre-computed child help entries let lazy help listings render
+        // siblings without building full child metadata (#675).
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SubCommand1", SUB_COMMAND1_SOURCE),
+                new InMemorySource("test.SubCommand2", SUB_COMMAND2_SOURCE),
+                new InMemorySource("test.GroupTestCommand", GROUP_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> metadataClass = result.classLoader.loadClass("test.GroupTestCommand_AeshMetadata");
+        CommandMetadataProvider<?> provider = (CommandMetadataProvider<?>) metadataClass.newInstance();
+        String[][] entries = provider.groupCommandHelpEntries();
+        assertNotNull("Help entries must be generated for groups", entries);
+        assertEquals(2, entries.length);
+        assertEquals("sub1", entries[0][0]);
+        assertEquals("Subcommand 1", entries[0][1]);
+        assertEquals("", entries[0][2]);
+        assertEquals("sub2", entries[1][0]);
+        assertEquals("Subcommand 2", entries[1][1]);
+        assertEquals("", entries[1][2]);
+    }
+
+    @Test
     public void testHelpBuildTouchesNoConverterOrReflection() throws Exception {
         // Generated provider classes must not resolve converters, completers
         // or reflection at class-init: LazyHelp walks every group child for a

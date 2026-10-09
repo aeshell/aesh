@@ -235,6 +235,11 @@ final class CodeGenerator {
             generateGroupCommandNamesAndAliases(sb, commandElement, elementUtils);
         }
 
+        // groupCommandHelpEntries() — pre-computed child name/description/helpGroup (#675)
+        if (isGroup) {
+            generateGroupCommandHelpEntries(sb, commandElement, elementUtils);
+        }
+
         // Collect field accessor info for the switch-based Accessor class
         List<FieldAccessorInfo> accessorInfos = new java.util.ArrayList<>();
 
@@ -331,6 +336,55 @@ final class CodeGenerator {
                 }
             }
             sb.append("}");
+            if (i < groupClasses.size() - 1)
+                sb.append(",");
+            sb.append("\n");
+        }
+        sb.append("        };\n");
+        sb.append("    }\n\n");
+    }
+
+    /**
+     * Generate the groupCommandHelpEntries() override for group commands.
+     * Returns a String[][] where each entry is {name, description, helpGroup},
+     * index-aligned with groupCommandClasses(). Lazy help listings render
+     * sibling subcommands from these literals without building full child
+     * metadata (#675).
+     */
+    private static void generateGroupCommandHelpEntries(StringBuilder sb, TypeElement commandElement,
+            Elements elementUtils) {
+        List<String> groupClasses = getGroupCommandClassNames(commandElement, elementUtils);
+        if (groupClasses.isEmpty())
+            return;
+
+        sb.append("    @Override\n");
+        sb.append("    public String[][] groupCommandHelpEntries() {\n");
+        sb.append("        return new String[][] {\n");
+        for (int i = 0; i < groupClasses.size(); i++) {
+            String childClassName = groupClasses.get(i);
+            TypeElement childElement = elementUtils.getTypeElement(childClassName);
+            String childName = null;
+            String childDescription = "";
+            String childHelpGroup = "";
+            if (childElement != null) {
+                childName = getAnnotationValue(childElement, "name", elementUtils);
+                String desc = getAnnotationValue(childElement, "description", elementUtils);
+                if (desc != null)
+                    childDescription = desc;
+                String group = getAnnotationValue(childElement, "helpGroup", elementUtils);
+                if (group != null)
+                    childHelpGroup = group;
+            }
+            if (childName == null) {
+                // Fallback: use simple class name lowercased (shouldn't happen with valid @CommandDefinition)
+                String simpleName = childClassName.contains(".")
+                        ? childClassName.substring(childClassName.lastIndexOf('.') + 1)
+                        : childClassName;
+                childName = simpleName.toLowerCase();
+            }
+            sb.append("            {").append(stringLiteral(childName)).append(", ")
+                    .append(stringLiteral(childDescription)).append(", ")
+                    .append(stringLiteral(childHelpGroup)).append("}");
             if (i < groupClasses.size() - 1)
                 sb.append(",");
             sb.append("\n");

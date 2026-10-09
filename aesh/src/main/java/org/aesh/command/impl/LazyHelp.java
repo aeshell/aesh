@@ -29,6 +29,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommand;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -107,26 +108,43 @@ public final class LazyHelp {
                 return null;
             if (children.isEmpty())
                 return walk;
-            for (Class<? extends Command> childClass : children) {
-                AeshCommandLineParser<CommandInvocation> child = newParser(childClass);
-                if (child == null)
-                    return null;
+            // Peek before building: only the token-matched child (if any)
+            // gets a full parser. Siblings become metadata-only ghosts
+            // carrying just name/description/helpGroup, so listings render
+            // byte-identically without field processing (#675).
+            String token = (args == null || index >= args.length) ? null : args[index];
+            Class<? extends Command> matched = null;
+            if (token != null && !token.isEmpty() && !token.equals("--") && token.charAt(0) != '-') {
+                matched = LazyRouteResolver.matchChild(currentClass, token);
+                if (matched == null) {
+                    walk.fullyMatched = false;
+                }
+            }
+            String[][] helpEntries = groupHelpEntries(currentClass, children);
+            for (int i = 0; i < children.size(); i++) {
+                Class<? extends Command> childClass = children.get(i);
+                AeshCommandLineParser<CommandInvocation> child;
+                if (childClass == matched)
+                    child = newParser(childClass);
+                else
+                    child = ghostParser(childClass,
+                            helpEntries == null ? null : helpEntries[i]);
+                if (child == null) {
+                    // Ghost unusable: fall back to the full parser (status quo)
+                    if (childClass == matched)
+                        return null;
+                    child = newParser(childClass);
+                    if (child == null)
+                        return null;
+                }
                 try {
                     current.addChildParser(child);
                 } catch (CommandLineParserException e) {
                     return null;
                 }
             }
-            if (args == null || index >= args.length)
+            if (matched == null)
                 return walk;
-            String token = args[index];
-            if (token == null || token.isEmpty() || token.charAt(0) == '-' || token.equals("--"))
-                return walk;
-            Class<? extends Command> matched = LazyRouteResolver.matchChild(currentClass, token);
-            if (matched == null) {
-                walk.fullyMatched = false;
-                return walk;
-            }
             CommandLineParser<CommandInvocation> next = current.getChildParser(token);
             if (!(next instanceof AeshCommandLineParser))
                 return null;
@@ -141,6 +159,65 @@ public final class LazyHelp {
         private AeshCommandLineParser<CommandInvocation> root;
         private AeshCommandLineParser<CommandInvocation> deepest;
         private boolean fullyMatched;
+    }
+
+    /**
+     * Pre-computed {@code {name, description, helpGroup}} triples for a
+     * group's children, index-aligned with {@code children}. Null when
+     * unavailable — callers then fall back to building full child parsers.
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static String[][] groupHelpEntries(Class<? extends Command> parent,
+            List<Class<? extends Command>> children) {
+        CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(parent);
+        if (provider == null || !provider.isGroupCommand())
+            return null;
+        String[][] entries = ((CommandMetadataProvider) provider).groupCommandHelpEntries();
+        if (entries == null || entries.length != children.size())
+            return null;
+        return entries;
+    }
+
+    /**
+     * A metadata-only stand-in for a sibling subcommand: just enough
+     * (name/description/helpGroup) for the group listing to render
+     * byte-identically, without field processing or class loading.
+     * Null when the entry is unusable — callers build the full parser.
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static AeshCommandLineParser<CommandInvocation> ghostParser(
+            Class<? extends Command> childClass, String[] helpEntry) {
+        String name = null;
+        String description = "";
+        String helpGroup = "";
+        if (helpEntry != null && helpEntry.length == 3) {
+            name = helpEntry[0];
+            if (helpEntry[1] != null)
+                description = helpEntry[1];
+            if (helpEntry[2] != null)
+                helpGroup = helpEntry[2];
+        } else {
+            CommandDefinition definition = childClass.getAnnotation(CommandDefinition.class);
+            if (definition == null)
+                return null;
+            name = definition.name();
+            description = definition.description();
+            helpGroup = definition.helpGroup();
+        }
+        if (name == null || name.isEmpty())
+            return null;
+        try {
+            ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processed = ProcessedCommandBuilder
+                    .<Command<CommandInvocation>, CommandInvocation> builder()
+                    .name(name)
+                    .description(description)
+                    .create();
+            if (!helpGroup.isEmpty())
+                processed.setHelpGroup(helpGroup);
+            return new AeshCommandLineParser<>(processed);
+        } catch (CommandLineParserException e) {
+            return null;
+        }
     }
 
     private static List<Class<? extends Command>> childClasses(Class<? extends Command> parent) {

@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -670,6 +671,182 @@ public class AeshRuntimeRunnerLazyStartupTest {
             System.setOut(original);
         }
         return baos.toString();
+    }
+
+    @CommandDefinition(name = "ghostroot", description = "Ghost root", generateHelp = true, groupCommands = {
+            GhostSub1Command.class,
+            GhostSub2Command.class, GhostSub3Command.class })
+    public static class GhostRootCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub1", description = "First sub", generateHelp = true)
+    public static class GhostSub1Command implements Command<CommandInvocation> {
+        @Option(name = "sub1opt", description = "Sub1 option")
+        private String sub1opt;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub2", description = "Second sub")
+    public static class GhostSub2Command implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "sub3", description = "Third sub")
+    public static class GhostSub3Command implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static final Map<String, Integer> ghostHelpBuilds = new HashMap<>();
+
+    private static class CountingGhostProvider<C extends Command> implements CommandMetadataProvider<C> {
+        private final Class<C> commandType;
+        private final String name;
+        private final Class<? extends Command>[] children;
+        private final String[][] names;
+        private final String[][] entries;
+
+        @SuppressWarnings("unchecked")
+        CountingGhostProvider(Class<C> commandType, String name,
+                Class<? extends Command>[] children, String[][] names, String[][] entries) {
+            this.commandType = commandType;
+            this.name = name;
+            this.children = children;
+            this.names = names;
+            this.entries = entries;
+        }
+
+        @Override
+        public Class<C> commandType() {
+            return commandType;
+        }
+
+        @Override
+        public C newInstance() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ProcessedCommand buildProcessedCommand(C instance) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isGroupCommand() {
+            return children.length > 0;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Class<? extends Command>[] groupCommandClasses() {
+            return children;
+        }
+
+        @Override
+        public String commandName() {
+            return name;
+        }
+
+        @Override
+        public String[][] groupCommandNamesAndAliases() {
+            return names;
+        }
+
+        @Override
+        public String[][] groupCommandHelpEntries() {
+            return entries;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public ProcessedCommand buildHelpProcessedCommand() {
+            ghostHelpBuilds.merge(name, 1, Integer::sum);
+            try {
+                return new AeshCommandContainerBuilder<CommandInvocation>()
+                        .buildHelpProcessedCommand(commandType);
+            } catch (CommandLineParserException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testLazyHelpBuildsOnlyMatchedChild() {
+        // Only the addressed child may get a full metadata build; siblings
+        // render from pre-computed entries without field processing (#675).
+        ghostHelpBuilds.clear();
+        MetadataProviderRegistry.register(className -> {
+            if (className.equals(GhostRootCommand.class.getName()))
+                return new CountingGhostProvider<>(GhostRootCommand.class, "ghostroot",
+                        new Class[] { GhostSub1Command.class, GhostSub2Command.class,
+                                GhostSub3Command.class },
+                        new String[][] { { "sub1" }, { "sub2" }, { "sub3" } },
+                        new String[][] { { "sub1", "First sub", "" }, { "sub2", "Second sub", "" },
+                                { "sub3", "Third sub", "" } });
+            if (className.equals(GhostSub1Command.class.getName()))
+                return new CountingGhostProvider<>(GhostSub1Command.class, "sub1",
+                        new Class[0], new String[0][], null);
+            if (className.equals(GhostSub2Command.class.getName()))
+                return new CountingGhostProvider<>(GhostSub2Command.class, "sub2",
+                        new Class[0], new String[0][], null);
+            if (className.equals(GhostSub3Command.class.getName()))
+                return new CountingGhostProvider<>(GhostSub3Command.class, "sub3",
+                        new Class[0], new String[0][], null);
+            return null;
+        });
+
+        final CommandResult[] rootResult = new CommandResult[1];
+        String rootOutput = captureStdout(() -> rootResult[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(GhostRootCommand.class)
+                .args("--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, rootResult[0]);
+        assertEquals(Integer.valueOf(1), ghostHelpBuilds.get("ghostroot"));
+        assertFalse("No child metadata may build for a bare group listing",
+                ghostHelpBuilds.containsKey("sub1")
+                        || ghostHelpBuilds.containsKey("sub2")
+                        || ghostHelpBuilds.containsKey("sub3"));
+        // The listing still shows every sibling with its description
+        assertTrue(rootOutput.contains("sub1"));
+        assertTrue(rootOutput.contains("First sub"));
+        assertTrue(rootOutput.contains("sub2"));
+        assertTrue(rootOutput.contains("Second sub"));
+        assertTrue(rootOutput.contains("sub3"));
+        assertTrue(rootOutput.contains("Third sub"));
+
+        ghostHelpBuilds.clear();
+        final CommandResult[] result = new CommandResult[1];
+        String output = captureStdout(() -> result[0] = AeshRuntimeRunner.builder()
+                .lazyStartup(true)
+                .command(GhostRootCommand.class)
+                .args("sub1", "--help")
+                .execute());
+
+        assertEquals(CommandResult.SUCCESS, result[0]);
+        assertEquals(Integer.valueOf(1), ghostHelpBuilds.get("ghostroot"));
+        assertEquals(Integer.valueOf(1), ghostHelpBuilds.get("sub1"));
+        assertFalse("Sibling sub2 must render from entries, not a full build",
+                ghostHelpBuilds.containsKey("sub2"));
+        assertFalse("Sibling sub3 must render from entries, not a full build",
+                ghostHelpBuilds.containsKey("sub3"));
+        // The matched path is real: sub1's own option renders
+        assertTrue(output.contains("sub1opt"));
     }
 
     @Test

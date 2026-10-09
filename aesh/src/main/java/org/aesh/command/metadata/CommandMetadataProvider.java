@@ -106,4 +106,20 @@ public interface CommandMetadataProvider<C extends Command> {
     default String[][] groupCommandNamesAndAliases() {
         return null;
     }
+
+    /**
+     * Returns child command help entries for group commands: one
+     * {@code {name, description, helpGroup}} triple per child, index-aligned
+     * with {@link #groupCommandClasses()}.
+     * <p>
+     * When available, lazy help listings render sibling subcommands from
+     * these literals without building (and class-loading) full child
+     * metadata (#675).
+     *
+     * @return help entries per child, or {@code null} if not available
+     *         (falls back to building child parsers)
+     */
+    default String[][] groupCommandHelpEntries() {
+        return null;
+    }
 }
