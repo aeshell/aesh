@@ -28,6 +28,13 @@ package org.aesh.command;
  * listener) and {@link #onPipelineComplete(PipelineResult)} once per
  * pipeline. The existing {@code onCommandComplete} contract is unchanged and
  * still fires for the terminal stage.
+ * <p>
+ * Ordering guarantee: within one pipeline, {@code stage*} events fire, then
+ * {@code pipeline}, then the terminal {@code onCommandComplete} — sequentially
+ * on the terminal job's thread, with the pipeline events strictly before the
+ * drain launches the next command. There is deliberately no FIFO order
+ * <em>across</em> commands: the terminal callback and the next command's
+ * callbacks run on different worker threads and may interleave.
  *
  * @author Aesh team
  */
