@@ -19,9 +19,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build and test
-        run: mvn clean install
+        run: ./mvnw clean install
       - name: Verify benchmark compiles
-        run: mvn compile -Pbenchmark -pl benchmark
+        run: ./mvnw compile -Pbenchmark -pl benchmark
 
   windows-test:
     runs-on: windows-latest
@@ -36,11 +36,11 @@ jobs:
           distribution: 'temurin'
           cache: maven
       - name: Build dependencies
-        run: mvn -q -pl aesh -am -DskipTests install
+        run: .\mvnw.cmd -q -pl aesh -am -DskipTests install
       - name: Test builtins
-        run: mvn -pl aesh-builtins test
+        run: .\mvnw.cmd -pl aesh-builtins test
       - name: Test shell escape
-        run: mvn -pl aesh test -Dtest='NativeExecutionTest,ShellEscapeTest' -DfailIfNoTests=false
+        run: .\mvnw.cmd -pl aesh test -Dtest='NativeExecutionTest,ShellEscapeTest' -DfailIfNoTests=false
 
   native-test:
     runs-on: ubuntu-latest
@@ -55,9 +55,9 @@ jobs:
           distribution: 'graalvm'
           cache: maven
       - name: Build aesh
-        run: mvn clean install -DskipTests
+        run: ./mvnw clean install -DskipTests
       - name: Build examples
-        run: mvn package -Pexamples -pl examples -DskipTests
+        run: ./mvnw package -Pexamples -pl examples -DskipTests
       - name: Build native image
         run: |
           # Use the shaded fat jar (exclude -javadoc, -sources, -tests JARs)
