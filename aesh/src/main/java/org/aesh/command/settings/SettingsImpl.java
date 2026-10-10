@@ -108,6 +108,8 @@ public class SettingsImpl<CI extends CommandInvocation>
     private boolean enableSearchPaging;
     private boolean tailTipSuggestions;
     private CommandExecutionListener commandExecutionListener;
+    private boolean programStatusEnabled;
+    private String programStatusAppName;
     private Supplier<Prompt> promptSupplier;
     private AliasManager aliasManager;
     private Consumer<Void> connectionClosedHandler;
@@ -168,6 +170,8 @@ public class SettingsImpl<CI extends CommandInvocation>
         setEnableSearchInPaging(baseSettings.enableSearchInPaging());
         setTailTipSuggestions(baseSettings.tailTipSuggestions());
         setCommandExecutionListener(baseSettings.commandExecutionListener());
+        setProgramStatusEnabled(baseSettings.programStatusEnabled());
+        setProgramStatusAppName(baseSettings.programStatusAppName());
         setPromptSupplier(baseSettings.promptSupplier());
         setAliasManager(baseSettings.aliasManager());
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
@@ -868,6 +872,26 @@ public class SettingsImpl<CI extends CommandInvocation>
     @Override
     public CommandExecutionListener commandExecutionListener() {
         return commandExecutionListener;
+    }
+
+    @Override
+    public void setProgramStatusEnabled(boolean enabled) {
+        this.programStatusEnabled = enabled;
+    }
+
+    @Override
+    public boolean programStatusEnabled() {
+        return programStatusEnabled;
+    }
+
+    @Override
+    public void setProgramStatusAppName(String appName) {
+        this.programStatusAppName = appName;
+    }
+
+    @Override
+    public String programStatusAppName() {
+        return programStatusAppName;
     }
 
     @Override

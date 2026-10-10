@@ -358,6 +358,38 @@ public interface Settings<CI extends CommandInvocation>
     CommandExecutionListener commandExecutionListener();
 
     /**
+     * Enable OSC 7501 program-status reporting for command execution.
+     * Disabled by default. Reporting is best-effort: reports are written
+     * to the terminal connection when available, silently skipped otherwise.
+     * Enabling alone performs no terminal queries and starts no threads.
+     *
+     * @param enabled true to enable program-status reporting
+     * @since 3.19
+     */
+    void setProgramStatusEnabled(boolean enabled);
+
+    /**
+     * @return true when OSC 7501 program-status reporting is enabled
+     * @since 3.19
+     */
+    boolean programStatusEnabled();
+
+    /**
+     * Stable application name reported with program-status records.
+     * Must satisfy the protocol grammar; null means no name is sent.
+     *
+     * @param appName the application name, or null
+     * @since 3.19
+     */
+    void setProgramStatusAppName(String appName);
+
+    /**
+     * @return the program-status application name, or null
+     * @since 3.19
+     */
+    String programStatusAppName();
+
+    /**
      * Get sub-command mode settings.
      *
      * @return the sub-command mode settings

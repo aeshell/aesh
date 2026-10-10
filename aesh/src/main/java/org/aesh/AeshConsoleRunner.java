@@ -155,6 +155,35 @@ public class AeshConsoleRunner {
     }
 
     /**
+     * Enable OSC 7501 program-status reporting for command execution.
+     * Disabled by default; see {@code Settings#setProgramStatusEnabled}.
+     *
+     * @param enable true to enable program-status reporting
+     * @return this builder
+     * @since 3.19
+     */
+    public AeshConsoleRunner enableProgramStatus(boolean enable) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setProgramStatusEnabled(enable);
+        return this;
+    }
+
+    /**
+     * Stable application name reported with program-status records.
+     *
+     * @param appName the application name, or null
+     * @return this builder
+     * @since 3.19
+     */
+    public AeshConsoleRunner programStatusAppName(String appName) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setProgramStatusAppName(appName);
+        return this;
+    }
+
+    /**
      * Enable the {@code !} prefix for executing native OS commands from the REPL.
      * For example, {@code !ls -la} forks {@code ls -la} as a native process.
      * Disabled by default.

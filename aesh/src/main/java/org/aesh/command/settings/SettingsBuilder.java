@@ -338,6 +338,31 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Enable OSC 7501 program-status reporting for command execution.
+     * Disabled by default; see {@link Settings#setProgramStatusEnabled}.
+     *
+     * @param enable true to enable program-status reporting
+     * @return this builder
+     * @since 3.19
+     */
+    public SettingsBuilder<CI> enableProgramStatus(boolean enable) {
+        settings.setProgramStatusEnabled(enable);
+        return this;
+    }
+
+    /**
+     * Stable application name reported with program-status records.
+     *
+     * @param appName the application name, or null
+     * @return this builder
+     * @since 3.19
+     */
+    public SettingsBuilder<CI> programStatusAppName(String appName) {
+        settings.setProgramStatusAppName(appName);
+        return this;
+    }
+
     public SettingsBuilder<CI> tailTipSuggestions(boolean enable) {
         settings.setTailTipSuggestions(enable);
         return this;
