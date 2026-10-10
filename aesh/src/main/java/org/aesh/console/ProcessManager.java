@@ -42,8 +42,10 @@ import org.aesh.command.impl.PipelineStages;
 import org.aesh.command.impl.UpstreamOutcomeSupervisor;
 import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.status.ProgramStatusReporter;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.utils.LoggerUtil;
+import org.aesh.terminal.utils.ProgramStatus;
 
 /**
  * Manages command execution within the interactive console.
@@ -94,6 +96,28 @@ public class ProcessManager {
     private volatile CommandJob activeJob;
     private boolean synchronous;
     private PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
+    private boolean programStatusEnabled;
+    private String programStatusAppName;
+    private ProgramStatusReporter sessionReporter = ProgramStatusReporter.disabled();
+    /**
+     * Finalized outcome of the last finished job on the current line, for
+     * program-status terminal reporting. Written in
+     * {@link #processFinished} under the same identity guard that clears
+     * the active slot, so abandoned workers never snapshot; read on the
+     * drain turn when the line's planner is exhausted. Null when no job
+     * has finished on the current line.
+     */
+    private volatile TerminalOutcome terminalOutcome;
+
+    private static final class TerminalOutcome {
+        final CommandResult result;
+        final Throwable error;
+
+        TerminalOutcome(CommandResult result, Throwable error) {
+            this.result = result;
+            this.error = error;
+        }
+    }
 
     public ProcessManager(Console console) {
         this.console = console;
@@ -127,6 +151,20 @@ public class ProcessManager {
     public void setPipelineConfig(PipelineConfig pipelineConfig) {
         if (pipelineConfig != null)
             this.pipelineConfig = pipelineConfig;
+    }
+
+    /**
+     * Opt-in OSC 7501 program-status reporting for executed lines.
+     * Disabled by default; when disabled nothing is allocated, probed,
+     * or written. Reports go to each session's original terminal
+     * connection, never to redirected command output.
+     *
+     * @param enabled true to report work start and terminal outcomes
+     * @param appName stable application name, or null for none
+     */
+    public void setProgramStatus(boolean enabled, String appName) {
+        this.programStatusEnabled = enabled;
+        this.programStatusAppName = appName;
     }
 
     /**
@@ -175,8 +213,11 @@ public class ProcessManager {
     public void processFinished(CommandJob job) {
         // Identity check: an abandoned worker may finish after a newer job
         // became active; it must not clear another job's slot.
-        if (activeJob == job)
+        if (activeJob == job) {
             activeJob = null;
+            if (programStatusEnabled)
+                terminalOutcome = new TerminalOutcome(job.result(), job.error());
+        }
         publishExitCode(job);
         firePipelineEvents(job);
         requestDrain();
@@ -246,6 +287,27 @@ public class ProcessManager {
     @SuppressWarnings("unchecked")
     public void executeNext() {
         requestDrain();
+    }
+
+    /**
+     * Publish the line's terminal program-status outcome: the last finished
+     * job's finalized result, reported once the planner is exhausted —
+     * before the next session is picked up and before the prompt is rearmed
+     * or the connection closed. User cancellation reports idle; everything
+     * else maps off the finalized result, never raw job state.
+     */
+    private void reportTerminalOutcome() {
+        TerminalOutcome outcome = terminalOutcome;
+        if (outcome == null || outcome.result == null)
+            return;
+        ProgramStatus.State state;
+        if (outcome.result == CommandResult.INTERRUPTED)
+            state = ProgramStatus.State.IDLE;
+        else if (outcome.result.isSuccess())
+            state = ProgramStatus.State.DONE;
+        else
+            state = ProgramStatus.State.ERROR;
+        sessionReporter.report(ProgramStatus.builder(state).build());
     }
 
     /**
@@ -371,9 +433,14 @@ public class ProcessManager {
                 this.executor = session.executor;
                 this.commandLine = session.commandLine;
                 this.planner = new ExecutionPlanner<>(executor.getExecutions());
+                terminalOutcome = null;
+                sessionReporter = ProgramStatusReporter.create(programStatusEnabled,
+                        programStatusAppName, session.connection);
+                sessionReporter.report(ProgramStatus.builder(ProgramStatus.State.WORKING).build());
             }
             ExecutionPlanner.Unit<? extends CommandInvocation> unit = planner.nextUnit();
             if (unit == null) {
+                reportTerminalOutcome();
                 if (planner.hasSkipped())
                     planner.clearSkipped();
                 planner = null;

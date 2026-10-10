@@ -64,6 +64,7 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.command.status.ProgramStatusReporter;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
@@ -90,6 +91,7 @@ import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.tty.TerminalConnection;
 import org.aesh.terminal.utils.Config;
 import org.aesh.terminal.utils.LoggerUtil;
+import org.aesh.terminal.utils.ProgramStatus;
 
 /**
  * @author Aesh team
@@ -194,6 +196,8 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             ExportManager exitCodes = exportManager;
             processManager.setExitCodeRecorder(exitCodes::setLastExitCode);
         }
+        processManager.setProgramStatus(settings.programStatusEnabled(),
+                settings.programStatusAppName());
         processManager.setExecutionListener(new PipelineExecutionListener() {
             @Override
             public void onCommandComplete(String line, CommandResult result, long durationMs) {
@@ -541,7 +545,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             } else {
                 conn.write(cnfe.getMessage() + Config.getLineSeparator());
             }
-            fireExecutionListener(line, CommandResult.COMMAND_NOT_FOUND, cnfe);
+            fireExecutionListener(conn, line, CommandResult.COMMAND_NOT_FOUND, cnfe);
             read(conn, readline);
         } catch (IllegalArgumentException | OptionValidatorException | CommandValidatorException
                 | CommandLineParserException e) {
@@ -557,11 +561,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             CommandResult errorResult = (e instanceof SubcommandNotFoundException)
                     ? CommandResult.COMMAND_NOT_FOUND
                     : CommandResult.USAGE_ERROR;
-            fireExecutionListener(line, errorResult, e);
+            fireExecutionListener(conn, line, errorResult, e);
             read(conn, readline);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
-            fireExecutionListener(line, CommandResult.FAILURE, e);
+            fireExecutionListener(conn, line, CommandResult.FAILURE, e);
             read(conn, readline);
         }
     }
@@ -571,10 +575,15 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
      * is created (CommandNotFoundException, parse errors, unexpected exceptions).
      * These cases bypass Process.run() so the listener must be fired here to
      * give consumers a complete view of all command outcomes (#605).
+     * Pre-job failures also report an error program-status record through the
+     * same opt-in policy as executed commands.
      */
-    private void fireExecutionListener(String line, CommandResult result, Throwable error) {
+    private void fireExecutionListener(Connection conn, String line, CommandResult result, Throwable error) {
         if (exportManager != null && result != null)
             exportManager.setLastExitCode(result.getResultValue());
+        ProgramStatusReporter.create(settings.programStatusEnabled(),
+                settings.programStatusAppName(), conn).report(
+                        ProgramStatus.builder(ProgramStatus.State.ERROR).build());
         CommandExecutionListener listener = settings.commandExecutionListener();
         if (listener != null) {
             try {
