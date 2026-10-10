@@ -344,7 +344,7 @@ public class SettingsBuilder<CI extends CommandInvocation> {
      *
      * @param enable true to enable program-status reporting
      * @return this builder
-     * @since 3.19
+     * @since 3.18.3
      */
     public SettingsBuilder<CI> enableProgramStatus(boolean enable) {
         settings.setProgramStatusEnabled(enable);
@@ -356,7 +356,7 @@ public class SettingsBuilder<CI extends CommandInvocation> {
      *
      * @param appName the application name, or null
      * @return this builder
-     * @since 3.19
+     * @since 3.18.3
      */
     public SettingsBuilder<CI> programStatusAppName(String appName) {
         settings.setProgramStatusAppName(appName);

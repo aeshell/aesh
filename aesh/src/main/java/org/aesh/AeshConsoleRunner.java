@@ -160,7 +160,7 @@ public class AeshConsoleRunner {
      *
      * @param enable true to enable program-status reporting
      * @return this builder
-     * @since 3.19
+     * @since 3.18.3
      */
     public AeshConsoleRunner enableProgramStatus(boolean enable) {
         if (settings == null)
@@ -174,7 +174,7 @@ public class AeshConsoleRunner {
      *
      * @param appName the application name, or null
      * @return this builder
-     * @since 3.19
+     * @since 3.18.3
      */
     public AeshConsoleRunner programStatusAppName(String appName) {
         if (settings == null)

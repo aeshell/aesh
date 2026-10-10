@@ -364,13 +364,13 @@ public interface Settings<CI extends CommandInvocation>
      * Enabling alone performs no terminal queries and starts no threads.
      *
      * @param enabled true to enable program-status reporting
-     * @since 3.19
+     * @since 3.18.3
      */
     void setProgramStatusEnabled(boolean enabled);
 
     /**
      * @return true when OSC 7501 program-status reporting is enabled
-     * @since 3.19
+     * @since 3.18.3
      */
     boolean programStatusEnabled();
 
@@ -379,13 +379,13 @@ public interface Settings<CI extends CommandInvocation>
      * Must satisfy the protocol grammar; null means no name is sent.
      *
      * @param appName the application name, or null
-     * @since 3.19
+     * @since 3.18.3
      */
     void setProgramStatusAppName(String appName);
 
     /**
      * @return the program-status application name, or null
-     * @since 3.19
+     * @since 3.18.3
      */
     String programStatusAppName();
 

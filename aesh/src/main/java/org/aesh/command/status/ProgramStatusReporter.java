@@ -42,7 +42,7 @@ import org.aesh.terminal.utils.ProgramStatus;
  * sequences. Encoding and validation belong to aesh-readline's
  * {@code ProgramStatus} model.
  *
- * @since 3.19
+ * @since 3.18.3
  */
 public final class ProgramStatusReporter {
 
