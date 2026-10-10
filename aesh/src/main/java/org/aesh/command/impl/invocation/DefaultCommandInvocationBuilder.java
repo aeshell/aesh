@@ -10,6 +10,7 @@ import org.aesh.command.impl.shell.ShellOutputTee;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.shell.Shell;
+import org.aesh.command.status.ProgramStatusScope;
 
 public class DefaultCommandInvocationBuilder implements CommandInvocationBuilder<DefaultCommandInvocation> {
 
@@ -35,6 +36,9 @@ public class DefaultCommandInvocationBuilder implements CommandInvocationBuilder
         OutputDelegate redirection = configuration == null ? null : configuration.getOutputRedirection();
         if (redirection != null)
             effectiveShell = new ShellOutputDelegate(effectiveShell, redirection);
-        return new DefaultCommandInvocation(runtime, configuration, commandContainer, effectiveShell);
+        DefaultCommandInvocation invocation = new DefaultCommandInvocation(runtime, configuration, commandContainer,
+                effectiveShell);
+        invocation.setProgramStatusScope(ProgramStatusScope.current());
+        return invocation;
     }
 }

@@ -47,6 +47,7 @@ import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
+import org.aesh.terminal.Connection;
 import org.aesh.terminal.utils.Config;
 import org.aesh.util.completer.ShellCompletionGenerator;
 import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
@@ -65,6 +66,9 @@ public class AeshRuntimeRunner {
     private boolean dynamicComplete;
     private CommandNotFoundHandler commandNotFoundHandler;
     private Shell shell;
+    private boolean programStatusEnabled;
+    private String programStatusAppName;
+    private Connection programStatusConnection;
     private org.aesh.command.invocation.CommandInvocationProvider commandInvocationProvider;
     private org.aesh.command.invocation.CommandInvocationBuilder commandInvocationBuilder;
     private org.aesh.command.converter.ConverterInvocationProvider converterInvocationProvider;
@@ -198,6 +202,46 @@ public class AeshRuntimeRunner {
      */
     public AeshRuntimeRunner shell(Shell shell) {
         this.shell = shell;
+        return this;
+    }
+
+    /**
+     * Opt-in OSC 7501 program-status reporting for explicit invocation
+     * hooks. Disabled by default; see
+     * {@code AeshCommandRuntimeBuilder#enableProgramStatus}.
+     *
+     * @param enable true to enable explicit reporting
+     * @return this runner
+     * @since 3.18.3
+     */
+    public AeshRuntimeRunner enableProgramStatus(boolean enable) {
+        this.programStatusEnabled = enable;
+        return this;
+    }
+
+    /**
+     * Stable application name reported with program-status records.
+     *
+     * @param appName the application name, or null for none
+     * @return this runner
+     * @since 3.18.3
+     */
+    public AeshRuntimeRunner programStatusAppName(String appName) {
+        this.programStatusAppName = appName;
+        return this;
+    }
+
+    /**
+     * Terminal connection for program-status reports. Must be supplied
+     * explicitly — it is never discovered from shells, so no terminal is
+     * ever initialized for reporting.
+     *
+     * @param connection the terminal connection, or null
+     * @return this runner
+     * @since 3.18.3
+     */
+    public AeshRuntimeRunner programStatusConnection(Connection connection) {
+        this.programStatusConnection = connection;
         return this;
     }
 
@@ -350,7 +394,10 @@ public class AeshRuntimeRunner {
 
         AeshCommandRuntimeBuilder runtimeBuilder = AeshCommandRuntimeBuilder.builder()
                 .commandRegistry(commandRegistry)
-                .shell(effectiveShell);
+                .shell(effectiveShell)
+                .enableProgramStatus(programStatusEnabled)
+                .programStatusAppName(programStatusAppName)
+                .programStatusConnection(programStatusConnection);
         if (commandNotFoundHandler != null)
             runtimeBuilder.commandNotFoundHandler(commandNotFoundHandler);
         if (commandInvocationProvider != null)

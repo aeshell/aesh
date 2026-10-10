@@ -35,6 +35,7 @@ import org.aesh.command.PipelineConfig;
 import org.aesh.command.impl.UpstreamOutcomeSupervisor;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.status.ProgramStatusScope;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.terminal.Connection;
@@ -78,6 +79,14 @@ public final class CommandJob implements Consumer<Signal> {
     private volatile UpstreamOutcomeSupervisor upstreamSupervisor;
     private volatile boolean finished;
     private final InterruptEscalation escalation = new InterruptEscalation();
+    /**
+     * Execution-scoped program-status context, installed on the worker
+     * thread for the run and closed when the job finishes. Explicit
+     * reports issued afterwards — including from a leaked thread of an
+     * abandoned execution — fail closed instead of overwriting newer
+     * work. Null when reporting is not enabled.
+     */
+    private volatile ProgramStatusScope statusScope;
 
     public CommandJob(ProcessManager manager, Connection conn,
             Execution<? extends CommandInvocation> execution,
@@ -96,6 +105,17 @@ public final class CommandJob implements Consumer<Signal> {
     public void setPipelineConfig(PipelineConfig pipelineConfig) {
         if (pipelineConfig != null)
             this.pipelineConfig = pipelineConfig;
+    }
+
+    /**
+     * Bind the execution's program-status scope. Called by the launcher
+     * before the run; the scope is installed on the worker thread and
+     * closed when the job finishes.
+     *
+     * @param statusScope the scope, or null for unavailable reporting
+     */
+    public void setProgramStatusScope(ProgramStatusScope statusScope) {
+        this.statusScope = statusScope;
     }
 
     public JobState state() {
@@ -326,7 +346,10 @@ public final class CommandJob implements Consumer<Signal> {
 
     private void runJob() {
         startTime = System.currentTimeMillis();
-        try (HandlerScope scope = HandlerScope.signal(conn, this)) {
+        ProgramStatusScope scope = statusScope;
+        if (scope != null)
+            ProgramStatusScope.install(scope);
+        try (HandlerScope handlerScope = HandlerScope.signal(conn, this)) {
             try {
                 execution.execute();
             } catch (CommandValidatorException | CommandException | OptionValidatorException
@@ -347,7 +370,11 @@ public final class CommandJob implements Consumer<Signal> {
                 awaitUpstreamPipeThreads();
             }
         } finally {
-            finish();
+            try {
+                finish();
+            } finally {
+                ProgramStatusScope.install(null);
+            }
         }
     }
 
@@ -374,6 +401,12 @@ public final class CommandJob implements Consumer<Signal> {
             snapshotResult = finalResult;
             snapshotError = finalError;
         }
+        // Fail explicit reporting closed the moment the job finishes, on
+        // every path including abandonment: a leaked thread must not
+        // overwrite newer work afterwards.
+        ProgramStatusScope scope = statusScope;
+        if (scope != null)
+            scope.close();
         manager.processFinished(this);
         if (executionListener != null) {
             try {

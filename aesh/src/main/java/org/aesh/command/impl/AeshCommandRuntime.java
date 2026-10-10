@@ -64,6 +64,8 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.status.ProgramStatusReporter;
+import org.aesh.command.status.ProgramStatusScope;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.command.validator.ValidatorInvocationProvider;
@@ -73,6 +75,7 @@ import org.aesh.parser.LineParser;
 import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedWord;
 import org.aesh.parser.ParserStatus;
+import org.aesh.terminal.Connection;
 
 /**
  * Implementation of the Command processor.
@@ -98,6 +101,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private volatile PipelineResult lastPipelineResult;
     private volatile PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
     private final AtomicBoolean closed = new AtomicBoolean();
+    private boolean programStatusEnabled;
+    private String programStatusAppName;
+    private Connection programStatusConnection;
 
     public AeshCommandRuntime(AeshContext ctx,
             CommandRegistry<CI> registry,
@@ -166,6 +172,23 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     public void setPipelineConfig(PipelineConfig pipelineConfig) {
         if (pipelineConfig != null)
             this.pipelineConfig = pipelineConfig;
+    }
+
+    /**
+     * Opt-in OSC 7501 program-status reporting for explicit invocation
+     * hooks. No automatic lifecycle reports are published on this path;
+     * the scope only makes {@code CommandInvocation} reporting available.
+     * The connection must be supplied explicitly — it is never discovered
+     * from shells, so no terminal is ever initialized for reporting.
+     *
+     * @param enabled true to enable explicit reporting
+     * @param appName stable application name, or null for none
+     * @param connection the terminal connection, or null
+     */
+    public void setProgramStatus(boolean enabled, String appName, Connection connection) {
+        this.programStatusEnabled = enabled;
+        this.programStatusAppName = appName;
+        this.programStatusConnection = connection;
     }
 
     @Override
@@ -255,6 +278,25 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private CommandResult runExecutor(Executor<CI> executor) throws CommandException,
+            CommandValidatorException, CommandLineParserException, InterruptedException {
+        ProgramStatusScope scope = null;
+        if (programStatusEnabled && programStatusConnection != null) {
+            scope = new ProgramStatusScope(ProgramStatusReporter.create(
+                    true, programStatusAppName, programStatusConnection));
+            ProgramStatusScope.install(scope);
+        }
+        try {
+            return runExecutorUnits(executor);
+        } finally {
+            if (scope != null) {
+                scope.close();
+                ProgramStatusScope.install(null);
+            }
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private CommandResult runExecutorUnits(Executor<CI> executor) throws CommandException,
             CommandValidatorException, CommandLineParserException, InterruptedException {
         ExecutionPlanner<CI> planner = new ExecutionPlanner<>(executor.getExecutions());
         CommandResult result = null;

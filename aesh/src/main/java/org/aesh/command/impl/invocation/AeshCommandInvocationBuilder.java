@@ -28,6 +28,7 @@ import org.aesh.command.impl.shell.ShellOutputTee;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.shell.Shell;
+import org.aesh.command.status.ProgramStatusScope;
 import org.aesh.console.Console;
 import org.aesh.console.ReadlineConsole;
 
@@ -66,9 +67,9 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
             ctx = ((ReadlineConsole) console).getCommandContext();
         }
         if (ctx != null && ctx.isInSubCommandMode()) {
-            return new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer, ctx);
+            return scoped(new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer, ctx));
         }
-        return new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer);
+        return scoped(new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer));
     }
 
     @Override
@@ -76,7 +77,18 @@ public class AeshCommandInvocationBuilder implements CommandInvocationBuilder<Ae
             CommandInvocationConfiguration config,
             CommandContainer<AeshCommandInvocation> commandContainer,
             CommandContext commandContext) {
-        return new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer, commandContext);
+        return scoped(new AeshCommandInvocation(console, wrapShell(), runtime, config, commandContainer, commandContext));
+    }
+
+    /**
+     * Bake the executing thread's program-status scope into the invocation,
+     * or leave reporting unavailable outside any execution. Baking (rather
+     * than resolving at report time) keeps a stashed invocation bound to
+     * its own execution after it finished.
+     */
+    private static AeshCommandInvocation scoped(AeshCommandInvocation invocation) {
+        invocation.setProgramStatusScope(ProgramStatusScope.current());
+        return invocation;
     }
 
 }

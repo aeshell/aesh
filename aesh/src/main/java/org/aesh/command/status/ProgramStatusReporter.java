@@ -116,6 +116,31 @@ public final class ProgramStatusReporter {
         }
     }
 
+    /**
+     * Clear one owned task record on the bound terminal connection.
+     * Root/all-record clears are never issued from here: pass an explicit
+     * child task id, or nothing is cleared.
+     *
+     * @param taskId child task id to clear, or null/empty for no-op
+     * @return true when the clear was written, false otherwise
+     */
+    public boolean clear(String taskId) {
+        if (!enabled || taskId == null || taskId.isEmpty())
+            return false;
+        try {
+            TerminalFeatures current = features;
+            if (current == null) {
+                current = new TerminalFeatures(connection);
+                features = current;
+            }
+            current.clearProgramStatus(taskId);
+            return true;
+        } catch (Exception e) {
+            LOGGER.log(Level.FINE, "Program-status clear failed", e);
+            return false;
+        }
+    }
+
     private ProgramStatus withAppName(ProgramStatus status) {
         if (appName == null || status.app() != null)
             return status;

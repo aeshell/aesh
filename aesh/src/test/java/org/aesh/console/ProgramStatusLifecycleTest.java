@@ -45,6 +45,7 @@ import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.terminal.StreamConnection;
 import org.aesh.terminal.tty.Signal;
 import org.aesh.terminal.utils.ProgramStatus;
+import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
 /**
@@ -100,6 +101,48 @@ public class ProgramStatusLifecycleTest {
         }
     }
 
+    @CommandDefinition(name = "progress", description = "progress")
+    public static class ProgressCommand implements Command<CommandInvocation> {
+        static volatile CommandInvocation stashed;
+        static volatile boolean progressResult;
+        static volatile boolean blockedResult;
+        static volatile boolean clearResult;
+
+        static void reset() {
+            stashed = null;
+            progressResult = false;
+            blockedResult = false;
+            clearResult = false;
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            stashed = commandInvocation;
+            progressResult = commandInvocation.reportProgramStatus(ProgramStatus.builder(
+                    ProgramStatus.State.WORKING).progress(50).message("half").build());
+            blockedResult = commandInvocation.reportProgramStatus(ProgramStatus.builder(
+                    ProgramStatus.State.BLOCKED).kind(ProgramStatus.BlockedKind.QUESTION)
+                    .message("Sure?").build());
+            commandInvocation.reportProgramStatus(ProgramStatus.builder(
+                    ProgramStatus.State.WORKING).id("task/1").message("sub").build());
+            clearResult = commandInvocation.clearProgramStatus("task/1");
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "up", description = "up")
+    public static class UpCommand implements Command<CommandInvocation> {
+        static volatile boolean reported;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            reported = commandInvocation.reportProgramStatus(ProgramStatus.builder(
+                    ProgramStatus.State.WORKING).message("up-work").build());
+            commandInvocation.println("piped");
+            return CommandResult.SUCCESS;
+        }
+    }
+
     private static final class Session implements AutoCloseable {
         final PipedOutputStream testOut;
         final PipedInputStream pipeIn;
@@ -123,6 +166,8 @@ public class ProgramStatusLifecycleTest {
                     .command(FailCommand.class)
                     .command(SlowCommand.class)
                     .command(BlockCommand.class)
+                    .command(ProgressCommand.class)
+                    .command(UpCommand.class)
                     .create();
             File exportFile = File.createTempFile("aesh-ps-export", ".txt");
             exportFile.deleteOnExit();
@@ -293,5 +338,108 @@ public class ProgramStatusLifecycleTest {
             assertTrue("done must still publish on the terminal, got: " + session.output(),
                     session.output().contains(sequence(ProgramStatus.State.DONE)));
         }
+    }
+
+    private static String sequenced(ProgramStatus status) {
+        ProgramStatus.Builder builder = ProgramStatus.builder(status.state());
+        if (status.kind() != null)
+            builder.kind(status.kind());
+        if (status.id() != null)
+            builder.id(status.id());
+        if (status.title() != null)
+            builder.title(status.title());
+        if (status.progress() != null)
+            builder.progress(status.progress().intValue());
+        if (status.message() != null)
+            builder.message(status.message());
+        return builder.app(APP).build().toSequence();
+    }
+
+    @Test
+    public void testExplicitProgressAndBlocked() throws Exception {
+        ProgressCommand.reset();
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(1);
+            session.completionLatch.set(done);
+            session.writeChunk("progress\n");
+            assertTrue("progress command should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            assertTrue("explicit progress must return true", ProgressCommand.progressResult);
+            assertTrue("explicit blocked must return true", ProgressCommand.blockedResult);
+            assertTrue("explicit clear must return true", ProgressCommand.clearResult);
+            String output = session.output();
+            assertTrue("progress bytes must publish, got: " + output,
+                    output.contains(sequenced(ProgramStatus.builder(ProgramStatus.State.WORKING)
+                            .progress(50).message("half").build())));
+            assertTrue("blocked bytes must publish, got: " + output,
+                    output.contains(sequenced(ProgramStatus.builder(ProgramStatus.State.BLOCKED)
+                            .kind(ProgramStatus.BlockedKind.QUESTION).message("Sure?").build())));
+            assertTrue("clear bytes must publish, got: " + output,
+                    output.contains(ProgramStatus.clearSequence("task/1")));
+        }
+    }
+
+    @Test
+    public void testStashedInvocationFailsClosed() throws Exception {
+        ProgressCommand.reset();
+        String before;
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(1);
+            session.completionLatch.set(done);
+            session.writeChunk("progress\n");
+            assertTrue("progress command should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            before = session.output();
+        }
+        assertFalse("stashed report after finish must fail",
+                ProgressCommand.stashed.reportProgramStatus(
+                        ProgramStatus.builder(ProgramStatus.State.WORKING).build()));
+        assertFalse("stashed clear after finish must fail",
+                ProgressCommand.stashed.clearProgramStatus("task/1"));
+    }
+
+    @Test
+    public void testUpstreamExplicitReports() throws Exception {
+        UpCommand.reported = false;
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(1);
+            session.completionLatch.set(done);
+            session.writeChunk("up | ok\n");
+            assertTrue("pipeline should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            assertTrue("upstream explicit report must return true", UpCommand.reported);
+            assertTrue("upstream bytes must publish, got: " + session.output(),
+                    session.output().contains(sequenced(ProgramStatus.builder(
+                            ProgramStatus.State.WORKING).message("up-work").build())));
+        }
+    }
+
+    @Test
+    public void testRuntimeExplicitUnavailableByDefault() {
+        ProgressCommand.reset();
+        org.aesh.AeshRuntimeRunner.builder()
+                .command(ProgressCommand.class)
+                .args()
+                .execute();
+        assertFalse("runtime without configuration must not report",
+                ProgressCommand.progressResult);
+    }
+
+    @Test
+    public void testRuntimeExplicitWithConnection() {
+        ProgressCommand.reset();
+        TestConnection connection = new TestConnection(false);
+        org.aesh.AeshRuntimeRunner.builder()
+                .command(ProgressCommand.class)
+                .args()
+                .enableProgramStatus(true)
+                .programStatusAppName("rt")
+                .programStatusConnection(connection)
+                .execute();
+        assertTrue("runtime explicit report must return true", ProgressCommand.progressResult);
+        String expected = ProgramStatus.builder(ProgramStatus.State.WORKING)
+                .progress(50).message("half").app("rt").build().toSequence();
+        assertTrue("runtime bytes must publish, got: " + connection.getOutputBuffer(),
+                connection.getOutputBuffer().contains(expected));
     }
 }

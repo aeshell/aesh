@@ -38,6 +38,7 @@ import org.aesh.readline.prompt.Prompt;
 import org.aesh.selector.Selector;
 import org.aesh.selector.SelectorType;
 import org.aesh.terminal.KeyAction;
+import org.aesh.terminal.utils.ProgramStatus;
 
 /**
  * A CommandInvocation is the value object passed to a Command when it is executed.
@@ -62,6 +63,39 @@ public interface CommandInvocation {
      * @return the shell
      */
     Shell getShell();
+
+    /**
+     * Report OSC 7501 program status (progress, blocking, messages) for
+     * this execution. Plain text and typed values only — the framework
+     * supplies identity metadata and encodes the report.
+     * <p>
+     * Available only while the owning execution runs and program-status
+     * reporting is opted in with a terminal connection: otherwise a
+     * documented no-op returning {@code false}. In particular, calls made
+     * after the execution finished — including from a leaked worker thread
+     * of an abandoned execution — fail closed instead of overwriting
+     * newer work.
+     *
+     * @param status the report to write, or null
+     * @return true when the report was written, false otherwise
+     * @since 3.18.3
+     */
+    default boolean reportProgramStatus(ProgramStatus status) {
+        return false;
+    }
+
+    /**
+     * Clear one owned child task record created through
+     * {@link #reportProgramStatus(ProgramStatus)}. Root/all-record clears
+     * are never issued: pass an explicit child task id, or nothing happens.
+     *
+     * @param taskId child task id to clear, or null/empty for no-op
+     * @return true when the clear was written, false otherwise
+     * @since 3.18.3
+     */
+    default boolean clearProgramStatus(String taskId) {
+        return false;
+    }
 
     /**
      * Specify the prompt

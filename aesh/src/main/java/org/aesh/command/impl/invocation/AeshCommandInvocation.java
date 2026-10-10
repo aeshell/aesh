@@ -36,6 +36,7 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.shell.Shell;
+import org.aesh.command.status.ProgramStatusScope;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.console.Console;
@@ -43,6 +44,7 @@ import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.KeyAction;
 import org.aesh.terminal.utils.Config;
+import org.aesh.terminal.utils.ProgramStatus;
 
 /**
  * @author Aesh team
@@ -55,6 +57,7 @@ public final class AeshCommandInvocation implements CommandInvocation {
     private final CommandInvocationConfiguration config;
     private final CommandContainer<AeshCommandInvocation> commandContainer;
     private final CommandContext commandContext;
+    private ProgramStatusScope programStatusScope;
     private java.io.InputStream cachedStdin;
     private boolean stdinResolved;
 
@@ -87,6 +90,29 @@ public final class AeshCommandInvocation implements CommandInvocation {
     @Override
     public Shell getShell() {
         return shell;
+    }
+
+    /**
+     * Bind the execution's program-status scope, baked in at build time so
+     * a stashed invocation keeps its own execution's scope instead of
+     * resolving whatever runs later on the same thread.
+     *
+     * @param scope the scope, or null for unavailable reporting
+     */
+    void setProgramStatusScope(ProgramStatusScope scope) {
+        this.programStatusScope = scope;
+    }
+
+    @Override
+    public boolean reportProgramStatus(ProgramStatus status) {
+        ProgramStatusScope scope = programStatusScope;
+        return scope != null && scope.report(status);
+    }
+
+    @Override
+    public boolean clearProgramStatus(String taskId) {
+        ProgramStatusScope scope = programStatusScope;
+        return scope != null && scope.clear(taskId);
     }
 
     @Override

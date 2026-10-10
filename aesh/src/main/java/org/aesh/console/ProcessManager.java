@@ -43,6 +43,7 @@ import org.aesh.command.impl.UpstreamOutcomeSupervisor;
 import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.status.ProgramStatusReporter;
+import org.aesh.command.status.ProgramStatusScope;
 import org.aesh.terminal.Connection;
 import org.aesh.terminal.utils.LoggerUtil;
 import org.aesh.terminal.utils.ProgramStatus;
@@ -165,6 +166,18 @@ public class ProcessManager {
     public void setProgramStatus(boolean enabled, String appName) {
         this.programStatusEnabled = enabled;
         this.programStatusAppName = appName;
+    }
+
+    /**
+     * Create the execution-scoped program-status context for one job,
+     * bound to the session's original terminal connection. Null unless
+     * reporting is opted in with a connection, keeping disabled execution
+     * free of allocation, probes, and thread-local traffic.
+     */
+    private ProgramStatusScope newJobScope(Connection connection) {
+        if (!programStatusEnabled || connection == null)
+            return null;
+        return new ProgramStatusScope(ProgramStatusReporter.create(true, programStatusAppName, connection));
     }
 
     /**
@@ -486,22 +499,32 @@ public class ProcessManager {
         // live Execution fields a still-unwinding task may be writing.
         final UpstreamOutcomeSupervisor supervisor = new UpstreamOutcomeSupervisor(upstreamCount);
         List<Thread> upstreamThreads = new ArrayList<>(upstreamCount);
+        // Upstream stages share the line's scope: their explicit reports
+        // belong to the same submitted line and connection.
+        final ProgramStatusScope jobScope = newJobScope(conn);
         for (int i = 0; i < upstreamCount; i++) {
             final int stageIndex = i;
             Execution<T> stage = pipeChain.get(i);
             Thread t = PipeThreads.newThread(() -> {
-                supervisor.stageStarted(stageIndex);
+                if (jobScope != null)
+                    ProgramStatusScope.install(jobScope);
                 try {
-                    stage.execute();
-                    supervisor.completeStage(stageIndex, stage, stage.getResult(), null);
-                } catch (Throwable e) {
-                    if (PipeOperator.isPipeBroken(e))
-                        supervisor.completeStage(stageIndex, stage,
-                                CommandResult.PIPE_BROKEN, e);
-                    else
-                        supervisor.completeStage(stageIndex, stage,
-                                CommandResult.FAILURE, e);
-                    LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
+                    supervisor.stageStarted(stageIndex);
+                    try {
+                        stage.execute();
+                        supervisor.completeStage(stageIndex, stage, stage.getResult(), null);
+                    } catch (Throwable e) {
+                        if (PipeOperator.isPipeBroken(e))
+                            supervisor.completeStage(stageIndex, stage,
+                                    CommandResult.PIPE_BROKEN, e);
+                        else
+                            supervisor.completeStage(stageIndex, stage,
+                                    CommandResult.FAILURE, e);
+                        LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
+                    }
+                } finally {
+                    if (jobScope != null)
+                        ProgramStatusScope.install(null);
                 }
             }, "aesh-pipe-" + i);
             upstreamThreads.add(t);
@@ -514,6 +537,7 @@ public class ProcessManager {
         Execution<T> lastStage = pipeChain.get(upstreamCount);
         CommandJob mainJob = new CommandJob(this, conn, lastStage, commandLine, executionListener);
         mainJob.setPipelineConfig(pipelineConfig);
+        mainJob.setProgramStatusScope(jobScope);
         mainJob.setUpstreamPipeThreads(upstreamThreads);
         mainJob.setUpstreamOutcomes(new ArrayList<Execution<? extends CommandInvocation>>(
                 pipeChain.subList(0, upstreamCount)), stageNames);
@@ -525,6 +549,7 @@ public class ProcessManager {
     private void launchSingle(Execution<? extends CommandInvocation> exec) {
         CommandJob job = new CommandJob(this, conn, exec, commandLine, executionListener);
         job.setPipelineConfig(pipelineConfig);
+        job.setProgramStatusScope(newJobScope(conn));
         activeJob = job;
         job.start();
     }
@@ -532,6 +557,7 @@ public class ProcessManager {
     private void runInline(Execution<? extends CommandInvocation> exec) {
         CommandJob job = new CommandJob(this, conn, exec, commandLine, executionListener);
         job.setPipelineConfig(pipelineConfig);
+        job.setProgramStatusScope(newJobScope(conn));
         activeJob = job;
         job.run();
     }

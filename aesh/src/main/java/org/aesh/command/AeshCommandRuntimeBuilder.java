@@ -42,6 +42,7 @@ import org.aesh.command.shell.Shell;
 import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.AeshContext;
 import org.aesh.console.DefaultAeshContext;
+import org.aesh.terminal.Connection;
 
 /**
  *
@@ -71,6 +72,9 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     private EnumSet<OperatorType> operators;
     private PipelineConfig pipelineConfig;
     private Consumer<String> commandOutputHandler;
+    private boolean programStatusEnabled;
+    private String programStatusAppName;
+    private Connection programStatusConnection;
 
     private AeshCommandRuntimeBuilder() {
     }
@@ -91,6 +95,47 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
 
     public AeshCommandRuntimeBuilder<CI> pipelineConfig(PipelineConfig pipelineConfig) {
         this.pipelineConfig = pipelineConfig;
+        return this;
+    }
+
+    /**
+     * Opt-in OSC 7501 program-status reporting for explicit invocation
+     * hooks. Disabled by default. No automatic lifecycle reports are
+     * published on this path; the scope only makes
+     * {@code CommandInvocation} reporting available.
+     *
+     * @param enabled true to enable explicit reporting
+     * @return this builder
+     * @since 3.18.3
+     */
+    public AeshCommandRuntimeBuilder<CI> enableProgramStatus(boolean enabled) {
+        this.programStatusEnabled = enabled;
+        return this;
+    }
+
+    /**
+     * Stable application name reported with program-status records.
+     *
+     * @param appName the application name, or null for none
+     * @return this builder
+     * @since 3.18.3
+     */
+    public AeshCommandRuntimeBuilder<CI> programStatusAppName(String appName) {
+        this.programStatusAppName = appName;
+        return this;
+    }
+
+    /**
+     * Terminal connection for program-status reports. Must be supplied
+     * explicitly — it is never discovered from shells, so no terminal is
+     * ever initialized for reporting.
+     *
+     * @param connection the terminal connection, or null
+     * @return this builder
+     * @since 3.18.3
+     */
+    public AeshCommandRuntimeBuilder<CI> programStatusConnection(Connection connection) {
+        this.programStatusConnection = connection;
         return this;
     }
 
@@ -254,6 +299,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
                 commandInvocationBuilder, parseBrackets, operators);
         if (pipelineConfig != null)
             runtime.setPipelineConfig(pipelineConfig);
+        runtime.setProgramStatus(programStatusEnabled, programStatusAppName, programStatusConnection);
         return runtime;
     }
 }
