@@ -266,6 +266,7 @@ public class ProgramStatusLifecycleTest {
             SlowCommand.release.countDown();
             assertTrue("slow command should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.DONE), 10000);
             String output = session.output();
             assertTrue("done must publish, got: " + output,
                     output.contains(sequence(ProgramStatus.State.DONE)));
@@ -282,6 +283,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("fail\n");
             assertTrue("fail command should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.ERROR), 10000);
             String output = session.output();
             assertTrue("working must publish, got: " + output,
                     output.contains(sequence(ProgramStatus.State.WORKING)));
@@ -298,6 +300,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("boguscmd\n");
             assertTrue("unknown command should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.ERROR), 10000);
             assertTrue("error must publish for unknown commands, got: " + session.output(),
                     session.output().contains(sequence(ProgramStatus.State.ERROR)));
         }
@@ -317,6 +320,7 @@ public class ProgramStatusLifecycleTest {
             job.accept(Signal.INT);
             assertTrue("interrupted command should complete",
                     blockDone.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.IDLE), 10000);
             assertTrue("idle must publish on cancellation, got: " + session.output(),
                     session.output().contains(sequence(ProgramStatus.State.IDLE)));
         }
@@ -332,6 +336,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("ok > " + target.getAbsolutePath() + "\n");
             assertTrue("redirected command should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.DONE), 10000);
             String filed = new String(Files.readAllBytes(target.toPath()), StandardCharsets.UTF_8);
             assertFalse("redirected file must not carry reports, got: " + filed,
                     filed.contains("7501"));
@@ -454,7 +459,8 @@ public class ProgramStatusLifecycleTest {
     }
 
     private static void assertCount(String message, int expected, String haystack, String needle) {
-        assertTrue(message + ": expected " + expected + " occurrences",
+        assertTrue(message + ": expected " + expected + " occurrences, found "
+                + countOccurrences(haystack, needle),
                 expected == countOccurrences(haystack, needle));
     }
 
@@ -466,6 +472,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("ok && ok\n");
             assertTrue("both commands should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.DONE), 10000);
             String output = session.output();
             assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
             assertCount("one done per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.DONE));
@@ -480,6 +487,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("fail || ok\n");
             assertTrue("both commands should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.DONE), 10000);
             String output = session.output();
             assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
             assertCount("last outcome wins, got: " + output, 1, output, sequence(ProgramStatus.State.DONE));
@@ -495,6 +503,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("fail && ok\n");
             assertTrue("failing command should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.ERROR), 10000);
             String output = session.output();
             assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
             assertCount("executed prefix decides, got: " + output, 1, output, sequence(ProgramStatus.State.ERROR));
@@ -510,6 +519,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("ok; ok\n");
             assertTrue("both commands should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.DONE), 10000);
             String output = session.output();
             assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
             assertCount("one done per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.DONE));
@@ -524,6 +534,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("up | ok\n");
             assertTrue("pipeline should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.DONE), 10000);
             String output = session.output();
             assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
             assertCount("one done per pipeline, got: " + output, 1, output, sequence(ProgramStatus.State.DONE));
@@ -538,6 +549,7 @@ public class ProgramStatusLifecycleTest {
             session.writeChunk("up | fail\n");
             assertTrue("pipeline should complete",
                     done.await(15, TimeUnit.SECONDS));
+            session.awaitBytes(sequence(ProgramStatus.State.ERROR), 10000);
             String output = session.output();
             assertCount("one working per submitted line", 1, output,
                     sequence(ProgramStatus.State.WORKING));
