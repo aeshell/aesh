@@ -442,4 +442,107 @@ public class ProgramStatusLifecycleTest {
         assertTrue("runtime bytes must publish, got: " + connection.getOutputBuffer(),
                 connection.getOutputBuffer().contains(expected));
     }
+
+    private static int countOccurrences(String haystack, String needle) {
+        int count = 0;
+        int index = 0;
+        while ((index = haystack.indexOf(needle, index)) >= 0) {
+            count++;
+            index += needle.length();
+        }
+        return count;
+    }
+
+    private static void assertCount(String message, int expected, String haystack, String needle) {
+        assertTrue(message + ": expected " + expected + " occurrences",
+                expected == countOccurrences(haystack, needle));
+    }
+
+    @Test
+    public void testConditionalAndReportsSingleTerminal() throws Exception {
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(2);
+            session.completionLatch.set(done);
+            session.writeChunk("ok && ok\n");
+            assertTrue("both commands should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            String output = session.output();
+            assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
+            assertCount("one done per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.DONE));
+        }
+    }
+
+    @Test
+    public void testConditionalOrReportsSingleTerminal() throws Exception {
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(2);
+            session.completionLatch.set(done);
+            session.writeChunk("fail || ok\n");
+            assertTrue("both commands should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            String output = session.output();
+            assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
+            assertCount("last outcome wins, got: " + output, 1, output, sequence(ProgramStatus.State.DONE));
+            assertCount("no error for a recovered line, got: " + output, 0, output, sequence(ProgramStatus.State.ERROR));
+        }
+    }
+
+    @Test
+    public void testSkippedUnitStaysInvisible() throws Exception {
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(1);
+            session.completionLatch.set(done);
+            session.writeChunk("fail && ok\n");
+            assertTrue("failing command should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            String output = session.output();
+            assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
+            assertCount("executed prefix decides, got: " + output, 1, output, sequence(ProgramStatus.State.ERROR));
+            assertFalse("skipped work must not appear", output.contains("ok-output"));
+        }
+    }
+
+    @Test
+    public void testSequenceReportsSingleTerminal() throws Exception {
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(2);
+            session.completionLatch.set(done);
+            session.writeChunk("ok; ok\n");
+            assertTrue("both commands should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            String output = session.output();
+            assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
+            assertCount("one done per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.DONE));
+        }
+    }
+
+    @Test
+    public void testPipelineReportsSingleTerminal() throws Exception {
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(1);
+            session.completionLatch.set(done);
+            session.writeChunk("up | ok\n");
+            assertTrue("pipeline should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            String output = session.output();
+            assertCount("one working per submitted line, got: " + output, 1, output, sequence(ProgramStatus.State.WORKING));
+            assertCount("one done per pipeline, got: " + output, 1, output, sequence(ProgramStatus.State.DONE));
+        }
+    }
+
+    @Test
+    public void testFailingPipelineReportsError() throws Exception {
+        try (Session session = new Session(true)) {
+            CountDownLatch done = new CountDownLatch(1);
+            session.completionLatch.set(done);
+            session.writeChunk("up | fail\n");
+            assertTrue("pipeline should complete",
+                    done.await(15, TimeUnit.SECONDS));
+            String output = session.output();
+            assertCount("one working per submitted line", 1, output,
+                    sequence(ProgramStatus.State.WORKING));
+            assertCount("last stage decides", 1, output,
+                    sequence(ProgramStatus.State.ERROR));
+        }
+    }
 }
