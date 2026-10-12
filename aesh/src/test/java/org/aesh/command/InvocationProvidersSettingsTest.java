@@ -20,6 +20,7 @@
 package org.aesh.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -211,10 +212,15 @@ public class InvocationProvidersSettingsTest {
                 .invocationProviders(composite)
                 .build();
 
-        AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
                 .settings(settings)
                 .build();
 
+        // Deferred registration builds on first use: the hook runs when
+        // the command materializes for execution, not at runtime build.
+        assertFalse("nothing built yet, hook must not have run",
+                RecordingOptionActivatorProvider.called);
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("gated --value x"));
         assertTrue("custom activator provider must run when providers are applied",
                 RecordingOptionActivatorProvider.called);
     }

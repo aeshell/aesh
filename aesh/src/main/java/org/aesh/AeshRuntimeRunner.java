@@ -110,8 +110,14 @@ public class AeshRuntimeRunner {
             throw new IllegalStateException(
                     "Only AeshCommandContainerBuilder subclasses are supported with lazy startup");
         this.lazyStartup = lazyStartup;
-        if (!lazyStartup)
+        if (!lazyStartup) {
             materializePendingRoot();
+            try {
+                registryBuilder.materializeAll();
+            } catch (CommandRegistryException e) {
+                throw new RuntimeException("Exception while building command: " + e.getMessage());
+            }
+        }
         return this;
     }
 

@@ -21,6 +21,7 @@
 package org.aesh.command.impl.registry;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.container.CommandContainer;
@@ -35,8 +37,12 @@ import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.metadata.CommandMetadataProvider;
+import org.aesh.command.metadata.MetadataProviderRegistry;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.registry.MutableCommandRegistry;
@@ -53,6 +59,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
 
     private CommandContainerBuilder<CI> containerBuilder;
     private DefaultValueProvider defaultValueProvider;
+    private InvocationProviders invocationProviders;
 
     private final List<CommandRegistrationListener> listeners = new ArrayList<>();
     /**
@@ -71,18 +78,21 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     private static final class CommandSource {
         final CommandSourceKind kind;
         final Class<? extends Command> clazz;
+        /** Recorded alias names for deferred class registrations (no build yet). */
+        final List<String> aliases;
 
-        private CommandSource(CommandSourceKind kind, Class<? extends Command> clazz) {
+        private CommandSource(CommandSourceKind kind, Class<? extends Command> clazz, List<String> aliases) {
             this.kind = kind;
             this.clazz = clazz;
+            this.aliases = aliases;
         }
 
-        static CommandSource forClass(Class<? extends Command> clazz) {
-            return new CommandSource(CommandSourceKind.CLASS, clazz);
+        static CommandSource forClass(Class<? extends Command> clazz, List<String> aliases) {
+            return new CommandSource(CommandSourceKind.CLASS, clazz, aliases);
         }
 
         static CommandSource shared() {
-            return new CommandSource(CommandSourceKind.SHARED, null);
+            return new CommandSource(CommandSourceKind.SHARED, null, Collections.<String> emptyList());
         }
     }
 
@@ -98,18 +108,38 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
         this.defaultValueProvider = provider;
     }
 
+    /**
+     * Set the runtime invocation providers, applied to every container the
+     * registry builds from now on (deferred class registrations included).
+     * Already-built containers keep whatever was applied before; runtimes
+     * refresh those through their update path.
+     */
+    public void setInvocationProviders(InvocationProviders providers) {
+        this.invocationProviders = providers;
+    }
+
+    /**
+     * Whether the named command already has a built shared container.
+     * Lets runtimes refresh already-materialized definitions without
+     * forcing deferred class registrations to build (#678).
+     *
+     * @param name the command name
+     * @return true when a shared container exists for the name
+     */
+    public boolean isBuilt(String name) {
+        return registry.containsKey(name);
+    }
+
     @Override
     public CommandContainer<CI> getCommand(String name, String line) throws CommandNotFoundException {
         if (registry.containsKey(name))
             return registry.get(name);
-        //group command
         else if (name.contains(" ")) {
             String[] names = name.split(" ");
-            if (registry.containsKey(names[0])) {
-                return registry.get(names[0]);
-            }
-            throw new CommandNotFoundException("Command: " + names[0] + " was not found.", names[0]);
-        } else
+            return materialize(names[0]);
+        } else if (sources.containsKey(name))
+            return materialize(name);
+        else
             throw new CommandNotFoundException("Command: " + name + " was not found.", name);
     }
 
@@ -124,6 +154,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
 
     @Override
     public void completeCommandName(CompleteOperation co, ParsedLine parsedLine) {
+        materializeAllLenient();
         if (parsedLine.words().isEmpty()) {
             //add all
             for (CommandContainer<CI> command : registry.values()) {
@@ -147,7 +178,9 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
 
     @Override
     public Set<String> getAllCommandNames() {
-        return registry.keySet();
+        Set<String> names = new java.util.LinkedHashSet<>(registry.keySet());
+        names.addAll(sources.keySet());
+        return names;
     }
 
     @Override
@@ -173,13 +206,159 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
 
     @Override
     public void addCommand(Class<? extends Command> command) throws CommandRegistryException {
-        try {
-            CommandContainer<CI> container = getBuilder().create(command);
-            sources.put(container.getParser().getProcessedCommand().name(), CommandSource.forClass(command));
-            putIntoRegistry(container);
-        } catch (CommandLineParserException e) {
-            throw new CommandRegistryException(e.getMessage(), e.getCause());
+        // Record name and aliases without instantiating or building: the
+        // shared container materializes on first read (completion, docs,
+        // direct lookup) and executions fork straight from the class (#678).
+        String name = commandNameOf(command);
+        if (name == null)
+            throw new CommandRegistryException("Commands must be annotated with @CommandDefinition");
+        List<String> aliases = commandAliasesOf(command);
+        if (contains(name))
+            return;
+        boolean collision = false;
+        for (String alias : aliases) {
+            if (contains(alias)) {
+                collision = true;
+                break;
+            }
         }
+        if (collision)
+            return;
+        sources.put(name, CommandSource.forClass(command, aliases));
+        emit(name, REGISTRATION_ACTION.ADDED);
+    }
+
+    /**
+     * Resolve a command name (or recorded alias owner) to a built shared
+     * container, building deferred class registrations on first read.
+     * Definition failures surface here instead of at registration, with
+     * the same exception type.
+     */
+    private CommandContainer<CI> materialize(String name) throws CommandNotFoundException {
+        CommandContainer<CI> built = registry.get(name);
+        if (built != null)
+            return built;
+        CommandSource source = sources.get(name);
+        if (source == null || source.kind != CommandSourceKind.CLASS || source.clazz == null)
+            throw new CommandNotFoundException("Command: " + name + " was not found.", name);
+        try {
+            CommandContainer<CI> container = (CommandContainer<CI>) getBuilder().create(source.clazz);
+            if (defaultValueProvider != null)
+                injectDefaultValueProvider(container.getParser());
+            if (invocationProviders != null)
+                applyProviders(container);
+            registerBuilt(container);
+            CommandContainer<CI> registered = registry.get(name);
+            if (registered != null)
+                return registered;
+            throw new CommandNotFoundException("Command: " + name + " was not found.", name);
+        } catch (CommandLineParserException e) {
+            CommandNotFoundException notFound = new CommandNotFoundException("Command: " + name + " failed to build.", name);
+            notFound.initCause(e);
+            throw notFound;
+        }
+    }
+
+    /**
+     * Apply runtime invocation providers to one built container, mirroring
+     * the runtime's own update path for containers it resolves directly.
+     */
+    private void applyProviders(CommandContainer<CI> container) {
+        CommandLineParser<CI> parser = container.getParser();
+        parser.getProcessedCommand().updateInvocationProviders(invocationProviders);
+        if (parser instanceof AeshCommandLineParser) {
+            AeshCommandLineParser<CI> aeshParser = (AeshCommandLineParser<CI>) parser;
+            aeshParser.storeInvocationProviders(invocationProviders);
+            List<CommandLineParser<CI>> childParsers = aeshParser.getChildParsers();
+            if (childParsers != null) {
+                for (CommandLineParser<CI> child : childParsers) {
+                    child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+                    if (child instanceof AeshCommandLineParser)
+                        ((AeshCommandLineParser<CI>) child).storeInvocationProviders(invocationProviders);
+                }
+            }
+        } else {
+            List<CommandLineParser<CI>> childParsers = parser.getAllChildParsers();
+            for (CommandLineParser<?> child : childParsers) {
+                child.getProcessedCommand().updateInvocationProviders(invocationProviders);
+            }
+        }
+    }
+
+    /**
+     * Build every deferred class registration now. Used to restore eager
+     * timing explicitly; execution and completion paths otherwise trigger
+     * builds lazily on first use (#678).
+     *
+     * @throws CommandRegistryException if any definition fails to build
+     */
+    public void materializeAll() throws CommandRegistryException {
+        for (String name : new ArrayList<>(sources.keySet())) {
+            if (!registry.containsKey(name)) {
+                try {
+                    materialize(name);
+                } catch (CommandNotFoundException e) {
+                    throw new CommandRegistryException(e.getMessage(), e.getCause());
+                }
+            }
+        }
+    }
+
+    /**
+     * Build every deferred class registration, skipping definitions that
+     * fail. Completion reads all definitions, so one corrupt command must
+     * not hide the rest; failures surface loudly at execution instead.
+     */
+    private void materializeAllLenient() {
+        for (String name : new ArrayList<>(sources.keySet())) {
+            if (!registry.containsKey(name)) {
+                try {
+                    materialize(name);
+                } catch (CommandNotFoundException ignored) {
+                }
+            }
+        }
+    }
+
+    /**
+     * Primary name for a command name or alias, consulting built maps
+     * first and recorded deferred entries second — without building.
+     */
+    private String primaryName(String name) {
+        if (registry.containsKey(name) || sources.containsKey(name))
+            return name;
+        for (Map.Entry<String, CommandSource> entry : sources.entrySet()) {
+            if (entry.getValue().aliases.contains(name))
+                return entry.getKey();
+        }
+        if (aliases.containsKey(name)) {
+            return aliases.get(name).getParser().getProcessedCommand().name();
+        }
+        return null;
+    }
+
+    private static String commandNameOf(Class<? extends Command> clazz) {
+        CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(clazz);
+        if (provider != null)
+            return provider.commandName();
+        CommandDefinition definition = clazz.getAnnotation(CommandDefinition.class);
+        if (definition != null)
+            return definition.name();
+        return null;
+    }
+
+    private static List<String> commandAliasesOf(Class<? extends Command> clazz) {
+        CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(clazz);
+        if (provider != null) {
+            String[] aliases = provider.commandAliases();
+            if (aliases != null)
+                return Arrays.asList(aliases);
+            return Collections.<String> emptyList();
+        }
+        CommandDefinition definition = clazz.getAnnotation(CommandDefinition.class);
+        if (definition != null)
+            return Arrays.asList(definition.aliases());
+        return Collections.<String> emptyList();
     }
 
     @Override
@@ -200,11 +379,32 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
 
     @Override
     public boolean contains(String commandName) {
-        return registry.containsKey(commandName) || aliases.containsKey(commandName);
-
+        if (registry.containsKey(commandName) || aliases.containsKey(commandName))
+            return true;
+        if (sources.containsKey(commandName))
+            return true;
+        for (CommandSource source : sources.values()) {
+            if (source.aliases.contains(commandName))
+                return true;
+        }
+        return false;
     }
 
     private void putIntoRegistry(CommandContainer<CI> commandContainer) {
+        if (registerBuilt(commandContainer)) {
+            emit(commandContainer.getParser().getProcessedCommand().name(),
+                    REGISTRATION_ACTION.ADDED);
+        }
+    }
+
+    /**
+     * Store a built container and its aliases without emitting. Eager
+     * registration paths emit through {@link #putIntoRegistry}; deferred
+     * class registrations already emitted at record time.
+     *
+     * @return true when the container was stored
+     */
+    private boolean registerBuilt(CommandContainer<CI> commandContainer) {
         if (!commandContainer.haveBuildError()
                 && !contains(commandContainer.getParser().getProcessedCommand())) {
             registry.put(commandContainer.getParser().getProcessedCommand().name(),
@@ -213,9 +413,9 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
             for (String alias : command.getAliases()) {
                 aliases.put(alias, commandContainer);
             }
-            emit(commandContainer.getParser().getProcessedCommand().name(),
-                    REGISTRATION_ACTION.ADDED);
+            return true;
         }
+        return false;
     }
 
     /**
@@ -266,6 +466,11 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                 aliases.remove(alias);
             }
             emit(name, REGISTRATION_ACTION.REMOVED);
+        } else if (sources.containsKey(name)) {
+            // Deferred class registration: no container was ever built,
+            // so dropping the record (with its recorded aliases) suffices.
+            sources.remove(name);
+            emit(name, REGISTRATION_ACTION.REMOVED);
         }
     }
 
@@ -293,6 +498,54 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
         }
     }
 
+    /**
+     * Fork straight from the recorded class for class-registered commands,
+     * without materializing the shared container first: the run-once path
+     * never pays for a shared build it discards (#678). Anything else
+     * resolves the shared container and forks from it as before.
+     */
+    @Override
+    public CommandContainer<CI> createExecutionContainer(String name) throws CommandNotFoundException {
+        String primary = primaryName(name);
+        CommandSource source = primary == null ? null : sources.get(primary);
+        if (source != null && source.kind == CommandSourceKind.CLASS && source.clazz != null) {
+            try {
+                CommandContainer<CI> fork = (CommandContainer<CI>) getBuilder().create(source.clazz);
+                if (defaultValueProvider != null)
+                    injectDefaultValueProvider(fork.getParser());
+                return fork;
+            } catch (CommandLineParserException e) {
+                CommandNotFoundException notFound = new CommandNotFoundException("Command: " + name + " failed to build.",
+                        name);
+                notFound.initCause(e);
+                throw notFound;
+            }
+        }
+        CommandContainer<CI> shared;
+        try {
+            shared = getCommand(name, "");
+        } catch (CommandNotFoundException e) {
+            shared = getCommandByAlias(name);
+        }
+        return createExecutionContainer(shared);
+    }
+
+    @Override
+    public boolean isSharedExecutionContainer(String name) throws CommandNotFoundException {
+        String primary = primaryName(name);
+        CommandSource source = primary == null ? null : sources.get(primary);
+        if (source != null && source.kind == CommandSourceKind.CLASS && source.clazz != null)
+            return false;
+        if (primary == null) {
+            try {
+                getCommand(name, "");
+            } catch (CommandNotFoundException e) {
+                getCommandByAlias(name);
+            }
+        }
+        return true;
+    }
+
     private CommandContainerBuilder<CI> getBuilder() {
         if (containerBuilder == null)
             containerBuilder = new AeshCommandContainerBuilder<>();
@@ -304,6 +557,10 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
         if (aliases.containsKey(alias)) {
             return aliases.get(alias);
         } else {
+            for (Map.Entry<String, CommandSource> entry : sources.entrySet()) {
+                if (entry.getValue().aliases.contains(alias))
+                    return materialize(entry.getKey());
+            }
             throw new CommandNotFoundException("Command: named " + alias + " was not found.", alias);
         }
     }

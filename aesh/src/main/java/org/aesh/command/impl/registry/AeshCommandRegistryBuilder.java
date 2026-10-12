@@ -102,6 +102,17 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Build every deferred class registration now. Used to restore eager
+     * timing explicitly; execution and completion paths otherwise build
+     * lazily on first use (#678).
+     *
+     * @throws CommandRegistryException if any definition fails to build
+     */
+    public void materializeAll() throws CommandRegistryException {
+        commandRegistry.materializeAll();
+    }
+
     public CommandRegistry<CI> create() {
         commandRegistry.applyDefaultValueProvider();
         return commandRegistry;

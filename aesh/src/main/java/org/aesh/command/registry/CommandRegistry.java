@@ -151,4 +151,61 @@ public interface CommandRegistry<CI extends CommandInvocation> {
     default CommandContainer<CI> createExecutionContainer(CommandContainer<CI> shared) {
         return shared;
     }
+
+    /**
+     * Materializes an execution-scoped container directly by command name,
+     * without materializing the shared registered container first.
+     * Registries that track class-registered commands rebuild straight
+     * from the class, so run-once execution never pays for a shared build
+     * it discards (#678).
+     * <p>
+     * The default resolves the shared container (building it if necessary)
+     * and forks from it, preserving historic behavior for registries
+     * without source tracking.
+     *
+     * @param name the command name (or alias) being executed
+     * @return an execution-scoped container
+     * @throws CommandNotFoundException if no command matches, or its
+     *         definition fails to build on first use
+     */
+    /**
+     * Whether executions of the named command share the registered
+     * container instead of receiving a per-execution fork.
+     * <p>
+     * The default returns true (historic shared behavior) for registries
+     * without source tracking.
+     *
+     * @param name the command name (or alias) being executed
+     * @return true when executions share the registered container
+     * @throws CommandNotFoundException if no command matches
+     */
+    default boolean isSharedExecutionContainer(String name) throws CommandNotFoundException {
+        return true;
+    }
+
+    /**
+     * Materializes an execution-scoped container directly by command name,
+     * without materializing the shared registered container first.
+     * Registries that track class-registered commands rebuild straight
+     * from the class, so run-once execution never pays for a shared build
+     * it discards (#678).
+     * <p>
+     * The default resolves the shared container (building it if necessary)
+     * and forks from it, preserving historic behavior for registries
+     * without source tracking.
+     *
+     * @param name the command name (or alias) being executed
+     * @return an execution-scoped container
+     * @throws CommandNotFoundException if no command matches, or its
+     *         definition fails to build on first use
+     */
+    default CommandContainer<CI> createExecutionContainer(String name) throws CommandNotFoundException {
+        CommandContainer<CI> shared;
+        try {
+            shared = getCommand(name, "");
+        } catch (CommandNotFoundException e) {
+            shared = getCommandByAlias(name);
+        }
+        return createExecutionContainer(shared);
+    }
 }

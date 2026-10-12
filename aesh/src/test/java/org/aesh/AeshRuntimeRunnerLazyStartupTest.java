@@ -259,9 +259,9 @@ public class AeshRuntimeRunnerLazyStartupTest {
                 .execute();
 
         assertEquals(CommandResult.SUCCESS, result);
-        // Registration builds root, execution forks it, then the selected
-        // child materializes; the skipped child is still never built (#642).
-        assertEquals(3, CountingContainerBuilder.calls);
+        // Registration only records; execution forks root, then the selected
+        // child materializes; the skipped child is still never built (#678).
+        assertEquals(2, CountingContainerBuilder.calls);
         assertTrue(LazySelectedCommand.constructed);
         assertFalse(LazySkippedCommand.constructed);
     }
@@ -1041,8 +1041,9 @@ public class AeshRuntimeRunnerLazyStartupTest {
         assertEquals(Arrays.asList(
                 "construct:root",
                 // Execution-scoped fork of the class-registered root (#642);
-                // selection-time materialization order is unchanged.
-                "construct:root", "beforeParse:root",
+                // registration itself no longer builds (#678). Selection-time
+                // materialization order is unchanged.
+                "beforeParse:root",
                 "construct:mid", "beforeParse:mid",
                 "construct:leaf", "beforeParse:leaf",
                 "afterParse:root", "afterParse:leaf"),
@@ -1071,9 +1072,9 @@ public class AeshRuntimeRunnerLazyStartupTest {
 
         runtime.executeCommand("proot pmid pleaf");
 
-        // Root, mid and leaf each get providers once; the execution fork's
-        // root options are wired in addition (#642).
-        assertEquals(4, ChainActivationCounter.enhancements);
+        // Root, mid and leaf each get providers once on the execution
+        // fork; no shared registration build exists anymore (#678).
+        assertEquals(3, ChainActivationCounter.enhancements);
     }
 
     private static void registerProviderFixtures() {

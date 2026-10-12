@@ -56,6 +56,7 @@ import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
@@ -139,6 +140,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         this.commandInvocationBuilder = commandInvocationBuilder;
         this.invocationProviders = invocationProviders != null ? invocationProviders
                 : new AeshInvocationProviders();
+        if (registry instanceof MutableCommandRegistryImpl)
+            ((MutableCommandRegistryImpl<?>) registry).setInvocationProviders(this.invocationProviders);
         processAfterInit();
         registry.addRegistrationListener(this);
         this.parseBrackets = parseBrackets;
@@ -536,6 +539,12 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private void processAfterInit() {
         try {
             for (String commandName : registry.getAllCommandNames()) {
+                // Deferred class registrations have no shared container
+                // yet; they receive providers when they materialize.
+                // Building them here would defeat the deferral (#678).
+                if (registry instanceof MutableCommandRegistryImpl
+                        && !((MutableCommandRegistryImpl<?>) registry).isBuilt(commandName))
+                    continue;
                 updateCommand(commandName);
             }
         } catch (Exception e) {
@@ -606,12 +615,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         final String name = aeshLine.firstWord().word();
         // Name-only resolution: evaluating the display line here would
         // materialize it on every pre-tokenized execution (#662).
-        CommandContainer<CI> container = commandResolver.resolveCommandByName(name);
-        if (container == null) {
-            throw new CommandNotFoundException("No command handler for '" + name + "'.", name);
-        }
-        CommandContainer<CI> executionContainer = registry.createExecutionContainer(container);
-        if (executionContainer != container)
+        // The registry forks class-registered commands straight from the
+        // recorded class, so the shared container is never built just to
+        // be discarded (#678).
+        CommandContainer<CI> executionContainer = registry.createExecutionContainer(name);
+        if (!registry.isSharedExecutionContainer(name))
             updateContainer(executionContainer);
         executionContainer.addLine(aeshLine);
         return executionContainer;
