@@ -4,6 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # The Maven distribution itself is pinned via the wrapper
+    # (.mvn/wrapper/maven-wrapper.properties) — 3.10 breaks the Central
+    # Sonatype deploy, so never bump it via Dependabot.
+    ignore:
+      - dependency-name: "org.apache.maven:apache-maven"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
