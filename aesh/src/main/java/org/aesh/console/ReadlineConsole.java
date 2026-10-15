@@ -77,6 +77,7 @@ import org.aesh.readline.alias.AliasCompletion;
 import org.aesh.readline.alias.AliasManager;
 import org.aesh.readline.alias.AliasPreProcessor;
 import org.aesh.readline.completion.Completion;
+import org.aesh.readline.completion.impl.CompletionHandler;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.history.FileHistory;
 import org.aesh.readline.history.History;
@@ -344,7 +345,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     private void init() {
-        org.aesh.readline.completion.impl.CompletionHandler<?> completionHandler = settings
+        CompletionHandler<?> completionHandler = settings
                 .completionHandler() != null
                         ? settings.completionHandler()
                         : new AeshCompletionHandler(context);

@@ -42,6 +42,8 @@ import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.AeshContext;
 import org.aesh.io.Resource;
 import org.aesh.readline.alias.AliasManager;
+import org.aesh.readline.completion.impl.CompletionHandler;
+import org.aesh.readline.cursor.CursorListener;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Connection;
@@ -372,7 +374,7 @@ public class SettingsBuilder<CI extends CommandInvocation> {
      * @return this builder
      * @since 3.18.5
      */
-    public SettingsBuilder<CI> cursorListener(org.aesh.readline.cursor.CursorListener listener) {
+    public SettingsBuilder<CI> cursorListener(CursorListener listener) {
         settings.setCursorListener(listener);
         return this;
     }
@@ -387,7 +389,7 @@ public class SettingsBuilder<CI extends CommandInvocation> {
      * @since 3.18.5
      */
     public SettingsBuilder<CI> completionHandler(
-            org.aesh.readline.completion.impl.CompletionHandler<?> handler) {
+            CompletionHandler<?> handler) {
         settings.setCompletionHandler(handler);
         return this;
     }

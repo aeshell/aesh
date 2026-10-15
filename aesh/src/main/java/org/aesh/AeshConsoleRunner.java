@@ -34,6 +34,8 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.console.ReadlineConsole;
+import org.aesh.readline.completion.impl.CompletionHandler;
+import org.aesh.readline.cursor.CursorListener;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Connection;
 
@@ -192,7 +194,7 @@ public class AeshConsoleRunner {
      * @return this builder
      * @since 3.18.5
      */
-    public AeshConsoleRunner cursorListener(org.aesh.readline.cursor.CursorListener listener) {
+    public AeshConsoleRunner cursorListener(CursorListener listener) {
         if (settings == null)
             settings = SettingsBuilder.builder().build();
         settings.setCursorListener(listener);
@@ -209,7 +211,7 @@ public class AeshConsoleRunner {
      * @since 3.18.5
      */
     public AeshConsoleRunner completionHandler(
-            org.aesh.readline.completion.impl.CompletionHandler<?> handler) {
+            CompletionHandler<?> handler) {
         if (settings == null)
             settings = SettingsBuilder.builder().build();
         settings.setCompletionHandler(handler);

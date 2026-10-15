@@ -42,6 +42,8 @@ import org.aesh.command.validator.ValidatorInvocationProvider;
 import org.aesh.console.AeshContext;
 import org.aesh.io.Resource;
 import org.aesh.readline.alias.AliasManager;
+import org.aesh.readline.completion.impl.CompletionHandler;
+import org.aesh.readline.cursor.CursorListener;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.Connection;
@@ -397,13 +399,13 @@ public interface Settings<CI extends CommandInvocation>
      * @param listener the cursor listener, or null to remove
      * @since 3.18.5
      */
-    void setCursorListener(org.aesh.readline.cursor.CursorListener listener);
+    void setCursorListener(CursorListener listener);
 
     /**
      * @return the cursor listener, or null
      * @since 3.18.5
      */
-    org.aesh.readline.cursor.CursorListener cursorListener();
+    CursorListener cursorListener();
 
     /**
      * Supply a custom completion handler, replacing the default candidate
@@ -413,13 +415,13 @@ public interface Settings<CI extends CommandInvocation>
      * @param handler the completion handler, or null to restore the default
      * @since 3.18.5
      */
-    void setCompletionHandler(org.aesh.readline.completion.impl.CompletionHandler<?> handler);
+    void setCompletionHandler(CompletionHandler<?> handler);
 
     /**
      * @return the custom completion handler, or null for the default
      * @since 3.18.5
      */
-    org.aesh.readline.completion.impl.CompletionHandler<?> completionHandler();
+    CompletionHandler<?> completionHandler();
 
     /**
      * Get sub-command mode settings.
