@@ -390,6 +390,38 @@ public interface Settings<CI extends CommandInvocation>
     String programStatusAppName();
 
     /**
+     * Set a listener invoked on every cursor move while editing a line,
+     * e.g. for live syntax highlighting. Unset by default; must return
+     * quickly and never block the input thread.
+     *
+     * @param listener the cursor listener, or null to remove
+     * @since 3.18.5
+     */
+    void setCursorListener(org.aesh.readline.cursor.CursorListener listener);
+
+    /**
+     * @return the cursor listener, or null
+     * @since 3.18.5
+     */
+    org.aesh.readline.cursor.CursorListener cursorListener();
+
+    /**
+     * Supply a custom completion handler, replacing the default candidate
+     * computation and rendering. Unset by default; replacement takes over
+     * the whole completion path, not just colours.
+     *
+     * @param handler the completion handler, or null to restore the default
+     * @since 3.18.5
+     */
+    void setCompletionHandler(org.aesh.readline.completion.impl.CompletionHandler<?> handler);
+
+    /**
+     * @return the custom completion handler, or null for the default
+     * @since 3.18.5
+     */
+    org.aesh.readline.completion.impl.CompletionHandler<?> completionHandler();
+
+    /**
      * Get sub-command mode settings.
      *
      * @return the sub-command mode settings

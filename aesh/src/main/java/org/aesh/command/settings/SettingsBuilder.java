@@ -363,6 +363,35 @@ public class SettingsBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Set a listener invoked on every cursor move while editing a line,
+     * e.g. for live syntax highlighting. Unset by default; must return
+     * quickly and never block the input thread.
+     *
+     * @param listener the cursor listener, or null to remove
+     * @return this builder
+     * @since 3.18.5
+     */
+    public SettingsBuilder<CI> cursorListener(org.aesh.readline.cursor.CursorListener listener) {
+        settings.setCursorListener(listener);
+        return this;
+    }
+
+    /**
+     * Supply a custom completion handler, replacing the default candidate
+     * computation and rendering. Unset by default; replacement takes over
+     * the whole completion path, not just colours.
+     *
+     * @param handler the completion handler, or null to restore the default
+     * @return this builder
+     * @since 3.18.5
+     */
+    public SettingsBuilder<CI> completionHandler(
+            org.aesh.readline.completion.impl.CompletionHandler<?> handler) {
+        settings.setCompletionHandler(handler);
+        return this;
+    }
+
     public SettingsBuilder<CI> tailTipSuggestions(boolean enable) {
         settings.setTailTipSuggestions(enable);
         return this;

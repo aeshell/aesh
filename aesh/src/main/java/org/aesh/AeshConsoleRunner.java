@@ -184,6 +184,39 @@ public class AeshConsoleRunner {
     }
 
     /**
+     * Set a listener invoked on every cursor move while editing a line,
+     * e.g. for live syntax highlighting. Unset by default; must return
+     * quickly and never block the input thread.
+     *
+     * @param listener the cursor listener, or null to remove
+     * @return this builder
+     * @since 3.18.5
+     */
+    public AeshConsoleRunner cursorListener(org.aesh.readline.cursor.CursorListener listener) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setCursorListener(listener);
+        return this;
+    }
+
+    /**
+     * Supply a custom completion handler, replacing the default candidate
+     * computation and rendering. Unset by default; replacement takes over
+     * the whole completion path, not just colours.
+     *
+     * @param handler the completion handler, or null to restore the default
+     * @return this builder
+     * @since 3.18.5
+     */
+    public AeshConsoleRunner completionHandler(
+            org.aesh.readline.completion.impl.CompletionHandler<?> handler) {
+        if (settings == null)
+            settings = SettingsBuilder.builder().build();
+        settings.setCompletionHandler(handler);
+        return this;
+    }
+
+    /**
      * Enable the {@code !} prefix for executing native OS commands from the REPL.
      * For example, {@code !ls -la} forks {@code ls -la} as a native process.
      * Disabled by default.

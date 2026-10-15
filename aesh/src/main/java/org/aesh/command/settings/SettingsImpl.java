@@ -45,6 +45,8 @@ import org.aesh.console.DefaultAeshContext;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
 import org.aesh.readline.alias.AliasManager;
+import org.aesh.readline.completion.impl.CompletionHandler;
+import org.aesh.readline.cursor.CursorListener;
 import org.aesh.readline.editing.EditMode;
 import org.aesh.readline.editing.EditModeBuilder;
 import org.aesh.readline.prompt.Prompt;
@@ -110,6 +112,8 @@ public class SettingsImpl<CI extends CommandInvocation>
     private CommandExecutionListener commandExecutionListener;
     private boolean programStatusEnabled;
     private String programStatusAppName;
+    private CursorListener cursorListener;
+    private CompletionHandler<?> completionHandler;
     private Supplier<Prompt> promptSupplier;
     private AliasManager aliasManager;
     private Consumer<Void> connectionClosedHandler;
@@ -172,6 +176,8 @@ public class SettingsImpl<CI extends CommandInvocation>
         setCommandExecutionListener(baseSettings.commandExecutionListener());
         setProgramStatusEnabled(baseSettings.programStatusEnabled());
         setProgramStatusAppName(baseSettings.programStatusAppName());
+        setCursorListener(baseSettings.cursorListener());
+        setCompletionHandler(baseSettings.completionHandler());
         setPromptSupplier(baseSettings.promptSupplier());
         setAliasManager(baseSettings.aliasManager());
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
@@ -872,6 +878,26 @@ public class SettingsImpl<CI extends CommandInvocation>
     @Override
     public CommandExecutionListener commandExecutionListener() {
         return commandExecutionListener;
+    }
+
+    @Override
+    public void setCursorListener(CursorListener listener) {
+        this.cursorListener = listener;
+    }
+
+    @Override
+    public CursorListener cursorListener() {
+        return cursorListener;
+    }
+
+    @Override
+    public void setCompletionHandler(CompletionHandler<?> handler) {
+        this.completionHandler = handler;
+    }
+
+    @Override
+    public CompletionHandler<?> completionHandler() {
+        return completionHandler;
     }
 
     @Override

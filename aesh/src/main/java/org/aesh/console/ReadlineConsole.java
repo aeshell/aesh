@@ -344,7 +344,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     }
 
     private void init() {
-        AeshCompletionHandler completionHandler = new AeshCompletionHandler(context);
+        org.aesh.readline.completion.impl.CompletionHandler<?> completionHandler = settings
+                .completionHandler() != null
+                        ? settings.completionHandler()
+                        : new AeshCompletionHandler(context);
         String originalPromptString = "";
         if (prompt == null)
             prompt = new Prompt("");
@@ -424,6 +427,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                             read(conn, readline);
                     })
                     .preProcessors(preProcessors);
+
+            if (settings.cursorListener() != null)
+                requestBuilder.cursorListener(settings.cursorListener());
 
             if (conn.isInteractive()) {
                 // Interactive mode: full readline features
