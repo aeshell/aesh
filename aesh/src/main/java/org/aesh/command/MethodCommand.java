@@ -44,11 +44,15 @@ import java.lang.annotation.Target;
 public @interface MethodCommand {
 
     /**
-     * Specifies the command name
+     * Specifies the command name. When empty, the name is derived verbatim
+     * from the annotated method's name, mirroring picocli method commands.
+     * Explicit names always win, and must be unique within the declaring
+     * class: Java overloads sharing a derived or explicit name collide on
+     * the command line and fail registration.
      *
-     * @return command name
+     * @return command name, or empty to derive it from the method name
      */
-    String name();
+    String name() default "";
 
     /**
      * Add any aliases connected to this command
