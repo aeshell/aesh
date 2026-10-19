@@ -72,7 +72,7 @@
       <version.shade.plugin>3.6.2</version.shade.plugin>
       <version.enforcer.plugin>3.6.3</version.enforcer.plugin>
       <version.gpg.plugin>3.2.8</version.gpg.plugin>
-      <version.central-publishing.plugin>0.11.0</version.central-publishing.plugin>
+      <version.central-publishing.plugin>0.12.0</version.central-publishing.plugin>
       <version.clean.plugin>3.4.0</version.clean.plugin>
       <version.resources.plugin>3.5.0</version.resources.plugin>
       <version.install.plugin>3.2.0</version.install.plugin>
