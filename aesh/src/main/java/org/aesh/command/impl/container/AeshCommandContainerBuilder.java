@@ -21,6 +21,9 @@
 package org.aesh.command.impl.container;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -32,8 +35,10 @@ import java.util.function.Function;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandResult;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.GroupCommand;
+import org.aesh.command.MethodCommand;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.internal.OptionType;
@@ -99,6 +104,56 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         } else {
             container = doGenerateCommandLineParser(ReflectionUtil.newInstance(command));
         }
+        applyDefaultValueProvider(container);
+        return container;
+    }
+
+    /**
+     * Build a container for a {@code @MethodCommand}-annotated method, to be
+     * invoked on the caller-supplied instance. The instance is shared across
+     * executions, exactly like instance-registered field commands; for static
+     * methods the instance may be null and is ignored.
+     * <p>
+     * Validation fails fast: missing annotation, unsupported return type
+     * (only {@code void}, {@code Void} and {@code CommandResult} are
+     * accepted), missing instance for instance methods, and unusable
+     * parameters all throw here rather than at first execution. Duplicate
+     * command names across methods of one class are left to the group or
+     * registry, which skip already-registered names as for classes.
+     *
+     * @param instance the object the method is invoked on, or null for static methods
+     * @param method the {@code @MethodCommand}-annotated method
+     * @return a container whose command executes the method
+     * @throws CommandLineParserException if the method cannot serve as a command
+     */
+    public CommandContainer<CI> create(Object instance, Method method) throws CommandLineParserException {
+        if (method == null)
+            throw new CommandLineParserException("Method must not be null");
+        MethodCommand command = method.getAnnotation(MethodCommand.class);
+        if (command == null)
+            throw new CommandLineParserException(
+                    "Method must be annotated with @MethodCommand: " + method);
+        if (instance == null && !Modifier.isStatic(method.getModifiers()))
+            throw new CommandLineParserException(
+                    "Non-static @MethodCommand method requires an instance: " + method);
+        Class<?> returnType = method.getReturnType();
+        if (returnType != void.class && returnType != Void.class
+                && !CommandResult.class.isAssignableFrom(returnType))
+            throw new CommandLineParserException(
+                    "@MethodCommand method must return void or CommandResult: " + method);
+        method.setAccessible(true);
+        String name = command.name().length() < 1 ? method.getName() : command.name();
+        Object[] slots = new Object[method.getParameterCount()];
+        MethodCommandAdapter<CI> adapter = new MethodCommandAdapter<>(instance, method, slots);
+        ProcessedCommand<Command<CI>, CI> processedCommand = ProcessedCommandBuilder.<Command<CI>, CI> builder()
+                .name(name)
+                .aliases(Arrays.asList(command.aliases()))
+                .description(command.description())
+                .command(adapter)
+                .create();
+        processMethod(processedCommand, slots, method);
+        validatePositionalIndexes(processedCommand);
+        AeshCommandContainer<CI> container = new AeshCommandContainer<>(new AeshCommandLineParser<>(processedCommand));
         applyDefaultValueProvider(container);
         return container;
     }
@@ -328,6 +383,143 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     private static void processField(ProcessedCommand processedCommand, Field field) throws CommandLineParserException {
         processField(processedCommand, field, null, false);
+    }
+
+    /**
+     * Map a {@code @MethodCommand} method's parameters to options, mirroring
+     * {@link #processField(ProcessedCommand, Field, String, boolean)}. Each
+     * annotated parameter becomes an option whose converted values land in
+     * the adapter's slot array; {@code CommandInvocation} parameters are
+     * passed straight through at execution time and need no annotation.
+     */
+    private static void processMethod(ProcessedCommand processedCommand, Object[] slots, Method method)
+            throws CommandLineParserException {
+        Parameter[] parameters = method.getParameters();
+        for (int i = 0; i < parameters.length; i++) {
+            Parameter param = parameters[i];
+            if (CommandInvocation.class.isAssignableFrom(param.getType())) {
+                if (param.getAnnotation(Option.class) != null || param.getAnnotation(Argument.class) != null)
+                    throw new CommandLineParserException(
+                            "CommandInvocation parameter must not carry @Option/@Argument: "
+                                    + param.getName() + " in " + method);
+                continue;
+            }
+            if (param.getAnnotation(OptionList.class) != null || param.getAnnotation(OptionGroup.class) != null
+                    || param.getAnnotation(Arguments.class) != null || param.getAnnotation(Mixin.class) != null)
+                throw new CommandLineParserException(
+                        "Only @Option and @Argument are supported on @MethodCommand parameters: "
+                                + param.getName() + " in " + method);
+            Option o;
+            Argument arg;
+            if ((o = param.getAnnotation(Option.class)) != null) {
+                OptionType optionType;
+                if (o.hasValue())
+                    optionType = OptionType.NORMAL;
+                else
+                    optionType = OptionType.BOOLEAN;
+
+                Class<?> paramType = param.getType();
+                boolean isOptionalWrapped = Optional.class.isAssignableFrom(paramType);
+                if (isOptionalWrapped) {
+                    paramType = unwrapOptionalParameterType(param);
+                }
+
+                ProcessedOptionBuilder optionBuilder = ProcessedOptionBuilder.builder()
+                        .shortName(o.shortName())
+                        .name(o.name().length() < 1 ? param.getName() : o.name())
+                        .description(o.description())
+                        .required(o.required())
+                        .valueSeparator(' ')
+                        .askIfNotSet(o.askIfNotSet())
+                        .acceptNameWithoutDashes(o.acceptNameWithoutDashes())
+                        .selector(o.selector())
+                        .addAllDefaultValues(o.defaultValue())
+                        .type(paramType)
+                        .fieldName(param.getName())
+                        .fieldAccessor(MethodCommandAdapter.slotAccessor(slots, i))
+                        .optionalWrapped(isOptionalWrapped)
+                        .optionType(optionType);
+                optionBuilder.converter(o.converter())
+                        .completer(o.completer())
+                        .validator(o.validator())
+                        .activator(o.activator())
+                        .renderer(o.renderer())
+                        .parser(o.parser());
+                processedCommand.addOption(optionBuilder
+                        .overrideRequired(o.overrideRequired())
+                        .optionalValue(o.optionalValue())
+                        .fallbackValue("\u0000".equals(o.fallbackValue()) ? null : o.fallbackValue())
+                        .negatable(o.negatable())
+                        .negationPrefix(o.negationPrefix())
+                        .inherited(o.inherited())
+                        .descriptionUrl(o.descriptionUrl())
+                        .url(o.url())
+                        .completeFallback(resolveEffectiveFallback(
+                                o.completeFallback(), processedCommand))
+                        .aliases(o.aliases())
+                        .helpGroup(o.helpGroup())
+                        .exclusiveWith(o.exclusiveWith())
+                        .addAllAllowedValues(o.allowedValues())
+                        .visibility(o.visibility())
+                        .order(o.order())
+                        .build());
+            } else if ((arg = param.getAnnotation(Argument.class)) != null) {
+                Class<?> paramType = param.getType();
+                boolean isOptionalWrapped = Optional.class.isAssignableFrom(paramType);
+                if (isOptionalWrapped) {
+                    paramType = unwrapOptionalParameterType(param);
+                }
+                if (Collection.class.isAssignableFrom(paramType))
+                    throw new CommandLineParserException("Argument parameter can not be an instance of Collection");
+                ProcessedOptionBuilder argumentBuilder = ProcessedOptionBuilder.builder()
+                        .shortName('\u0000')
+                        .name("")
+                        .description(arg.description())
+                        .required(arg.required())
+                        .valueSeparator(' ')
+                        .askIfNotSet(arg.askIfNotSet())
+                        .selector(arg.selector())
+                        .addAllDefaultValues(arg.defaultValue())
+                        .type(paramType)
+                        .fieldName(param.getName())
+                        .fieldAccessor(MethodCommandAdapter.slotAccessor(slots, i))
+                        .optionalWrapped(isOptionalWrapped)
+                        .paramLabel(arg.paramLabel())
+                        .arity(arg.arity())
+                        .index(arg.index())
+                        .optionType(OptionType.ARGUMENT);
+                argumentBuilder.converter(arg.converter())
+                        .completer(arg.completer())
+                        .validator(arg.validator())
+                        .activator(arg.activator())
+                        .renderer(arg.renderer())
+                        .parser(arg.parser());
+                processedCommand.addArgument(argumentBuilder
+                        .overrideRequired(arg.overrideRequired())
+                        .inherited(arg.inherited())
+                        .url(arg.url())
+                        .completeFallback(resolveEffectiveFallback(
+                                arg.completeFallback(), processedCommand))
+                        .build());
+            } else {
+                throw new CommandLineParserException(
+                        "Method parameter must be annotated with @Option or @Argument: "
+                                + param.getName() + " in " + method);
+            }
+        }
+    }
+
+    private static Class<?> unwrapOptionalParameterType(Parameter parameter) {
+        Type genericType = parameter.getParameterizedType();
+        if (genericType instanceof ParameterizedType) {
+            Type innerType = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+            if (innerType instanceof Class) {
+                return (Class<?>) innerType;
+            } else if (innerType instanceof ParameterizedType) {
+                return (Class<?>) ((ParameterizedType) innerType).getRawType();
+            }
+        }
+        return Object.class;
     }
 
     private static void processField(ProcessedCommand processedCommand, Field field, boolean forHelp)
