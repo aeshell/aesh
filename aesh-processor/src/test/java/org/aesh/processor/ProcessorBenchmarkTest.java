@@ -504,6 +504,86 @@ public class ProcessorBenchmarkTest {
         System.out.printf("  Speedup:     %.2fx%n", speedup);
     }
 
+    private static final String METHOD_OWNER_SOURCE = "package bench;\n" +
+            "\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.MethodCommand;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class MethodOwner {\n" +
+            "    public String lastTarget;\n" +
+            "\n" +
+            "    @MethodCommand(name = \"deploy\", description = \"deploy it\")\n" +
+            "    public void deploy(@Option(name = \"target\", description = \"t\") String target,\n" +
+            "            @Option(name = \"count\", description = \"c\") int count) {\n" +
+            "        lastTarget = target;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void benchmarkMethodExecute() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("bench.MethodOwner", METHOD_OWNER_SOURCE));
+
+        if (!result.success) {
+            System.out.println("Compilation failed: " + result.diagnostics);
+            return;
+        }
+
+        Class<?> ownerClass = result.classLoader.loadClass("bench.MethodOwner");
+        Object owner = ownerClass.newInstance();
+        java.lang.reflect.Method method = ownerClass.getMethod("deploy", String.class, int.class);
+        org.aesh.command.metadata.MethodCommandMetadataProvider provider = (org.aesh.command.metadata.MethodCommandMetadataProvider) result.classLoader
+                .loadClass("bench.MethodOwner_deploy_2_AeshMethodMetadata").newInstance();
+
+        // Reflection path container (Method.invoke at execution)
+        AeshCommandContainerBuilder containerBuilder = new AeshCommandContainerBuilder();
+        CommandContainer reflectionContainer = containerBuilder.create(owner, method);
+        MutableCommandRegistryImpl reflectionRegistry = new MutableCommandRegistryImpl<>();
+        reflectionRegistry.addCommand(reflectionContainer);
+        CommandRuntime reflectionRuntime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(reflectionRegistry)
+                .build();
+
+        // Generated path container (direct call at execution)
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(owner);
+        AeshCommandContainer generatedContainer = new AeshCommandContainer(
+                new AeshCommandLineParser<>(generatedPC));
+        MutableCommandRegistryImpl generatedRegistry = new MutableCommandRegistryImpl<>();
+        generatedRegistry.addCommand(generatedContainer);
+        CommandRuntime generatedRuntime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(generatedRegistry)
+                .build();
+
+        System.out.println();
+        System.out.println("=== Method command execute: deploy --target prod --count 3 ===");
+        System.out.println("Warmup: " + WARMUP_ITERATIONS + ", Measured: " + MEASURED_ITERATIONS + " iterations");
+        System.out.println();
+
+        ThrowingRunnable reflectionRun = () -> reflectionRuntime.executeCommand("deploy --target prod --count 3");
+        ThrowingRunnable generatedRun = () -> generatedRuntime.executeCommand("deploy --target prod --count 3");
+
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            reflectionRun.run();
+        }
+        long reflectionNs = timeIterations(reflectionRun);
+
+        for (int i = 0; i < WARMUP_ITERATIONS; i++) {
+            generatedRun.run();
+        }
+        long generatedNs = timeIterations(generatedRun);
+
+        double reflAvgUs = (reflectionNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        double genAvgUs = (generatedNs / (double) MEASURED_ITERATIONS) / 1000.0;
+        double speedup = reflAvgUs / genAvgUs;
+
+        System.out.printf("  Reflection:  %,.1f us/op  (total: %,d ms)%n", reflAvgUs, reflectionNs / 1_000_000);
+        System.out.printf("  Generated:   %,.1f us/op  (total: %,d ms)%n", genAvgUs, generatedNs / 1_000_000);
+        System.out.printf("  Speedup:     %.2fx%n", speedup);
+    }
+
     @FunctionalInterface
     private interface ThrowingRunnable {
         void run() throws Exception;

@@ -19,6 +19,8 @@
  */
 package org.aesh.command.container;
 
+import java.lang.reflect.Method;
+
 import org.aesh.command.Command;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.parser.CommandLineParserException;
@@ -32,4 +34,53 @@ public interface CommandContainerBuilder<CI extends CommandInvocation> {
     CommandContainer<CI> create(Command command) throws CommandLineParserException;
 
     CommandContainer<CI> create(Class<? extends Command> command) throws CommandLineParserException;
+
+    /**
+     * Build a container for a {@code @MethodCommand}-annotated method, to be
+     * invoked on the caller-supplied instance. Only public, protected, and
+     * package-private methods are supported; private methods are rejected
+     * because generated adapters call them directly. For static methods the
+     * instance may be null and is ignored.
+     *
+     * @param instance the object the method is invoked on, or null for static methods
+     * @param method the {@code @MethodCommand}-annotated method
+     * @return a container whose command executes the method
+     * @throws CommandLineParserException if the method cannot serve as a command
+     */
+    default CommandContainer<CI> create(Object instance, Method method) throws CommandLineParserException {
+        throw new UnsupportedOperationException(
+                "Method commands are not supported by this container builder");
+    }
+
+    /**
+     * Build a container for a {@code @MethodCommand} command identified by
+     * its command name or alias, to be invoked on the caller-supplied owner
+     * object. Generated metadata is preferred when available; otherwise the
+     * owner's methods are scanned reflectively as a fallback.
+     *
+     * @param owner the object the method is invoked on
+     * @param commandName the command name or alias
+     * @return a container whose command executes the method
+     * @throws CommandLineParserException if no matching method serves as a command
+     */
+    default CommandContainer<CI> create(Object owner, String commandName) throws CommandLineParserException {
+        throw new UnsupportedOperationException(
+                "Method commands are not supported by this container builder");
+    }
+
+    /**
+     * Build a container for a static {@code @MethodCommand} command
+     * identified by its command name or alias. Only static methods are
+     * considered; no owner instance is required.
+     *
+     * @param ownerClass the class declaring the static method
+     * @param commandName the command name or alias
+     * @return a container whose command executes the method
+     * @throws CommandLineParserException if no matching static method serves as a command
+     */
+    default CommandContainer<CI> create(Class<?> ownerClass, String commandName)
+            throws CommandLineParserException {
+        throw new UnsupportedOperationException(
+                "Method commands are not supported by this container builder");
+    }
 }

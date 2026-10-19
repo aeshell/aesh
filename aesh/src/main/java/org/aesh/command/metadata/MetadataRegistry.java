@@ -17,6 +17,9 @@
  */
 package org.aesh.command.metadata;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Registry that maps command class names to their generated
  * {@link CommandMetadataProvider} instances.
@@ -44,4 +47,18 @@ public interface MetadataRegistry {
      * @return the provider, or {@code null} if this registry does not handle the given class
      */
     CommandMetadataProvider<?> get(String commandClassName);
+
+    /**
+     * Look up the generated method-command providers for one owning class.
+     * <p>
+     * The key is the owner's binary name, as for {@link #get(String)}.
+     * The default returns an empty list so hand-written registries stay
+     * source-compatible; generated registries override it.
+     *
+     * @param ownerClassName the binary name of the method-owning class
+     * @return the method providers, or an empty list if none
+     */
+    default List<MethodCommandMetadataProvider> methodProviders(String ownerClassName) {
+        return Collections.emptyList();
+    }
 }

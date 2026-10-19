@@ -23,6 +23,7 @@ import java.util.List;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -662,19 +663,19 @@ final class CodeGenerator {
 
         if (o != null) {
             generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp);
+                    commandFallback, forHelp, null);
         } else if (ol != null) {
             generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp);
+                    commandFallback, forHelp, null);
         } else if (og != null) {
             generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils, accessorInfos,
                     commandFallback, forHelp);
         } else if (args != null) {
             generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp);
+                    commandFallback, forHelp, null);
         } else if (arg != null) {
             generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp);
+                    commandFallback, forHelp, null);
         } else if (field.getAnnotation(Mixin.class) != null) {
             // Chain mixinFieldName for nested mixins: "outer" + "inner" -> "outer.inner"
             String nestedMixinName = mixinFieldName != null
@@ -737,7 +738,8 @@ final class CodeGenerator {
 
     private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
+            String accessorFieldName) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -751,7 +753,9 @@ final class CodeGenerator {
 
         // Accessor index
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
+        accessorInfos.add(new FieldAccessorInfo(accIdx,
+                accessorFieldName != null ? accessorFieldName : fieldName,
+                erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         // Emit: ProcessedOption opt_N = ProcessedOption.createDirect(...)
@@ -839,7 +843,8 @@ final class CodeGenerator {
 
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
+            String accessorFieldName) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -850,7 +855,9 @@ final class CodeGenerator {
         String optionName = ol.name().length() < 1 ? fieldName : ol.name();
 
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
+        accessorInfos.add(new FieldAccessorInfo(accIdx,
+                accessorFieldName != null ? accessorFieldName : fieldName,
+                erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         String var = "opt_" + accIdx;
@@ -1002,7 +1009,8 @@ final class CodeGenerator {
 
     private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
+            String accessorFieldName) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1012,7 +1020,9 @@ final class CodeGenerator {
         String elementType = getGenericTypeArgument(effectiveType, 0, typeUtils);
 
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
+        accessorInfos.add(new FieldAccessorInfo(accIdx,
+                accessorFieldName != null ? accessorFieldName : fieldName,
+                erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         String var = "argsOpt_" + accIdx;
@@ -1069,7 +1079,8 @@ final class CodeGenerator {
 
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
+            String accessorFieldName) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1079,7 +1090,9 @@ final class CodeGenerator {
         String fieldType = getBoxedTypeName(effectiveType, typeUtils);
 
         int accIdx = accessorInfos.size();
-        accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
+        accessorInfos.add(new FieldAccessorInfo(accIdx,
+                accessorFieldName != null ? accessorFieldName : fieldName,
+                erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
 
         String var = "argOpt_" + accIdx;
@@ -1534,10 +1547,18 @@ final class CodeGenerator {
      */
     private static java.util.LinkedHashSet<String> collectSharedConverterTypes(
             List<VariableElement> fields, Elements elementUtils, Types typeUtils) {
+        return collectSharedConverterTypes(fields, elementUtils, typeUtils, true);
+    }
+
+    private static java.util.LinkedHashSet<String> collectSharedConverterTypes(
+            List<VariableElement> fields, Elements elementUtils, Types typeUtils,
+            boolean alwaysIncludeBoolean) {
         // Collect distinct default converter types (types that use CLConverterManager, not custom converters)
         java.util.LinkedHashSet<String> converterTypes = new java.util.LinkedHashSet<>();
-        // Always include Boolean — needed for generated help/version options
-        converterTypes.add("java.lang.Boolean");
+        // Always include Boolean — needed for generated help/version options.
+        // Method providers synthesize no help/version options, so they skip it.
+        if (alwaysIncludeBoolean)
+            converterTypes.add("java.lang.Boolean");
 
         for (VariableElement field : fields) {
             if (field.getAnnotation(Mixin.class) != null) {
@@ -1736,6 +1757,52 @@ final class CodeGenerator {
             String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
                     .getQualifiedName().toString();
             if (mirrorType.equals(CommandDefinition.class.getCanonicalName())) {
+                for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
+                        .getElementValues().entrySet()) {
+                    if (entry.getKey().getSimpleName().toString().equals(attributeName)) {
+                        List<? extends AnnotationValue> values = (List<? extends AnnotationValue>) entry.getValue().getValue();
+                        String[] result = new String[values.size()];
+                        for (int i = 0; i < values.size(); i++) {
+                            result[i] = String.valueOf(values.get(i).getValue());
+                        }
+                        return result;
+                    }
+                }
+            }
+        }
+        return new String[0];
+    }
+
+    /**
+     * Read a string annotation value from a {@code @MethodCommand} mirror.
+     * Returns null when absent (e.g. an unset {@code name}, which derives
+     * from the method name instead).
+     */
+    private static String getMethodCommandValue(ExecutableElement method, String attributeName) {
+        for (AnnotationMirror mirror : method.getAnnotationMirrors()) {
+            String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
+                    .getQualifiedName().toString();
+            if (mirrorType.equals(org.aesh.command.MethodCommand.class.getCanonicalName())) {
+                for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
+                        .getElementValues().entrySet()) {
+                    if (entry.getKey().getSimpleName().toString().equals(attributeName)) {
+                        return String.valueOf(entry.getValue().getValue());
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Read a String[] annotation value from a {@code @MethodCommand} mirror.
+     */
+    @SuppressWarnings("unchecked")
+    private static String[] getMethodCommandStringArrayValue(ExecutableElement method, String attributeName) {
+        for (AnnotationMirror mirror : method.getAnnotationMirrors()) {
+            String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
+                    .getQualifiedName().toString();
+            if (mirrorType.equals(org.aesh.command.MethodCommand.class.getCanonicalName())) {
                 for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
                         .getElementValues().entrySet()) {
                     if (entry.getKey().getSimpleName().toString().equals(attributeName)) {
@@ -2065,7 +2132,8 @@ final class CodeGenerator {
      * @param entries list of (binaryClassName, metadataClassName) pairs
      * @return the generated Java source code
      */
-    static String generateRegistry(String packageName, List<String[]> entries) {
+    static String generateRegistry(String packageName, List<String[]> entries,
+            java.util.Map<String, List<String[]>> methodEntries) {
         StringBuilder sb = new StringBuilder();
 
         if (!packageName.isEmpty()) {
@@ -2087,10 +2155,306 @@ final class CodeGenerator {
         }
         sb.append("            default: return null;\n");
         sb.append("        }\n");
+        sb.append("    }\n\n");
+
+        sb.append("    @Override\n");
+        sb.append(
+                "    public java.util.List<org.aesh.command.metadata.MethodCommandMetadataProvider> methodProviders(String ownerClassName) {\n");
+        sb.append("        switch (ownerClassName) {\n");
+        for (java.util.Map.Entry<String, List<String[]>> owner : methodEntries.entrySet()) {
+            sb.append("            case \"").append(owner.getKey()).append("\": return java.util.Arrays.asList(\n");
+            List<String[]> providers = owner.getValue();
+            for (int i = 0; i < providers.size(); i++) {
+                sb.append("                    new ").append(providers.get(i)[1]).append("()");
+                sb.append(i < providers.size() - 1 ? ",\n" : "\n");
+            }
+            sb.append("            );\n");
+        }
+        sb.append("            default: return java.util.Collections.emptyList();\n");
+        sb.append("        }\n");
         sb.append("    }\n");
 
         sb.append("}\n");
 
         return sb.toString();
     }
+
+    /**
+     * Resolve the CLI command name for a {@code @MethodCommand} method:
+     * the explicit annotation name, or the method name verbatim when
+     * unset — mirroring the reflection path's derivation rule.
+     */
+    static String methodCommandName(ExecutableElement method) {
+        String name = getMethodCommandValue(method, "name");
+        if (name == null || name.isEmpty())
+            return method.getSimpleName().toString();
+        return name;
+    }
+
+    /**
+     * Generate a {@code MethodCommandMetadataProvider} implementation for
+     * one {@code @MethodCommand}-annotated method. Parameter options reuse
+     * {@link #generateOption} and {@link #generateArgument} with the
+     * generated adapter as the accessor target; execution is a direct call
+     * on the caller-supplied owner, never reflection.
+     */
+    static String generateMethodProvider(
+            String packageName, String ownerTypeRef, String metadataClassName,
+            ExecutableElement method, Elements elementUtils, Types typeUtils) {
+        StringBuilder sb = new StringBuilder();
+
+        if (!packageName.isEmpty()) {
+            sb.append("package ").append(packageName).append(";\n\n");
+        }
+
+        sb.append("import java.util.Arrays;\n\n");
+        sb.append("import org.aesh.command.Command;\n");
+        sb.append("import org.aesh.command.CommandException;\n");
+        sb.append("import org.aesh.command.CommandResult;\n");
+        sb.append("import org.aesh.command.impl.internal.ProcessedCommand;\n");
+        sb.append("import org.aesh.command.impl.internal.ProcessedCommandBuilder;\n");
+        sb.append("import org.aesh.command.impl.internal.ProcessedOption;\n");
+        sb.append("import org.aesh.command.impl.internal.OptionType;\n");
+        sb.append("import org.aesh.command.invocation.CommandInvocation;\n");
+        sb.append("import org.aesh.command.metadata.MethodCommandMetadataProvider;\n");
+        sb.append("import org.aesh.command.parser.CommandLineParserException;\n\n");
+
+        String cliName = methodCommandName(method);
+        String[] aliases = getMethodCommandStringArrayValue(method, "aliases");
+        String description = getMethodCommandValue(method, "description");
+        if (description == null)
+            description = "";
+
+        sb.append("/**\n");
+        sb.append(" * Generated compile-time metadata provider for method command '")
+                .append(cliName).append("'.\n");
+        sb.append(" * Do not edit — this file is regenerated by the aesh annotation processor.\n");
+        sb.append(" */\n");
+        sb.append("@SuppressWarnings({\"unchecked\", \"rawtypes\"})\n");
+        sb.append("public final class ").append(metadataClassName);
+        sb.append(" implements MethodCommandMetadataProvider {\n\n");
+
+        sb.append("    @Override\n");
+        sb.append("    public Class<?> ownerType() {\n");
+        sb.append("        return ").append(ownerTypeRef).append(".class;\n");
+        sb.append("    }\n\n");
+
+        sb.append("    @Override\n");
+        sb.append("    public String methodName() {\n");
+        sb.append("        return ").append(stringLiteral(method.getSimpleName().toString())).append(";\n");
+        sb.append("    }\n\n");
+
+        sb.append("    @Override\n");
+        sb.append("    public String commandName() {\n");
+        sb.append("        return ").append(stringLiteral(cliName)).append(";\n");
+        sb.append("    }\n\n");
+
+        if (aliases.length > 0) {
+            sb.append("    @Override\n");
+            sb.append("    public String[] commandAliases() {\n");
+            sb.append("        return new String[] {").append(stringArrayLiteral(aliases)).append("};\n");
+            sb.append("    }\n\n");
+        }
+
+        List<VariableElement> params = new java.util.ArrayList<VariableElement>(method.getParameters());
+        List<FieldAccessorInfo> accessorInfos = new java.util.ArrayList<>();
+        java.util.LinkedHashSet<String> sharedConverters = collectSharedConverterTypes(params, elementUtils, typeUtils, false);
+
+        sb.append("    @Override\n");
+        sb.append("    public ProcessedCommand buildProcessedCommand(Object owner)");
+        sb.append(" throws CommandLineParserException {\n");
+        generateMethodBuildProcessedCommand(sb, ownerTypeRef, method, params, cliName, aliases,
+                description, elementUtils, typeUtils, accessorInfos, false, sharedConverters);
+        sb.append("    }\n\n");
+
+        sb.append("    @Override\n");
+        sb.append("    public ProcessedCommand buildHelpProcessedCommand()");
+        sb.append(" throws CommandLineParserException {\n");
+        generateMethodBuildProcessedCommand(sb, ownerTypeRef, method, params, cliName, aliases,
+                description, elementUtils, typeUtils, new java.util.ArrayList<>(), true, sharedConverters);
+        sb.append("    }\n\n");
+
+        generateMethodAdapter(sb, ownerTypeRef, method, params, elementUtils, typeUtils);
+        generateAccessorClass(sb, "Adapter", accessorInfos, null);
+
+        sb.append("}\n");
+
+        return sb.toString();
+    }
+
+    private static void generateMethodBuildProcessedCommand(StringBuilder sb, String ownerTypeRef,
+            ExecutableElement method, List<? extends VariableElement> params,
+            String cliName, String[] aliases, String description,
+            Elements elementUtils, Types typeUtils,
+            List<FieldAccessorInfo> accessorInfos, boolean forHelp,
+            java.util.LinkedHashSet<String> sharedConverters) {
+        sb.append(
+                "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
+        sb.append("                .name(").append(stringLiteral(cliName)).append(")\n");
+        sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(aliases)).append("))\n");
+        sb.append("                .description(").append(stringLiteral(description)).append(")\n");
+        if (forHelp)
+            sb.append("                .command((Adapter) null)\n");
+        else
+            sb.append("                .command(new Adapter((").append(ownerTypeRef).append(") owner))\n");
+        int optionCount = 0;
+        for (VariableElement param : params) {
+            if (param.getAnnotation(Option.class) != null)
+                optionCount++;
+        }
+        sb.append("                .optionCapacity(").append(optionCount).append(")\n");
+        sb.append("                .create();\n\n");
+
+        if (!forHelp) {
+            for (String type : sharedConverters) {
+                sb.append("        org.aesh.command.converter.Converter converter_")
+                        .append(converterConstantSuffix(type))
+                        .append(" = org.aesh.converter.CLConverterManager.getInstance().getConverter(")
+                        .append(type).append(".class);\n");
+            }
+            if (!sharedConverters.isEmpty())
+                sb.append("\n");
+        }
+
+        for (int i = 0; i < params.size(); i++) {
+            generateMethodParameter(sb, params.get(i), i, elementUtils, typeUtils, accessorInfos, forHelp);
+        }
+
+        sb.append("        return processedCommand;\n");
+    }
+
+    /**
+     * Map one method parameter to an option, reusing the field emitters
+     * with the generated adapter as the accessor target and positional
+     * {@code p<i>} fields. {@code CommandInvocation} parameters carry no
+     * option and are passed through at execution time.
+     */
+    private static void generateMethodParameter(StringBuilder sb, VariableElement param, int paramIndex,
+            Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos, boolean forHelp) {
+        if (isCommandInvocationParam(param, elementUtils, typeUtils))
+            return;
+        String target = "p" + paramIndex;
+        Option o = param.getAnnotation(Option.class);
+        Argument arg = param.getAnnotation(Argument.class);
+        OptionList ol = param.getAnnotation(OptionList.class);
+        Arguments a = param.getAnnotation(Arguments.class);
+        org.aesh.command.option.CompletionFallback commandFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
+        if (o != null) {
+            generateOption(sb, "Adapter", param, o, null, elementUtils, typeUtils, accessorInfos,
+                    commandFallback, forHelp, target);
+        } else if (arg != null) {
+            generateArgument(sb, "Adapter", param, arg, null, elementUtils, typeUtils, accessorInfos,
+                    commandFallback, forHelp, target);
+        } else if (ol != null) {
+            generateOptionList(sb, "Adapter", param, ol, null, elementUtils, typeUtils, accessorInfos,
+                    commandFallback, forHelp, target);
+        } else if (a != null) {
+            generateArguments(sb, "Adapter", param, a, null, elementUtils, typeUtils, accessorInfos,
+                    commandFallback, forHelp, target);
+        }
+    }
+
+    private static boolean isCommandInvocationParam(VariableElement param,
+            Elements elementUtils, Types typeUtils) {
+        TypeElement invocationType = elementUtils.getTypeElement("org.aesh.command.invocation.CommandInvocation");
+        if (invocationType == null)
+            return false;
+        return typeUtils.isAssignable(typeUtils.erasure(param.asType()),
+                typeUtils.erasure(invocationType.asType()));
+    }
+
+    /**
+     * Emit the generated adapter: typed parameter fields populated through
+     * the generated accessor, and a direct call on the owner — never
+     * reflection. Invocation parameters are passed straight through.
+     */
+    private static void generateMethodAdapter(StringBuilder sb, String ownerTypeRef,
+            ExecutableElement method, List<? extends VariableElement> params,
+            Elements elementUtils, Types typeUtils) {
+        List<? extends VariableElement> methodParams = method.getParameters();
+        sb.append("    @SuppressWarnings({\"unchecked\", \"rawtypes\"})\n");
+        sb.append("    static final class Adapter implements Command<CommandInvocation> {\n");
+        sb.append("        final ").append(ownerTypeRef).append(" owner;\n");
+        for (int i = 0; i < methodParams.size(); i++) {
+            VariableElement param = methodParams.get(i);
+            if (isCommandInvocationParam(param, elementUtils, typeUtils))
+                continue;
+            sb.append("        ").append(erasedTypeName(param.asType(), typeUtils))
+                    .append(" p").append(i).append(";\n");
+        }
+        sb.append("\n");
+        sb.append("        Adapter(").append(ownerTypeRef).append(" owner) {\n");
+        sb.append("            this.owner = owner;\n");
+        sb.append("        }\n\n");
+        sb.append("        @Override\n");
+        sb.append("        public CommandResult execute(CommandInvocation invocation)")
+                .append(" throws CommandException, InterruptedException {\n");
+        sb.append("            try {\n");
+        StringBuilder call = new StringBuilder();
+        if (method.getModifiers().contains(Modifier.STATIC))
+            call.append(ownerTypeRef);
+        else
+            call.append("owner");
+        call.append(".").append(method.getSimpleName().toString()).append("(");
+        boolean first = true;
+        for (int i = 0; i < methodParams.size(); i++) {
+            if (!first)
+                call.append(", ");
+            first = false;
+            if (isCommandInvocationParam(methodParams.get(i), elementUtils, typeUtils))
+                call.append("invocation");
+            else
+                call.append("p").append(i);
+        }
+        call.append(")");
+        TypeMirror returnType = method.getReturnType();
+        boolean isVoid = returnType.getKind() == TypeKind.VOID
+                || erasedTypeName(returnType, typeUtils).equals("java.lang.Void");
+        if (isVoid) {
+            sb.append("                ").append(call).append(";\n");
+            sb.append("                return CommandResult.SUCCESS;\n");
+        } else {
+            sb.append("                CommandResult result = ").append(call).append(";\n");
+            sb.append("                return result != null ? result : CommandResult.SUCCESS;\n");
+        }
+        sb.append("            }");
+        emitMethodExecuteCatches(sb, method, elementUtils, typeUtils);
+        sb.append("        }\n");
+        sb.append("    }\n\n");
+    }
+
+    /**
+     * Emit catch clauses mirroring the reflection adapter's exception
+     * mapping: declared {@code CommandException}/{@code InterruptedException}
+     * pass through only when the method can actually throw them (otherwise
+     * the catch would not compile); unchecked types always pass through
+     * and anything else wraps in {@code CommandException}.
+     */
+    private static void emitMethodExecuteCatches(StringBuilder sb, ExecutableElement method,
+            Elements elementUtils, Types typeUtils) {
+        boolean catchesCommandException = false;
+        boolean catchesInterrupted = false;
+        TypeElement commandExceptionType = elementUtils.getTypeElement("org.aesh.command.CommandException");
+        TypeElement interruptedType = elementUtils.getTypeElement("java.lang.InterruptedException");
+        for (TypeMirror thrown : method.getThrownTypes()) {
+            TypeMirror erased = typeUtils.erasure(thrown);
+            if (!catchesCommandException && commandExceptionType != null
+                    && (typeUtils.isAssignable(erased, typeUtils.erasure(commandExceptionType.asType()))
+                            || typeUtils.isAssignable(typeUtils.erasure(commandExceptionType.asType()), erased)))
+                catchesCommandException = true;
+            if (!catchesInterrupted && interruptedType != null
+                    && (typeUtils.isAssignable(erased, typeUtils.erasure(interruptedType.asType()))
+                            || typeUtils.isAssignable(typeUtils.erasure(interruptedType.asType()), erased)))
+                catchesInterrupted = true;
+        }
+        if (catchesCommandException)
+            sb.append(" catch (CommandException e) {\n                throw e;\n            }");
+        if (catchesInterrupted)
+            sb.append(" catch (InterruptedException e) {\n                throw e;\n            }");
+        sb.append(" catch (RuntimeException e) {\n                throw e;\n            }");
+        sb.append(" catch (Error e) {\n                throw e;\n            }");
+        sb.append(" catch (Throwable e) {\n");
+        sb.append("                throw new CommandException(e);\n            }\n");
+    }
+
 }

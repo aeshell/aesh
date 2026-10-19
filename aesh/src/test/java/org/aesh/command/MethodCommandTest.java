@@ -25,15 +25,26 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.aesh.command.container.CommandContainer;
+import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainer;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.metadata.MetadataProviderRegistry;
+import org.aesh.command.metadata.MetadataRegistry;
+import org.aesh.command.metadata.MethodCommandMetadataProvider;
 import org.aesh.command.option.Argument;
+import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.complete.AeshCompleteOperation;
@@ -69,7 +80,7 @@ public class MethodCommandTest {
         }
 
         @MethodCommand(description = "run it")
-        public CommandResult run(@Argument(description = "the file") String file) {
+        public CommandResult run(@Argument(description = "the file", paramLabel = "file") String file) {
             seenTarget = file;
             return CommandResult.SUCCESS;
         }
@@ -279,6 +290,21 @@ public class MethodCommandTest {
         }
     }
 
+    @MethodCommand(name = "unnamed", description = "unnamed option")
+    public void unnamedOption(@Option(description = "t") String target) {
+    }
+
+    @Test
+    public void testUnnamedOptionFailsFast() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(this,
+                    MethodCommandTest.class.getMethod("unnamedOption", String.class));
+            fail("expected failure for unnamed @Option");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("explicit name"));
+        }
+    }
+
     @MethodCommand(name = "instanceless", description = "needs an instance")
     public void needsInstance() {
     }
@@ -316,9 +342,389 @@ public class MethodCommandTest {
     @Test
     public void testNullMethodFailsFast() {
         try {
-            new AeshCommandContainerBuilder<CommandInvocation>().create(new Object(), null);
+            new AeshCommandContainerBuilder<CommandInvocation>().create(new Object(), (java.lang.reflect.Method) null);
             fail("expected failure for null method");
         } catch (CommandLineParserException expected) {
         }
+    }
+
+    @Test
+    public void testCreateByNameReflectiveFallback() throws Exception {
+        DeployMethods methods = new DeployMethods();
+        CommandContainer<CommandInvocation> container = new AeshCommandContainerBuilder<CommandInvocation>().create(methods,
+                "deploy");
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder().command(container).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+
+        assertEquals(CommandResult.SUCCESS,
+                runtime.executeCommand("deploy --target prod --count 2"));
+        assertEquals("prod", methods.seenTarget);
+        assertEquals(2, methods.seenCount);
+    }
+
+    @Test
+    public void testCreateByNameAlias() throws Exception {
+        DeployMethods methods = new DeployMethods();
+        CommandContainer<CommandInvocation> container = new AeshCommandContainerBuilder<CommandInvocation>().create(methods,
+                "dep");
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder().command(container).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("dep --target prod"));
+        assertEquals("prod", methods.seenTarget);
+    }
+
+    @Test
+    public void testCreateByNameUnknown() {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(new DeployMethods(), "missing");
+            fail("expected failure for unknown command name");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("missing"));
+        }
+    }
+
+    public static class DupMethods {
+        @MethodCommand(name = "dup", description = "first")
+        public void first() {
+        }
+
+        @MethodCommand(name = "dup", description = "second")
+        public void second() {
+        }
+    }
+
+    @Test
+    public void testCreateByNameAmbiguous() {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(new DupMethods(), "dup");
+            fail("expected failure for ambiguous command name");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("Ambiguous"));
+        }
+    }
+
+    private static final AtomicBoolean generatedUsed = new AtomicBoolean(false);
+
+    private static class MarkerProvider implements MethodCommandMetadataProvider {
+        @Override
+        public Class<?> ownerType() {
+            return DeployMethods.class;
+        }
+
+        @Override
+        public String methodName() {
+            return "deploy";
+        }
+
+        @Override
+        public String commandName() {
+            return "marked";
+        }
+
+        @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public ProcessedCommand buildProcessedCommand(Object owner) {
+            generatedUsed.set(true);
+            try {
+                return ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())
+                        .name("marked")
+                        .description("marked")
+                        .command(new NoopCommand())
+                        .create();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static class NoopCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static class MarkerRegistry implements MetadataRegistry {
+        private final MethodCommandMetadataProvider provider;
+
+        MarkerRegistry(MethodCommandMetadataProvider provider) {
+            this.provider = provider;
+        }
+
+        @Override
+        public org.aesh.command.metadata.CommandMetadataProvider<?> get(String commandClassName) {
+            return null;
+        }
+
+        @Override
+        public List<MethodCommandMetadataProvider> methodProviders(String ownerClassName) {
+            return Collections.singletonList(provider);
+        }
+    }
+
+    @Test
+    public void testCreateByNamePrefersGenerated() throws Exception {
+        generatedUsed.set(false);
+        MarkerRegistry registry = new MarkerRegistry(new MarkerProvider());
+        MetadataProviderRegistry.register(registry);
+        try {
+            CommandContainer<CommandInvocation> container = new AeshCommandContainerBuilder<CommandInvocation>()
+                    .create(new DeployMethods(), "marked");
+            CommandRegistry<CommandInvocation> commandRegistry = AeshCommandRegistryBuilder.builder().command(container)
+                    .create();
+            CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder().commandRegistry(commandRegistry)
+                    .build();
+
+            assertEquals(CommandResult.SUCCESS, runtime.executeCommand("marked"));
+            assertTrue("generated provider must have built the container", generatedUsed.get());
+        } finally {
+            MetadataProviderRegistry.reset();
+        }
+    }
+
+    public static class StaticMethods {
+        static String seenTarget;
+
+        @MethodCommand(name = "sdeploy", description = "static deploy", aliases = { "sdep" })
+        public static void deploy(@Option(name = "target", description = "the target") String target) {
+            seenTarget = target;
+        }
+
+        @MethodCommand(name = "priv", description = "private")
+        private static void hidden() {
+        }
+    }
+
+    public abstract static class AbstractMethods {
+        @MethodCommand(name = "abs", description = "abstract")
+        public abstract void run();
+    }
+
+    private CommandRuntime<CommandInvocation> runtimeForContainer(CommandContainer<CommandInvocation> container) {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder().command(container)
+                .create();
+        return AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+    }
+
+    @Test
+    public void testCreateStaticByNameViaInterface() throws Exception {
+        StaticMethods.seenTarget = null;
+        // Typed as the interface: the method-command overloads must be part of the API, not just the impl
+        CommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandContainer<CommandInvocation> container = builder.create(StaticMethods.class, "sdeploy");
+        CommandRuntime<CommandInvocation> runtime = runtimeForContainer(container);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("sdeploy --target prod"));
+        assertEquals("prod", StaticMethods.seenTarget);
+    }
+
+    @Test
+    public void testCreateStaticByAlias() throws Exception {
+        StaticMethods.seenTarget = null;
+        CommandContainer<CommandInvocation> container = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(StaticMethods.class, "sdep");
+        CommandRuntime<CommandInvocation> runtime = runtimeForContainer(container);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("sdep --target dev"));
+        assertEquals("dev", StaticMethods.seenTarget);
+    }
+
+    @Test
+    public void testCreateByClassRejectsInstanceMethod() {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(DeployMethods.class, "deploy");
+            fail("expected failure: deploy is not static");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("No static @MethodCommand"));
+        }
+    }
+
+    @Test
+    public void testCreateByClassUnknown() {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(StaticMethods.class, "missing");
+            fail("expected failure for unknown command name");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("missing"));
+        }
+    }
+
+    @Test
+    public void testPrivateMethodFailsFast() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(null,
+                    StaticMethods.class.getDeclaredMethod("hidden"));
+            fail("expected failure for private method");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("must not be private"));
+        }
+    }
+
+    @Test
+    public void testAbstractMethodFailsFast() throws Exception {
+        AbstractMethods instance = new AbstractMethods() {
+            @Override
+            public void run() {
+            }
+        };
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(instance,
+                    AbstractMethods.class.getMethod("run"));
+            fail("expected failure for abstract method");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("must not be abstract"));
+        }
+    }
+
+    public static class MultiMethods {
+        List<String> seenIncludes;
+        List<String> seenFiles;
+
+        @MethodCommand(name = "build", description = "build it")
+        public void build(@OptionList(name = "include", description = "includes") List<String> includes,
+                @Arguments(description = "files", paramLabel = "file") List<String> files) {
+            seenIncludes = includes;
+            seenFiles = files;
+        }
+    }
+
+    @Test
+    public void testOptionListAndArguments() throws Exception {
+        MultiMethods methods = new MultiMethods();
+        CommandRuntime<CommandInvocation> runtime = runtimeFor(methods, "build", List.class, List.class);
+
+        assertEquals(CommandResult.SUCCESS,
+                runtime.executeCommand("build --include a --include b x.txt y.txt"));
+        assertEquals(Arrays.asList("a", "b"), methods.seenIncludes);
+        assertEquals(Arrays.asList("x.txt", "y.txt"), methods.seenFiles);
+    }
+
+    @Test
+    public void testOptionListRepeatedExecutionResets() throws Exception {
+        MultiMethods methods = new MultiMethods();
+        CommandRuntime<CommandInvocation> runtime = runtimeFor(methods, "build", List.class, List.class);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("build --include a x.txt"));
+        // No --include on the second run: reset restores the initial null,
+        // exactly like a null-starting List field on a field command
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("build y.txt"));
+        assertEquals(null, methods.seenIncludes);
+        assertEquals(Arrays.asList("y.txt"), methods.seenFiles);
+        // And values still flow on the third run: no stale state either way
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("build --include b z.txt"));
+        assertEquals(Arrays.asList("b"), methods.seenIncludes);
+        assertEquals(Arrays.asList("z.txt"), methods.seenFiles);
+    }
+
+    @MethodCommand(name = "badargs", description = "bad args")
+    public void badArgs(@Arguments(description = "x") String files) {
+    }
+
+    // NOTE: @OptionGroup/@Mixin rejection branches exist in both paths but are
+    // not directly testable: both annotations are @Target(FIELD), so javac
+    // rejects them on parameters before either path ever sees them. The
+    // branches stay as defense-in-depth with a precise message if targets
+    // ever widen.
+
+    @MethodCommand(name = "badlist", description = "bad list")
+    public void badList(@OptionList(name = "include", description = "x") String includes) {
+    }
+
+    @MethodCommand(name = "unnamedlist", description = "unnamed list")
+    public void unnamedList(@OptionList(description = "x") List<String> includes) {
+    }
+
+    @MethodCommand(name = "nolabel", description = "no label")
+    public void noLabel(@Argument(description = "x") String value) {
+    }
+
+    @MethodCommand(name = "nolabels", description = "no labels")
+    public void noLabels(@Arguments(description = "x") List<String> values) {
+    }
+
+    @Test
+    public void testMissingParamLabelFailsFast() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(this,
+                    MethodCommandTest.class.getMethod("noLabel", String.class));
+            fail("expected failure for missing @Argument paramLabel");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("explicit paramLabel"));
+        }
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(this,
+                    MethodCommandTest.class.getMethod("noLabels", List.class));
+            fail("expected failure for missing @Arguments paramLabel");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("explicit paramLabel"));
+        }
+    }
+
+    @Test
+    public void testNonCollectionMultiParamsFailFast() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(this,
+                    MethodCommandTest.class.getMethod("badArgs", String.class));
+            fail("expected failure for non-Collection @Arguments");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("must be an instance of Collection"));
+        }
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(this,
+                    MethodCommandTest.class.getMethod("badList", String.class));
+            fail("expected failure for non-Collection @OptionList");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("must be an instance of Collection"));
+        }
+    }
+
+    @Test
+    public void testUnnamedOptionListFailsFast() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(this,
+                    MethodCommandTest.class.getMethod("unnamedList", List.class));
+            fail("expected failure for unnamed @OptionList");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("explicit name"));
+        }
+    }
+
+    @CommandDefinition(name = "g", description = "group")
+    public static class MethodGroup implements GroupCommand<CommandInvocation> {
+        private final CommandContainer<CommandInvocation> child;
+
+        MethodGroup(CommandContainer<CommandInvocation> child) {
+            this.child = child;
+        }
+
+        @Override
+        public List<Command<CommandInvocation>> getCommands() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<CommandContainer<CommandInvocation>> getParsedCommands() {
+            return Collections.singletonList(child);
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testMethodContainerAsGroupChild() throws Exception {
+        MultiMethods methods = new MultiMethods();
+        CommandContainer<CommandInvocation> methodContainer = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(methods, "build");
+        CommandContainer<CommandInvocation> groupContainer = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new MethodGroup(methodContainer));
+        CommandRuntime<CommandInvocation> runtime = runtimeForContainer(groupContainer);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("g build --include a x.txt"));
+        assertEquals(Arrays.asList("a"), methods.seenIncludes);
+        assertEquals(Arrays.asList("x.txt"), methods.seenFiles);
     }
 }

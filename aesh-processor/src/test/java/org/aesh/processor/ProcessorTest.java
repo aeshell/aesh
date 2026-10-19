@@ -49,6 +49,7 @@ import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.GeneratedProcessedOption;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.metadata.MetadataRegistry;
 import org.junit.Test;
@@ -4216,5 +4217,379 @@ public class ProcessorTest {
             assertTrue("Should mention allowed values",
                     e.getMessage().contains("Allowed values") || e.getMessage().contains("allowed"));
         }
+    }
+
+    // --- Test: @MethodCommand processor support (#680) ---
+
+    private static final String METHOD_OWNER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.MethodCommand;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class DeployOwner {\n" +
+            "    public String lastTarget;\n" +
+            "    public int lastCount;\n" +
+            "    public boolean sawInvocation;\n" +
+            "\n" +
+            "    @MethodCommand(name = \"deploy\", description = \"deploy it\", aliases = {\"dep\"})\n" +
+            "    public void deploy(@Option(name = \"target\", description = \"t\") String target,\n" +
+            "            @Option(name = \"count\", description = \"c\") int count,\n" +
+            "            CommandInvocation invocation) {\n" +
+            "        lastTarget = target;\n" +
+            "        lastCount = count;\n" +
+            "        sawInvocation = invocation != null;\n" +
+            "    }\n" +
+            "\n" +
+            "    @MethodCommand(description = \"run it\")\n" +
+            "    public CommandResult run(@Argument(description = \"f\", paramLabel = \"file\") String file) {\n" +
+            "        lastTarget = file;\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandDiscovery() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.DeployOwner", METHOD_OWNER_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> deployMetadata = result.classLoader.loadClass("test.DeployOwner_deploy_3_AeshMethodMetadata");
+        Class<?> runMetadata = result.classLoader.loadClass("test.DeployOwner_run_1_AeshMethodMetadata");
+
+        org.aesh.command.metadata.MethodCommandMetadataProvider deployProvider = (org.aesh.command.metadata.MethodCommandMetadataProvider) deployMetadata
+                .newInstance();
+        assertEquals("test.DeployOwner", deployProvider.ownerType().getName());
+        assertEquals("deploy", deployProvider.methodName());
+        assertEquals("deploy", deployProvider.commandName());
+        assertEquals(java.util.Collections.singletonList("dep"),
+                java.util.Arrays.asList(deployProvider.commandAliases()));
+
+        org.aesh.command.metadata.MethodCommandMetadataProvider runProvider = (org.aesh.command.metadata.MethodCommandMetadataProvider) runMetadata
+                .newInstance();
+        assertEquals("run", runProvider.methodName());
+        assertEquals("run", runProvider.commandName());
+
+        Class<?> registryClass = result.classLoader.loadClass("test._AeshMetadataRegistry");
+        org.aesh.command.metadata.MetadataRegistry registry = (org.aesh.command.metadata.MetadataRegistry) registryClass
+                .newInstance();
+        java.util.List<org.aesh.command.metadata.MethodCommandMetadataProvider> providers = registry
+                .methodProviders("test.DeployOwner");
+        assertEquals("Registry should expose both method providers", 2, providers.size());
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandGeneratedParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.DeployOwner", METHOD_OWNER_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> ownerClass = result.classLoader.loadClass("test.DeployOwner");
+        Object owner = ownerClass.newInstance();
+        java.lang.reflect.Method method = ownerClass.getMethod("deploy", String.class, int.class, CommandInvocation.class);
+
+        // Reflection path (registry empty in-process: aesh tests never run the processor)
+        AeshCommandContainerBuilder reflectionBuilder = new AeshCommandContainerBuilder();
+        ProcessedCommand reflectionPC = ((org.aesh.command.container.CommandContainer) reflectionBuilder
+                .create(owner, method)).getParser().getProcessedCommand();
+
+        // Generated path
+        Class<?> metadataClass = result.classLoader.loadClass("test.DeployOwner_deploy_3_AeshMethodMetadata");
+        org.aesh.command.metadata.MethodCommandMetadataProvider provider = (org.aesh.command.metadata.MethodCommandMetadataProvider) metadataClass
+                .newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(owner);
+
+        assertEquals("Command name", reflectionPC.name(), generatedPC.name());
+        assertEquals("Command description", reflectionPC.description(), generatedPC.description());
+        assertEquals("Aliases", reflectionPC.getAliases(), generatedPC.getAliases());
+        assertEquals("Number of options",
+                reflectionPC.getOptions().size(), generatedPC.getOptions().size());
+        for (ProcessedOption rOpt : (List<ProcessedOption>) reflectionPC.getOptions()) {
+            ProcessedOption gOpt = findOptionByName(
+                    (List<ProcessedOption>) generatedPC.getOptions(), rOpt.name());
+            assertNotNull("Generated should have option: " + rOpt.name(), gOpt);
+            assertEquals("Option type for " + rOpt.name(), rOpt.type(), gOpt.type());
+            assertEquals("Option required for " + rOpt.name(), rOpt.isRequired(), gOpt.isRequired());
+            assertEquals("Option defaultValues for " + rOpt.name(),
+                    rOpt.getDefaultValues(), gOpt.getDefaultValues());
+        }
+        assertEquals("Help output should match between reflection and generated paths",
+                reflectionPC.printHelp(reflectionPC.name()),
+                generatedPC.printHelp(generatedPC.name()));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandGeneratedExecutesDirectCall() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.DeployOwner", METHOD_OWNER_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> ownerClass = result.classLoader.loadClass("test.DeployOwner");
+        Object owner = ownerClass.newInstance();
+        Class<?> metadataClass = result.classLoader.loadClass("test.DeployOwner_deploy_3_AeshMethodMetadata");
+        org.aesh.command.metadata.MethodCommandMetadataProvider provider = (org.aesh.command.metadata.MethodCommandMetadataProvider) metadataClass
+                .newInstance();
+
+        org.aesh.command.CommandRuntime runtime = methodRuntime(provider.buildProcessedCommand(owner));
+        assertEquals(org.aesh.command.CommandResult.SUCCESS,
+                runtime.executeCommand("deploy --target prod --count 3"));
+        assertEquals("prod", ownerClass.getField("lastTarget").get(owner));
+        assertEquals(3, ownerClass.getField("lastCount").getInt(owner));
+        assertEquals(true, ownerClass.getField("sawInvocation").getBoolean(owner));
+
+        // The generated executor must call the method directly, never reflectively
+        Path generatedSource = result.outputDir.resolve("test/DeployOwner_deploy_3_AeshMethodMetadata.java");
+        assertTrue("Generated source should be available", Files.exists(generatedSource));
+        String source = new String(Files.readAllBytes(generatedSource), StandardCharsets.UTF_8);
+        assertTrue("Generated code should call the method directly",
+                source.contains("owner.deploy("));
+        assertFalse("Generated code must not use Method.invoke",
+                source.contains("Method.invoke"));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandRepeatedExecutionNoStaleValues() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.DeployOwner", METHOD_OWNER_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> ownerClass = result.classLoader.loadClass("test.DeployOwner");
+        Object owner = ownerClass.newInstance();
+        Class<?> metadataClass = result.classLoader.loadClass("test.DeployOwner_deploy_3_AeshMethodMetadata");
+        org.aesh.command.metadata.MethodCommandMetadataProvider provider = (org.aesh.command.metadata.MethodCommandMetadataProvider) metadataClass
+                .newInstance();
+
+        org.aesh.command.CommandRuntime runtime = methodRuntime(provider.buildProcessedCommand(owner));
+        assertEquals(org.aesh.command.CommandResult.SUCCESS,
+                runtime.executeCommand("deploy --target a --count 1"));
+        assertEquals(org.aesh.command.CommandResult.SUCCESS,
+                runtime.executeCommand("deploy --target b"));
+        assertEquals("b", ownerClass.getField("lastTarget").get(owner));
+        assertEquals("unset count must reset, not linger", 0, ownerClass.getField("lastCount").getInt(owner));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandValidationErrors() throws Exception {
+        String pkg = "package test;\n"
+                + "import org.aesh.command.MethodCommand;\n"
+                + "import org.aesh.command.option.Option;\n";
+        CompilationResult privateMethod = compileWithProcessor(new InMemorySource("test.PrivateOwner",
+                pkg + "public class PrivateOwner {\n"
+                        + "    @MethodCommand(name = \"x\", description = \"x\")\n"
+                        + "    private void x() {}\n"
+                        + "}\n"));
+        assertFalse("Private method must fail", privateMethod.success);
+        assertTrue("Should mention visibility: " + privateMethod.diagnostics,
+                privateMethod.diagnostics.contains("must not be private"));
+
+        CompilationResult badReturn = compileWithProcessor(new InMemorySource("test.BadReturnOwner",
+                pkg + "public class BadReturnOwner {\n"
+                        + "    @MethodCommand(name = \"x\", description = \"x\")\n"
+                        + "    public String x() { return \"x\"; }\n"
+                        + "}\n"));
+        assertFalse("Bad return type must fail", badReturn.success);
+        assertTrue("Should mention return type: " + badReturn.diagnostics,
+                badReturn.diagnostics.contains("void or CommandResult"));
+
+        CompilationResult bareParam = compileWithProcessor(new InMemorySource("test.BareParamOwner",
+                pkg + "public class BareParamOwner {\n"
+                        + "    @MethodCommand(name = \"x\", description = \"x\")\n"
+                        + "    public void x(String value) {}\n"
+                        + "}\n"));
+        assertFalse("Bare parameter must fail", bareParam.success);
+        assertTrue("Should mention annotation: " + bareParam.diagnostics,
+                bareParam.diagnostics.contains("@OptionList or @Arguments"));
+
+        CompilationResult duplicates = compileWithProcessor(new InMemorySource("test.DupOwner",
+                pkg + "public class DupOwner {\n"
+                        + "    @MethodCommand(name = \"dup\", description = \"x\")\n"
+                        + "    public void first() {}\n"
+                        + "    @MethodCommand(name = \"dup\", description = \"x\")\n"
+                        + "    public void second() {}\n"
+                        + "}\n"));
+        assertFalse("Duplicate names must fail", duplicates.success);
+        assertTrue("Should mention duplication: " + duplicates.diagnostics,
+                duplicates.diagnostics.contains("Duplicate command name"));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandExplicitOptionNameRequired() throws Exception {
+        // Unnamed @Option would derive from the parameter name, which only
+        // exists with -parameters: the same source would expose a different
+        // CLI surface per build flags. Both paths reject it explicitly.
+        String source = "package test;\n"
+                + "import org.aesh.command.MethodCommand;\n"
+                + "import org.aesh.command.option.Option;\n"
+                + "public class UnnamedOwner {\n"
+                + "    @MethodCommand(name = \"run\", description = \"run\")\n"
+                + "    public void run(@Option(description = \"t\") String target) {}\n"
+                + "}\n";
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.UnnamedOwner", source));
+        assertFalse("Unnamed @Option must fail", result.success);
+        assertTrue("Should mention explicit name: " + result.diagnostics,
+                result.diagnostics.contains("explicit name"));
+    }
+
+    // --- Test: @OptionList/@Arguments on @MethodCommand parameters (#680) ---
+
+    private static final String MULTI_OWNER_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "\n" +
+            "import org.aesh.command.MethodCommand;\n" +
+            "import org.aesh.command.option.Arguments;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "\n" +
+            "public class MultiOwner {\n" +
+            "    public List<String> lastIncludes;\n" +
+            "    public List<String> lastFiles;\n" +
+            "\n" +
+            "    @MethodCommand(name = \"build\", description = \"build it\")\n" +
+            "    public void build(@OptionList(name = \"include\", description = \"includes\") List<String> includes,\n" +
+            "            @Arguments(description = \"files\", paramLabel = \"file\") List<String> files) {\n" +
+            "        lastIncludes = includes;\n" +
+            "        lastFiles = files;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandMultiParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.MultiOwner", MULTI_OWNER_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> ownerClass = result.classLoader.loadClass("test.MultiOwner");
+        Object owner = ownerClass.newInstance();
+        java.lang.reflect.Method method = ownerClass.getMethod("build", List.class, List.class);
+
+        // Reflection path (registry empty in-process: aesh tests never run the processor)
+        AeshCommandContainerBuilder reflectionBuilder = new AeshCommandContainerBuilder();
+        ProcessedCommand reflectionPC = ((org.aesh.command.container.CommandContainer) reflectionBuilder
+                .create(owner, method)).getParser().getProcessedCommand();
+
+        // Generated path
+        Class<?> metadataClass = result.classLoader.loadClass("test.MultiOwner_build_2_AeshMethodMetadata");
+        org.aesh.command.metadata.MethodCommandMetadataProvider provider = (org.aesh.command.metadata.MethodCommandMetadataProvider) metadataClass
+                .newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(owner);
+
+        assertEquals("Command name", reflectionPC.name(), generatedPC.name());
+        assertEquals("Number of options",
+                reflectionPC.getOptions().size(), generatedPC.getOptions().size());
+        for (ProcessedOption rOpt : (List<ProcessedOption>) reflectionPC.getOptions()) {
+            ProcessedOption gOpt = findOptionByName(
+                    (List<ProcessedOption>) generatedPC.getOptions(), rOpt.name());
+            assertNotNull("Generated should have option: " + rOpt.name(), gOpt);
+            assertEquals("Option type for " + rOpt.name(), rOpt.type(), gOpt.type());
+            assertEquals("Option kind for " + rOpt.name(),
+                    rOpt.getOptionType(), gOpt.getOptionType());
+        }
+        assertEquals("Arguments should match",
+                reflectionPC.getArguments().type(), generatedPC.getArguments().type());
+        assertEquals("Help output should match between reflection and generated paths",
+                reflectionPC.printHelp(reflectionPC.name()),
+                generatedPC.printHelp(generatedPC.name()));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandMultiExecutes() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.MultiOwner", MULTI_OWNER_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> ownerClass = result.classLoader.loadClass("test.MultiOwner");
+        Object owner = ownerClass.newInstance();
+        Class<?> metadataClass = result.classLoader.loadClass("test.MultiOwner_build_2_AeshMethodMetadata");
+        org.aesh.command.metadata.MethodCommandMetadataProvider provider = (org.aesh.command.metadata.MethodCommandMetadataProvider) metadataClass
+                .newInstance();
+
+        org.aesh.command.CommandRuntime runtime = methodRuntime(provider.buildProcessedCommand(owner));
+        assertEquals(org.aesh.command.CommandResult.SUCCESS,
+                runtime.executeCommand("build --include a --include b x.txt y.txt"));
+        assertEquals(java.util.Arrays.asList("a", "b"),
+                ownerClass.getField("lastIncludes").get(owner));
+        assertEquals(java.util.Arrays.asList("x.txt", "y.txt"),
+                ownerClass.getField("lastFiles").get(owner));
+
+        // The generated executor must call the method directly, never reflectively
+        String source = new String(Files.readAllBytes(
+                result.outputDir.resolve("test/MultiOwner_build_2_AeshMethodMetadata.java")),
+                StandardCharsets.UTF_8);
+        assertTrue("Generated code should call the method directly",
+                source.contains("owner.build("));
+        assertFalse("Generated code must not use Method.invoke",
+                source.contains("Method.invoke"));
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testMethodCommandMultiValidationErrors() throws Exception {
+        String pkg = "package test;\n"
+                + "import java.util.List;\n"
+                + "import org.aesh.command.MethodCommand;\n"
+                + "import org.aesh.command.option.Arguments;\n"
+                + "import org.aesh.command.option.OptionGroup;\n"
+                + "import org.aesh.command.option.Mixin;\n"
+                + "import org.aesh.command.option.OptionList;\n";
+        CompilationResult unnamedList = compileWithProcessor(new InMemorySource("test.UnnamedListOwner",
+                pkg + "public class UnnamedListOwner {\n"
+                        + "    @MethodCommand(name = \"x\", description = \"x\")\n"
+                        + "    public void x(@OptionList(description = \"x\") List<String> values) {}\n"
+                        + "}\n"));
+        assertFalse("Unnamed @OptionList must fail", unnamedList.success);
+        assertTrue("Should mention explicit name: " + unnamedList.diagnostics,
+                unnamedList.diagnostics.contains("explicit name"));
+
+        CompilationResult bareArguments = compileWithProcessor(new InMemorySource("test.BareArgsOwner",
+                pkg + "public class BareArgsOwner {\n"
+                        + "    @MethodCommand(name = \"x\", description = \"x\")\n"
+                        + "    public void x(@Arguments(description = \"x\") String value) {}\n"
+                        + "}\n"));
+        assertFalse("Non-Collection @Arguments must fail", bareArguments.success);
+        assertTrue("Should mention Collection: " + bareArguments.diagnostics,
+                bareArguments.diagnostics.contains("instance of Collection"));
+
+        CompilationResult noLabel = compileWithProcessor(new InMemorySource("test.NoLabelOwner",
+                pkg + "public class NoLabelOwner {\n"
+                        + "    @MethodCommand(name = \"x\", description = \"x\")\n"
+                        + "    public void x(@Arguments(description = \"x\") List<String> files) {}\n"
+                        + "}\n"));
+        assertFalse("Missing paramLabel must fail", noLabel.success);
+        assertTrue("Should mention paramLabel: " + noLabel.diagnostics,
+                noLabel.diagnostics.contains("explicit paramLabel"));
+
+        CompilationResult bareList = compileWithProcessor(new InMemorySource("test.BareListOwner",
+                pkg + "public class BareListOwner {\n"
+                        + "    @MethodCommand(name = \"x\", description = \"x\")\n"
+                        + "    public void x(@OptionList(name = \"v\", description = \"x\") String value) {}\n"
+                        + "}\n"));
+        assertFalse("Non-Collection @OptionList must fail", bareList.success);
+        assertTrue("Should mention Collection: " + bareList.diagnostics,
+                bareList.diagnostics.contains("instance of Collection"));
+        // NOTE: @OptionGroup/@Mixin rejection branches exist in validateMethod
+        // but are not directly testable: both annotations are @Target(FIELD),
+        // so javac rejects them on parameters ("annotation interface not
+        // applicable") before the processor's validation ever runs. The
+        // branches stay as defense-in-depth if targets ever widen.
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private org.aesh.command.CommandRuntime methodRuntime(ProcessedCommand processedCommand) throws Exception {
+        org.aesh.command.container.CommandContainer container = new org.aesh.command.impl.container.AeshCommandContainer(
+                new org.aesh.command.impl.parser.AeshCommandLineParser(processedCommand));
+        org.aesh.command.impl.registry.MutableCommandRegistryImpl registry = new org.aesh.command.impl.registry.MutableCommandRegistryImpl<>();
+        registry.addCommand(container);
+        return org.aesh.command.AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
     }
 }

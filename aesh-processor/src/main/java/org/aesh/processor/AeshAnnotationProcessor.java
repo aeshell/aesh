@@ -60,7 +60,8 @@ import org.aesh.command.CommandDefinition;
  * @author Aesh team
  */
 @SupportedAnnotationTypes({
-        "org.aesh.command.CommandDefinition"
+        "org.aesh.command.CommandDefinition",
+        "org.aesh.command.MethodCommand"
 })
 @SupportedOptions({
         AeshAnnotationProcessor.OPT_PROJECT,
@@ -79,6 +80,11 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     private Types typeUtils;
     /** Pairs of (binaryClassName, metadataSimpleName) for the registry switch. */
     private final List<String[]> registryEntries = new ArrayList<>();
+    /**
+     * Method-command providers by owner binary name, each entry a
+     * (methodName, metadataClassName) pair for the registry switch.
+     */
+    private final Map<String, List<String[]>> methodRegistryEntries = new LinkedHashMap<>();
     private String registryPackage;
     private boolean registryGenerated;
     /** Private fields needing reflection config, grouped by declaring class name. */
@@ -107,7 +113,7 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver()) {
             // Write resource files in the final round (resources don't trigger the warning)
-            if (!registryEntries.isEmpty()) {
+            if (!registryEntries.isEmpty() || !methodRegistryEntries.isEmpty()) {
                 writeServiceFile();
                 writeNativeImageConfigs();
             }
@@ -134,9 +140,41 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
             }
         }
 
+        Map<TypeElement, List<ExecutableElement>> methodElements = new LinkedHashMap<>();
+        for (Element element : roundEnv.getElementsAnnotatedWith(
+                org.aesh.command.MethodCommand.class)) {
+            if (element.getKind() != ElementKind.METHOD)
+                continue;
+            ExecutableElement method = (ExecutableElement) element;
+            Element enclosing = method.getEnclosingElement();
+            if (!(enclosing instanceof TypeElement))
+                continue;
+            methodElements.computeIfAbsent((TypeElement) enclosing, k -> new ArrayList<>()).add(method);
+        }
+
+        boolean methodsSeen = false;
+        for (Map.Entry<TypeElement, List<ExecutableElement>> entry : methodElements.entrySet()) {
+            methodsSeen = true;
+            List<ExecutableElement> valid = new ArrayList<>();
+            for (ExecutableElement method : entry.getValue()) {
+                if (validateMethod(method))
+                    valid.add(method);
+            }
+            valid = withoutDuplicateCommands(entry.getKey(), valid);
+            for (ExecutableElement method : valid) {
+                try {
+                    generateMethodProvider(entry.getKey(), method);
+                } catch (IOException e) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "Failed to generate method metadata provider: " + e.getMessage(), method);
+                }
+            }
+        }
+
         // Generate the registry source file in the same round as the providers,
         // not in the final round, to avoid javac's "created in the last round" warning (#492).
-        if (!registryEntries.isEmpty() && !commandElements.isEmpty() && !registryGenerated) {
+        if ((!registryEntries.isEmpty() || !methodRegistryEntries.isEmpty())
+                && (!commandElements.isEmpty() || methodsSeen) && !registryGenerated) {
             generateRegistryClass();
             registryGenerated = true;
         }
@@ -337,6 +375,252 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         collectPrivateFieldsForReflectConfig(fields);
     }
 
+    private void generateMethodProvider(TypeElement owner, ExecutableElement method) throws IOException {
+        String ownerQualified = owner.getQualifiedName().toString();
+        String packageName = elementUtils.getPackageOf(owner).getQualifiedName().toString();
+
+        String ownerTypeRef;
+        if (packageName.isEmpty()) {
+            ownerTypeRef = ownerQualified;
+        } else {
+            ownerTypeRef = ownerQualified.substring(packageName.length() + 1);
+        }
+        String ownerSimple = ownerTypeRef.replace('.', '_');
+        String methodName = method.getSimpleName().toString();
+        // Arity keeps overloads collision-free: same name plus same arity
+        // cannot overload in Java, so (name, arity) is unique per owner.
+        String metadataClassName = ownerSimple + "_" + methodName + "_"
+                + method.getParameters().size() + "_AeshMethodMetadata";
+        String fullMetadataName = packageName.isEmpty() ? metadataClassName : packageName + "." + metadataClassName;
+
+        String code = CodeGenerator.generateMethodProvider(
+                packageName, ownerTypeRef, metadataClassName, method, elementUtils, typeUtils);
+
+        JavaFileObject sourceFile = filer.createSourceFile(fullMetadataName, method);
+        try (Writer writer = sourceFile.openWriter()) {
+            writer.write(code);
+        }
+
+        String binaryName = elementUtils.getBinaryName(owner).toString();
+        methodRegistryEntries.computeIfAbsent(binaryName, k -> new ArrayList<>())
+                .add(new String[] { methodName, fullMetadataName });
+
+        if (registryPackage == null) {
+            registryPackage = packageName;
+        }
+    }
+
+    /**
+     * Validate one {@code @MethodCommand} method. Mirrors the reflection
+     * path's fail-fast rules so both paths reject the same shapes.
+     */
+    private boolean validateMethod(ExecutableElement method) {
+        boolean valid = true;
+
+        if (method.getSimpleName().contentEquals("<init>")) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "@MethodCommand must annotate a method, not a constructor", method);
+            return false;
+        }
+        if (method.getModifiers().contains(Modifier.ABSTRACT)) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "@MethodCommand method must not be abstract", method);
+            valid = false;
+        }
+        if (method.getModifiers().contains(Modifier.PRIVATE)) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "@MethodCommand method must not be private: generated code calls it directly. "
+                            + "Use package-private or public visibility.",
+                    method);
+            valid = false;
+        }
+
+        TypeMirror returnType = method.getReturnType();
+        boolean voidLike = returnType.getKind() == TypeKind.VOID
+                || returnType.toString().equals("java.lang.Void");
+        TypeMirror commandResultType = elementUtils
+                .getTypeElement(org.aesh.command.CommandResult.class.getCanonicalName()).asType();
+        if (!voidLike && !typeUtils.isAssignable(typeUtils.erasure(returnType),
+                typeUtils.erasure(commandResultType))) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "@MethodCommand method must return void or CommandResult", method);
+            valid = false;
+        }
+
+        TypeMirror invocationType = elementUtils
+                .getTypeElement("org.aesh.command.invocation.CommandInvocation").asType();
+        TypeMirror collectionType = elementUtils
+                .getTypeElement(Collection.class.getCanonicalName()).asType();
+        for (VariableElement param : method.getParameters()) {
+            boolean isInvocation = typeUtils.isAssignable(typeUtils.erasure(param.asType()),
+                    typeUtils.erasure(invocationType));
+            boolean hasOption = param.getAnnotation(org.aesh.command.option.Option.class) != null;
+            boolean hasArgument = param.getAnnotation(org.aesh.command.option.Argument.class) != null;
+            boolean hasOptionList = param.getAnnotation(org.aesh.command.option.OptionList.class) != null;
+            boolean hasArguments = param.getAnnotation(org.aesh.command.option.Arguments.class) != null;
+            if (isInvocation) {
+                if (hasOption || hasArgument || hasOptionList || hasArguments) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "CommandInvocation parameter must not carry"
+                                    + " @Option/@Argument/@OptionList/@Arguments: "
+                                    + param.getSimpleName(),
+                            method);
+                    valid = false;
+                }
+                continue;
+            }
+            if (param.getAnnotation(org.aesh.command.option.OptionGroup.class) != null
+                    || param.getAnnotation(org.aesh.command.option.Mixin.class) != null) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "Only @Option, @Argument, @OptionList and @Arguments are supported"
+                                + " on @MethodCommand parameters: "
+                                + param.getSimpleName(),
+                        method);
+                valid = false;
+                continue;
+            }
+            if (!hasOption && !hasArgument && !hasOptionList && !hasArguments) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "Method parameter must be annotated with @Option, @Argument,"
+                                + " @OptionList or @Arguments: "
+                                + param.getSimpleName(),
+                        method);
+                valid = false;
+                continue;
+            }
+            if (hasOption) {
+                org.aesh.command.option.Option option = param.getAnnotation(org.aesh.command.option.Option.class);
+                if (option.name().length() < 1) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "@Option on @MethodCommand parameters requires an explicit name: "
+                                    + param.getSimpleName(),
+                            method);
+                    valid = false;
+                    continue;
+                }
+            }
+            if (hasOptionList) {
+                org.aesh.command.option.OptionList optionList = param.getAnnotation(org.aesh.command.option.OptionList.class);
+                if (optionList.name().length() < 1) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "@OptionList on @MethodCommand parameters requires an explicit name: "
+                                    + param.getSimpleName(),
+                            method);
+                    valid = false;
+                    continue;
+                }
+                if (!typeUtils.isAssignable(typeUtils.erasure(param.asType()),
+                        typeUtils.erasure(collectionType))) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "OptionList parameter must be an instance of Collection: "
+                                    + param.getSimpleName(),
+                            method);
+                    valid = false;
+                }
+            }
+            if (hasArguments && !typeUtils.isAssignable(typeUtils.erasure(param.asType()),
+                    typeUtils.erasure(collectionType))) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "Arguments parameter must be an instance of Collection: "
+                                + param.getSimpleName(),
+                        method);
+                valid = false;
+            }
+            if (hasArguments) {
+                org.aesh.command.option.Arguments arguments = param.getAnnotation(org.aesh.command.option.Arguments.class);
+                if (arguments.paramLabel().length() < 1) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "@Arguments on @MethodCommand parameters requires an explicit paramLabel: "
+                                    + param.getSimpleName(),
+                            method);
+                    valid = false;
+                }
+            }
+            if (hasArgument && typeUtils.isAssignable(typeUtils.erasure(param.asType()),
+                    typeUtils.erasure(collectionType))) {
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "Argument parameter can not be an instance of Collection: "
+                                + param.getSimpleName(),
+                        method);
+                valid = false;
+            }
+            if (hasArgument) {
+                org.aesh.command.option.Argument argument = param.getAnnotation(org.aesh.command.option.Argument.class);
+                if (argument.paramLabel().length() < 1) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "@Argument on @MethodCommand parameters requires an explicit paramLabel: "
+                                    + param.getSimpleName(),
+                            method);
+                    valid = false;
+                }
+            }
+        }
+
+        if (valid) {
+            List<VariableElement> params = new ArrayList<>();
+            for (VariableElement param : method.getParameters())
+                params.add(param);
+            Element enclosing = method.getEnclosingElement();
+            if (enclosing instanceof TypeElement)
+                validatePositionalIndexes((TypeElement) enclosing, params);
+        }
+
+        return valid;
+    }
+
+    /**
+     * Drop methods whose CLI names or aliases collide within one owner,
+     * reporting each collision. Mirrors the fail-fast duplicate rule: the
+     * command line cannot address two methods by one name.
+     */
+    private List<ExecutableElement> withoutDuplicateCommands(TypeElement owner,
+            List<ExecutableElement> methods) {
+        Map<String, List<ExecutableElement>> byName = new LinkedHashMap<>();
+        for (ExecutableElement method : methods) {
+            for (String cliName : methodCliNames(method)) {
+                byName.computeIfAbsent(cliName, k -> new ArrayList<>()).add(method);
+            }
+        }
+        List<ExecutableElement> duplicates = new ArrayList<>();
+        for (Map.Entry<String, List<ExecutableElement>> entry : byName.entrySet()) {
+            if (entry.getValue().size() > 1) {
+                for (ExecutableElement method : entry.getValue()) {
+                    messager.printMessage(Diagnostic.Kind.ERROR,
+                            "Duplicate command name '" + entry.getKey() + "' on "
+                                    + owner.getQualifiedName(),
+                            method);
+                    if (!duplicates.contains(method))
+                        duplicates.add(method);
+                }
+            }
+        }
+        List<ExecutableElement> valid = new ArrayList<>(methods);
+        valid.removeAll(duplicates);
+        return valid;
+    }
+
+    private List<String> methodCliNames(ExecutableElement method) {
+        List<String> names = new ArrayList<>();
+        String name = CodeGenerator.methodCommandName(method);
+        names.add(name);
+        for (AnnotationMirror mirror : method.getAnnotationMirrors()) {
+            String mirrorType = ((TypeElement) mirror.getAnnotationType().asElement())
+                    .getQualifiedName().toString();
+            if (mirrorType.equals(org.aesh.command.MethodCommand.class.getCanonicalName())) {
+                for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
+                        .getElementValues().entrySet()) {
+                    if (entry.getKey().getSimpleName().toString().equals("aliases")) {
+                        @SuppressWarnings("unchecked")
+                        List<? extends AnnotationValue> values = (List<? extends AnnotationValue>) entry.getValue().getValue();
+                        for (AnnotationValue value : values)
+                            names.add(String.valueOf(value.getValue()));
+                    }
+                }
+            }
+        }
+        return names;
+    }
+
     @SuppressWarnings("unchecked")
     private boolean hasGroupCommands(TypeElement element) {
         for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
@@ -451,7 +735,7 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
 
     private void generateRegistryClass() {
         String pkg = registryPackage != null ? registryPackage : "";
-        String registryCode = CodeGenerator.generateRegistry(pkg, registryEntries);
+        String registryCode = CodeGenerator.generateRegistry(pkg, registryEntries, methodRegistryEntries);
         String fullRegistryName = pkg.isEmpty() ? "_AeshMetadataRegistry" : pkg + "._AeshMetadataRegistry";
 
         try {

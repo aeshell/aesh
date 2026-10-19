@@ -26,6 +26,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -53,6 +54,7 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.metadata.MetadataProviderRegistry;
+import org.aesh.command.metadata.MethodCommandMetadataProvider;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.CompletionFallback;
@@ -109,6 +111,82 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     }
 
     /**
+     * Build a container for a {@code @MethodCommand} command identified by
+     * its command name, to be invoked on the caller-supplied owner object.
+     * Generated metadata is preferred: when a processor-generated provider
+     * matches, the method executes through a direct call. Otherwise the
+     * owner's methods are scanned reflectively as a fallback.
+     *
+     * @param owner the object the method is invoked on
+     * @param commandName the command name or alias
+     * @return a container whose command executes the method
+     * @throws CommandLineParserException if no matching method serves as a command
+     */
+    @Override
+    public CommandContainer<CI> create(Object owner, String commandName) throws CommandLineParserException {
+        if (owner == null)
+            throw new CommandLineParserException("Owner must not be null");
+        if (commandName == null || commandName.isEmpty())
+            throw new CommandLineParserException("Command name must not be empty");
+        List<MethodCommandMetadataProvider> matches = new ArrayList<>();
+        for (MethodCommandMetadataProvider provider : methodProvidersFor(owner.getClass())) {
+            if (provider.commandName().equals(commandName))
+                matches.add(provider);
+            else {
+                for (String alias : provider.commandAliases()) {
+                    if (alias.equals(commandName)) {
+                        matches.add(provider);
+                        break;
+                    }
+                }
+            }
+        }
+        if (matches.size() > 1)
+            throw new CommandLineParserException(
+                    "Ambiguous command name '" + commandName + "': matched "
+                            + matches.size() + " methods");
+        if (matches.size() == 1)
+            return containerFromMethodProvider(matches.get(0), owner);
+        return createFromMethodScan(owner, commandName);
+    }
+
+    @Override
+    public CommandContainer<CI> create(Class<?> ownerClass, String commandName)
+            throws CommandLineParserException {
+        if (ownerClass == null)
+            throw new CommandLineParserException("Owner class must not be null");
+        if (commandName == null || commandName.isEmpty())
+            throw new CommandLineParserException("Command name must not be empty");
+        List<Method> matches = new ArrayList<>();
+        for (Method candidate : ownerClass.getMethods()) {
+            if (!Modifier.isStatic(candidate.getModifiers()))
+                continue;
+            MethodCommand command = candidate.getAnnotation(MethodCommand.class);
+            if (command == null)
+                continue;
+            String cliName = command.name().length() < 1 ? candidate.getName() : command.name();
+            if (cliName.equals(commandName)) {
+                matches.add(candidate);
+                continue;
+            }
+            for (String alias : command.aliases()) {
+                if (alias.equals(commandName)) {
+                    matches.add(candidate);
+                    break;
+                }
+            }
+        }
+        if (matches.isEmpty())
+            throw new CommandLineParserException(
+                    "No static @MethodCommand named '" + commandName + "' on " + ownerClass.getName());
+        if (matches.size() > 1)
+            throw new CommandLineParserException(
+                    "Ambiguous command name '" + commandName + "': matched "
+                            + matches.size() + " methods");
+        return create(null, matches.get(0));
+    }
+
+    /**
      * Build a container for a {@code @MethodCommand}-annotated method, to be
      * invoked on the caller-supplied instance. The instance is shared across
      * executions, exactly like instance-registered field commands; for static
@@ -126,6 +204,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
      * @return a container whose command executes the method
      * @throws CommandLineParserException if the method cannot serve as a command
      */
+    @Override
     public CommandContainer<CI> create(Object instance, Method method) throws CommandLineParserException {
         if (method == null)
             throw new CommandLineParserException("Method must not be null");
@@ -133,6 +212,13 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         if (command == null)
             throw new CommandLineParserException(
                     "Method must be annotated with @MethodCommand: " + method);
+        if (Modifier.isPrivate(method.getModifiers()))
+            throw new CommandLineParserException(
+                    "@MethodCommand method must not be private: use public, protected or package-private"
+                            + " visibility: " + method);
+        if (Modifier.isAbstract(method.getModifiers()))
+            throw new CommandLineParserException(
+                    "@MethodCommand method must not be abstract: " + method);
         if (instance == null && !Modifier.isStatic(method.getModifiers()))
             throw new CommandLineParserException(
                     "Non-static @MethodCommand method requires an instance: " + method);
@@ -141,6 +227,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 && !CommandResult.class.isAssignableFrom(returnType))
             throw new CommandLineParserException(
                     "@MethodCommand method must return void or CommandResult: " + method);
+        MethodCommandMetadataProvider generated = findMethodProvider(method);
+        if (generated != null)
+            return containerFromMethodProvider(generated, instance);
         method.setAccessible(true);
         String name = command.name().length() < 1 ? method.getName() : command.name();
         Object[] slots = new Object[method.getParameterCount()];
@@ -156,6 +245,83 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         AeshCommandContainer<CI> container = new AeshCommandContainer<>(new AeshCommandLineParser<>(processedCommand));
         applyDefaultValueProvider(container);
         return container;
+    }
+
+    /**
+     * Collect generated method-command providers for a class, walking
+     * superclasses so proxied or extended owners resolve like the
+     * class-command hierarchy walk does.
+     */
+    private static List<MethodCommandMetadataProvider> methodProvidersFor(Class<?> ownerClass) {
+        List<MethodCommandMetadataProvider> result = new ArrayList<>();
+        for (Class<?> current = ownerClass; current != null && current != Object.class; current = current.getSuperclass()) {
+            result.addAll(MetadataProviderRegistry.getMethodProviders(current));
+        }
+        return result;
+    }
+
+    /**
+     * Find the generated provider whose CLI name matches the given method's
+     * own annotation, or null when none matches. Matching by CLI name (not
+     * Java name) keeps overloads with distinct command names precise.
+     */
+    private static MethodCommandMetadataProvider findMethodProvider(Method method) {
+        MethodCommand command = method.getAnnotation(MethodCommand.class);
+        if (command == null)
+            return null;
+        String cliName = command.name().length() < 1 ? method.getName() : command.name();
+        List<MethodCommandMetadataProvider> matches = new ArrayList<>();
+        for (MethodCommandMetadataProvider provider : methodProvidersFor(method.getDeclaringClass())) {
+            if (provider.commandName().equals(cliName))
+                matches.add(provider);
+        }
+        if (matches.size() > 1)
+            return null;
+        return matches.isEmpty() ? null : matches.get(0);
+    }
+
+    @SuppressWarnings("unchecked")
+    private AeshCommandContainer<CI> containerFromMethodProvider(MethodCommandMetadataProvider provider,
+            Object owner) throws CommandLineParserException {
+        ProcessedCommand<Command<CI>, CI> processedCommand = (ProcessedCommand<Command<CI>, CI>) provider
+                .buildProcessedCommand(owner);
+        AeshCommandContainer<CI> container = new AeshCommandContainer<>(new AeshCommandLineParser<>(processedCommand));
+        applyDefaultValueProvider(container);
+        return container;
+    }
+
+    /**
+     * Reflective fallback for {@link #create(Object, String)} when no
+     * generated provider matches: scan the owner's methods for a
+     * {@code @MethodCommand} with a matching name or alias.
+     */
+    private CommandContainer<CI> createFromMethodScan(Object owner, String commandName)
+            throws CommandLineParserException {
+        List<Method> matches = new ArrayList<>();
+        for (Method candidate : owner.getClass().getMethods()) {
+            MethodCommand command = candidate.getAnnotation(MethodCommand.class);
+            if (command == null)
+                continue;
+            String cliName = command.name().length() < 1 ? candidate.getName() : command.name();
+            if (cliName.equals(commandName)) {
+                matches.add(candidate);
+                continue;
+            }
+            for (String alias : command.aliases()) {
+                if (alias.equals(commandName)) {
+                    matches.add(candidate);
+                    break;
+                }
+            }
+        }
+        if (matches.isEmpty())
+            throw new CommandLineParserException(
+                    "No @MethodCommand named '" + commandName + "' on " + owner.getClass().getName());
+        if (matches.size() > 1)
+            throw new CommandLineParserException(
+                    "Ambiguous command name '" + commandName + "': matched "
+                            + matches.size() + " methods");
+        return create(owner, matches.get(0));
     }
 
     @SuppressWarnings("unchecked")
@@ -398,20 +564,31 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         for (int i = 0; i < parameters.length; i++) {
             Parameter param = parameters[i];
             if (CommandInvocation.class.isAssignableFrom(param.getType())) {
-                if (param.getAnnotation(Option.class) != null || param.getAnnotation(Argument.class) != null)
+                if (param.getAnnotation(Option.class) != null || param.getAnnotation(Argument.class) != null
+                        || param.getAnnotation(OptionList.class) != null
+                        || param.getAnnotation(Arguments.class) != null)
                     throw new CommandLineParserException(
-                            "CommandInvocation parameter must not carry @Option/@Argument: "
+                            "CommandInvocation parameter must not carry @Option/@Argument/@OptionList/@Arguments: "
                                     + param.getName() + " in " + method);
                 continue;
             }
-            if (param.getAnnotation(OptionList.class) != null || param.getAnnotation(OptionGroup.class) != null
-                    || param.getAnnotation(Arguments.class) != null || param.getAnnotation(Mixin.class) != null)
+            if (param.getAnnotation(OptionGroup.class) != null || param.getAnnotation(Mixin.class) != null)
                 throw new CommandLineParserException(
-                        "Only @Option and @Argument are supported on @MethodCommand parameters: "
+                        "Only @Option, @Argument, @OptionList and @Arguments are supported"
+                                + " on @MethodCommand parameters: "
                                 + param.getName() + " in " + method);
             Option o;
             Argument arg;
+            OptionList ol;
+            Arguments a;
             if ((o = param.getAnnotation(Option.class)) != null) {
+                // Parameter names depend on the -parameters compiler flag,
+                // so the CLI surface would change with build flags. Explicit
+                // names keep it stable (and match picocli, where names= is required).
+                if (o.name().length() < 1)
+                    throw new CommandLineParserException(
+                            "@Option on @MethodCommand parameters requires an explicit name: "
+                                    + param.getName() + " in " + method);
                 OptionType optionType;
                 if (o.hasValue())
                     optionType = OptionType.NORMAL;
@@ -471,6 +648,13 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 }
                 if (Collection.class.isAssignableFrom(paramType))
                     throw new CommandLineParserException("Argument parameter can not be an instance of Collection");
+                // Help text falls back to the parameter name when paramLabel is
+                // unset, and parameter names depend on the -parameters compiler
+                // flag. Explicit labels keep help output stable (like option names).
+                if (arg.paramLabel().length() < 1)
+                    throw new CommandLineParserException(
+                            "@Argument on @MethodCommand parameters requires an explicit paramLabel: "
+                                    + param.getName() + " in " + method);
                 ProcessedOptionBuilder argumentBuilder = ProcessedOptionBuilder.builder()
                         .shortName('\u0000')
                         .name("")
@@ -501,9 +685,132 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         .completeFallback(resolveEffectiveFallback(
                                 arg.completeFallback(), processedCommand))
                         .build());
+            } else if ((ol = param.getAnnotation(OptionList.class)) != null) {
+                // Parameter names depend on the -parameters compiler flag,
+                // so the CLI surface would change with build flags. Explicit
+                // names keep it stable (and match picocli, where names= is required).
+                if (ol.name().length() < 1)
+                    throw new CommandLineParserException(
+                            "@OptionList on @MethodCommand parameters requires an explicit name: "
+                                    + param.getName() + " in " + method);
+                Class<?> rawParamType = param.getType();
+                Type genericParamType = param.getParameterizedType();
+                boolean listOptionalWrapped = Optional.class.isAssignableFrom(rawParamType);
+                if (listOptionalWrapped && genericParamType instanceof ParameterizedType) {
+                    Type innerType = ((ParameterizedType) genericParamType).getActualTypeArguments()[0];
+                    if (innerType instanceof ParameterizedType) {
+                        rawParamType = (Class<?>) ((ParameterizedType) innerType).getRawType();
+                        genericParamType = innerType;
+                    } else if (innerType instanceof Class) {
+                        rawParamType = (Class<?>) innerType;
+                    }
+                }
+                if (!Collection.class.isAssignableFrom(rawParamType))
+                    throw new CommandLineParserException(
+                            "OptionList parameter must be an instance of Collection: "
+                                    + param.getName() + " in " + method);
+                Class<?> elementType = Object.class;
+                if (genericParamType instanceof ParameterizedType) {
+                    Type elementArg = ((ParameterizedType) genericParamType).getActualTypeArguments()[0];
+                    if (elementArg instanceof Class)
+                        elementType = (Class<?>) elementArg;
+                }
+                ProcessedOptionBuilder optionListBuilder = ProcessedOptionBuilder.builder()
+                        .shortName(ol.shortName())
+                        .name(ol.name())
+                        .description(ol.description())
+                        .required(ol.required())
+                        .valueSeparator(ol.valueSeparator())
+                        .askIfNotSet(ol.askIfNotSet())
+                        .acceptNameWithoutDashes(ol.acceptNameWithoutDashes())
+                        .selector(ol.selector())
+                        .addAllDefaultValues(ol.defaultValue())
+                        .type(elementType)
+                        .fieldName(param.getName())
+                        .fieldAccessor(MethodCommandAdapter.slotAccessor(slots, i))
+                        .optionalWrapped(listOptionalWrapped)
+                        .optionType(OptionType.LIST);
+                optionListBuilder.converter(ol.converter())
+                        .completer(ol.completer())
+                        .validator(ol.validator())
+                        .activator(ol.activator())
+                        .renderer(ol.renderer())
+                        .parser(ol.parser());
+                processedCommand.addOption(optionListBuilder
+                        .overrideRequired(ol.overrideRequired())
+                        .inherited(ol.inherited())
+                        .descriptionUrl(ol.descriptionUrl())
+                        .url(ol.url())
+                        .completeFallback(resolveEffectiveFallback(
+                                ol.completeFallback(), processedCommand))
+                        .aliases(ol.aliases())
+                        .helpGroup(ol.helpGroup())
+                        .exclusiveWith(ol.exclusiveWith())
+                        .addAllAllowedValues(ol.allowedValues())
+                        .visibility(ol.visibility())
+                        .order(ol.order())
+                        .build());
+            } else if ((a = param.getAnnotation(Arguments.class)) != null) {
+                Class<?> rawParamType = param.getType();
+                Type genericParamType = param.getParameterizedType();
+                boolean argsOptionalWrapped = Optional.class.isAssignableFrom(rawParamType);
+                if (argsOptionalWrapped && genericParamType instanceof ParameterizedType) {
+                    Type innerType = ((ParameterizedType) genericParamType).getActualTypeArguments()[0];
+                    if (innerType instanceof ParameterizedType) {
+                        rawParamType = (Class<?>) ((ParameterizedType) innerType).getRawType();
+                        genericParamType = innerType;
+                    } else if (innerType instanceof Class) {
+                        rawParamType = (Class<?>) innerType;
+                    }
+                }
+                if (!Collection.class.isAssignableFrom(rawParamType))
+                    throw new CommandLineParserException(
+                            "Arguments parameter must be an instance of Collection: "
+                                    + param.getName() + " in " + method);
+                // Help text falls back to the parameter name when paramLabel is
+                // unset, and parameter names depend on the -parameters compiler
+                // flag. Explicit labels keep help output stable (like option names).
+                if (a.paramLabel().length() < 1)
+                    throw new CommandLineParserException(
+                            "@Arguments on @MethodCommand parameters requires an explicit paramLabel: "
+                                    + param.getName() + " in " + method);
+                Class<?> elementType = Object.class;
+                if (genericParamType instanceof ParameterizedType) {
+                    Type elementArg = ((ParameterizedType) genericParamType).getActualTypeArguments()[0];
+                    if (elementArg instanceof Class)
+                        elementType = (Class<?>) elementArg;
+                }
+                ProcessedOptionBuilder argumentsBuilder = ProcessedOptionBuilder.builder()
+                        .shortName('\u0000')
+                        .name("")
+                        .description(a.description())
+                        .required(a.required())
+                        .valueSeparator(a.valueSeparator())
+                        .selector(a.selector())
+                        .askIfNotSet(a.askIfNotSet())
+                        .addAllDefaultValues(a.defaultValue())
+                        .type(elementType)
+                        .fieldName(param.getName())
+                        .fieldAccessor(MethodCommandAdapter.slotAccessor(slots, i))
+                        .optionalWrapped(argsOptionalWrapped)
+                        .paramLabel(a.paramLabel())
+                        .arity(a.arity())
+                        .index(a.index())
+                        .optionType(OptionType.ARGUMENTS);
+                argumentsBuilder.converter(a.converter())
+                        .completer(a.completer())
+                        .validator(a.validator())
+                        .activator(a.activator())
+                        .parser(a.parser());
+                processedCommand.setArguments(argumentsBuilder
+                        .url(a.url())
+                        .completeFallback(resolveEffectiveFallback(
+                                a.completeFallback(), processedCommand))
+                        .build());
             } else {
                 throw new CommandLineParserException(
-                        "Method parameter must be annotated with @Option or @Argument: "
+                        "Method parameter must be annotated with @Option, @Argument,"
+                                + " @OptionList or @Arguments: "
                                 + param.getName() + " in " + method);
             }
         }

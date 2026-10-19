@@ -200,6 +200,32 @@ public final class MetadataProviderRegistry {
         return entry.provider == ABSENT ? null : (CommandMetadataProvider<C>) entry.provider;
     }
 
+    /**
+     * Look up generated method-command providers for one owning class.
+     * <p>
+     * Deliberately uncached: lookups happen at container-build time, never
+     * on a hot path, and the per-class ClassValue above cannot key lists.
+     *
+     * @param ownerClass the class declaring {@code @MethodCommand} methods
+     * @return the method providers, or an empty list if none
+     */
+    public static List<MethodCommandMetadataProvider> getMethodProviders(Class<?> ownerClass) {
+        List<MethodCommandMetadataProvider> result = new ArrayList<>();
+        if (ownerClass == null)
+            return result;
+        String ownerName = ownerClass.getName();
+        for (MetadataRegistry registry : getRegistries()) {
+            try {
+                List<MethodCommandMetadataProvider> providers = registry.methodProviders(ownerName);
+                if (providers != null)
+                    result.addAll(providers);
+            } catch (Exception ignored) {
+                // A broken registry must not break unrelated lookups
+            }
+        }
+        return result;
+    }
+
     private static List<MetadataRegistry> getRegistries() {
         ClassLoader currentCL = Thread.currentThread().getContextClassLoader();
         List<MetadataRegistry> result = registries;
