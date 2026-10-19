@@ -1,0 +1,35 @@
+= testcommand(1)
+:doctype: manpage
+
+
+== NAME
+testcommand - a test command for verifying == section syntax
+
+
+== SYNOPSIS
+*testcommand* ['OPTIONS'] 'FILE'
+
+
+== DESCRIPTION
+This is a test manpage using the standard asciidoctor == section syntax
+instead of the underline format. According to the asciidoctor specification,
+this is the proper way to define sections in manpage documents.
+
+The converter should automatically uppercase level-0 and level-1 section
+titles to conform to Unix manpage conventions.
+
+
+== OPTIONS
+*-v, --verbose*::
+    Enable verbose output mode.
+
+*-h, --help*::
+    Display help information.
+
+
+== AUTHOR
+Test Author
+
+
+== SEE ALSO
+other-command(1)

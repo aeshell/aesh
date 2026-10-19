@@ -41,18 +41,28 @@ public class ManSection {
         //we ignore the links atm
         if (input.get(0).startsWith("[["))
             input.remove(0);
-        //first line should be the name
-        name = input.get(0);
-        input.remove(0);
-        //the first section, ignoring it for now
-        //starting a new section
-        if (input.get(0).startsWith("-") &&
-                input.get(0).trim().length() == name.length()) {
+
+        //check for == Section syntax (standard asciidoctor format)
+        if (input.get(0).startsWith("== ")) {
+            name = input.get(0).substring(3).trim();
             input.remove(0);
+        }
+        //check for underline format (legacy format)
+        else {
+            //first line should be the name
+            name = input.get(0);
+            input.remove(0);
+            //check if next line is the underline
+            if (!input.isEmpty() && input.get(0).startsWith("-") &&
+                    input.get(0).trim().length() == name.length()) {
+                input.remove(0);
+            }
+        }
+
+        //parse parameters if this is an OPTIONS-style section
+        if (!input.isEmpty()) {
             //a new param
             List<String> newOption = new ArrayList<String>();
-            boolean startingNewOption = false;
-            boolean paramName = false;
             for (String in : input) {
                 if (in.trim().length() > 0)
                     newOption.add(in);
