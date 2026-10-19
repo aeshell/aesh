@@ -107,11 +107,42 @@ public class ManFileParser implements FileParser {
     }
 
     private void processHeader(List<String> header, int columns) throws IOException {
-        if (header.size() != 4)
-            throw new IOException("File did not include the correct header.");
-        name = header.get(0);
-        if (!header.get(2).equals(":doctype: manpage"))
+        boolean foundTitle = false;
+        boolean foundDoctype = false;
+
+        // Process header lines to find title and doctype
+        for (int i = 0; i < header.size(); i++) {
+            String line = header.get(i);
+            String trimmed = line.trim();
+
+            // Extract title from = progname(volume) format
+            if (trimmed.startsWith("=") && !trimmed.startsWith("==")) {
+                name = trimmed.substring(1).trim();
+                foundTitle = true;
+            }
+            // Extract title from underline format (title\n====)
+            else if (!foundTitle && i + 1 < header.size() &&
+                    header.get(i + 1).trim().matches("^=+$") &&
+                    header.get(i + 1).trim().length() == trimmed.length()) {
+                name = trimmed;
+                foundTitle = true;
+            }
+            // Check for doctype attribute
+            else if (trimmed.equals(":doctype: manpage")) {
+                foundDoctype = true;
+            }
+            // Reject wrong doctype
+            else if (trimmed.startsWith(":doctype:") && !trimmed.equals(":doctype: manpage")) {
+                throw new IOException("File did not include the correct header: \":doctype: manpage\". Found: " + trimmed);
+            }
+        }
+
+        if (!foundTitle) {
+            throw new IOException("File did not include a valid title in format: = progname(volume) or title with underline");
+        }
+        if (!foundDoctype) {
             throw new IOException("File did not include the correct header: \":doctype: manpage\"");
+        }
     }
 
     public List<ManSection> getSections() {

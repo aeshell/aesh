@@ -1,0 +1,21 @@
+= mixedcmd(1)
+:doctype: manpage
+
+
+NAME
+----
+mixedcmd - testing mixed section formats
+
+
+== SYNOPSIS
+*mixedcmd* 'FILE'
+
+
+DESCRIPTION
+-----------
+This tests mixing == format with underline format.
+
+
+== OPTIONS
+*-a*::
+    Option a.

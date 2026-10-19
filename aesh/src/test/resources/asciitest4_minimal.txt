@@ -1,0 +1,6 @@
+= minimal(1)
+:doctype: manpage
+
+
+== NAME
+minimal - minimal test case
