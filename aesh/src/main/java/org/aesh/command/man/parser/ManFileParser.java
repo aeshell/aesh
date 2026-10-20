@@ -116,7 +116,7 @@ public class ManFileParser implements FileParser {
             String trimmed = line.trim();
 
             // Extract title from = progname(volume) format
-            if (trimmed.startsWith("=") && !trimmed.startsWith("==")) {
+            if (!foundTitle && trimmed.startsWith("=") && !trimmed.startsWith("==")) {
                 name = trimmed.substring(1).trim();
                 foundTitle = true;
             }

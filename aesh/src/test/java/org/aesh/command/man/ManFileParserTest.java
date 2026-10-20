@@ -198,6 +198,22 @@ public class ManFileParserTest {
     }
 
     /**
+     * Test that == sections have their parameters parsed, mirroring the
+     * underline-format coverage above. Without this, the == code path is
+     * only verified for section names, never for option extraction.
+     */
+    @Test
+    public void testEqualsSignOptionsSectionWithParameters() throws IOException {
+        ManFileParser parser = new ManFileParser();
+        parser.setInput(new FileInputStream("src/test/resources/asciitest3_with_equals.txt"));
+        parser.loadPage(80);
+
+        // OPTIONS is the 4th section (index 3): *-v/--verbose and *-h/--help
+        assertEquals("OPTIONS", parser.getSections().get(3).getName());
+        assertEquals("Should have 2 options", 2, parser.getSections().get(3).getParameters().size());
+    }
+
+    /**
      * Test that section titles are properly extracted regardless of format.
      */
     @Test
@@ -281,7 +297,9 @@ public class ManFileParserTest {
     }
 
     /**
-     * Test that parser can be reused with setInput.
+     * Test that parser can be reused with setInput. The second file has a
+     * different title on purpose: asserting the name actually changes proves
+     * the previous state was cleared rather than leaked through.
      */
     @Test
     public void testParserReuse() throws IOException {
@@ -292,13 +310,16 @@ public class ManFileParserTest {
         parser.loadPage(80);
         String firstName = parser.getName();
 
-        // Parse second file
-        parser.setInput(new FileInputStream("src/test/resources/asciitest2.txt"));
+        // Parse second file with a different title
+        parser.setInput(new FileInputStream("src/test/resources/asciitest3_with_equals.txt"));
         parser.loadPage(80);
         String secondName = parser.getName();
 
         assertEquals("First file name", "ASCIIDOC(1)", firstName);
-        assertEquals("Second file name", "ASCIIDOC(1)", secondName);
+        assertEquals("Second file name", "testcommand(1)", secondName);
+        assertEquals("Sections must be rebuilt, not appended",
+                6, parser.getSections().size());
+        assertEquals("NAME", parser.getSections().get(0).getName());
     }
 
     /**
