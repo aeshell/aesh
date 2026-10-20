@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -4582,6 +4583,62 @@ public class ProcessorTest {
         // so javac rejects them on parameters ("annotation interface not
         // applicable") before the processor's validation ever runs. The
         // branches stay as defense-in-depth if targets ever widen.
+    }
+
+    private static final String PARENT_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"parent\", description = \"parent\")\n" +
+            "public class ParentCmd implements Command<CommandInvocation> {\n" +
+            "    public CommandResult execute(CommandInvocation invocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String CHILD_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.ParentCommand;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"child\", description = \"child\")\n" +
+            "public class ChildCmd implements Command<CommandInvocation> {\n" +
+            "    @ParentCommand\n" +
+            "    public ParentCmd parent;\n" +
+            "\n" +
+            "    public CommandResult execute(CommandInvocation invocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testGeneratedParentInjector() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ParentCmd", PARENT_CMD_SOURCE),
+                new InMemorySource("test.ChildCmd", CHILD_CMD_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> childClass = result.classLoader.loadClass("test.ChildCmd");
+        Class<?> parentClass = result.classLoader.loadClass("test.ParentCmd");
+        Object child = childClass.newInstance();
+        Object parent = parentClass.newInstance();
+
+        Class<?> metadataClass = result.classLoader.loadClass("test.ChildCmd_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand((Command) child);
+
+        assertNotNull("Generated provider must expose a parent injector",
+                generatedPC.getParentCommandInjector());
+        generatedPC.getParentCommandInjector().accept(child, parent);
+        assertSame("Injector must link the child to the given parent",
+                parent, childClass.getField("parent").get(child));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.aesh.command.Command;
@@ -386,10 +387,15 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 if (childPopulator instanceof AeshCommandPopulator) {
                     ((AeshCommandPopulator<?, CI>) childPopulator).setChildCommand(true);
                 }
-                if (child instanceof AeshCommandLineParser)
+                if (child instanceof AeshCommandLineParser) {
                     ((AeshCommandLineParser<CI>) child).populateSelectedPath(
                             child.getProcessedCommand(), invocationProviders, aeshContext, mode);
-                else
+                    // Link the selected child to this level's command so
+                    // @ParentCommand works outside sub-command mode too. The
+                    // direct parent instance is used, matching what
+                    // CommandContext.getParentCommand() would return.
+                    injectParentCommand(child, processedCommand);
+                } else
                     // Foreign parser implementations keep their legacy full behavior.
                     child.doPopulate(child.getProcessedCommand(), invocationProviders, aeshContext, mode);
             } else {
@@ -400,6 +406,23 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 resetUnselectedSubtree(child);
             }
         }
+    }
+
+    /**
+     * Inject this level's command instance into the selected child's
+     * {@code @ParentCommand} field. Generated providers always carry an
+     * injector (a no-op without such a field); reflection-built commands get
+     * theirs wired at container-build time — either way this is a single
+     * call with no reflection on the execution path. Foreign parsers keep
+     * their existing behavior.
+     */
+    private void injectParentCommand(CommandLineParser<CI> child,
+            ProcessedCommand<Command<CI>, CI> processedCommand) {
+        if (!(child instanceof AeshCommandLineParser))
+            return;
+        BiConsumer<Object, Object> injector = child.getProcessedCommand().getParentCommandInjector();
+        if (injector != null)
+            injector.accept(child.getCommand(), processedCommand.getCommand());
     }
 
     /**

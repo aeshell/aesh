@@ -62,6 +62,7 @@ import org.aesh.command.option.Mixin;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
+import org.aesh.command.option.ParentCommand;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.command.validator.OptionValidatorException;
@@ -450,6 +451,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
             processedCommand.setCompleteFallback(command.completeFallback());
             processCommand(processedCommand, clazz);
+            wireParentCommandInjector(processedCommand, clazz);
             validatePositionalIndexes(processedCommand);
             if (command.helpGroup().length() > 0)
                 processedCommand.setHelpGroup(command.helpGroup());
@@ -506,6 +508,33 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     private static void processCommand(ProcessedCommand processedCommand, Class clazz) throws CommandLineParserException {
         processCommand(processedCommand, clazz, false);
+    }
+
+    /**
+     * Wire the parent-command injector for the reflection path. Generated
+     * providers set their own injector; here a single hierarchy walk at
+     * registration time records the first @ParentCommand field, so execution
+     * performs one BiConsumer call with no reflection. Mirrors the
+     * sub-command-mode fallback in Executions: inaccessible fields are
+     * skipped, type mismatches fail.
+     */
+    private static void wireParentCommandInjector(ProcessedCommand processedCommand, Class<?> clazz) {
+        for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
+            for (Field field : c.getDeclaredFields()) {
+                if (field.isAnnotationPresent(ParentCommand.class)) {
+                    if (!Modifier.isPublic(field.getModifiers()))
+                        field.setAccessible(true);
+                    processedCommand.setParentCommandInjector((child, parent) -> {
+                        try {
+                            field.set(child, parent);
+                        } catch (IllegalAccessException e) {
+                            // Mirror the Executions fallback: skip quietly
+                        }
+                    });
+                    return;
+                }
+            }
+        }
     }
 
     private static void processCommand(ProcessedCommand processedCommand, Class clazz, boolean forHelp)
