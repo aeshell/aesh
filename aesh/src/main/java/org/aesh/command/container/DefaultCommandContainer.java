@@ -24,8 +24,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandException;
+import org.aesh.command.CommandLifecycle;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
@@ -82,6 +84,7 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
         if (lines == null || lines.isEmpty())
             return null;
         ParsedLine aeshLine = lines.poll();
+        applyAeshContext(getParser(), aeshContext);
         getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);
         if (getParser().getProcessedCommand().parserExceptions().size() > 0
                 && !getParser().getProcessedCommand().hasOptionWithOverrideRequired()) {
@@ -112,8 +115,18 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
             throws CommandLineParserException, OptionValidatorException, CommandValidatorException, CommandException,
             InterruptedException {
 
+        applyAeshContext(getParser(), aeshContext);
         getParser().parse(line.iterator(), CommandLineParser.Mode.STRICT);
         return executeCommand(invocationProviders, aeshContext, commandInvocation);
+    }
+
+    /**
+     * Hands the active console context to the parser so that {@link CommandLifecycle#setContext(AeshContext)}
+     * is invoked with it before each lifecycle hook. Non-Æsh parsers are left untouched.
+     */
+    private void applyAeshContext(CommandLineParser<CI> parser, AeshContext aeshContext) {
+        if (parser instanceof AeshCommandLineParser)
+            ((AeshCommandLineParser<CI>) parser).setAeshContext(aeshContext);
     }
 
     private CommandContainerResult executeCommand(InvocationProviders invocationProviders,

@@ -19,6 +19,8 @@
  */
 package org.aesh.command;
 
+import org.aesh.console.AeshContext;
+
 /**
  * Optional lifecycle interface for commands that need hooks around
  * the parse/execution cycle.
@@ -26,6 +28,7 @@ package org.aesh.command;
  * When a command is reused across multiple invocations (e.g., in test suites
  * or long-running applications), this interface provides hooks for:
  * <ul>
+ * <li>{@code setContext(AeshContext)} — receiving the active console context</li>
  * <li>{@code beforeParse()} — resetting external state before parsing</li>
  * <li>{@code afterParse()} — post-processing after field population, before execution</li>
  * </ul>
@@ -37,6 +40,18 @@ package org.aesh.command;
  * @author Aesh team
  */
 public interface CommandLifecycle {
+
+    /**
+     * Called with the active {@link AeshContext} immediately before each
+     * lifecycle hook ({@code beforeParse()} and {@code afterParse()}).
+     * <p>
+     * Commands that need access to console facilities (e.g., a connection,
+     * environment lookups) should store the context here, since no other
+     * reference is passed into the hooks. The value may be null when Æsh
+     * runs without a console (e.g., pure command-line mode).
+     */
+    default void setContext(AeshContext context) {
+    }
 
     /**
      * Called before each parse cycle, giving the command a chance to

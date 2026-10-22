@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
@@ -21,6 +22,8 @@ import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
+import org.aesh.console.AeshContext;
+import org.aesh.console.DefaultAeshContext;
 import org.junit.Test;
 
 public class AeshCommandRuntimeTest {
@@ -179,6 +182,58 @@ public class AeshCommandRuntimeTest {
             if (params != null && !params.isEmpty()) {
                 scriptFile = params.remove(0);
             }
+        }
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testSetContextBeforeLifecycleHooks() throws Exception {
+        ContextLifecycleCommand.ctxAtBeforeParse = null;
+        ContextLifecycleCommand.ctxAfterParse = null;
+        AeshContext customCtx = new DefaultAeshContext();
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(ContextLifecycleCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .aeshContext(customCtx)
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("ctxlifecycle", null);
+        executor.getExecutions().get(0).populateCommand();
+
+        // setContext() must deliver the active context before each hook runs, so both
+        // hooks observe exactly this instance (null would mean no delivery happened).
+        assertSame(customCtx, ContextLifecycleCommand.ctxAtBeforeParse);
+        assertSame(customCtx, ContextLifecycleCommand.ctxAfterParse);
+    }
+
+    @CommandDefinition(name = "ctxlifecycle", description = "")
+    public static class ContextLifecycleCommand implements Command<CommandInvocation>, CommandLifecycle {
+        // Captured at the moment each hook ran; null if setContext() had not been called first.
+        static volatile AeshContext ctxAtBeforeParse;
+        static volatile AeshContext ctxAfterParse;
+
+        private AeshContext context;
+
+        @Override
+        public void setContext(AeshContext context) {
+            this.context = context;
+        }
+
+        @Override
+        public void beforeParse() {
+            ctxAtBeforeParse = context;
+            // Clear so a missing second delivery (before afterParse()) is caught:
+            // the Executions path must re-deliver the context, not rely on our state.
+            this.context = null;
+        }
+
+        @Override
+        public void afterParse() {
+            ctxAfterParse = context;
         }
 
         @Override

@@ -78,6 +78,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private Function<Class<? extends Command>, CommandContainer<CI>> childResolver;
     private InvocationProviders storedInvocationProviders;
     private DefaultValueProvider storedDefaultValueProvider;
+    /** Active console context for the current parse cycle. */
+    private AeshContext aeshContext;
     private boolean isChild = false;
     private ProcessedOption lastParsedOption;
     private boolean parsedCommand = false;
@@ -139,6 +141,15 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     public void storeDefaultValueProvider(DefaultValueProvider provider) {
         this.storedDefaultValueProvider = provider;
+    }
+
+    /**
+     * Provide the active console context for the upcoming parse cycle. The value is handed to
+     * {@link CommandLifecycle#setContext(AeshContext)} before each lifecycle hook and propagated
+     * to child parsers when a group command delegates parsing of its subcommand.
+     */
+    public void setAeshContext(AeshContext aeshContext) {
+        this.aeshContext = aeshContext;
     }
 
     /**
@@ -687,6 +698,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         processedCommand.markDirty();
         Command<CI> cmd = processedCommand.getCommand();
         if (mode != Mode.COMPLETION && cmd instanceof CommandLifecycle) {
+            // Hand over the active console context before each hook so lifecycle
+            // commands can access it without a reference from CommandInvocation.
+            ((CommandLifecycle) cmd).setContext(aeshContext);
             ((CommandLifecycle) cmd).beforeParse();
         }
         if (iterator.hasNextWord()) {
@@ -727,6 +741,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     //we have a group command
                     else {
                         //remove the child name
+                        if (clp instanceof AeshCommandLineParser)
+                            ((AeshCommandLineParser<CI>) clp).setAeshContext(aeshContext);
                         clp.parse(iterator, mode);
                     }
                 } else
@@ -797,6 +813,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                         // command name to still be in the iterator.
                                         // Reset parsedCommand so parsedCommand() returns the child, not us.
                                         parsedCommand = false;
+                                        if (clp instanceof AeshCommandLineParser)
+                                            ((AeshCommandLineParser<CI>) clp).setAeshContext(aeshContext);
                                         clp.parse(iter, mode);
                                         return;
                                     } else {
