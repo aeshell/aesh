@@ -161,11 +161,13 @@ class Executions {
                 }
                 // Get command context for inherited option injection
                 CommandContext cmdContext = getCommandInvocation().getCommandContext();
-                cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), runtime.getAeshContext(), cmdContext);
+                AeshContext aeshCtx = runtime.getAeshContext();
+                cmd = commandContainer.parseAndPopulate(runtime.invocationProviders(), aeshCtx, cmdContext);
                 populated = true;
                 // Call afterParse() on parent group commands first, then on the parsed child
-                callAfterParseOnParents(commandContainer.getParser());
+                callAfterParseOnParents(commandContainer.getParser(), aeshCtx);
                 if (cmd.getCommand() instanceof CommandLifecycle) {
+                    ((CommandLifecycle) cmd.getCommand()).setContext(aeshCtx);
                     ((CommandLifecycle) cmd.getCommand()).afterParse();
                 }
                 if (probe != null) {
@@ -179,9 +181,10 @@ class Executions {
         /**
          * Walk the parser tree and call afterParse() on parent group commands
          * whose child was actually parsed. Skips the final parsed command
-         * (that's handled separately).
+         * (that's handled separately). Each hook receives its active console
+         * context via {@link CommandLifecycle#setContext(AeshContext)} first.
          */
-        private void callAfterParseOnParents(CommandLineParser<?> rootParser) {
+        private void callAfterParseOnParents(CommandLineParser<?> rootParser, AeshContext aeshCtx) {
             if (!rootParser.isGroupCommand())
                 return;
             // If the root parser itself is a group and has a parsed child,
@@ -190,6 +193,7 @@ class Executions {
             if (parsed != null && parsed != rootParser) {
                 Command<?> parentCmd = rootParser.getProcessedCommand().getCommand();
                 if (parentCmd instanceof CommandLifecycle) {
+                    ((CommandLifecycle) parentCmd).setContext(aeshCtx);
                     ((CommandLifecycle) parentCmd).afterParse();
                 }
             }
