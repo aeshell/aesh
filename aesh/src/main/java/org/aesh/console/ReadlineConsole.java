@@ -185,7 +185,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             readlineFlags.put(ReadlineFlag.NO_PROMPT_REDRAW_ON_INTR, Integer.MAX_VALUE);
         }
 
-        context = new DefaultAeshContext(exportManager);
+        // Respect an explicitly configured context (e.g., a CLI-provided AeshContext via SettingsBuilder.aeshContext(...));
+        if (settings.hasExplicitAeshContext() && settings.aeshContext() != null)
+            context = settings.aeshContext();
+        else
+            context = new DefaultAeshContext(exportManager);
 
         processManager = new ProcessManager(this);
         CommandExecutionListener userListener = settings.commandExecutionListener();
