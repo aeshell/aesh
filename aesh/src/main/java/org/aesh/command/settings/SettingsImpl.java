@@ -84,6 +84,8 @@ public class SettingsImpl<CI extends CommandInvocation>
     private boolean manEnabled = true;
     private PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
     private AeshContext aeshContext;
+    /** True when the context above was set explicitly, not lazily defaulted. */
+    private boolean explicitAeshContext = false;
     private boolean exportEnabled = true;
     private File exportFile;
     private boolean persistExport = true;
@@ -148,7 +150,8 @@ public class SettingsImpl<CI extends CommandInvocation>
         enableOperatorParser(baseSettings.operatorParserEnabled());
         setPipelineConfig(baseSettings.pipelineConfig());
         setManEnabled(baseSettings.manEnabled());
-        setAeshContext(baseSettings.aeshContext());
+        // Only carry over an explicitly configured context; otherwise this instance keeps its own lazily-created default.
+        setAeshContext(baseSettings.hasExplicitAeshContext() ? baseSettings.aeshContext() : null);
         setExportEnabled(baseSettings.exportEnabled());
         setExportFile(baseSettings.exportFile());
         setPersistExport(baseSettings.persistExport());
@@ -600,7 +603,18 @@ public class SettingsImpl<CI extends CommandInvocation>
         return aeshContext;
     }
 
+    /**
+     * True only when {@link #setAeshContext(AeshContext)} was called with a non-null value.
+     * A lazily-created default does not count as explicit, so console components can fall back to their own managed context
+     * (e.g., one wired to the export manager).
+     */
+    @Override
+    public boolean hasExplicitAeshContext() {
+        return explicitAeshContext;
+    }
+
     public void setAeshContext(AeshContext aeshContext) {
+        this.explicitAeshContext = aeshContext != null;
         this.aeshContext = aeshContext;
     }
 

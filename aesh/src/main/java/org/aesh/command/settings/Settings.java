@@ -190,6 +190,15 @@ public interface Settings<CI extends CommandInvocation>
     AeshContext aeshContext();
 
     /**
+     * Indicates whether {@link #aeshContext()} was explicitly configured (e.g., via
+     * {@code SettingsBuilder.aeshContext(...)}) rather than lazily defaulted. Components that build their own runtime from
+     * these settings use this to decide whether the provided context should take precedence over console-managed defaults.
+     */
+    default boolean hasExplicitAeshContext() {
+        return true;
+    }
+
+    /**
      * Get the export file
      * Defaults to ~/.aesh_export
      */
