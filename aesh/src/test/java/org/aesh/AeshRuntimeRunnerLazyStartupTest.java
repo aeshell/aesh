@@ -1046,7 +1046,9 @@ public class AeshRuntimeRunnerLazyStartupTest {
                 "beforeParse:root",
                 "construct:mid", "beforeParse:mid",
                 "construct:leaf", "beforeParse:leaf",
-                "afterParse:root", "afterParse:leaf"),
+                // afterParse() runs top-down along the whole selected path,
+                // including intermediate groups (#685 follow-up)
+                "afterParse:root", "afterParse:mid", "afterParse:leaf"),
                 ChainEvents.events);
 
         // Execution state now lives on per-execution forks; the registry

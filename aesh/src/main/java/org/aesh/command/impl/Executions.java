@@ -179,24 +179,33 @@ class Executions {
         }
 
         /**
-         * Walk the parser tree and call afterParse() on parent group commands
-         * whose child was actually parsed. Skips the final parsed command
+         * Walk the selected path top-down and call afterParse() on each group
+         * command whose child was actually parsed. Skips the final parsed command
          * (that's handled separately). Each hook receives its active console
          * context via {@link CommandLifecycle#setContext(AeshContext)} first.
          */
         private void callAfterParseOnParents(CommandLineParser<?> rootParser, AeshContext aeshCtx) {
             if (!rootParser.isGroupCommand())
                 return;
-            // If the root parser itself is a group and has a parsed child,
-            // the root is a parent — call its afterParse() first
-            CommandLineParser<?> parsed = rootParser.parsedCommand();
-            if (parsed != null && parsed != rootParser) {
-                Command<?> parentCmd = rootParser.getProcessedCommand().getCommand();
-                if (parentCmd instanceof CommandLifecycle) {
-                    ((CommandLifecycle) parentCmd).setContext(aeshCtx);
-                    ((CommandLifecycle) parentCmd).afterParse();
+            List<? extends CommandLineParser<?>> children = rootParser.getChildParsers();
+            if (children == null)
+                return;
+            CommandLineParser<?> selected = null;
+            for (CommandLineParser<?> child : children) {
+                if (child.parsedCommand() != null) {
+                    selected = child;
+                    break;
                 }
             }
+            if (selected == null)
+                return;
+            Command<?> parentCmd = rootParser.getProcessedCommand().getCommand();
+            if (parentCmd instanceof CommandLifecycle) {
+                ((CommandLifecycle) parentCmd).setContext(aeshCtx);
+                ((CommandLifecycle) parentCmd).afterParse();
+            }
+            if (selected.isGroupCommand())
+                callAfterParseOnParents(selected, aeshCtx);
         }
 
         @Override

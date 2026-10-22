@@ -20,6 +20,7 @@
 package org.aesh.command;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -30,6 +31,8 @@ import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.ParentCommand;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.console.AeshContext;
+import org.aesh.console.DefaultAeshContext;
 import org.junit.Test;
 
 /**
@@ -69,8 +72,17 @@ public class GroupParentInjectionTest {
     }
 
     private CommandRuntime<CommandInvocation> runtimeFor(Class<? extends Command> root) throws Exception {
+        return runtimeFor(root, null);
+    }
+
+    private CommandRuntime<CommandInvocation> runtimeFor(Class<? extends Command> root, AeshContext context)
+            throws Exception {
         CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder().command(root).create();
-        return AeshCommandRuntimeBuilder.builder().commandRegistry(registry).build();
+        AeshCommandRuntimeBuilder<CommandInvocation> builder = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                .commandRegistry(registry);
+        if (context != null)
+            builder.aeshContext(context);
+        return builder.build();
     }
 
     @Test
@@ -106,9 +118,22 @@ public class GroupParentInjectionTest {
     }
 
     @CommandDefinition(name = "mid", description = "middle", groupCommands = { Leaf.class })
-    public static class Mid implements Command<CommandInvocation> {
+    public static class Mid implements Command<CommandInvocation>, CommandLifecycle {
         @ParentCommand
         Root parent;
+
+        static boolean afterParseRan;
+        static AeshContext ctxAtAfterParse;
+
+        @Override
+        public void setContext(AeshContext context) {
+            ctxAtAfterParse = context;
+        }
+
+        @Override
+        public void afterParse() {
+            afterParseRan = true;
+        }
 
         @Override
         public CommandResult execute(CommandInvocation invocation) {
@@ -136,11 +161,16 @@ public class GroupParentInjectionTest {
     public void testNestedGroupsInjectDirectParent() throws Exception {
         Leaf.seenParentClass = null;
         Leaf.seenRootValue = null;
-        CommandRuntime<CommandInvocation> runtime = runtimeFor(Root.class);
+        Mid.afterParseRan = false;
+        Mid.ctxAtAfterParse = null;
+        AeshContext ctx = new DefaultAeshContext();
+        CommandRuntime<CommandInvocation> runtime = runtimeFor(Root.class, ctx);
 
         assertEquals(CommandResult.SUCCESS, runtime.executeCommand("root --c conn mid leaf"));
         assertEquals("leaf must link to its direct parent", Mid.class, Leaf.seenParentClass);
         assertEquals("values must flow through the whole chain", "conn", Leaf.seenRootValue);
+        assertTrue("mid-level afterParse must run", Mid.afterParseRan);
+        assertSame("mid must receive the runtime context", ctx, Mid.ctxAtAfterParse);
     }
 
     @CommandDefinition(name = "db", description = "root", groupCommands = { HealthCheck.class })
