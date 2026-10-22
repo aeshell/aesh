@@ -42,6 +42,33 @@ jobs:
       - name: Test shell escape
         run: .\mvnw.cmd -pl aesh test -Dtest='NativeExecutionTest,ShellEscapeTest' -DfailIfNoTests=false
 
+  windows-augmentation-mimic:
+    runs-on: windows-latest
+    name: windows augmentation mimic (#686)
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+      - name: Build test classes
+        shell: bash
+        run: ./mvnw -q -pl aesh -am -DskipTests install
+      - name: Run headless parallel-augmentation mimic
+        shell: bash
+        timeout-minutes: 25
+        run: |
+          ./mvnw -q -pl aesh dependency:build-classpath -Dmdep.outputFile="$RUNNER_TEMP/mimic-cp.txt" -DincludeScope=test
+          CP="aesh/target/test-classes;aesh/target/classes;$(cat "$RUNNER_TEMP/mimic-cp.txt")"
+          for i in 1 2 3 4 5; do
+            echo "=== attempt $i/5 ==="
+            java -cp "$CP" org.aesh.command.QuarkusForkMimic || exit 1
+          done
+          echo "MIMIC ALL GREEN"
+
   native-test:
     runs-on: ubuntu-latest
     name: native-image smoke test
