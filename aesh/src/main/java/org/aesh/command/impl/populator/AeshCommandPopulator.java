@@ -173,11 +173,13 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
 
     private void injectParentCommands(ProcessedCommand<Command<CI>, CI> processedCommand,
             CommandContext commandContext) {
-        java.util.function.BiConsumer<Object, Object> injector = processedCommand.getParentCommandInjector();
+        org.aesh.command.impl.internal.ParentCommandInjector injector = processedCommand.getParentCommandInjector();
         if (injector != null) {
-            Command<?> parent = commandContext.getParentCommand();
-            if (parent != null)
-                injector.accept(getObject(), parent);
+            injector.inject(getObject(), type -> {
+                if (!Command.class.isAssignableFrom(type))
+                    return null;
+                return commandContext.getParentCommand((Class) type);
+            });
             return;
         }
         List<Field> fields = getAllFields(getObject().getClass());
