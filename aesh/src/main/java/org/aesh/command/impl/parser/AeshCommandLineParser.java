@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.aesh.command.Command;
@@ -405,7 +404,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     // @ParentCommand works outside sub-command mode too. The
                     // direct parent instance is used, matching what
                     // CommandContext.getParentCommand() would return.
-                    injectParentCommand(child, processedCommand);
+                    injectParentCommand(child);
                 } else
                     // Foreign parser implementations keep their legacy full behavior.
                     child.doPopulate(child.getProcessedCommand(), invocationProviders, aeshContext, mode);
@@ -420,20 +419,26 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     /**
-     * Inject this level's command instance into the selected child's
-     * {@code @ParentCommand} field. Generated providers always carry an
-     * injector (a no-op without such a field); reflection-built commands get
-     * theirs wired at container-build time — either way this is a single
-     * call with no reflection on the execution path. Foreign parsers keep
-     * their existing behavior.
+     * Inject matching ancestors into the selected child's {@code @ParentCommand}
+     * fields. Generated providers and reflection-built commands resolve each
+     * field by type; foreign parsers keep their existing behavior.
      */
-    private void injectParentCommand(CommandLineParser<CI> child,
-            ProcessedCommand<Command<CI>, CI> processedCommand) {
+    private void injectParentCommand(CommandLineParser<CI> child) {
         if (!(child instanceof AeshCommandLineParser))
             return;
-        BiConsumer<Object, Object> injector = child.getProcessedCommand().getParentCommandInjector();
-        if (injector != null)
-            injector.accept(child.getCommand(), processedCommand.getCommand());
+        org.aesh.command.impl.internal.ParentCommandInjector injector = child.getProcessedCommand()
+                .getParentCommandInjector();
+        if (injector != null) {
+            AeshCommandLineParser<CI> childParser = (AeshCommandLineParser<CI>) child;
+            injector.inject(child.getCommand(), type -> {
+                for (AeshCommandLineParser<CI> ancestor = childParser.parent; ancestor != null; ancestor = ancestor.parent) {
+                    Command<CI> parentCommand = ancestor.getCommand();
+                    if (type.isInstance(parentCommand))
+                        return parentCommand;
+                }
+                return null;
+            });
+        }
     }
 
     /**

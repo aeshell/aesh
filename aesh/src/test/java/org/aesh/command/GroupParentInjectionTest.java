@@ -146,13 +146,18 @@ public class GroupParentInjectionTest {
         @ParentCommand
         Mid parent;
 
+        @ParentCommand
+        Root root;
+
         static Class<?> seenParentClass;
         static String seenRootValue;
+        static String seenAncestorValue;
 
         @Override
         public CommandResult execute(CommandInvocation invocation) {
             seenParentClass = parent.getClass();
             seenRootValue = parent.parent.connectionString;
+            seenAncestorValue = root != null ? root.connectionString : null;
             return CommandResult.SUCCESS;
         }
     }
@@ -169,6 +174,7 @@ public class GroupParentInjectionTest {
         assertEquals(CommandResult.SUCCESS, runtime.executeCommand("root --c conn mid leaf"));
         assertEquals("leaf must link to its direct parent", Mid.class, Leaf.seenParentClass);
         assertEquals("values must flow through the whole chain", "conn", Leaf.seenRootValue);
+        assertEquals("@ParentCommand resolves an ancestor by the field's type", "conn", Leaf.seenAncestorValue);
         assertTrue("mid-level afterParse must run", Mid.afterParseRan);
         assertSame("mid must receive the runtime context", ctx, Mid.ctxAtAfterParse);
     }

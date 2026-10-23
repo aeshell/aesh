@@ -511,30 +511,43 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     }
 
     /**
-     * Wire the parent-command injector for the reflection path. Generated
-     * providers set their own injector; here a single hierarchy walk at
-     * registration time records the first @ParentCommand field, so execution
-     * performs one BiConsumer call with no reflection. Mirrors the
-     * sub-command-mode fallback in Executions: inaccessible fields are
-     * skipped, type mismatches fail.
+     * Wire the parent-command injector for the reflection path. Fields are
+     * collected at registration so execution performs no reflective scan; each
+     * field resolves the nearest ancestor matching its declared type.
      */
     private static void wireParentCommandInjector(ProcessedCommand processedCommand, Class<?> clazz) {
+        List<Field> parentFields = new ArrayList<>();
         for (Class<?> c = clazz; c != null; c = c.getSuperclass()) {
             for (Field field : c.getDeclaredFields()) {
                 if (field.isAnnotationPresent(ParentCommand.class)) {
                     if (!Modifier.isPublic(field.getModifiers()))
                         field.setAccessible(true);
-                    processedCommand.setParentCommandInjector((child, parent) -> {
-                        try {
-                            field.set(child, parent);
-                        } catch (IllegalAccessException e) {
-                            // Mirror the Executions fallback: skip quietly
-                        }
-                    });
-                    return;
+                    parentFields.add(field);
                 }
             }
         }
+        if (parentFields.isEmpty())
+            return;
+        processedCommand.setParentCommandInjector(new org.aesh.command.impl.internal.ParentCommandInjector() {
+            @Override
+            public void accept(Object child, Object parent) {
+                inject(child, type -> type.isInstance(parent) ? parent : null);
+            }
+
+            @Override
+            public void inject(Object child, Function<Class<?>, Object> parentLookup) {
+                for (Field field : parentFields) {
+                    Object parent = parentLookup.apply(field.getType());
+                    if (parent != null) {
+                        try {
+                            field.set(child, parent);
+                        } catch (IllegalAccessException e) {
+                            // Match the existing fallback: skip inaccessible fields.
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private static void processCommand(ProcessedCommand processedCommand, Class clazz, boolean forHelp)

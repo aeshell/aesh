@@ -244,13 +244,12 @@ final class CodeGenerator {
         // Collect field accessor info for the switch-based Accessor class
         List<FieldAccessorInfo> accessorInfos = new java.util.ArrayList<>();
 
-        // Find @ParentCommand field for the Accessor class
-        FieldAccessorInfo parentInfo = null;
+        // Collect @ParentCommand fields for type-directed ancestor injection.
+        List<FieldAccessorInfo> parentInfos = new java.util.ArrayList<>();
         for (VariableElement field : fields) {
             if (field.getAnnotation(ParentCommand.class) != null) {
-                parentInfo = new FieldAccessorInfo(-1, field.getSimpleName().toString(),
-                        erasedTypeName(field.asType(), typeUtils), null, isPrivateField(field), simpleName);
-                break;
+                parentInfos.add(new FieldAccessorInfo(-1, field.getSimpleName().toString(),
+                        erasedTypeName(field.asType(), typeUtils), null, isPrivateField(field), simpleName));
             }
         }
 
@@ -271,7 +270,7 @@ final class CodeGenerator {
         sb.append("    }\n\n");
 
         // Generate the single Accessor inner class
-        generateAccessorClass(sb, simpleName, accessorInfos, parentInfo);
+        generateAccessorClass(sb, simpleName, accessorInfos, parentInfos);
 
         // End class
         sb.append("}\n");
@@ -1146,9 +1145,9 @@ final class CodeGenerator {
     }
 
     private static void generateAccessorClass(StringBuilder sb, String commandSimpleName,
-            List<FieldAccessorInfo> infos, FieldAccessorInfo parentInfo) {
+            List<FieldAccessorInfo> infos, List<FieldAccessorInfo> parentInfos) {
         sb.append("    static final class Accessor implements org.aesh.command.impl.internal.FieldAccessor,\n");
-        sb.append("            java.util.function.BiConsumer<Object, Object> {\n");
+        sb.append("            org.aesh.command.impl.internal.ParentCommandInjector {\n");
 
         sb.append("        static final Accessor PARENT_INJECTOR = new Accessor(-1);\n\n");
 
@@ -1164,7 +1163,7 @@ final class CodeGenerator {
 
         // set method
         sb.append("        public void set(Object inst, Object val) {\n");
-        boolean setNeedsTry = hasPrivateFields(infos) || (parentInfo != null && parentInfo.isPrivate);
+        boolean setNeedsTry = hasPrivateFields(infos);
         if (setNeedsTry) {
             sb.append("          try {\n");
         }
@@ -1243,18 +1242,26 @@ final class CodeGenerator {
         }
         sb.append("        }\n\n");
 
-        // accept method (BiConsumer for parent command injection)
+        // Legacy direct-parent form, plus the type-directed runtime form.
         sb.append("        @Override\n");
         sb.append("        public void accept(Object cmd, Object parent) {\n");
-        if (parentInfo != null) {
+        sb.append("            inject(cmd, type -> type.isInstance(parent) ? parent : null);\n");
+        sb.append("        }\n\n");
+        sb.append("        @Override\n");
+        sb.append("        public void inject(Object cmd, java.util.function.Function<Class<?>, Object> parentLookup) {\n");
+        for (FieldAccessorInfo parentInfo : parentInfos) {
+            sb.append("            {").append(parentInfo.fieldType).append(" parent = (")
+                    .append(parentInfo.fieldType).append(") parentLookup.apply(")
+                    .append(parentInfo.fieldType).append(".class);\n");
+            sb.append("                if (parent != null) {");
             if (parentInfo.isPrivate) {
-                sb.append("            try { ").append(fieldConstantRef(fieldConstantName(parentInfo.fieldName)))
-                        .append(".set(cmd, parent);")
-                        .append(" } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
+                sb.append(" try { ").append(fieldConstantRef(fieldConstantName(parentInfo.fieldName)))
+                        .append(".set(cmd, parent); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
             } else {
-                sb.append("            ((").append(commandSimpleName).append(") cmd).").append(parentInfo.fieldName)
-                        .append(" = (").append(parentInfo.fieldType).append(") parent;\n");
+                sb.append(" ((").append(commandSimpleName).append(") cmd).")
+                        .append(parentInfo.fieldName).append(" = parent;");
             }
+            sb.append(" }\n            }\n");
         }
         sb.append("        }\n");
         sb.append("    }\n");
@@ -2275,7 +2282,7 @@ final class CodeGenerator {
         sb.append("    }\n\n");
 
         generateMethodAdapter(sb, ownerTypeRef, method, params, elementUtils, typeUtils);
-        generateAccessorClass(sb, "Adapter", accessorInfos, null);
+        generateAccessorClass(sb, "Adapter", accessorInfos, java.util.Collections.emptyList());
 
         sb.append("}\n");
 

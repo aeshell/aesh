@@ -1713,6 +1713,19 @@ public class ProcessorTest {
 
     // --- Test: @ParentCommand injection in generated code ---
 
+    private static final String PARENT_ROOT_CMD_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"root\", description = \"Root\")\n" +
+            "public class ParentRootCommand implements Command<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+            "}\n";
+
     private static final String PARENT_CMD_GROUP_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
@@ -1748,6 +1761,12 @@ public class ProcessorTest {
             "    @ParentCommand\n" +
             "    private ParentGroupCommand parent;\n" +
             "\n" +
+            "    @ParentCommand\n" +
+            "    private ParentGroupCommand secondParent;\n" +
+            "\n" +
+            "    @ParentCommand\n" +
+            "    private ParentRootCommand root;\n" +
+            "\n" +
             "    @Option(description = \"Name\")\n" +
             "    private String name;\n" +
             "\n" +
@@ -1761,7 +1780,8 @@ public class ProcessorTest {
     public void testParentCommandInjection() throws Exception {
         CompilationResult result = compileWithProcessor(
                 new InMemorySource("test.ParentChildCommand", PARENT_CHILD_CMD_SOURCE),
-                new InMemorySource("test.ParentGroupCommand", PARENT_CMD_GROUP_SOURCE));
+                new InMemorySource("test.ParentGroupCommand", PARENT_CMD_GROUP_SOURCE),
+                new InMemorySource("test.ParentRootCommand", PARENT_ROOT_CMD_SOURCE));
         assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
 
         // Verify the child's generated metadata has a parentCommandInjector
@@ -1776,12 +1796,24 @@ public class ProcessorTest {
         // Verify the injector works: create a parent, inject into child
         Class<?> parentClass = result.classLoader.loadClass("test.ParentGroupCommand");
         Object parentInstance = parentClass.newInstance();
-        childPC.getParentCommandInjector().accept(childInstance, parentInstance);
+        Class<?> rootClass = result.classLoader.loadClass("test.ParentRootCommand");
+        Object rootInstance = rootClass.newInstance();
+        childPC.getParentCommandInjector().inject(childInstance, type -> type == parentClass
+                ? parentInstance
+                : type == rootClass ? rootInstance : null);
 
         // Verify the @ParentCommand field was set via reflection
         java.lang.reflect.Field parentField = childInstance.getClass().getDeclaredField("parent");
         parentField.setAccessible(true);
         assertEquals("Parent should be injected", parentInstance, parentField.get(childInstance));
+        java.lang.reflect.Field secondParentField = childInstance.getClass().getDeclaredField("secondParent");
+        secondParentField.setAccessible(true);
+        assertEquals("Every matching @ParentCommand field should be injected", parentInstance,
+                secondParentField.get(childInstance));
+        java.lang.reflect.Field rootField = childInstance.getClass().getDeclaredField("root");
+        rootField.setAccessible(true);
+        assertEquals("Ancestor fields should resolve by their declared type", rootInstance,
+                rootField.get(childInstance));
 
         // Also verify equivalence with reflection path
         assertEquivalence(

@@ -555,11 +555,13 @@ class Executions {
     }
 
     private static void injectParentCommands(ProcessedCommand<?, ?> processedCommand, CommandContext commandContext) {
-        java.util.function.BiConsumer<Object, Object> injector = processedCommand.getParentCommandInjector();
+        org.aesh.command.impl.internal.ParentCommandInjector injector = processedCommand.getParentCommandInjector();
         if (injector != null) {
-            Command<?> parent = commandContext.getParentCommand();
-            if (parent != null)
-                injector.accept(processedCommand.getCommand(), parent);
+            injector.inject(processedCommand.getCommand(), type -> {
+                if (!Command.class.isAssignableFrom(type))
+                    return null;
+                return commandContext.getParentCommand((Class) type);
+            });
             return;
         }
         Object command = processedCommand.getCommand();

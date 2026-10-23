@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -111,7 +110,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
     private CompleteStatus completeStatus;
-    private BiConsumer<Object, Object> parentCommandInjector;
+    private ParentCommandInjector parentCommandInjector;
     private int optionDeclarationCounter;
     private List<ProcessedOption> cachedPositionalOrder;
     private boolean hasInheritedOptions;
@@ -502,11 +501,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.helpSectionProvider = helpSectionProvider;
     }
 
-    public void setParentCommandInjector(BiConsumer<Object, Object> injector) {
+    public void setParentCommandInjector(ParentCommandInjector injector) {
         this.parentCommandInjector = injector;
     }
 
-    public BiConsumer<Object, Object> getParentCommandInjector() {
+    public ParentCommandInjector getParentCommandInjector() {
         return parentCommandInjector;
     }
 
