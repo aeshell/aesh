@@ -29,6 +29,20 @@ final class InterruptEscalation {
 
     static final long GRACE_MS = 2000;
 
+    private final long graceMs;
+
+    InterruptEscalation() {
+        this(GRACE_MS);
+    }
+
+    /**
+     * Test seam: same escalation logic with a shorter abandonment grace
+     * period, so tests need not wait out the production timeout.
+     */
+    InterruptEscalation(long graceMs) {
+        this.graceMs = graceMs;
+    }
+
     private int repeats;
     private boolean watcherStarted;
 
@@ -45,7 +59,7 @@ final class InterruptEscalation {
             watcherStarted = true;
             Thread watcher = new Thread(() -> {
                 try {
-                    Thread.sleep(GRACE_MS);
+                    Thread.sleep(graceMs);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return;

@@ -78,7 +78,17 @@ public final class CommandJob implements Consumer<Signal> {
     // wired (see setUpstreamSupervisor).
     private volatile UpstreamOutcomeSupervisor upstreamSupervisor;
     private volatile boolean finished;
-    private final InterruptEscalation escalation = new InterruptEscalation();
+    private InterruptEscalation escalation = new InterruptEscalation();
+
+    /**
+     * Test seam: replace the abandonment tracker, e.g. with a shorter grace
+     * period so tests need not wait out the production timeout. Production
+     * code never calls this; behavior is unchanged unless invoked.
+     */
+    void setInterruptEscalation(InterruptEscalation escalation) {
+        this.escalation = escalation;
+    }
+
     /**
      * Execution-scoped program-status context, installed on the worker
      * thread for the run and closed when the job finishes. Explicit

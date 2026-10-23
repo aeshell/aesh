@@ -283,6 +283,9 @@ public class CommandJobTest {
         AtomicBoolean stop = new AtomicBoolean();
         FakeExecution execution = ignoringExecution(entered, stop);
         CommandJob job = new CommandJob(testManager(), new TestConnection(), execution, "test", null);
+        // Shorten the abandonment grace period: the escalation logic is
+        // identical, only the production 2s wait is skipped.
+        job.setInterruptEscalation(new InterruptEscalation(100));
 
         job.start();
         assertTrue(entered.await(5, TimeUnit.SECONDS));
@@ -422,6 +425,11 @@ public class CommandJobTest {
         connection.read("spin" + Config.getLineSeparator());
         assertTrue(SpinCommand.entered.await(5, TimeUnit.SECONDS));
         CommandJob job = (CommandJob) connection.signalHandler();
+        // Three interrupts abandon immediately without waiting out the grace
+        // period (grace-expiry abandonment is covered by
+        // testRepeatedInterruptAbandonsUnresponsiveJob); what matters here is
+        // that the prompt is reclaimed and the next command runs.
+        job.accept(Signal.INT);
         job.accept(Signal.INT);
         job.accept(Signal.INT);
         assertTrue("Unresponsive job should be abandoned", killedLatch.await(10, TimeUnit.SECONDS));
