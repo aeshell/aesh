@@ -31,7 +31,6 @@ import org.aesh.builtins.common.AeshTestCommons;
 import org.aesh.builtins.ls.Ls;
 import org.aesh.builtins.mkdir.Mkdir;
 import org.aesh.builtins.touch.Touch;
-import org.aesh.terminal.Key;
 import org.aesh.terminal.utils.Config;
 import org.junit.After;
 import org.junit.Before;
@@ -75,24 +74,29 @@ public class RmTest extends AeshTestCommons {
 
         pushToOutput("touch " + tempPath + "file03.txt");
         assertTrue(new File(tempPath+"file03.txt").exists());
-        pushToOutput("rm -i " + tempPath + "file03.txt");
+        // Send without waiting: rm blocks on the interactive prompt, so awaiting
+        // its completion here would burn the whole 5s latch timeout. The "y"
+        // line below completes the command and releases *its* latch instead.
+        connection().read("rm -i " + tempPath + "file03.txt" + Config.getLineSeparator());
         pushToOutput("y");
         assertFalse(new File(tempPath+"file03.txt").exists());
 
         pushToOutput("cd " + tempDir.toFile().getAbsolutePath());
         pushToOutput("mkdir " + tempPath + "aesh_rocks2");
         assertTrue(new File(tempPath+"aesh_rocks2").exists());
-        pushToOutput("rm -di " + tempPath + "aesh_rocks2");
+        connection().read("rm -di " + tempPath + "aesh_rocks2" + Config.getLineSeparator());
         pushToOutput("y");
         assertFalse(new File(tempPath+"aesh_rocks2").exists());
 
-        connection().clearOutputBuffer();
+        // Answering anything but "y" keeps the file: exercises the decline
+        // branch of the interactive prompt (the accept branch is covered above).
+        // Note: AeshTestCommons.output() writes to the *output* buffer, so it
+        // cannot submit commands or send a real interrupt; use connection reads.
         pushToOutput("touch " + tempPath + "file04.txt");
-        output("rm " + tempPath + "file04.txt");
-        output(String.valueOf(Key.CTRL_C));
-        pushToOutput("cat " + tempPath + "file04.txt");
-
-        assertFalse(connection().getOutputBuffer().contains("No such file or directory"));
+        assertTrue(new File(tempPath + "file04.txt").exists());
+        connection().read("rm -i " + tempPath + "file04.txt" + Config.getLineSeparator());
+        pushToOutput("n");
+        assertTrue("declined removal must keep the file", new File(tempPath + "file04.txt").exists());
 
         finish();
     }

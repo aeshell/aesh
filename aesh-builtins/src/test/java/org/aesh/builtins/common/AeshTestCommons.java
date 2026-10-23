@@ -6,6 +6,8 @@
  */
 package org.aesh.builtins.common;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -83,7 +85,12 @@ public class AeshTestCommons {
         commandLatch = new CountDownLatch(1);
         connection.read(literalCommand + Config.getLineSeparator());
         try {
-            commandLatch.await(5, TimeUnit.SECONDS);
+            // Fail loudly on timeout: an ignored await turned interactive
+            // prompts into silent 5s stalls (e.g. waiting on a command that
+            // blocks for follow-up input). Every caller sends a completing
+            // command; use connection().read() directly for fire-and-forget.
+            boolean completed = commandLatch.await(5, TimeUnit.SECONDS);
+            assertTrue("command did not complete within timeout: " + literalCommand, completed);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
