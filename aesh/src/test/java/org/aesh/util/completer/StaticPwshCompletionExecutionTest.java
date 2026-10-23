@@ -28,6 +28,7 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -115,31 +116,71 @@ public class StaticPwshCompletionExecutionTest {
     }
 
     /**
+     * Every input exercised below. All cases run in a single pwsh process
+     * (spawning pwsh dominates test time); results are split per input.
+     * Add new inputs here when adding tests.
+     */
+    private static final List<String> BATCH_INPUTS = Arrays.asList(
+            "cmd mid leaf --leaf",
+            "cmd --glo",
+            "cmd mid --",
+            "cmd mid leaf --",
+            "cmd mid ",
+            "cmd mid leaf --l",
+            "cmd mid leaf --mode ");
+
+    private static volatile List<List<String>> batchResults;
+
+    /**
      * Sources the script in a real pwsh and asks the completion engine for
      * candidates at the end of the given input line, returning the offered
-     * completion texts.
+     * completion texts. Backed by a single batched pwsh run shared by all
+     * tests in this class.
      */
-    private static List<String> completeInPwsh(String script, String input)
+    private static synchronized List<String> completeInPwsh(String script, String input)
             throws Exception {
+        if (batchResults == null)
+            batchResults = runBatch(script);
+        int index = BATCH_INPUTS.indexOf(input);
+        if (index < 0 || index >= batchResults.size())
+            throw new IllegalStateException(
+                    "No batched completion result for input [" + input + "]; add it to BATCH_INPUTS");
+        return batchResults.get(index);
+    }
+
+    private static List<List<String>> runBatch(String script) throws Exception {
         File dir = Files.createTempDirectory("aesh-pwsh-complete").toFile();
         try {
             File scriptFile = new File(dir, "complete.ps1");
             Files.write(scriptFile.toPath(), script.getBytes(StandardCharsets.UTF_8));
             List<String> driver = new ArrayList<>();
-            driver.add("param([string]$GenScript, [string]$Line)");
+            driver.add("param([string]$GenScript, [string]$LinesFile)");
             driver.add(". $GenScript");
-            driver.add("$r = TabExpansion2 -inputScript $Line -cursorColumn $Line.Length");
-            driver.add("foreach ($m in $r.CompletionMatches) {");
-            driver.add("    Write-Output (\"CAND:\" + $m.CompletionText)");
+            driver.add("$i = 0");
+            driver.add("foreach ($Line in [System.IO.File]::ReadAllLines($LinesFile)) {");
+            driver.add("    Write-Output (\"CASE:\" + $i)");
+            driver.add("    $r = TabExpansion2 -inputScript $Line -cursorColumn $Line.Length");
+            driver.add("    foreach ($m in $r.CompletionMatches) {");
+            driver.add("        Write-Output (\"CAND:\" + $m.CompletionText)");
+            driver.add("    }");
+            driver.add("    $i = $i + 1");
             driver.add("}");
             File driverFile = new File(dir, "driver.ps1");
             Files.write(driverFile.toPath(),
                     String.join("\r\n", driver).getBytes(StandardCharsets.UTF_8));
+            File linesFile = new File(dir, "lines.txt");
+            Files.write(linesFile.toPath(),
+                    String.join("\n", BATCH_INPUTS).getBytes(StandardCharsets.UTF_8));
 
-            Process process = new ProcessBuilder("pwsh", "-NoProfile", "-NonInteractive",
-                    "-File", driverFile.getAbsolutePath(),
-                    scriptFile.getAbsolutePath(), input)
-                    .redirectErrorStream(true).start();
+            List<String> command = new ArrayList<>();
+            command.add("pwsh");
+            command.add("-NoProfile");
+            command.add("-NonInteractive");
+            command.add("-File");
+            command.add(driverFile.getAbsolutePath());
+            command.add(scriptFile.getAbsolutePath());
+            command.add(linesFile.getAbsolutePath());
+            Process process = new ProcessBuilder(command).redirectErrorStream(true).start();
             if (!process.waitFor(120, TimeUnit.SECONDS)) {
                 process.destroyForcibly();
                 throw new IllegalStateException("pwsh completion timed out");
@@ -148,12 +189,20 @@ public class StaticPwshCompletionExecutionTest {
                     StandardCharsets.UTF_8);
             if (process.exitValue() != 0)
                 throw new IllegalStateException("pwsh failed: " + output);
-            List<String> candidates = new ArrayList<>();
+            List<List<String>> buckets = new ArrayList<>();
+            List<String> current = null;
             for (String line : output.split("\\r?\\n")) {
-                if (line.startsWith("CAND:"))
-                    candidates.add(line.substring("CAND:".length()));
+                if (line.startsWith("CASE:")) {
+                    current = new ArrayList<>();
+                    buckets.add(current);
+                } else if (line.startsWith("CAND:") && current != null) {
+                    current.add(line.substring("CAND:".length()));
+                }
             }
-            return candidates;
+            if (buckets.size() != BATCH_INPUTS.size())
+                throw new IllegalStateException("Expected " + BATCH_INPUTS.size()
+                        + " completion cases, got " + buckets.size() + ": " + output);
+            return buckets;
         } finally {
             deleteRecursively(dir);
         }
