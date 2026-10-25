@@ -414,6 +414,19 @@ public class SettingsBuilder<CI extends CommandInvocation> {
     }
 
     /**
+     * Enable fuzzy matching as a completion fallback in the interactive
+     * terminal. When prefix matching finds no candidates, the typed word is
+     * fuzzy-matched against command, subcommand, and option names.
+     * Enabled by default.
+     *
+     * @param enable true to enable fuzzy completion
+     */
+    public SettingsBuilder<CI> fuzzyCompletion(boolean enable) {
+        settings.setFuzzyCompletion(enable);
+        return this;
+    }
+
+    /**
      * Set a handler that receives command output separately from readline
      * chrome. Output is teed to both the terminal and this handler.
      * Zero overhead when not set.

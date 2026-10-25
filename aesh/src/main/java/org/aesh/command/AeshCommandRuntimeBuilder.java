@@ -302,7 +302,8 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
                     optionActivatorProvider != null ? optionActivatorProvider
                             : resolvedProviders.getOptionActivatorProvider(),
                     commandActivatorProvider != null ? commandActivatorProvider
-                            : resolvedProviders.getCommandActivatorProvider());
+                            : resolvedProviders.getCommandActivatorProvider(),
+                    resolvedProviders.fuzzyCompletion());
         } else if (resolvedProviders == null) {
             // Historic path: individuals only (nulls become defaults).
             resolvedProviders = new AeshInvocationProviders(converterInvocationProvider,
