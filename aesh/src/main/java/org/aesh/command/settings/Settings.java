@@ -456,6 +456,28 @@ public interface Settings<CI extends CommandInvocation>
     void setEnableShellEscape(boolean enable);
 
     /**
+     * Whether fuzzy matching is used as a completion fallback in the
+     * interactive terminal. When enabled, a typed word that matches no
+     * command, subcommand, or option name by prefix is fuzzy-matched
+     * against the available candidates (tolerating typos and supporting
+     * camelCase abbreviations) and the matches are ranked by score.
+     * <p>
+     * Enabled by default. Only applies to interactive completion; shell
+     * completion scripts ({@code --aesh-complete}) are unaffected since
+     * the shell re-filters candidates by prefix.
+     *
+     * @return true if fuzzy completion is enabled
+     */
+    boolean fuzzyCompletion();
+
+    /**
+     * Set whether fuzzy matching is used as a completion fallback.
+     *
+     * @param enable true to enable fuzzy completion
+     */
+    void setFuzzyCompletion(boolean enable);
+
+    /**
      * Handler that receives command output (what commands write via
      * {@code invocation.println()} / {@code invocation.print()}) separately
      * from readline chrome, prompt drawing, and ANSI escape sequences.

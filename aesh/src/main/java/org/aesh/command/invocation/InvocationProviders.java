@@ -40,4 +40,15 @@ public interface InvocationProviders {
     OptionActivatorProvider getOptionActivatorProvider();
 
     CommandActivatorProvider getCommandActivatorProvider();
+
+    /**
+     * Whether fuzzy matching is used as a completion fallback when prefix
+     * matching finds no candidates. Defaults to false; interactive consoles
+     * enable it through their settings.
+     *
+     * @return true if fuzzy completion is enabled
+     */
+    default boolean fuzzyCompletion() {
+        return false;
+    }
 }
