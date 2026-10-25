@@ -121,6 +121,7 @@ public class SettingsImpl<CI extends CommandInvocation>
     private Consumer<Void> connectionClosedHandler;
     private SubCommandModeSettings subCommandModeSettings;
     private boolean enableShellEscape;
+    private boolean fuzzyCompletion = true;
     private Consumer<String> commandOutputHandler;
     private java.util.Queue<String> inputLineResponses;
 
@@ -186,6 +187,7 @@ public class SettingsImpl<CI extends CommandInvocation>
         setConnectionClosedHandler(baseSettings.connectionClosedHandler());
         setSubCommandModeSettings(baseSettings.subCommandModeSettings());
         setEnableShellEscape(baseSettings.enableShellEscape());
+        setFuzzyCompletion(baseSettings.fuzzyCompletion());
         setCommandOutputHandler(baseSettings.commandOutputHandler());
         setInputLineResponses(baseSettings.inputLineResponses());
     }
@@ -962,6 +964,16 @@ public class SettingsImpl<CI extends CommandInvocation>
     @Override
     public void setEnableShellEscape(boolean enable) {
         this.enableShellEscape = enable;
+    }
+
+    @Override
+    public boolean fuzzyCompletion() {
+        return fuzzyCompletion;
+    }
+
+    @Override
+    public void setFuzzyCompletion(boolean enable) {
+        this.fuzzyCompletion = enable;
     }
 
     @Override

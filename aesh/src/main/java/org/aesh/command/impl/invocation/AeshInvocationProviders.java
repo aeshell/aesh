@@ -49,6 +49,7 @@ public class AeshInvocationProviders implements InvocationProviders {
     private final ValidatorInvocationProvider validatorInvocationProvider;
     private final OptionActivatorProvider optionActivatorProvider;
     private final CommandActivatorProvider commandActivatorProvider;
+    private final boolean fuzzyCompletion;
 
     public AeshInvocationProviders() {
         this(null, null, null, null, null);
@@ -60,6 +61,7 @@ public class AeshInvocationProviders implements InvocationProviders {
         this.validatorInvocationProvider = defaultIfNull(settings.validatorInvocationProvider(), DEFAULT_VALIDATOR);
         this.optionActivatorProvider = defaultIfNull(settings.optionActivatorProvider(), DEFAULT_OPTION_ACTIVATOR);
         this.commandActivatorProvider = defaultIfNull(settings.commandActivatorProvider(), DEFAULT_COMMAND_ACTIVATOR);
+        this.fuzzyCompletion = settings.fuzzyCompletion();
     }
 
     public AeshInvocationProviders(ConverterInvocationProvider converterInvocationProvider,
@@ -67,11 +69,22 @@ public class AeshInvocationProviders implements InvocationProviders {
             ValidatorInvocationProvider validatorInvocationProvider,
             OptionActivatorProvider optionActivatorProvider,
             CommandActivatorProvider commandActivatorProvider) {
+        this(converterInvocationProvider, completerInvocationProvider, validatorInvocationProvider,
+                optionActivatorProvider, commandActivatorProvider, false);
+    }
+
+    public AeshInvocationProviders(ConverterInvocationProvider converterInvocationProvider,
+            CompleterInvocationProvider completerInvocationProvider,
+            ValidatorInvocationProvider validatorInvocationProvider,
+            OptionActivatorProvider optionActivatorProvider,
+            CommandActivatorProvider commandActivatorProvider,
+            boolean fuzzyCompletion) {
         this.converterInvocationProvider = defaultIfNull(converterInvocationProvider, DEFAULT_CONVERTER);
         this.completerInvocationProvider = defaultIfNull(completerInvocationProvider, DEFAULT_COMPLETER);
         this.validatorInvocationProvider = defaultIfNull(validatorInvocationProvider, DEFAULT_VALIDATOR);
         this.optionActivatorProvider = defaultIfNull(optionActivatorProvider, DEFAULT_OPTION_ACTIVATOR);
         this.commandActivatorProvider = defaultIfNull(commandActivatorProvider, DEFAULT_COMMAND_ACTIVATOR);
+        this.fuzzyCompletion = fuzzyCompletion;
     }
 
     private static <T> T defaultIfNull(T value, T defaultValue) {
@@ -101,5 +114,10 @@ public class AeshInvocationProviders implements InvocationProviders {
     @Override
     public OptionActivatorProvider getOptionActivatorProvider() {
         return optionActivatorProvider;
+    }
+
+    @Override
+    public boolean fuzzyCompletion() {
+        return fuzzyCompletion;
     }
 }
