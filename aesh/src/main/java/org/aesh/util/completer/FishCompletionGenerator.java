@@ -366,10 +366,81 @@ public class FishCompletionGenerator implements ShellCompletionGenerator {
                 "    end" + NL +
                 "end" + NL +
                 NL +
+                dynamicOptionLines(parser, programName) +
                 "# -f suppresses default file completion so aesh candidates (options," + NL +
                 "# subcommands) are not mixed with filenames. The function above handles" + NL +
                 "# file/dir fallback via __aesh_file__/__aesh_dir__ sentinels." + NL +
                 "complete -c " + programName + " -f -k -a '(__" + programName + "_complete)'" + NL;
+    }
+
+    /**
+     * Per-option value completion for dynamic scripts. Fish matches bare
+     * {@code -a} candidates against the whole token, so values after
+     * {@code --opt=} or {@code --opt <TAB>} are filtered out by the generic
+     * registration below. Registering each value-taking option with
+     * {@code -r} routes those positions back into the same dynamic callback,
+     * which resolves the actual command and values server-side. File options
+     * complete natively instead, avoiding a JVM spawn per keystroke.
+     */
+    private static String dynamicOptionLines(CommandLineParser<? extends CommandInvocation> parser,
+            String programName) {
+        StringBuilder out = new StringBuilder();
+        appendDynamicOptions(out, programName, parser, new ArrayList<String>());
+        if (out.length() == 0)
+            return "";
+        return "# Per-option value completion: route --opt= and --opt <TAB> positions\n"
+                + "# back into the dynamic callback above, which resolves values server-side.\n"
+                + out.toString();
+    }
+
+    private static void appendDynamicOptions(StringBuilder out, String programName,
+            CommandLineParser<? extends CommandInvocation> parser, List<String> ancestorNames) {
+        CompletionFilter filter = CompletionFilter.defaults();
+        for (ProcessedOption option : CompletionFilter.visibleOptions(parser.getProcessedCommand(), filter)) {
+            if (option.name() == null || !option.hasValue())
+                continue;
+            appendDynamicOptionValue(out, programName, ancestorNames, option, option.name(), true);
+            for (String alias : option.getAliases())
+                appendDynamicOptionValue(out, programName, ancestorNames, option, alias, false);
+        }
+        for (CommandLineParser<? extends CommandInvocation> child : CompletionFilter.visibleChildren(parser,
+                filter)) {
+            String childName = child.getProcessedCommand().name().toLowerCase();
+            if (ancestorNames.contains(childName))
+                continue;
+            List<String> childPath = new ArrayList<>(ancestorNames);
+            childPath.add(childName);
+            appendDynamicOptions(out, programName, child, childPath);
+        }
+    }
+
+    /**
+     * Emits one dynamic per-option registration. File-taking options get a
+     * native -r entry without -a so fish completes paths without a JVM spawn;
+     * other valued options route through the dynamic callback above.
+     */
+    private static void appendDynamicOptionValue(StringBuilder out, String programName,
+            List<String> ancestorNames, ProcessedOption option, String name, boolean primary) {
+        boolean isFileOpt = option.isTypeAssignableByResourcesOrFile();
+        out.append("complete -c ").append(programName);
+        if (!isFileOpt)
+            out.append(" -f");
+        if (!ancestorNames.isEmpty()) {
+            out.append(" -n \"");
+            for (int i = 0; i < ancestorNames.size(); i++) {
+                if (i > 0)
+                    out.append("; and ");
+                out.append("__fish_seen_subcommand_from ").append(ancestorNames.get(i));
+            }
+            out.append("\"");
+        }
+        out.append(" -l ").append(name);
+        if (primary && option.shortName() != null && !option.shortName().isEmpty())
+            out.append(" -s ").append(option.shortName());
+        out.append(" -r");
+        if (!isFileOpt)
+            out.append(" -a '(__").append(programName).append("_complete)'");
+        out.append(NL);
     }
 
     private static String escapeFish(String s) {

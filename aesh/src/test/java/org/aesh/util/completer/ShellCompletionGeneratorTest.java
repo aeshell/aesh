@@ -839,4 +839,94 @@ public class ShellCompletionGeneratorTest {
         assertTrue("Should use cursorPosition in static group completion",
                 out.contains("$cursorPosition"));
     }
+
+    // -- Dynamic per-option fish value completion (#693) --
+
+    @CommandDefinition(name = "dynroot", description = "dyn root", groupCommands = { DynSubCommand.class })
+    public static class DynRootCommand implements Command {
+        @Option(name = "global", description = "Global opt", inherited = true, allowedValues = { "g1", "g2" })
+        String global;
+
+        @Option(name = "config", description = "Config file")
+        java.io.File config;
+
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "dynsub", description = "dyn sub", groupCommands = { DynLeafCommand.class })
+    public static class DynSubCommand implements Command {
+        @Option(name = "mode", shortName = 'm', aliases = { "md" }, description = "Mode", allowedValues = {
+                "fast", "slow" })
+        String mode;
+
+        @Option(name = "verbose", shortName = 'v', hasValue = false, description = "Verbose output")
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "dynleaf", description = "dyn leaf")
+    public static class DynLeafCommand implements Command {
+        @Option(name = "level", description = "Level", allowedValues = { "1", "2" })
+        String level;
+
+        @Override
+        public CommandResult execute(CommandInvocation inv) throws CommandException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testFishDynamicOptionsScopedPerValueOption() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.FISH, DynRootCommand.class, "dynprog");
+
+        assertTrue("Valued option routes value positions back into the callback",
+                out.contains(
+                        "complete -c dynprog -f -n \"__fish_seen_subcommand_from dynsub\" -l mode -s m -r -a '(__dynprog_complete)'"));
+        assertTrue("Aliases get their own scoped entries without the short flag",
+                out.contains(
+                        "complete -c dynprog -f -n \"__fish_seen_subcommand_from dynsub\" -l md -r -a '(__dynprog_complete)'"));
+        assertTrue("Nested subcommands conjoin the ancestor path",
+                out.contains(
+                        "complete -c dynprog -f -n \"__fish_seen_subcommand_from dynsub; and __fish_seen_subcommand_from dynleaf\" -l level -r -a '(__dynprog_complete)'"));
+        assertFalse("Boolean flags take no value and get no per-option entry",
+                out.contains("-l verbose -r"));
+    }
+
+    @Test
+    public void testFishDynamicInheritedOptionEmittedOnce() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.FISH, DynRootCommand.class, "dynprog");
+        String line = "complete -c dynprog -f -l global -r -a '(__dynprog_complete)'";
+        int first = out.indexOf(line);
+        assertTrue("Inherited option must be registered: " + line, first >= 0);
+        assertEquals("Inherited option must appear exactly once (unscoped, server resolves context)",
+                -1, out.indexOf(line, first + 1));
+    }
+
+    @Test
+    public void testFishDynamicFileOptionUsesNativeCompletion() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.FISH, DynRootCommand.class, "dynprog");
+
+        assertTrue("File options route value positions natively",
+                out.contains("complete -c dynprog -l config -r\n"));
+        assertFalse("File options must not invoke the callback",
+                out.contains("-l config -r -a"));
+    }
+
+    @Test
+    public void testFishDynamicRedirectLeavesOptionLinesUnchanged() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.FISH, DynRootCommand.class, "dynprog", true);
+
+        assertTrue("Redirect applies inside the callback invocation",
+                out.contains("set -l results (dynprog --aesh-complete -- $tokens[2..] 2>/dev/null)"));
+        assertTrue("Per-option lines carry no redirect of their own",
+                out.contains(
+                        "complete -c dynprog -f -n \"__fish_seen_subcommand_from dynsub\" -l mode -s m -r -a '(__dynprog_complete)'"));
+    }
 }
