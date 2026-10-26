@@ -62,6 +62,7 @@ public class AeshRuntimeRunner {
     private String[] args;
     private ShellType completionShellType;
     private ShellType dynamicCompletionShellType;
+    private boolean redirectStderr;
     private String completionProgramName;
     private boolean dynamicComplete;
     private CommandNotFoundHandler commandNotFoundHandler;
@@ -174,6 +175,21 @@ public class AeshRuntimeRunner {
 
     public AeshRuntimeRunner generateDynamicCompletion(ShellType shellType) {
         this.dynamicCompletionShellType = shellType;
+        return this;
+    }
+
+    /**
+     * Silence the dynamic-completion callback's stderr in the generated
+     * script, so JVM startup noise (e.g. incubator module warnings, which no
+     * JVM flag suppresses) does not paint over the prompt during completion.
+     * Applies to bash/zsh/fish; PowerShell scripts already redirect stderr.
+     *
+     * @param redirectStderr whether to append the shell-appropriate stderr
+     *        redirect to the callback invocation
+     * @return this builder
+     */
+    public AeshRuntimeRunner redirectStderr(boolean redirectStderr) {
+        this.redirectStderr = redirectStderr;
         return this;
     }
 
@@ -493,7 +509,7 @@ public class AeshRuntimeRunner {
 
             String programName = completionProgramName != null ? completionProgramName : commandName;
             String script = ShellCompletionGenerator.forShell(dynamicCompletionShellType)
-                    .generateDynamic(container.getParser(), programName);
+                    .generateDynamic(container.getParser(), programName, redirectStderr);
             System.out.print(script);
             return CommandResult.SUCCESS;
         } catch (CommandNotFoundException e) {

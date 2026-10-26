@@ -328,6 +328,51 @@ public class ShellCompletionGeneratorTest {
         assertTrue(out.contains("--aesh-complete"));
     }
 
+    @Test
+    public void testBashDynamicCompletionRedirectsStderr() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.BASH, SimpleCmd.class, "mycli", true);
+
+        assertTrue("Redirect must sit inside the command substitution, keeping stdout captured",
+                out.contains("candidates=$(mycli --aesh-complete -- \"${COMP_WORDS[@]:1}\" 2>/dev/null)"));
+    }
+
+    @Test
+    public void testZshDynamicCompletionRedirectsStderr() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.ZSH, SimpleCmd.class, "mycli", true);
+
+        assertTrue("Redirect must sit inside the process substitution",
+                out.contains("done < <(mycli --aesh-complete -- \"${words[@]:1}\" 2>/dev/null)"));
+    }
+
+    @Test
+    public void testFishDynamicCompletionRedirectsStderr() throws CommandLineParserException {
+        String out = ShellCompletionGenerator.generateDynamic(ShellType.FISH, SimpleCmd.class, "mycli", true);
+
+        assertTrue("Redirect must sit inside the command substitution",
+                out.contains("set -l results (mycli --aesh-complete -- $tokens[2..] 2>/dev/null)"));
+    }
+
+    @Test
+    public void testDynamicCompletionDefaultsToNoRedirect() throws CommandLineParserException {
+        for (ShellType type : new ShellType[] { ShellType.BASH, ShellType.ZSH, ShellType.FISH }) {
+            String def = ShellCompletionGenerator.generateDynamic(type, SimpleCmd.class, "mycli");
+            String off = ShellCompletionGenerator.generateDynamic(type, SimpleCmd.class, "mycli", false);
+            assertEquals("No-flag output must be byte-identical to the default", def, off);
+            assertFalse("No redirect without the flag: " + type, off.contains("2>/dev/null"));
+        }
+    }
+
+    @Test
+    public void testPwshDynamicCompletionAlwaysRedirects() throws CommandLineParserException {
+        // PowerShell scripts already silenced the callback; the flag is a no-op there.
+        String def = ShellCompletionGenerator.generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli");
+        String on = ShellCompletionGenerator.generateDynamic(ShellType.PWSH, SimpleCmd.class, "mycli", true);
+
+        assertTrue("pwsh keeps its existing 2>$null redirect",
+                def.contains("--aesh-complete -- @cmdArgs 2>$null"));
+        assertEquals("Redirect flag must not change pwsh output", def, on);
+    }
+
     // -- One-shot API test --
 
     @Test

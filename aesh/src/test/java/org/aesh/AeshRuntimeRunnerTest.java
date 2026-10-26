@@ -459,6 +459,28 @@ public class AeshRuntimeRunnerTest {
         assertTrue(output.contains("complete -o nosort -F _complete_myapp myapp"));
     }
 
+    @Test
+    public void testGenerateDynamicCompletionRedirectsStderr() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateDynamicCompletion(ShellType.BASH)
+                .redirectStderr(true)
+                .execute());
+
+        assertTrue("Redirect must be inside the callback substitution",
+                output.contains("--aesh-complete -- \"${COMP_WORDS[@]:1}\" 2>/dev/null)"));
+    }
+
+    @Test
+    public void testGenerateDynamicCompletionDefaultsToNoRedirect() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(CaptureCommand.class)
+                .generateDynamicCompletion(ShellType.BASH)
+                .execute());
+
+        assertFalse("No redirect without the flag", output.contains("2>/dev/null"));
+    }
+
     // -- Built-in --aesh-completion flag tests --
 
     @Test

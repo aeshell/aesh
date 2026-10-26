@@ -72,6 +72,32 @@ public interface ShellCompletionGenerator {
     String generateDynamic(CommandLineParser<? extends CommandInvocation> parser, String programName);
 
     /**
+     * Generate a dynamic callback completion script, optionally silencing the
+     * callback JVM's stderr so startup noise (e.g. incubator module warnings,
+     * which no JVM flag suppresses) does not paint over the prompt during
+     * completion. The redirect is emitted inside the command substitution, so
+     * candidates on stdout are unaffected.
+     * <p>
+     * The default implementation ignores the flag and delegates to
+     * {@link #generateDynamic(CommandLineParser, String)}; implementations
+     * supporting redirection must override this method.
+     *
+     * @param parser the command parser
+     * @param programName the name of the program
+     * @param redirectStderr when true, append the shell-appropriate stderr
+     *        redirect ({@code 2>/dev/null}, {@code 2>$null} on PowerShell)
+     *        to the callback invocation
+     * @return the dynamic completion script content
+     */
+    default String generateDynamic(CommandLineParser<? extends CommandInvocation> parser, String programName,
+            boolean redirectStderr) {
+        if (redirectStderr)
+            throw new UnsupportedOperationException(
+                    getClass().getName() + " does not support stderr redirection");
+        return generateDynamic(parser, programName);
+    }
+
+    /**
      * Supported shell types.
      */
     enum ShellType {
@@ -177,5 +203,23 @@ public interface ShellCompletionGenerator {
     static String generateDynamic(ShellType type, Class<? extends Command> commandClass, String programName)
             throws CommandLineParserException {
         return forShell(type).generateDynamic(buildParser(commandClass), programName);
+    }
+
+    /**
+     * One-shot dynamic callback completion script generation from a command class,
+     * with optional silencing of the callback JVM's stderr (see
+     * {@link #generateDynamic(CommandLineParser, String, boolean)}).
+     *
+     * @param type shell type
+     * @param commandClass the command class annotated with @CommandDefinition
+     * @param programName the name of the program
+     * @param redirectStderr when true, append the shell-appropriate stderr redirect
+     *        to the callback invocation
+     * @return the dynamic completion script content
+     * @throws CommandLineParserException if the command class cannot be parsed
+     */
+    static String generateDynamic(ShellType type, Class<? extends Command> commandClass, String programName,
+            boolean redirectStderr) throws CommandLineParserException {
+        return forShell(type).generateDynamic(buildParser(commandClass), programName, redirectStderr);
     }
 }
