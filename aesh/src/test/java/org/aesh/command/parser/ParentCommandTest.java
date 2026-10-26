@@ -118,6 +118,50 @@ public class ParentCommandTest {
     }
 
     @Test
+    public void testTypedParentCommandInjection() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+
+        // Grandparent level
+        CommandLineParser<CommandInvocation> grandParser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new TypedGrandCommand<>()).getParser();
+        grandParser.parse("tgrand --grandname=G", CommandLineParser.Mode.STRICT);
+        grandParser.getCommandPopulator().populateObject(
+                grandParser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        TypedGrandCommand<CommandInvocation> grandCmd = (TypedGrandCommand<CommandInvocation>) grandParser
+                .getCommand();
+        assertEquals("G", grandCmd.grandName);
+
+        // Mid level, resolved lazily like a real sub-command entry
+        CommandLineParser<CommandInvocation> midParser = grandParser.getChildParser("tmid");
+        assertNotNull(midParser);
+        midParser.parse("tmid --midname=M", CommandLineParser.Mode.STRICT);
+        midParser.getCommandPopulator().populateObject(
+                midParser.getProcessedCommand(), invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        TypedMidCommand<CommandInvocation> midCmd = (TypedMidCommand<CommandInvocation>) midParser.getCommand();
+        assertEquals("M", midCmd.midName);
+
+        // Both ancestors on the context stack, innermost last
+        CommandContext ctx = new CommandContext("aesh> ");
+        ctx.push(grandParser, grandCmd);
+        ctx.push(midParser, midCmd);
+
+        // Leaf with two direct-typed fields and one ancestor-typed field
+        CommandLineParser<CommandInvocation> leafParser = midParser.getChildParser("tleaf");
+        assertNotNull(leafParser);
+        leafParser.parse("tleaf", CommandLineParser.Mode.STRICT);
+        leafParser.getCommandPopulator().populateObject(
+                leafParser.getProcessedCommand(), invocationProviders, aeshContext,
+                CommandLineParser.Mode.VALIDATE, ctx);
+
+        TypedLeafCommand<CommandInvocation> leafCmd = (TypedLeafCommand<CommandInvocation>) leafParser.getCommand();
+        assertSame("direct field resolves to the nearest matching parent", midCmd, leafCmd.directParent);
+        assertSame("a second field of the same type resolves identically", midCmd, leafCmd.alsoDirect);
+        assertSame("ancestor-typed field resolves past the direct parent", grandCmd, leafCmd.grandParent);
+        assertEquals("M", leafCmd.directParent.midName);
+        assertEquals("G", leafCmd.grandParent.grandName);
+    }
+
+    @Test
     public void testNestedContext() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
 
@@ -292,6 +336,50 @@ public class ParentCommandTest {
 
         @Argument(description = "Tag name")
         public String tagName;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ========== Typed multi-field @ParentCommand fixtures ==========
+
+    @CommandDefinition(name = "tgrand", description = "Typed grandparent", groupCommands = { TypedMidCommand.class })
+    public static class TypedGrandCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(name = "grandname", description = "Grandparent name")
+        public String grandName;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "tmid", description = "Typed mid", groupCommands = { TypedLeafCommand.class })
+    public static class TypedMidCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @Option(name = "midname", description = "Mid name")
+        public String midName;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "tleaf", description = "Typed leaf")
+    public static class TypedLeafCommand<CI extends CommandInvocation> implements Command<CI> {
+
+        @ParentCommand
+        public TypedMidCommand<CI> directParent;
+
+        @ParentCommand
+        public TypedMidCommand<CI> alsoDirect;
+
+        @ParentCommand
+        public TypedGrandCommand<CI> grandParent;
 
         @Override
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {

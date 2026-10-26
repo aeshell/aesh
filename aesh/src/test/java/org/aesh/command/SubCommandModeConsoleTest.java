@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.ParentCommand;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
@@ -384,6 +385,99 @@ public class SubCommandModeConsoleTest {
         public CommandResult execute(CommandInvocation invocation) {
             executed = true;
             lastValue = value;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- Typed @ParentCommand injection in sub-command mode ---
+
+    @Test
+    public void testTypedParentCommandInjectionInSubCommandMode() throws Exception {
+        TLeafCommand.executed = false;
+        TLeafCommand.seenDirectName = null;
+        TLeafCommand.seenAncestorName = null;
+        AtomicReference<CountDownLatch> latchRef = new AtomicReference<>(new CountDownLatch(1));
+
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(TRootCommand.class).create();
+
+        TestConnection connection = new TestConnection();
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .commandRegistry(registry)
+                .connection(connection)
+                .logging(true)
+                .commandExecutionListener((line, result, durationMs) -> latchRef.get().countDown())
+                .build();
+
+        ReadlineConsole console = new ReadlineConsole(settings);
+        console.start();
+
+        // Enter root sub-command mode with a root option value
+        connection.read("troot --rname=R" + Config.getLineSeparator());
+        assertTrue("troot should complete", latchRef.get().await(5, TimeUnit.SECONDS));
+
+        // Enter nested sub-command mode with a mid option value
+        latchRef.set(new CountDownLatch(1));
+        connection.read("tmid --mname=M" + Config.getLineSeparator());
+        assertTrue("tmid should complete", latchRef.get().await(5, TimeUnit.SECONDS));
+
+        // Execute the leaf: both @ParentCommand fields must resolve by type
+        latchRef.set(new CountDownLatch(1));
+        connection.read("tleaf" + Config.getLineSeparator());
+        assertTrue("tleaf should complete", latchRef.get().await(5, TimeUnit.SECONDS));
+
+        assertTrue("leaf should have executed", TLeafCommand.executed);
+        assertEquals("direct field must resolve to the mid parent", "M", TLeafCommand.seenDirectName);
+        assertEquals("ancestor field must resolve to the root parent", "R", TLeafCommand.seenAncestorName);
+
+        // Exit nested mode, then the top mode
+        connection.read("exit" + Config.getLineSeparator());
+        connection.read("exit" + Config.getLineSeparator());
+
+        console.stop();
+    }
+
+    @CommandDefinition(name = "troot", description = "Typed root", groupCommands = { TMidCommand.class })
+    public static class TRootCommand implements Command<CommandInvocation> {
+        @Option(name = "rname", description = "Root name")
+        String rname;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) throws CommandException, InterruptedException {
+            invocation.enterSubCommandMode(this);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "tmid", description = "Typed mid", groupCommands = { TLeafCommand.class })
+    public static class TMidCommand implements Command<CommandInvocation> {
+        @Option(name = "mname", description = "Mid name")
+        String mname;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) throws CommandException, InterruptedException {
+            invocation.enterSubCommandMode(this);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "tleaf", description = "Typed leaf")
+    public static class TLeafCommand implements Command<CommandInvocation> {
+        @ParentCommand
+        TMidCommand direct;
+
+        @ParentCommand
+        TRootCommand ancestor;
+
+        static volatile boolean executed;
+        static volatile String seenDirectName;
+        static volatile String seenAncestorName;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            executed = true;
+            seenDirectName = direct != null ? direct.mname : null;
+            seenAncestorName = ancestor != null ? ancestor.rname : null;
             return CommandResult.SUCCESS;
         }
     }
