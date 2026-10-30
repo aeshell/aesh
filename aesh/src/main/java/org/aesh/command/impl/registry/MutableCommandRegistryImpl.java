@@ -34,6 +34,7 @@ import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
+import org.aesh.command.impl.completer.FuzzyCompletionMatcher;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -48,6 +49,7 @@ import org.aesh.command.registry.CommandRegistryException;
 import org.aesh.command.registry.MutableCommandRegistry;
 import org.aesh.parser.ParsedLine;
 import org.aesh.readline.completion.CompleteOperation;
+import org.aesh.terminal.formatting.TerminalString;
 
 /**
  * @author Aesh team
@@ -173,7 +175,29 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                         co.setAppendSeparator(false);
                 }
             }
+            if (co.getCompletionCandidates().isEmpty() && isFuzzyCompletionEnabled() &&
+                    FuzzyCompletionMatcher.isEligible(parsedLine.selectedWord().word())) {
+                List<String> activatedNames = new ArrayList<>();
+                for (CommandContainer<CI> command : registry.values()) {
+                    ProcessedCommand<? extends Command<CI>, CI> com = command.getParser().getProcessedCommand();
+                    if (com.isActivated(new ParsedCommand(com)))
+                        activatedNames.add(com.name());
+                }
+                List<TerminalString> fuzzyMatches = FuzzyCompletionMatcher.getInstance()
+                        .fuzzyMatches(parsedLine.selectedWord().word(), activatedNames);
+                if (!fuzzyMatches.isEmpty()) {
+                    co.addCompletionCandidatesTerminalString(fuzzyMatches);
+                    co.setOffset(co.getCursor());
+                    co.setReplacingCurrentWord(true);
+                    if (parsedLine.selectedIndex() < parsedLine.size() - 1)
+                        co.setAppendSeparator(false);
+                }
+            }
         }
+    }
+
+    private boolean isFuzzyCompletionEnabled() {
+        return invocationProviders != null && invocationProviders.fuzzyCompletion();
     }
 
     @Override

@@ -24,6 +24,7 @@ import java.util.List;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.impl.completer.CompleterData;
 import org.aesh.command.impl.completer.DefaultValueOptionCompleter;
+import org.aesh.command.impl.completer.FuzzyCompletionMatcher;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -62,13 +63,13 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             String currentWord = line.selectedWord().word();
             if (currentWord.length() > 1 && !currentWord.startsWith("-")
                     && !parser.getProcessedCommand().findPossibleBareLongNamesWithDash(currentWord).isEmpty()) {
-                doListOptions(completeOperation, currentWord);
+                doListOptions(completeOperation, currentWord, invocationProviders);
                 return;
             }
         }
 
         if (parser.getProcessedCommand().completeStatus() == null) {
-            doListOptions(completeOperation, "");
+            doListOptions(completeOperation, "", invocationProviders);
             return;
         }
 
@@ -98,7 +99,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                             doProcessArgument(completeOperation, invocationProviders, line);
                         } else {
                             //list options
-                            doListOptions(completeOperation, "");
+                            doListOptions(completeOperation, "", invocationProviders);
                         }
                     }
                 }
@@ -111,7 +112,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                         //    parser.getProcessedCommand().getArguments().addValue(lastWord.word());
                         doProcessArgument(completeOperation, invocationProviders, line);
                     } else
-                        doListOptions(completeOperation, "");
+                        doListOptions(completeOperation, "", invocationProviders);
                 }
             }
             //no space means we should try to complete the value of the last parsed option
@@ -126,7 +127,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         //partial long option name, contains atleast --
         else if (parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.LONG_OPTION)) {
             //not option value so we'll complete all options not already listed
-            doListOptions(completeOperation, "--" + parser.getProcessedCommand().completeStatus().value());
+            doListOptions(completeOperation, "--" + parser.getProcessedCommand().completeStatus().value(), invocationProviders);
         }
         //partial short option, contains atleast -
         else if (parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.SHORT_OPTION)) {
@@ -142,6 +143,9 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                 if (!matches.isEmpty()) {
                     completeOperation.addCompletionCandidatesTerminalString(matches);
                     completeOperation.setOffset(completeOperation.getCursor() - prefix.length() - 1);
+                } else if (invocationProviders != null && invocationProviders.fuzzyCompletion()
+                        && FuzzyCompletionMatcher.isEligible(prefix)) {
+                    addFuzzyOptionMatches(completeOperation, prefix, invocationProviders);
                 }
             }
         }
@@ -185,7 +189,8 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         }
         //group command
         else if (parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.GROUP_COMMAND)) {
-            doProcessGroupCommand(completeOperation, parser.getProcessedCommand().completeStatus().value(), line);
+            doProcessGroupCommand(completeOperation, parser.getProcessedCommand().completeStatus().value(), line,
+                    invocationProviders);
         }
         //append space after group command
         else if (parser.getProcessedCommand().completeStatus().status().equals(CompleteStatus.Status.APPEND_SPACE)) {
@@ -195,7 +200,8 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         }
     }
 
-    private void doProcessGroupCommand(AeshCompleteOperation completeOperation, String name, ParsedLine line) {
+    private void doProcessGroupCommand(AeshCompleteOperation completeOperation, String name, ParsedLine line,
+            InvocationProviders invocationProviders) {
         if (name.isEmpty()) {
             for (CommandLineParser clp : parser.getAllChildParsers()) {
                 if (clp.getProcessedCommand().isActivated(new ParsedCommand(clp.getProcessedCommand())))
@@ -211,6 +217,21 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                     completeOperation.setOffset(completeOperation.getCursor() - name.length());
                 }
             }
+            if (completeOperation.getCompletionCandidates().isEmpty()
+                    && invocationProviders != null && invocationProviders.fuzzyCompletion()
+                    && FuzzyCompletionMatcher.isEligible(name)) {
+                List<String> childNames = new java.util.ArrayList<>();
+                for (CommandLineParser child : parser.getAllChildParsers()) {
+                    if (child.getProcessedCommand().isActivated(new ParsedCommand(child.getProcessedCommand())))
+                        childNames.add(child.getProcessedCommand().name());
+                }
+                List<TerminalString> fuzzyMatches = FuzzyCompletionMatcher.getInstance().fuzzyMatches(name, childNames);
+                if (!fuzzyMatches.isEmpty()) {
+                    completeOperation.addCompletionCandidatesTerminalString(fuzzyMatches);
+                    completeOperation.setOffset(completeOperation.getCursor());
+                    completeOperation.setReplacingCurrentWord(true);
+                }
+            }
         }
         if (completeOperation.getCompletionCandidates().size() == 1 && !line.cursorAtEnd())
             completeOperation.setAppendSeparator(false);
@@ -221,20 +242,20 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
         ProcessedOption arg = parser.getProcessedCommand().getPositionalForNextValue();
         if (arg == null) {
             if (parser.getProcessedCommand().hasOptions())
-                doListOptions(completeOperation, "");
+                doListOptions(completeOperation, "", invocationProviders);
             return;
         }
         //first check if arg is argument, if so check if it already have a value, if so to an option complete
         if (arg.getOptionType() == OptionType.ARGUMENT &&
                 (arg.getValue() != null || !arg.isActivated(new ParsedCommand(parser.getProcessedCommand())))) {
             //list options
-            doListOptions(completeOperation, "");
+            doListOptions(completeOperation, "", invocationProviders);
         }
         //if arguments, but not activated
         else if (arg.getOptionType() == OptionType.ARGUMENTS
                 && !arg.isActivated(new ParsedCommand(parser.getProcessedCommand())))
             //list options
-            doListOptions(completeOperation, "");
+            doListOptions(completeOperation, "", invocationProviders);
         //argument(s)
         else {
             if (parser.getProcessedCommand().completeStatus().value() != null &&
@@ -274,13 +295,13 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
                 if ((arg.completer() != null || !arg.isRequired())
                         && (parser.getProcessedCommand().completeStatus().value() == null
                                 || parser.getProcessedCommand().completeStatus().value().isEmpty())) {
-                    doListOptions(completeOperation, "");
+                    doListOptions(completeOperation, "", invocationProviders);
                 }
             }
         }
     }
 
-    private void doListOptions(AeshCompleteOperation completeOperation, String value) {
+    private void doListOptions(AeshCompleteOperation completeOperation, String value, InvocationProviders invocationProviders) {
         List<TerminalString> optionNamesWithDash;
         if (value.length() > 0 && !value.startsWith("-")) {
             // Bare option prefix (e.g. "st" → "staging") — filter to matching bare options
@@ -315,8 +336,38 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             else
                 completeOperation.addCompletionCandidate(optionNamesWithDash.get(0));
             completeOperation.setOffset(completeOperation.getCursor() - value.length());
+        } else if (value.startsWith("--") && value.length() > 2) {
+            addFuzzyOptionMatches(completeOperation, value.substring(2), invocationProviders);
         }
 
+    }
+
+    /**
+     * Fuzzy fallback for a partial long option name that matched no option by
+     * prefix. Candidates replace the typed word, so the operation is marked
+     * with replacingCurrentWord.
+     */
+    private void addFuzzyOptionMatches(AeshCompleteOperation completeOperation, String name,
+            InvocationProviders invocationProviders) {
+        if (invocationProviders == null || !invocationProviders.fuzzyCompletion()
+                || !FuzzyCompletionMatcher.isEligible(name))
+            return;
+        List<TerminalString> universe = parser.getProcessedCommand().getOptionLongNamesWithDash();
+        addInheritedOptions(universe, "--");
+        List<TerminalString> fuzzyMatches = FuzzyCompletionMatcher.getInstance()
+                .fuzzyMatches(name, terminalStringsAsStrings(universe));
+        if (!fuzzyMatches.isEmpty()) {
+            completeOperation.addCompletionCandidatesTerminalString(fuzzyMatches);
+            completeOperation.setOffset(completeOperation.getCursor());
+            completeOperation.setReplacingCurrentWord(true);
+        }
+    }
+
+    private static List<String> terminalStringsAsStrings(List<TerminalString> candidates) {
+        List<String> names = new java.util.ArrayList<>(candidates.size());
+        for (TerminalString candidate : candidates)
+            names.add(candidate.getCharacters());
+        return names;
     }
 
     /**
