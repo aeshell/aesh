@@ -493,6 +493,93 @@ public class AeshCommandRuntimeTest {
         assertEquals("INFO", cmd2.config.level);
     }
 
+    @Test
+    public void testPrimitiveInitializedFieldsPreserved() throws Exception {
+        // #697: primitive field initializers must survive a parse with no options,
+        // just like reference-type initializers do.
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(PrimitiveDefaultsCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("primdefs", new String[] {});
+        executor.getExecutions().get(0).populateCommand();
+        PrimitiveDefaultsCommand cmd = (PrimitiveDefaultsCommand) executor.getExecutions().get(0).getCommand();
+
+        assertTrue(cmd.global);
+        assertEquals(-1, cmd.port);
+        assertEquals("abc", cmd.name);
+        assertEquals(Integer.valueOf(-1), cmd.boxed);
+
+        // Override then parse again without options — initializers must be restored
+        runtime.executeCommand("primdefs --port 8080");
+        Executor<?> executor2 = runtime.buildExecutor("primdefs", new String[] {});
+        executor2.getExecutions().get(0).populateCommand();
+        PrimitiveDefaultsCommand cmd2 = (PrimitiveDefaultsCommand) executor2.getExecutions().get(0).getCommand();
+
+        assertTrue(cmd2.global);
+        assertEquals(-1, cmd2.port);
+        assertEquals("abc", cmd2.name);
+        assertEquals(Integer.valueOf(-1), cmd2.boxed);
+    }
+
+    @Test
+    public void testPrimitiveInitializedFieldsInMixinPreserved() throws Exception {
+        // #697 also happens in @Mixin classes, which share the same capture path.
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(MixinPrimitiveDefaultsCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Executor<?> executor = runtime.buildExecutor("mixprimdefs", new String[] {});
+        executor.getExecutions().get(0).populateCommand();
+        MixinPrimitiveDefaultsCommand cmd = (MixinPrimitiveDefaultsCommand) executor.getExecutions()
+                .get(0).getCommand();
+
+        assertNotNull(cmd.primitives);
+        assertTrue(cmd.primitives.color);
+        assertEquals(5, cmd.primitives.level);
+    }
+
+    @CommandDefinition(name = "primdefs", description = "")
+    public static class PrimitiveDefaultsCommand implements Command<CommandInvocation> {
+        @Option(name = "global", hasValue = false, description = "Global flag")
+        boolean global = true;
+
+        @Option(name = "port", description = "Port")
+        int port = -1;
+
+        @Option(name = "name", description = "Name")
+        String name = "abc";
+
+        @Option(name = "boxed", description = "Boxed")
+        Integer boxed = -1;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class PrimitiveMixin {
+        @Option(name = "color", hasValue = false, description = "Color flag")
+        boolean color = true;
+
+        @Option(name = "level", description = "Level")
+        int level = 5;
+    }
+
+    @CommandDefinition(name = "mixprimdefs", description = "")
+    public static class MixinPrimitiveDefaultsCommand implements Command<CommandInvocation> {
+        @org.aesh.command.option.Mixin
+        PrimitiveMixin primitives;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     public static class LoggingMixin {
         @Option(hasValue = false, description = "Enable verbose output")
         boolean verbose;

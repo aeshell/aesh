@@ -51,10 +51,6 @@ public final class GeneratedProcessedOption extends ProcessedOption {
     public void captureInitialValue(Object instance) {
         if (initialValueCaptured || instance == null || getFieldName() == null)
             return;
-        if (type() != null && type().isPrimitive()) {
-            initialValueCaptured = true;
-            return;
-        }
         Object value = fieldAccessor.get(instance);
         if (value != null) {
             initialValue = value;
