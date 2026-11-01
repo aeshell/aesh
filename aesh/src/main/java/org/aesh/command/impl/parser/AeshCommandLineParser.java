@@ -110,8 +110,6 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @Override
     public void addChildParser(CommandLineParser<CI> commandLineParser) throws CommandLineParserException {
-        if (processedCommand.hasArgument() || processedCommand.hasArguments())
-            throw new CommandLineParserException("Group commands can not have arguments defined");
         if (childParsers == null)
             childParsers = new ArrayList<>();
         commandLineParser.setChild(true);
@@ -127,8 +125,6 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @SuppressWarnings("unchecked")
     public void addLazyChild(String name, Class<? extends Command> clazz) throws CommandLineParserException {
-        if (processedCommand.hasArgument() || processedCommand.hasArguments())
-            throw new CommandLineParserException("Group commands can not have arguments defined");
         if (lazyChildClasses == null)
             lazyChildClasses = new LinkedHashMap<>();
         lazyChildClasses.put(name, clazz);
@@ -719,6 +715,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         // eg: group GARBAGE <tab>
                         if (iterator.isNextWordCursorWord() ||
                                 iterator.peekWord().startsWith("--") || iterator.peekWord().startsWith("-"))
+                            doParse(iterator, mode);
+                        // a group command with arguments takes a word that is not a child name
+                        // as its own argument, eg: group ARG (#702)
+                        else if (processedCommand.hasArgument() || processedCommand.hasArguments())
                             doParse(iterator, mode);
                         else {
                             // Collect available child names for "did you mean?" (#562)
