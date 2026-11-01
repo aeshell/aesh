@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
+import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.container.CommandContainer;
@@ -231,8 +232,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     /**
      * Resolve a command name (or recorded alias owner) to a built shared
      * container, building deferred class registrations on first read.
-     * Definition failures surface here instead of at registration, with
-     * the same exception type.
+     * Definition failures surface here instead of at registration, as a
+     * {@link CommandDefinitionException} with the parser error as cause.
      */
     private CommandContainer<CI> materialize(String name) throws CommandNotFoundException {
         CommandContainer<CI> built = registry.get(name);
@@ -253,9 +254,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                 return registered;
             throw new CommandNotFoundException("Command: " + name + " was not found.", name);
         } catch (CommandLineParserException e) {
-            CommandNotFoundException notFound = new CommandNotFoundException("Command: " + name + " failed to build.", name);
-            notFound.initCause(e);
-            throw notFound;
+            throw new CommandDefinitionException(name, e);
         }
     }
 
@@ -515,10 +514,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                     injectDefaultValueProvider(fork.getParser());
                 return fork;
             } catch (CommandLineParserException e) {
-                CommandNotFoundException notFound = new CommandNotFoundException("Command: " + name + " failed to build.",
-                        name);
-                notFound.initCause(e);
-                throw notFound;
+                throw new CommandDefinitionException(name, e);
             }
         }
         CommandContainer<CI> shared;
