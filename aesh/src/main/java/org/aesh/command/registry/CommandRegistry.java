@@ -23,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.parser.CommandLineParser;
@@ -198,6 +199,7 @@ public interface CommandRegistry<CI extends CommandInvocation> {
      * @return an execution-scoped container
      * @throws CommandNotFoundException if no command matches, or its
      *         definition fails to build on first use
+     *         ({@link CommandDefinitionException})
      */
     default CommandContainer<CI> createExecutionContainer(String name) throws CommandNotFoundException {
         CommandContainer<CI> shared;

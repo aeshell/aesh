@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandExecutionListener;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandResult;
@@ -547,6 +548,10 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         try {
             Executor<? extends CommandInvocation> executor = runtime.buildExecutor(line);
             processManager.execute(executor, conn, line);
+        } catch (CommandDefinitionException cde) {
+            conn.write(cde.getMessage() + Config.getLineSeparator());
+            fireExecutionListener(conn, line, CommandResult.FAILURE, cde);
+            read(conn, readline);
         } catch (CommandNotFoundException cnfe) {
             if (settings.commandNotFoundHandler() != null) {
                 settings.commandNotFoundHandler().handleCommandNotFound(line,

@@ -25,6 +25,7 @@ import java.util.Arrays;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandNotFoundHandler;
@@ -438,6 +439,9 @@ public class AeshRuntimeRunner {
 
         try {
             return runtime.executeCommand(commandName, args);
+        } catch (CommandDefinitionException e) {
+            System.err.println(e.getMessage());
+            return CommandResult.FAILURE;
         } catch (CommandNotFoundException e) {
             if (commandNotFoundHandler != null) {
                 String fullLine = commandName + (args != null && args.length > 0

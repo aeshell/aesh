@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.aesh.AeshConsoleRunner;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionList;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
 import org.aesh.terminal.utils.Config;
@@ -354,6 +355,50 @@ public class CommandExecutionListenerTest {
     }
 
     @Test
+    public void testListenerFiresForInvalidCommandDefinition() throws Exception {
+        TestConnection connection = new TestConnection();
+        CountDownLatch latch = new CountDownLatch(1);
+        AtomicReference<CommandResult> capturedResult = new AtomicReference<>();
+        AtomicReference<Throwable> capturedError = new AtomicReference<>();
+
+        Settings<CommandInvocation> settings = SettingsBuilder.builder()
+                .connection(connection)
+                .commandExecutionListener(new CommandExecutionListener() {
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result, long durationMs) {
+                    }
+
+                    @Override
+                    public void onCommandComplete(String commandLine, CommandResult result,
+                            long durationMs, Throwable error) {
+                        capturedResult.set(result);
+                        capturedError.set(error);
+                        latch.countDown();
+                    }
+                })
+                .build();
+
+        AeshConsoleRunner.builder()
+                .settings(settings)
+                .command(SuccessCommand.class)
+                .command(InvalidDefinitionCommand.class)
+                .addExitCommand()
+                .start();
+
+        // registration is deferred (#678): the definition error surfaces on first use (#701)
+        connection.read("invalid-definition" + Config.getLineSeparator());
+        assertTrue("Listener should fire for an invalid definition", latch.await(5, TimeUnit.SECONDS));
+
+        assertEquals(CommandResult.FAILURE.getResultValue(), capturedResult.get().getResultValue());
+        assertTrue("Error should be CommandDefinitionException",
+                capturedError.get() instanceof CommandDefinitionException);
+        assertTrue(connection.getOutputBuffer(),
+                connection.getOutputBuffer().contains("OptionList field must be instance of Collection"));
+
+        connection.read("exit" + Config.getLineSeparator());
+    }
+
+    @Test
     public void testListenerFiresForParseError() throws Exception {
         TestConnection connection = new TestConnection();
         CountDownLatch latch = new CountDownLatch(1);
@@ -429,6 +474,17 @@ public class CommandExecutionListenerTest {
         @Override
         public CommandResult execute(CommandInvocation ci) {
             ci.println("success");
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "invalid-definition", description = "An @OptionList field that is not a Collection")
+    public static class InvalidDefinitionCommand implements Command<CommandInvocation> {
+        @OptionList(name = "dep")
+        private String[] deps;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
             return CommandResult.SUCCESS;
         }
     }

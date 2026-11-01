@@ -32,6 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.aesh.command.Command;
+import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.CommandNotFoundHandler;
@@ -218,7 +219,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         } catch (CommandLineParserException e) {
             throw e;
         } catch (CommandNotFoundException cmd) {
-            if (commandNotFoundHandler != null) {
+            // a definition error is a command that was found: no "did you mean"
+            if (commandNotFoundHandler != null && !(cmd instanceof CommandDefinitionException)) {
                 commandNotFoundHandler.handleCommandNotFound(line,
                         msg -> commandInvocationBuilder.build(this, null, null).getShell().writeln(msg),
                         cmd.getCommandName(), registry.getAllCommandNames());
@@ -270,7 +272,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         } catch (CommandLineParserException e) {
             throw e;
         } catch (CommandNotFoundException cmd) {
-            if (commandNotFoundHandler != null) {
+            // a definition error is a command that was found: no "did you mean"
+            if (commandNotFoundHandler != null && !(cmd instanceof CommandDefinitionException)) {
                 commandNotFoundHandler.handleCommandNotFound(parsedLine.line(),
                         msg -> commandInvocationBuilder.build(this, null, null).getShell().writeln(msg),
                         cmd.getCommandName(), registry.getAllCommandNames());
