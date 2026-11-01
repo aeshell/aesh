@@ -456,9 +456,23 @@ public class CommandLineParserTest {
         assertTrue(subHelp.getHelp());
     }
 
-    @Test(expected = CommandLineParserException.class)
-    public void testInitializeGroupCommandWithArgument() throws Exception {
-        new AeshCommandContainerBuilder<>().create(new GroupFailCommand<>());
+    @Test
+    public void testGroupCommandWithArgument() throws Exception {
+        // a group command can have arguments: a child name selects the child,
+        // any other word is an argument of the group (#702)
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new GroupArgumentCommand<>()).getParser();
+        GroupArgumentCommand group = (GroupArgumentCommand) parser.getCommand();
+        ChildTest1 c1 = (ChildTest1) parser.getChildParser("child1").getCommand();
+
+        parser.populateObject("grouparg --foo FOO baz", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+        assertEquals("FOO", group.foo);
+        assertEquals("baz", group.bar);
+
+        parser.populateObject("grouparg child1 --foo BAR", invocationProviders, aeshContext, CommandLineParser.Mode.VALIDATE);
+        assertEquals("BAR", c1.foo);
     }
 
     @Test
@@ -911,8 +925,8 @@ public class CommandLineParserTest {
 
     }
 
-    @CommandDefinition(name = "groupfail", description = "", groupCommands = { ChildTest1.class })
-    public class GroupFailCommand<CI extends CommandInvocation> implements Command<CI> {
+    @CommandDefinition(name = "grouparg", description = "", groupCommands = { ChildTest1.class })
+    public class GroupArgumentCommand<CI extends CommandInvocation> implements Command<CI> {
 
         @Option
         private String foo;
