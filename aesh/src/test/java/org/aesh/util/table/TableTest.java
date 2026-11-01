@@ -102,10 +102,10 @@ public class TableTest {
 
         String output = Table.render(80, people, headers, accessors);
         // Floats should be formatted to 2 decimal places
-        assertTrue("Should contain 95.50", output.contains("95.50"));
-        assertTrue("Should contain 87.12", output.contains("87.12"));
+        assertTrue("Should contain 95.50", output.contains(decimal(95.5)));
+        assertTrue("Should contain 87.12", output.contains(decimal(87.12)));
         // Should NOT contain the full precision
-        assertFalse("Should not contain full 87.123", output.contains("87.123"));
+        assertFalse("Should not contain full 87.123", output.contains(String.format("%.3f", 87.123)));
     }
 
     @Test
@@ -173,7 +173,7 @@ public class TableTest {
                 TableStyle.SQLITE }) {
             String output = Table.render(80, rows, headers, accessors, style.characters());
             assertTrue(style + " must render the long", output.contains("123456789012345"));
-            assertTrue(style + " must format the double", output.contains("3.14"));
+            assertTrue(style + " must format the double", output.contains(decimal(3.14)));
             assertFalse(style + " must not leak nulls", output.contains("null"));
         }
     }
@@ -525,7 +525,7 @@ public class TableTest {
         for (String line : lines) {
             if (line.contains("Alice")) {
                 foundDataRow = true;
-                assertTrue("Data row should contain score", line.contains("95.50"));
+                assertTrue("Data row should contain score", line.contains(decimal(95.5)));
             }
         }
         assertTrue("Should find a data row", foundDataRow);
@@ -703,5 +703,10 @@ public class TableTest {
             assertFalse("No line should contain null text: " + line, line.contains("null"));
         }
         assertTrue("Should contain Alice", output.contains("Alice"));
+    }
+
+    // a double cell is formatted with the default locale: 95.50, or 95,50 on a locale with a decimal comma
+    private static String decimal(double value) {
+        return String.format("%.2f", value);
     }
 }

@@ -3,6 +3,8 @@ package org.aesh.charts.axis;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.text.DecimalFormatSymbols;
+
 import org.aesh.charts.common.Scale;
 import org.junit.Test;
 
@@ -10,6 +12,9 @@ import org.junit.Test;
  * Tests for Axis auto-range and tick generation (#585).
  */
 public class AxisTest {
+
+    // the labels are formatted with the default locale: 35.0, or 35,0 on a locale with a decimal comma
+    private static final char DECIMAL_SEPARATOR = DecimalFormatSymbols.getInstance().getDecimalSeparator();
 
     @Test
     public void testAutoRange_0to20() {
@@ -191,7 +196,7 @@ public class AxisTest {
 
         // Labels should show at least 2 decimal places for this interval
         for (String lbl : labels) {
-            int dot = lbl.indexOf('.');
+            int dot = lbl.indexOf(DECIMAL_SEPARATOR);
             assertTrue("Label should have a decimal point: " + lbl, dot >= 0);
             int decimals = lbl.length() - dot - 1;
             assertTrue("Label should have >= 2 decimals for narrow range: " + lbl,
@@ -220,7 +225,7 @@ public class AxisTest {
         double[] ticks = axis.tickValues();
         for (double tick : ticks) {
             String lbl = axis.formatTick(tick);
-            int dot = lbl.indexOf('.');
+            int dot = lbl.indexOf(DECIMAL_SEPARATOR);
             assertTrue("Label should have a decimal: " + lbl, dot >= 0);
             int decimals = lbl.length() - dot - 1;
             assertEquals("Should have exactly 1 decimal for interval ~0.5: " + lbl,
@@ -246,8 +251,8 @@ public class AxisTest {
 
         // Explicit format pattern should take priority over autoDecimalPlaces
         axis.format("%.4f");
-        assertEquals("35.0000", axis.formatTick(35.0));
-        assertEquals("35.0500", axis.formatTick(35.05));
+        assertEquals(String.format("%.4f", 35.0), axis.formatTick(35.0));
+        assertEquals(String.format("%.4f", 35.05), axis.formatTick(35.05));
     }
 
     @Test
@@ -257,8 +262,8 @@ public class AxisTest {
         axis.min(35.00).max(35.15);
 
         // Value >= 1 should use %.1f (old rule)
-        assertEquals("35.0", axis.formatTick(35.0));
-        assertEquals("35.1", axis.formatTick(35.05));
+        assertEquals(String.format("%.1f", 35.0), axis.formatTick(35.0));
+        assertEquals(String.format("%.1f", 35.1), axis.formatTick(35.05));
     }
 
     @Test
