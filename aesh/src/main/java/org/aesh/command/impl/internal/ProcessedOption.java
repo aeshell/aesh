@@ -530,15 +530,11 @@ public class ProcessedOption {
     /**
      * Captures the current field value from the command instance so it can be
      * restored on reset. Call once after the command is fully constructed.
-     * Only captures non-null reference-type values.
+     * Captures non-null reference-type values and primitive values (#697).
      */
     public void captureInitialValue(Object instance) {
         if (initialValueCaptured || instance == null || fieldName == null)
             return;
-        if (type != null && type.isPrimitive()) {
-            initialValueCaptured = true;
-            return;
-        }
         if (fieldAccessor != null) {
             Object value = fieldAccessor.get(instance);
             if (value != null) {

@@ -314,6 +314,67 @@ public class AeshCommandRuntimeTest {
         assertEquals("default", cmd2.name);
     }
 
+    @Test
+    public void testInitializedPrimitivesResetToInitialValue() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(InitializedPrimitivesCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        // First: no options — the initializers are the values (#697)
+        Executor<?> executor1 = runtime.buildExecutor("initprim", new String[] {});
+        executor1.getExecutions().get(0).populateCommand();
+        InitializedPrimitivesCommand cmd1 = (InitializedPrimitivesCommand) executor1.getExecutions().get(0).getCommand();
+        assertTrue(cmd1.global);
+        assertEquals(-1, cmd1.port);
+        assertEquals(30L, cmd1.timeout);
+        assertEquals(-1, cmd1.server.managementPort);
+
+        // Second: override them
+        Executor<?> executor2 = runtime.buildExecutor("initprim",
+                new String[] { "--global=false", "--port", "8080", "--timeout", "5", "--management-port", "9876" });
+        executor2.getExecutions().get(0).populateCommand();
+        InitializedPrimitivesCommand cmd2 = (InitializedPrimitivesCommand) executor2.getExecutions().get(0).getCommand();
+        assertFalse(cmd2.global);
+        assertEquals(8080, cmd2.port);
+        assertEquals(5L, cmd2.timeout);
+        assertEquals(9876, cmd2.server.managementPort);
+
+        // Third: no options again — should restore the initializers, not false/0
+        Executor<?> executor3 = runtime.buildExecutor("initprim", new String[] {});
+        executor3.getExecutions().get(0).populateCommand();
+        InitializedPrimitivesCommand cmd3 = (InitializedPrimitivesCommand) executor3.getExecutions().get(0).getCommand();
+        assertTrue(cmd3.global);
+        assertEquals(-1, cmd3.port);
+        assertEquals(30L, cmd3.timeout);
+        assertEquals(-1, cmd3.server.managementPort);
+    }
+
+    public static class ServerMixin {
+        @Option(name = "management-port")
+        int managementPort = -1;
+    }
+
+    @CommandDefinition(name = "initprim", description = "")
+    public static class InitializedPrimitivesCommand implements Command<CommandInvocation> {
+        @Option(hasValue = false)
+        boolean global = true;
+
+        @Option
+        int port = -1;
+
+        @Option
+        long timeout = 30;
+
+        @org.aesh.command.option.Mixin
+        ServerMixin server;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     @CommandDefinition(name = "initlist", description = "")
     public static class InitializedListCommand implements Command<CommandInvocation> {
         @org.aesh.command.option.Arguments

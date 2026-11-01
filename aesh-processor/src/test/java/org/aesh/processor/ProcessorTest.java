@@ -298,6 +298,59 @@ public class ProcessorTest {
         assertEquals("example field should be empty string", "", exampleVal);
     }
 
+    // --- Test: primitive field initializers survive the field reset (#697) ---
+
+    private static final String PRIMITIVE_INIT_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"primitiveinit\", description = \"Primitive initializers\")\n" +
+            "public class PrimitiveInitCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(hasValue = false)\n" +
+            "    boolean global = true;\n" +
+            "\n" +
+            "    @Option\n" +
+            "    int port = -1;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testPrimitiveInitializers() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.PrimitiveInitCommand", PRIMITIVE_INIT_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.PrimitiveInitCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.PrimitiveInitCommand_AeshMetadata");
+        assertEquivalence(commandClass, metadataClass);
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        // Parse without the options, then check the fields keep their initializers
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        org.aesh.command.invocation.InvocationProviders invProviders = new org.aesh.command.impl.invocation.AeshInvocationProviders();
+        parser.populateObject("primitiveinit", invProviders, null,
+                org.aesh.command.impl.parser.CommandLineParser.Mode.VALIDATE);
+
+        java.lang.reflect.Field globalField = commandClass.getDeclaredField("global");
+        globalField.setAccessible(true);
+        assertEquals("global keeps its initializer", true, globalField.get(instance));
+        java.lang.reflect.Field portField = commandClass.getDeclaredField("port");
+        portField.setAccessible(true);
+        assertEquals("port keeps its initializer", -1, portField.get(instance));
+    }
+
     // --- Test: Command with aliases and version ---
 
     private static final String ALIASED_SOURCE = "package test;\n" +
