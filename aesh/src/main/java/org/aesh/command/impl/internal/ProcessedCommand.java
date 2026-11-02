@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -34,6 +35,7 @@ import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.DocFormat;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.activator.CommandActivator;
+import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
 import org.aesh.command.invocation.CommandInvocation;
@@ -1896,10 +1898,26 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         private static String optionCompletionCandidates(ProcessedOption option) {
             if (option == null)
                 return "";
-            List<String> candidates = option.getAllowedValues();
-            if (candidates == null || candidates.isEmpty())
-                return "";
-            return String.join(", ", candidates);
+            // Allowed values first, then anything extra the completer can
+            // enumerate. LinkedHashSet dedupes while keeping that order, so
+            // output is unchanged when the completer offers nothing new (#708).
+            LinkedHashSet<String> all = new LinkedHashSet<>();
+            List<String> allowed = option.getAllowedValues();
+            if (allowed != null)
+                all.addAll(allowed);
+            OptionCompleter<?> completer = option.completer();
+            if (completer != null) {
+                try {
+                    List<String> extra = completer.candidates();
+                    if (extra != null)
+                        all.addAll(extra);
+                } catch (RuntimeException | LinkageError e) {
+                    // Help must never fail because a completer threw; fall
+                    // back to the allowed values alone.
+                }
+            }
+            all.remove(null);
+            return String.join(", ", all);
         }
 
         private static String firstToken(String value) {

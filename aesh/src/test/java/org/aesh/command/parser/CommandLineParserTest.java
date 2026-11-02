@@ -26,6 +26,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +36,8 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.completer.CompleterInvocation;
+import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
@@ -2005,6 +2009,104 @@ public class CommandLineParserTest {
         // Should NOT contain "Valid values:" since the description already lists them
         assertFalse("Help should NOT contain 'Valid values:' when already in description",
                 help.contains("Valid values:"));
+    }
+
+    // -- ${COMPLETION-CANDIDATES} from enumerable completers (#708) --
+
+    public static class IterableCompleter implements OptionCompleter<CompleterInvocation>, Iterable<String> {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            return Arrays.asList("json", "yaml", "toml").iterator();
+        }
+    }
+
+    public static class ListingCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+        }
+
+        @Override
+        public List<String> candidates() {
+            return Arrays.asList("csv", "tsv");
+        }
+    }
+
+    public static class ExplodingCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+        }
+
+        @Override
+        public List<String> candidates() {
+            throw new IllegalStateException("candidates unavailable");
+        }
+    }
+
+    public static class PlainCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+        }
+    }
+
+    @CommandDefinition(name = "candtest", description = "")
+    public static class CandidatesCmd implements Command<CommandInvocation> {
+        @Option(name = "iter", description = "Iterable (${COMPLETION-CANDIDATES})", allowedValues = { "text",
+                "json" }, completer = IterableCompleter.class)
+        String iter;
+
+        @Option(name = "listed", description = "Listed (${COMPLETION-CANDIDATES})", completer = ListingCompleter.class)
+        String listed;
+
+        @Option(name = "exploding", description = "Exploding (${COMPLETION-CANDIDATES})", allowedValues = {
+                "safe" }, completer = ExplodingCompleter.class)
+        String exploding;
+
+        @Option(name = "plain", description = "Plain (${COMPLETION-CANDIDATES})", allowedValues = { "one",
+                "two" }, completer = PlainCompleter.class)
+        String plain;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static String helpFor(Class<? extends Command> cmdClass) throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(cmdClass).getParser();
+        parser.updateAnsiMode(false);
+        return parser.printHelp();
+    }
+
+    @Test
+    public void testCompletionCandidatesFromIterableCompleter() throws Exception {
+        String help = helpFor(CandidatesCmd.class);
+        // Union of allowedValues and the completer's values, without duplicates
+        assertTrue(help.contains("text, json, yaml, toml"));
+    }
+
+    @Test
+    public void testCompletionCandidatesFromExplicitCandidates() throws Exception {
+        String help = helpFor(CandidatesCmd.class);
+        assertTrue(help.contains("csv, tsv"));
+    }
+
+    @Test
+    public void testCompletionCandidatesExplodingCompleterFallsBack() throws Exception {
+        // A throwing candidates() must not break help: allowed values still list
+        String help = helpFor(CandidatesCmd.class);
+        assertTrue(help.contains("Exploding (safe)"));
+    }
+
+    @Test
+    public void testCompletionCandidatesPlainCompleterUnchanged() throws Exception {
+        // A completer with no candidates leaves the output exactly as before
+        String help = helpFor(CandidatesCmd.class);
+        assertTrue(help.contains("Plain (one, two)"));
     }
 
     @Test

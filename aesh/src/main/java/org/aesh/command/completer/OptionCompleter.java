@@ -20,6 +20,10 @@
 
 package org.aesh.command.completer;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Complete the given input for an option value.
  *
@@ -32,4 +36,32 @@ public interface OptionCompleter<T extends CompleterInvocation> {
      * The current value to be completed is completerInvocation.getGivenCompleteValue()
      */
     void complete(T completerInvocation);
+
+    /**
+     * All values this completer can offer, for help text.
+     * Used to resolve the {@code ${COMPLETION-CANDIDATES}} placeholder in
+     * option descriptions, alongside the option's {@code allowedValues}.
+     * <p>
+     * The default implementation collects the values when this completer is
+     * itself {@link Iterable} (e.g. ported picocli completion candidates),
+     * and returns an empty list otherwise. Override it when the full set can
+     * only be computed on demand.
+     * <p>
+     * Must be cheap and side-effect-free: it runs every time help is
+     * rendered. A throwing implementation is ignored and only the
+     * {@code allowedValues} are listed.
+     *
+     * @return the enumerable candidates, or an empty list if there are none
+     */
+    default List<String> candidates() {
+        if (this instanceof Iterable) {
+            List<String> all = new ArrayList<>();
+            for (Object candidate : (Iterable<?>) this) {
+                if (candidate != null)
+                    all.add(candidate.toString());
+            }
+            return all;
+        }
+        return Collections.emptyList();
+    }
 }
