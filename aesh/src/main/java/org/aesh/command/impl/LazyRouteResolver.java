@@ -19,6 +19,7 @@
  */
 package org.aesh.command.impl;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +29,9 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommand;
 import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.metadata.MetadataProviderRegistry;
+import org.aesh.command.option.Argument;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Mixin;
 import org.aesh.command.parser.SubcommandNotFoundException;
 
 public final class LazyRouteResolver {
@@ -48,8 +52,13 @@ public final class LazyRouteResolver {
             ChildRoute route = findChild(current, token);
             if (route == null)
                 return;
-            if (route.childClass == null)
+            if (route.childClass == null) {
+                // a group command with arguments takes a word that is not a child name
+                // as its own argument, as the parser does (#702)
+                if (hasArguments(current))
+                    return;
                 throw new SubcommandNotFoundException(route.parentName, token, route.availableNames);
+            }
             current = route.childClass;
             index++;
         }
@@ -121,6 +130,23 @@ public final class LazyRouteResolver {
             }
         }
         return new ChildRoute(null, definition.name(), available);
+    }
+
+    /**
+     * Whether the command declares an {@link Argument} or {@link Arguments} field, in its class
+     * hierarchy or in a {@link Mixin}. Reads the annotations only, so no command is constructed.
+     */
+    private static boolean hasArguments(Class<?> commandClass) {
+        for (Class<?> c = commandClass; c != null && c != Object.class; c = c.getSuperclass()) {
+            for (Field field : c.getDeclaredFields()) {
+                if (field.isAnnotationPresent(Argument.class) || field.isAnnotationPresent(Arguments.class))
+                    return true;
+                if (field.isAnnotationPresent(Mixin.class) && field.getType() != commandClass
+                        && hasArguments(field.getType()))
+                    return true;
+            }
+        }
+        return false;
     }
 
     private static String childName(Class<? extends Command> child) {
