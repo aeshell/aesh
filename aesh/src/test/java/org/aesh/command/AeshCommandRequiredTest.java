@@ -19,18 +19,24 @@
  */
 package org.aesh.command;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.registry.CommandRegistry;
 import org.aesh.command.settings.Settings;
 import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.console.AeshContext;
 import org.aesh.console.ReadlineConsole;
 import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.utils.Config;
@@ -41,6 +47,8 @@ import org.junit.Test;
  * @author Aesh team
  */
 public class AeshCommandRequiredTest {
+
+    private final InvocationProviders invocationProviders = new AeshInvocationProviders();
 
     @Test
     public void testOptionRequired() throws Exception {
@@ -171,6 +179,85 @@ public class AeshCommandRequiredTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             commandInvocation.println("resetConfiguration is: " + resetConfiguration + ", arg is:" + arg);
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // --- #698: a static defaultValue satisfies required ---
+
+    @Test
+    public void testRequiredOptionWithDefaultValueIsSatisfied() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new ReqDefaultCommand()).getParser();
+
+        parser.populateObject("reqdef", invocationProviders, aeshContext, CommandLineParser.Mode.STRICT);
+        assertTrue("Default must satisfy required: " + parser.getProcessedCommand().parserExceptions(),
+                parser.getProcessedCommand().parserExceptions().isEmpty());
+        assertEquals("lib", ((ReqDefaultCommand) parser.getCommand()).dir);
+
+        parser.populateObject("reqdef --dir custom", invocationProviders, aeshContext,
+                CommandLineParser.Mode.STRICT);
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+        assertEquals("custom", ((ReqDefaultCommand) parser.getCommand()).dir);
+    }
+
+    @Test
+    public void testRequiredArgumentWithDefaultValueIsSatisfied() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new ReqDefaultArgCommand()).getParser();
+
+        parser.populateObject("reqdefarg", invocationProviders, aeshContext, CommandLineParser.Mode.STRICT);
+        assertTrue("Default must satisfy required: " + parser.getProcessedCommand().parserExceptions(),
+                parser.getProcessedCommand().parserExceptions().isEmpty());
+        assertEquals("lib", ((ReqDefaultArgCommand) parser.getCommand()).dir);
+    }
+
+    @Test
+    public void testRequiredOptionWithoutDefaultStillFails() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new ReqNoDefaultCommand()).getParser();
+
+        parser.populateObject("reqnodef", invocationProviders, aeshContext, CommandLineParser.Mode.STRICT);
+        assertEquals(1, parser.getProcessedCommand().parserExceptions().size());
+        assertTrue(parser.getProcessedCommand().parserExceptions()
+                .get(0) instanceof org.aesh.command.parser.RequiredOptionException);
+    }
+
+    @CommandDefinition(name = "reqdef", description = "")
+    public static class ReqDefaultCommand implements Command {
+
+        @Option(name = "dir", defaultValue = "lib", required = true)
+        private String dir;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "reqdefarg", description = "")
+    public static class ReqDefaultArgCommand implements Command {
+
+        @Argument(required = true, defaultValue = "lib")
+        private String dir;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "reqnodef", description = "")
+    public static class ReqNoDefaultCommand implements Command {
+
+        @Option(name = "dir", required = true)
+        private String dir;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
         }
     }
