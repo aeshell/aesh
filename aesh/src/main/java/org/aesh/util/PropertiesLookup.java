@@ -21,6 +21,15 @@ import java.util.List;
  */
 public class PropertiesLookup {
 
+    /**
+     * Resolve variable references in a default-value list.
+     * <p>
+     * Entries that are variable expressions (e.g. {@code ${env:VAR}}) resolving
+     * to nothing — variable undefined and no {@code :-} fallback — are dropped
+     * (#700), so an unresolved default behaves as "no default" instead of
+     * injecting an empty string. Entries with an explicit (possibly empty)
+     * fallback, literals, escapes and malformed expressions are kept as-is.
+     */
     public static List<String> checkForSystemVariables(List<String> defaultValues) {
         if (defaultValues.isEmpty())
             return defaultValues;
@@ -37,10 +46,25 @@ public class PropertiesLookup {
 
         List<String> result = new ArrayList<>(defaultValues.size());
         for (String v : defaultValues) {
-            result.add(resolveVariable(v));
+            ResolvedValue resolved = resolveWithSource(v);
+            if (isUnresolvedWithoutFallback(v, resolved))
+                continue;
+            result.add(resolved.value);
         }
 
         return result;
+    }
+
+    /**
+     * True when the raw value is a variable expression that resolved to
+     * nothing: the variable is undefined ({@code fromVariable} false), the
+     * resolved value is empty, and no {@code :-} fallback was given. Such
+     * entries carry no usable default and are dropped (#700).
+     */
+    private static boolean isUnresolvedWithoutFallback(String raw, ResolvedValue resolved) {
+        return raw != null && raw.length() > 3 && raw.charAt(0) == '$' && raw.charAt(1) == '{'
+                && !resolved.fromVariable && resolved.value != null && resolved.value.isEmpty()
+                && raw.indexOf(":-") < 0;
     }
 
     /** Maximum nesting depth for recursive fallback resolution. */

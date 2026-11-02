@@ -494,6 +494,54 @@ public class CommandLineParserTest {
         }
     }
 
+    @Test
+    public void testUnresolvedVariableDefaultLeavesFieldUnset() throws Exception {
+        // #700: an undefined ${...} behaves as no default, not "".
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new VariableDefaultCommand()).getParser();
+        parser.populateObject("vardef", invocationProviders, aeshContext, CommandLineParser.Mode.STRICT);
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+        assertNull(((VariableDefaultCommand) parser.getCommand()).version);
+    }
+
+    @Test
+    public void testResolvedVariableDefaultStillInjected() throws Exception {
+        System.setProperty("aesh.test.version.700", "1.0");
+        try {
+            AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+            CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                    .create(new ResolvedVariableDefaultCommand()).getParser();
+            parser.populateObject("vardefok", invocationProviders, aeshContext, CommandLineParser.Mode.STRICT);
+            assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+            assertEquals("1.0", ((ResolvedVariableDefaultCommand) parser.getCommand()).version);
+        } finally {
+            System.clearProperty("aesh.test.version.700");
+        }
+    }
+
+    @CommandDefinition(name = "vardef", description = "")
+    public static class VariableDefaultCommand implements Command<CommandInvocation> {
+        @Option(name = "version", defaultValue = "${env:AESH_TEST_NONEXISTENT_VAR_700}")
+        String version;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "vardefok", description = "")
+    public static class ResolvedVariableDefaultCommand implements Command<CommandInvocation> {
+        @Option(name = "version", defaultValue = "${sys:aesh.test.version.700}")
+        String version;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     public static class BaseArgumentsCommand {
         @Arguments
         List<String> files;

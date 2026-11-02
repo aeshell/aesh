@@ -219,6 +219,51 @@ public class PropertiesLookupTest {
         assertEquals("fallback_val", values.get(0));
     }
 
+    // --- Unresolved variables are dropped, not emptied (#700) ---
+
+    @Test
+    public void testCheckForSystemVariables_unresolvedVariableDropped() {
+        List<String> values = new ArrayList<>();
+        values.add("${env:AESH_TEST_NONEXISTENT_VAR}");
+        values = PropertiesLookup.checkForSystemVariables(values);
+        assertTrue("Unresolved variable must behave as no default", values.isEmpty());
+    }
+
+    @Test
+    public void testCheckForSystemVariables_mixedListKeepsRest() {
+        System.setProperty("aesh.test.defined", "yes");
+        try {
+            List<String> values = new ArrayList<>();
+            values.add("${sys:aesh.test.defined}");
+            values.add("${env:AESH_TEST_NONEXISTENT_VAR}");
+            values.add("literal");
+            values.add("");
+            values = PropertiesLookup.checkForSystemVariables(values);
+            assertEquals(3, values.size());
+            assertEquals("yes", values.get(0));
+            assertEquals("literal", values.get(1));
+            assertEquals("", values.get(2));
+        } finally {
+            System.clearProperty("aesh.test.defined");
+        }
+    }
+
+    @Test
+    public void testCheckForSystemVariables_explicitEmptyFallbackKept() {
+        List<String> values = new ArrayList<>();
+        values.add("${env:AESH_TEST_NONEXISTENT_VAR:-}");
+        values = PropertiesLookup.checkForSystemVariables(values);
+        assertEquals(1, values.size());
+        assertEquals("", values.get(0));
+    }
+
+    @Test
+    public void testCheckForSystemVariables_singleValueContractUnchanged() {
+        // The single-value API still resolves to "" (backward compatibility);
+        // only the default-value list drops the entry.
+        assertEquals("", PropertiesLookup.resolveVariable("${env:AESH_TEST_NONEXISTENT_VAR}"));
+    }
+
     // --- POSIX env var tests ---
 
     @Test
