@@ -850,7 +850,8 @@ final class CodeGenerator {
         if (isOptionalWrapped) {
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         }
-        String elementType = getGenericTypeArgument(effectiveType, 0, typeUtils);
+        boolean isArrayType = effectiveType.getKind() == TypeKind.ARRAY;
+        String elementType = getElementTypeName(effectiveType, typeUtils);
         String optionName = ol.name().length() < 1 ? fieldName : ol.name();
 
         int accIdx = accessorInfos.size();
@@ -879,6 +880,8 @@ final class CodeGenerator {
         emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
+        if (isArrayType)
+            sb.append("            ").append(var).append(".setArrayType(true);\n");
         if (ol.required())
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (ol.askIfNotSet())
@@ -915,7 +918,9 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(ol.selector()))
                     .append(");\n");
         {
-            TypeMirror elemMirror = getGenericTypeArgumentMirror(effectiveType, 0);
+            TypeMirror elemMirror = isArrayType
+                    ? ((javax.lang.model.type.ArrayType) effectiveType).getComponentType()
+                    : getGenericTypeArgumentMirror(effectiveType, 0);
             emitCompleteFallbackSetter(sb, var, ol.completeFallback(), elemMirror != null ? elemMirror : effectiveType,
                     typeUtils, commandFallback);
         }
@@ -1025,7 +1030,8 @@ final class CodeGenerator {
         if (isOptionalWrapped) {
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         }
-        String elementType = getGenericTypeArgument(effectiveType, 0, typeUtils);
+        boolean isArrayType = effectiveType.getKind() == TypeKind.ARRAY;
+        String elementType = getElementTypeName(effectiveType, typeUtils);
 
         int accIdx = accessorInfos.size();
         accessorInfos.add(new FieldAccessorInfo(accIdx,
@@ -1048,6 +1054,8 @@ final class CodeGenerator {
         emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
+        if (isArrayType)
+            sb.append("            ").append(var).append(".setArrayType(true);\n");
         if (a.required())
             sb.append("            ").append(var).append(".setRequired(true);\n");
         if (a.valueSeparator() != ' ')
@@ -1074,7 +1082,9 @@ final class CodeGenerator {
         if (a.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
         {
-            TypeMirror elemMirror = getGenericTypeArgumentMirror(effectiveType, 0);
+            TypeMirror elemMirror = isArrayType
+                    ? ((javax.lang.model.type.ArrayType) effectiveType).getComponentType()
+                    : getGenericTypeArgumentMirror(effectiveType, 0);
             emitCompleteFallbackSetter(sb, var, a.completeFallback(), elemMirror != null ? elemMirror : effectiveType,
                     typeUtils, commandFallback);
         }
@@ -1600,7 +1610,7 @@ final class CodeGenerator {
                 TypeMirror effectiveType = field.asType();
                 if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
-                converterTypes.add(getGenericTypeArgument(effectiveType, 0, typeUtils));
+                converterTypes.add(getElementTypeName(effectiveType, typeUtils));
             } else if (field.getAnnotation(OptionGroup.class) != null) {
                 TypeMirror effectiveType = field.asType();
                 if (isOptionalType(effectiveType, typeUtils))
@@ -1637,7 +1647,7 @@ final class CodeGenerator {
                 TypeMirror effectiveType = f.asType();
                 if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
-                types.add(getGenericTypeArgument(effectiveType, 0, typeUtils));
+                types.add(getElementTypeName(effectiveType, typeUtils));
             } else if (f.getAnnotation(OptionGroup.class) != null) {
                 TypeMirror effectiveType = f.asType();
                 if (isOptionalType(effectiveType, typeUtils))
@@ -2055,6 +2065,18 @@ final class CodeGenerator {
             }
         }
         return "Object";
+    }
+
+    /**
+     * Element type name for multi-value fields: the component type for arrays
+     * (#704), otherwise the first generic type argument.
+     */
+    private static String getElementTypeName(TypeMirror effectiveType, Types typeUtils) {
+        if (effectiveType.getKind() == TypeKind.ARRAY
+                && effectiveType instanceof javax.lang.model.type.ArrayType)
+            return erasedTypeName(
+                    ((javax.lang.model.type.ArrayType) effectiveType).getComponentType(), typeUtils);
+        return getGenericTypeArgument(effectiveType, 0, typeUtils);
     }
 
     // --- String literal helpers ---

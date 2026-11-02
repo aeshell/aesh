@@ -614,6 +614,30 @@ public class MethodCommandTest {
     }
 
     @Test
+    public void testArrayOptionListParam() throws Exception {
+        ArrayMethods methods = new ArrayMethods();
+        CommandRuntime<CommandInvocation> runtime = runtimeFor(methods, "optDeps", String[].class);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("optdeps --deps a,b"));
+        assertNotNull(methods.seenDeps);
+        assertEquals(2, methods.seenDeps.length);
+        assertEquals("a", methods.seenDeps[0]);
+        assertEquals("b", methods.seenDeps[1]);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("optdeps"));
+        assertNull(methods.seenDeps);
+    }
+
+    public static class ArrayMethods {
+        String[] seenDeps;
+
+        @MethodCommand(name = "optdeps", description = "optional deps")
+        public void optDeps(@OptionList(name = "deps", description = "deps") String[] deps) {
+            seenDeps = deps;
+        }
+    }
+
+    @Test
     public void testOptionListAndArguments() throws Exception {
         MultiMethods methods = new MultiMethods();
         CommandRuntime<CommandInvocation> runtime = runtimeFor(methods, "build", List.class, List.class);

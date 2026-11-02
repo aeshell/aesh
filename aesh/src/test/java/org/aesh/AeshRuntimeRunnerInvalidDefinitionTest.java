@@ -56,7 +56,7 @@ public class AeshRuntimeRunnerInvalidDefinitionTest {
 
         assertEquals(CommandResult.FAILURE, result);
         assertTrue(err.toString(), err.toString().contains("invalid-option-list"));
-        assertTrue(err.toString(), err.toString().contains("OptionList field must be instance of Collection"));
+        assertTrue(err.toString(), err.toString().contains("OptionList field must not be a multi-dimensional array"));
         assertFalse(err.toString(), err.toString().contains("Command not found"));
     }
 
@@ -86,7 +86,7 @@ public class AeshRuntimeRunnerInvalidDefinitionTest {
 
         assertEquals(CommandResult.FAILURE, result);
         assertFalse("A definition error is not a command that was not found", called.get());
-        assertTrue(err.toString(), err.toString().contains("OptionList field must be instance of Collection"));
+        assertTrue(err.toString(), err.toString().contains("OptionList field must not be a multi-dimensional array"));
     }
 
     @Test
@@ -101,7 +101,7 @@ public class AeshRuntimeRunnerInvalidDefinitionTest {
         } catch (CommandDefinitionException e) {
             assertEquals("invalid-option-list", e.getCommandName());
             assertTrue(e.getCause() instanceof CommandLineParserException);
-            assertTrue(e.getMessage(), e.getMessage().contains("OptionList field must be instance of Collection"));
+            assertTrue(e.getMessage(), e.getMessage().contains("OptionList field must not be a multi-dimensional array"));
         }
     }
 
@@ -115,10 +115,10 @@ public class AeshRuntimeRunnerInvalidDefinitionTest {
         }
     }
 
-    @CommandDefinition(name = "invalid-option-list", description = "an @OptionList field that is not a Collection")
+    @CommandDefinition(name = "invalid-option-list", description = "an @OptionList multi-dimensional array field")
     public static class InvalidOptionListCommand implements Command<CommandInvocation> {
         @OptionList(name = "dep")
-        private String[] deps;
+        private String[][] deps;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {

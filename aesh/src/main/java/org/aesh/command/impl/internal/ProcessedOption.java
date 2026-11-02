@@ -20,6 +20,7 @@
 package org.aesh.command.impl.internal;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -115,6 +116,12 @@ public class ProcessedOption {
      * (empty) stays distinct from "not given" (null) (#705).
      */
     private boolean explicitEmpty = false;
+    /**
+     * True when the multi-value field is an array rather than a Collection
+     * ({@code String[]}, {@code int[]} ...). The {@code type} is then the
+     * component type, and values are injected as arrays (#704).
+     */
+    private boolean arrayType = false;
     private String fallbackValue;
     // Raw template strings for deferred resolution (#520).
     // Only set when the value contains ${...} variable references.
@@ -627,7 +634,7 @@ public class ProcessedOption {
     protected Object typeDefault() {
         if (optionalWrapped)
             return java.util.Optional.empty();
-        if (type == null || !type.isPrimitive())
+        if (arrayType || type == null || !type.isPrimitive())
             return null;
         if (type == boolean.class)
             return Boolean.FALSE;
@@ -648,6 +655,17 @@ public class ProcessedOption {
         return null;
     }
 
+    /**
+     * Defensive copy of an array value so resets restore fresh mutable state
+     * instead of sharing one array across executions (#697, #704).
+     */
+    protected static Object copyArrayValue(Object array) {
+        int length = Array.getLength(array);
+        Object copy = Array.newInstance(array.getClass().getComponentType(), length);
+        System.arraycopy(array, 0, copy, 0, length);
+        return copy;
+    }
+
     @SuppressWarnings("unchecked")
     protected void restoreInitialValue(Object instance) {
         if (fieldAccessor != null || fieldSetter != null) {
@@ -664,6 +682,8 @@ public class ProcessedOption {
                 } catch (ReflectiveOperationException e) {
                     val = new LinkedHashMap<>();
                 }
+            } else if (initialValue != null && initialValue.getClass().isArray()) {
+                val = copyArrayValue(initialValue);
             }
             if (fieldAccessor != null)
                 fieldAccessor.set(instance, val);
@@ -682,6 +702,8 @@ public class ProcessedOption {
                 field.set(target, initialValue.getClass().getDeclaredConstructor().newInstance());
             } else if (initialValue instanceof Map) {
                 field.set(target, initialValue.getClass().getDeclaredConstructor().newInstance());
+            } else if (initialValue != null && initialValue.getClass().isArray()) {
+                field.set(target, copyArrayValue(initialValue));
             } else {
                 field.set(target, initialValue);
             }
@@ -745,6 +767,17 @@ public class ProcessedOption {
      */
     public boolean isExplicitEmpty() {
         return explicitEmpty;
+    }
+
+    /**
+     * Whether the multi-value field is an array rather than a Collection.
+     */
+    public boolean isArrayType() {
+        return arrayType;
+    }
+
+    public void setArrayType(boolean arrayType) {
+        this.arrayType = arrayType;
     }
 
     public boolean hasMultipleValues() {
@@ -1288,6 +1321,12 @@ public class ProcessedOption {
                                 doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation)));
             }
         } else if (optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
+            if (arrayType) {
+                List<String> strings = values.size() > 0 ? values : defaultValues;
+                setField(instance, wrapIfOptional(toArrayValue(strings, invocationProviders, instance, aeshContext,
+                        doValidation)));
+                return;
+            }
             Collection<Object> tmpSet;
             if (Set.class.isAssignableFrom(type))
                 tmpSet = new HashSet<>();
@@ -1348,6 +1387,12 @@ public class ProcessedOption {
                                     doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation)));
                 }
             } else if (optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
+                if (arrayType) {
+                    List<String> strings = values.size() > 0 ? values : defaultValues;
+                    field.set(instance, wrapIfOptional(toArrayValue(strings, invocationProviders, instance,
+                            aeshContext, doValidation)));
+                    return;
+                }
                 Collection<Object> tmpSet = initializeCollection(field);
                 if (values.size() > 0) {
                     for (String in : values)
@@ -1377,6 +1422,19 @@ public class ProcessedOption {
         } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InstantiationException e) {
             throw new RuntimeException("Failed to inject value into field: " + fieldName, e);
         }
+    }
+
+    /**
+     * Converts parsed values (or annotation defaults) for a multi-value option
+     * whose field is an array. Each string is converted with the option's
+     * converter; primitives unbox via {@link Array#set} (#704).
+     */
+    private Object toArrayValue(List<String> strings, InvocationProviders invocationProviders, Object instance,
+            AeshContext aeshContext, boolean doValidation) throws OptionValidatorException {
+        Object array = Array.newInstance(type, strings.size());
+        for (int i = 0; i < strings.size(); i++)
+            Array.set(array, i, doConvert(strings.get(i), invocationProviders, instance, aeshContext, doValidation));
+        return array;
     }
 
     @SuppressWarnings("unchecked")

@@ -688,8 +688,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 if (isOptionalWrapped) {
                     paramType = unwrapOptionalParameterType(param);
                 }
-                if (Collection.class.isAssignableFrom(paramType))
-                    throw new CommandLineParserException("Argument parameter can not be an instance of Collection");
+                if (Collection.class.isAssignableFrom(paramType) || paramType.isArray())
+                    throw new CommandLineParserException("Argument parameter can not be an instance of Collection or an array");
                 // Help text falls back to the parameter name when paramLabel is
                 // unset, and parameter names depend on the -parameters compiler
                 // flag. Explicit labels keep help output stable (like option names).
@@ -747,12 +747,19 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         rawParamType = (Class<?>) innerType;
                     }
                 }
-                if (!Collection.class.isAssignableFrom(rawParamType))
+                if (!Collection.class.isAssignableFrom(rawParamType) && !rawParamType.isArray())
                     throw new CommandLineParserException(
-                            "OptionList parameter must be an instance of Collection: "
+                            "OptionList parameter must be an instance of Collection or an array: "
                                     + param.getName() + " in " + method);
+                if (rawParamType.isArray() && rawParamType.getComponentType().isArray())
+                    throw new CommandLineParserException(
+                            "OptionList parameter must not be a multi-dimensional array: "
+                                    + param.getName() + " in " + method);
+                boolean optionListArray = rawParamType.isArray();
                 Class<?> elementType = Object.class;
-                if (genericParamType instanceof ParameterizedType) {
+                if (optionListArray)
+                    elementType = rawParamType.getComponentType();
+                else if (genericParamType instanceof ParameterizedType) {
                     Type elementArg = ((ParameterizedType) genericParamType).getActualTypeArguments()[0];
                     if (elementArg instanceof Class)
                         elementType = (Class<?>) elementArg;
@@ -771,6 +778,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         .fieldName(param.getName())
                         .fieldAccessor(MethodCommandAdapter.slotAccessor(slots, i))
                         .optionalWrapped(listOptionalWrapped)
+                        .array(optionListArray)
                         .optionType(OptionType.LIST);
                 optionListBuilder.converter(ol.converter())
                         .completer(ol.completer())
@@ -807,9 +815,13 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         rawParamType = (Class<?>) innerType;
                     }
                 }
-                if (!Collection.class.isAssignableFrom(rawParamType))
+                if (!Collection.class.isAssignableFrom(rawParamType) && !rawParamType.isArray())
                     throw new CommandLineParserException(
-                            "Arguments parameter must be an instance of Collection: "
+                            "Arguments parameter must be an instance of Collection or an array: "
+                                    + param.getName() + " in " + method);
+                if (rawParamType.isArray() && rawParamType.getComponentType().isArray())
+                    throw new CommandLineParserException(
+                            "Arguments parameter must not be a multi-dimensional array: "
                                     + param.getName() + " in " + method);
                 // Help text falls back to the parameter name when paramLabel is
                 // unset, and parameter names depend on the -parameters compiler
@@ -818,8 +830,11 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     throw new CommandLineParserException(
                             "@Arguments on @MethodCommand parameters requires an explicit paramLabel: "
                                     + param.getName() + " in " + method);
+                boolean argumentsArray = rawParamType.isArray();
                 Class<?> elementType = Object.class;
-                if (genericParamType instanceof ParameterizedType) {
+                if (argumentsArray)
+                    elementType = rawParamType.getComponentType();
+                else if (genericParamType instanceof ParameterizedType) {
                     Type elementArg = ((ParameterizedType) genericParamType).getActualTypeArguments()[0];
                     if (elementArg instanceof Class)
                         elementType = (Class<?>) elementArg;
@@ -837,6 +852,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         .fieldName(param.getName())
                         .fieldAccessor(MethodCommandAdapter.slotAccessor(slots, i))
                         .optionalWrapped(argsOptionalWrapped)
+                        .array(argumentsArray)
                         .paramLabel(a.paramLabel())
                         .arity(a.arity())
                         .index(a.index())
@@ -960,10 +976,15 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     rawFieldType = (Class<?>) innerType;
                 }
             }
-            if (!Collection.class.isAssignableFrom(rawFieldType))
-                throw new CommandLineParserException("OptionList field must be instance of Collection");
+            if (!Collection.class.isAssignableFrom(rawFieldType) && !rawFieldType.isArray())
+                throw new CommandLineParserException("OptionList field must be instance of Collection or an array");
+            if (rawFieldType.isArray() && rawFieldType.getComponentType().isArray())
+                throw new CommandLineParserException("OptionList field must not be a multi-dimensional array");
+            boolean optionListArray = rawFieldType.isArray();
             Class type = Object.class;
-            if (genericType instanceof ParameterizedType) {
+            if (optionListArray)
+                type = rawFieldType.getComponentType();
+            else if (genericType instanceof ParameterizedType) {
                 ParameterizedType listType = (ParameterizedType) genericType;
                 type = (Class) listType.getActualTypeArguments()[0];
             }
@@ -981,6 +1002,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .type(type)
                     .fieldName(field.getName())
                     .optionalWrapped(isOptionalWrapped)
+                    .array(optionListArray)
                     .optionType(OptionType.LIST);
             if (!forHelp) {
                 optionListBuilder.converter(ol.converter())
@@ -1085,10 +1107,15 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     argsRawType = (Class<?>) innerType;
                 }
             }
-            if (!Collection.class.isAssignableFrom(argsRawType))
-                throw new CommandLineParserException("Arguments field must be instance of Collection");
+            if (!Collection.class.isAssignableFrom(argsRawType) && !argsRawType.isArray())
+                throw new CommandLineParserException("Arguments field must be instance of Collection or an array");
+            if (argsRawType.isArray() && argsRawType.getComponentType().isArray())
+                throw new CommandLineParserException("Arguments field must not be a multi-dimensional array");
+            boolean argumentsArray = argsRawType.isArray();
             Class type = Object.class;
-            if (argsGenericType instanceof ParameterizedType) {
+            if (argumentsArray)
+                type = argsRawType.getComponentType();
+            else if (argsGenericType instanceof ParameterizedType) {
                 ParameterizedType listType = (ParameterizedType) argsGenericType;
                 type = (Class) listType.getActualTypeArguments()[0];
             }
@@ -1104,6 +1131,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .type(type)
                     .fieldName(field.getName())
                     .optionalWrapped(argsOptionalWrapped)
+                    .array(argumentsArray)
                     .paramLabel(a.paramLabel())
                     .arity(a.arity())
                     .index(a.index())
@@ -1127,8 +1155,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             if (argOptionalWrapped) {
                 argFieldType = unwrapOptionalType(field);
             }
-            if (Collection.class.isAssignableFrom(argFieldType))
-                throw new CommandLineParserException("Argument field can not be an instance of Collection");
+            if (Collection.class.isAssignableFrom(argFieldType) || argFieldType.isArray())
+                throw new CommandLineParserException("Argument field can not be an instance of Collection or an array");
             OptionType optionType = OptionType.ARGUMENT;
             ProcessedOptionBuilder argumentBuilder = ProcessedOptionBuilder.builder()
                     .shortName('\u0000')

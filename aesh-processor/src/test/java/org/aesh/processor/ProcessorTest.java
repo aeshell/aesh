@@ -355,6 +355,72 @@ public class ProcessorTest {
         assertTrue("bare --find must be empty", ((List<?>) findVal).isEmpty());
     }
 
+    // --- Test: @OptionList array field (#704) ---
+
+    private static final String ARRAY_LIST_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"arrayfind\", description = \"Array list\")\n" +
+            "public class ArrayListCommand implements Command<CommandInvocation> {\n" +
+            "    @OptionList(name = \"deps\")\n" +
+            "    String[] deps;\n" +
+            "\n" +
+            "    @OptionList(name = \"nums\")\n" +
+            "    int[] nums;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testArrayOptionListGenerated() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ArrayListCommand", ARRAY_LIST_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.ArrayListCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.ArrayListCommand_AeshMetadata");
+
+        // Verify parity between reflection and generated paths
+        assertEquivalence(commandClass, metadataClass);
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        AeshCommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(generatedPC);
+        InvocationProviders invProviders = new AeshInvocationProviders();
+        parser.populateObject("arrayfind --deps a,b", invProviders, null, CommandLineParser.Mode.STRICT);
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+
+        Field depsField = commandClass.getDeclaredField("deps");
+        depsField.setAccessible(true);
+        Object depsVal = depsField.get(instance);
+        assertNotNull(depsVal);
+        assertTrue(depsVal instanceof String[]);
+        assertEquals(2, ((String[]) depsVal).length);
+        assertEquals("a", ((String[]) depsVal)[0]);
+        assertEquals("b", ((String[]) depsVal)[1]);
+
+        parser.populateObject("arrayfind --nums 1,2", invProviders, null, CommandLineParser.Mode.STRICT);
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+        Field numsField = commandClass.getDeclaredField("nums");
+        numsField.setAccessible(true);
+        Object numsVal = numsField.get(instance);
+        assertNotNull(numsVal);
+        assertTrue(numsVal instanceof int[]);
+        assertEquals(2, ((int[]) numsVal).length);
+        assertEquals(1, ((int[]) numsVal)[0]);
+        assertEquals(2, ((int[]) numsVal)[1]);
+    }
+
     // --- Test: Command with aliases and version ---
 
     private static final String ALIASED_SOURCE = "package test;\n" +

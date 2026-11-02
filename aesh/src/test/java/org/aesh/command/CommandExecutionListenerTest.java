@@ -393,7 +393,7 @@ public class CommandExecutionListenerTest {
         assertTrue("Error should be CommandDefinitionException",
                 capturedError.get() instanceof CommandDefinitionException);
         assertTrue(connection.getOutputBuffer(),
-                connection.getOutputBuffer().contains("OptionList field must be instance of Collection"));
+                connection.getOutputBuffer().contains("OptionList field must not be a multi-dimensional array"));
 
         connection.read("exit" + Config.getLineSeparator());
     }
@@ -478,10 +478,10 @@ public class CommandExecutionListenerTest {
         }
     }
 
-    @CommandDefinition(name = "invalid-definition", description = "An @OptionList field that is not a Collection")
+    @CommandDefinition(name = "invalid-definition", description = "An @OptionList multi-dimensional array field")
     public static class InvalidDefinitionCommand implements Command<CommandInvocation> {
         @OptionList(name = "dep")
-        private String[] deps;
+        private String[][] deps;
 
         @Override
         public CommandResult execute(CommandInvocation ci) {

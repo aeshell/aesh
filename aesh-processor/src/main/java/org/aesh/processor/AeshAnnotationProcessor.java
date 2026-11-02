@@ -281,19 +281,21 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         if (field.getAnnotation(org.aesh.command.option.OptionList.class) != null) {
             TypeMirror collectionType = elementUtils
                     .getTypeElement(Collection.class.getCanonicalName()).asType();
-            if (!typeUtils.isAssignable(typeUtils.erasure(field.asType()),
-                    typeUtils.erasure(collectionType))) {
+            if (field.asType().getKind() != TypeKind.ARRAY
+                    && !typeUtils.isAssignable(typeUtils.erasure(field.asType()),
+                            typeUtils.erasure(collectionType))) {
                 messager.printMessage(Diagnostic.Kind.ERROR,
-                        "OptionList field must be instance of Collection", field);
+                        "OptionList field must be instance of Collection or an array", field);
             }
         }
         if (field.getAnnotation(org.aesh.command.option.Arguments.class) != null) {
             TypeMirror collectionType = elementUtils
                     .getTypeElement(Collection.class.getCanonicalName()).asType();
-            if (!typeUtils.isAssignable(typeUtils.erasure(field.asType()),
-                    typeUtils.erasure(collectionType))) {
+            if (field.asType().getKind() != TypeKind.ARRAY
+                    && !typeUtils.isAssignable(typeUtils.erasure(field.asType()),
+                            typeUtils.erasure(collectionType))) {
                 messager.printMessage(Diagnostic.Kind.ERROR,
-                        "Arguments field must be instance of Collection", field);
+                        "Arguments field must be instance of Collection or an array", field);
             }
         }
         if (field.getAnnotation(org.aesh.command.option.OptionGroup.class) != null) {
@@ -509,19 +511,21 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
                     valid = false;
                     continue;
                 }
-                if (!typeUtils.isAssignable(typeUtils.erasure(param.asType()),
-                        typeUtils.erasure(collectionType))) {
+                if (param.asType().getKind() != TypeKind.ARRAY
+                        && !typeUtils.isAssignable(typeUtils.erasure(param.asType()),
+                                typeUtils.erasure(collectionType))) {
                     messager.printMessage(Diagnostic.Kind.ERROR,
-                            "OptionList parameter must be an instance of Collection: "
+                            "OptionList parameter must be an instance of Collection or an array: "
                                     + param.getSimpleName(),
                             method);
                     valid = false;
                 }
             }
-            if (hasArguments && !typeUtils.isAssignable(typeUtils.erasure(param.asType()),
-                    typeUtils.erasure(collectionType))) {
+            if (hasArguments && param.asType().getKind() != TypeKind.ARRAY
+                    && !typeUtils.isAssignable(typeUtils.erasure(param.asType()),
+                            typeUtils.erasure(collectionType))) {
                 messager.printMessage(Diagnostic.Kind.ERROR,
-                        "Arguments parameter must be an instance of Collection: "
+                        "Arguments parameter must be an instance of Collection or an array: "
                                 + param.getSimpleName(),
                         method);
                 valid = false;
@@ -536,10 +540,11 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
                     valid = false;
                 }
             }
-            if (hasArgument && typeUtils.isAssignable(typeUtils.erasure(param.asType()),
-                    typeUtils.erasure(collectionType))) {
+            if (hasArgument && (typeUtils.isAssignable(typeUtils.erasure(param.asType()),
+                    typeUtils.erasure(collectionType))
+                    || param.asType().getKind() == TypeKind.ARRAY)) {
                 messager.printMessage(Diagnostic.Kind.ERROR,
-                        "Argument parameter can not be an instance of Collection: "
+                        "Argument parameter can not be an instance of Collection or an array: "
                                 + param.getSimpleName(),
                         method);
                 valid = false;

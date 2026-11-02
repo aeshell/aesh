@@ -21,6 +21,8 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Argument;
+import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Mixin;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
@@ -450,6 +452,196 @@ public class OptionListParserTest {
         if (parser.getProcessedCommand().parserExceptions().size() > 0)
             throw (Exception) parser.getProcessedCommand().parserExceptions().get(0);
         return (T) parser.getCommand();
+    }
+
+    // ========== @OptionList/@Arguments array fields (#704) ==========
+
+    @Test
+    public void testArrayOption_ValuesInjected() throws Exception {
+        ArrayOptionCmd cmd = populated(ArrayOptionCmd.class, "test --deps a,b");
+        assertNotNull(cmd.deps);
+        assertEquals(2, cmd.deps.length);
+        assertEquals("a", cmd.deps[0]);
+        assertEquals("b", cmd.deps[1]);
+    }
+
+    @Test
+    public void testArrayOption_AbsentStaysNull() throws Exception {
+        ArrayOptionCmd cmd = populated(ArrayOptionCmd.class, "test");
+        assertNull(cmd.deps);
+    }
+
+    @Test
+    public void testIntArrayOption_ElementsConverted() throws Exception {
+        IntArrayOptionCmd cmd = populated(IntArrayOptionCmd.class, "test --nums 1,2,3");
+        assertNotNull(cmd.nums);
+        assertEquals(3, cmd.nums.length);
+        assertEquals(1, cmd.nums[0]);
+        assertEquals(2, cmd.nums[1]);
+        assertEquals(3, cmd.nums[2]);
+    }
+
+    @Test
+    public void testArrayArguments_ValuesInjected() throws Exception {
+        ArrayArgumentsCmd cmd = populated(ArrayArgumentsCmd.class, "test a.txt b.txt");
+        assertNotNull(cmd.files);
+        assertEquals(2, cmd.files.length);
+        assertEquals("a.txt", cmd.files[0]);
+        assertEquals("b.txt", cmd.files[1]);
+    }
+
+    @Test
+    public void testOptionalArray_BareGivesEmptyArray() throws Exception {
+        OptionalArrayCmd cmd = populated(OptionalArrayCmd.class, "test --find");
+        assertNotNull("bare --find must inject an empty array, not null", cmd.find);
+        assertEquals(0, cmd.find.length);
+
+        OptionalArrayCmd absent = populated(OptionalArrayCmd.class, "test");
+        assertNull(absent.find);
+
+        OptionalArrayCmd explicit = populated(OptionalArrayCmd.class, "test --find a,b");
+        assertEquals(2, explicit.find.length);
+    }
+
+    @Test
+    public void testArrayInitializer_PreservedAndCloned() throws Exception {
+        ArrayInitializerCmd cmd = populated(ArrayInitializerCmd.class, "test");
+        assertEquals(1, cmd.deps.length);
+        assertEquals("x", cmd.deps[0]);
+
+        ArrayInitializerCmd explicit = populated(ArrayInitializerCmd.class, "test --deps y,z");
+        assertEquals(2, explicit.deps.length);
+
+        // Mutating the injected array must not corrupt the captured initial
+        // value: the next reset restores a fresh copy (#697 parity).
+        explicit.deps[0] = "MUTATED";
+        ArrayInitializerCmd reset = populated(ArrayInitializerCmd.class, "test");
+        assertEquals(1, reset.deps.length);
+        assertEquals("x", reset.deps[0]);
+        assertEquals(1, cmd.deps.length);
+        assertEquals("x", cmd.deps[0]);
+    }
+
+    @Test
+    public void testArrayOption_MixinField() throws Exception {
+        MixinArrayCmd cmd = populated(MixinArrayCmd.class, "test --mdeps a,b");
+        assertNotNull(cmd.mixin);
+        assertNotNull(cmd.mixin.mdeps);
+        assertEquals(2, cmd.mixin.mdeps.length);
+        assertEquals("a", cmd.mixin.mdeps[0]);
+    }
+
+    @Test
+    public void testMultiDimensionalArray_Rejected() throws Exception {
+        try {
+            populated(MultiDimArrayCmd.class, "test");
+            fail("multi-dimensional array must fail at build time");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("must not be a multi-dimensional array"));
+        }
+    }
+
+    @Test
+    public void testNonCollectionNonArray_StillRejected() throws Exception {
+        try {
+            populated(BareStringListCmd.class, "test");
+            fail("non-Collection non-array @OptionList must fail at build time");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("must be instance of Collection or an array"));
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Array option test")
+    public static class ArrayOptionCmd implements Command<CommandInvocation> {
+        @OptionList(name = "deps")
+        public String[] deps;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Primitive array option test")
+    public static class IntArrayOptionCmd implements Command<CommandInvocation> {
+        @OptionList(name = "nums")
+        public int[] nums;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Array arguments test")
+    public static class ArrayArgumentsCmd implements Command<CommandInvocation> {
+        @Arguments
+        public String[] files;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Optional array test")
+    public static class OptionalArrayCmd implements Command<CommandInvocation> {
+        @OptionList(name = "find", optionalValue = true)
+        public String[] find;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Array initializer test")
+    public static class ArrayInitializerCmd implements Command<CommandInvocation> {
+        @OptionList(name = "deps")
+        public String[] deps = { "x" };
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class ArrayMixin {
+        @OptionList(name = "mdeps")
+        public String[] mdeps;
+    }
+
+    @CommandDefinition(name = "test", description = "Mixin array test")
+    public static class MixinArrayCmd implements Command<CommandInvocation> {
+        @Mixin
+        public ArrayMixin mixin;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Multi-dimensional array test")
+    public static class MultiDimArrayCmd implements Command<CommandInvocation> {
+        @OptionList(name = "deps")
+        public String[][] deps;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Non-collection list test")
+    public static class BareStringListCmd implements Command<CommandInvocation> {
+        @OptionList(name = "deps")
+        public String deps;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
     }
 
     // ========== Helpers ==========

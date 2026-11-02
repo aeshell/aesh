@@ -87,6 +87,8 @@ public final class GeneratedProcessedOption extends ProcessedOption {
                     val = new HashMap<>();
                 }
             }
+        } else if (initialValue != null && initialValue.getClass().isArray()) {
+            val = copyArrayValue(initialValue);
         }
         fieldAccessor.set(instance, val);
     }

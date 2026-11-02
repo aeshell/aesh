@@ -81,6 +81,7 @@ public class ProcessedOptionBuilder {
     private SelectorType selectorType;
     private boolean optionalValue = false;
     private boolean optionalWrapped = false;
+    private boolean arrayType = false;
     private String fallbackValue;
     private boolean negatable = false;
     private String negationPrefix = "no-";
@@ -358,6 +359,15 @@ public class ProcessedOptionBuilder {
         return this;
     }
 
+    /**
+     * Set whether the multi-value field is an array rather than a Collection.
+     * The {@code type} is then the component type (#704).
+     */
+    public ProcessedOptionBuilder array(boolean array) {
+        this.arrayType = array;
+        return this;
+    }
+
     public ProcessedOptionBuilder negatable(boolean negatable) {
         this.negatable = negatable;
         return this;
@@ -569,6 +579,8 @@ public class ProcessedOptionBuilder {
             option.setFallbackValue(fallbackValue);
         if (optionalWrapped)
             option.setOptionalWrapped(true);
+        if (arrayType)
+            option.setArrayType(true);
         if (paramLabel != null && !paramLabel.isEmpty())
             option.setParamLabel(paramLabel);
         if (arity != null && !arity.isEmpty())
