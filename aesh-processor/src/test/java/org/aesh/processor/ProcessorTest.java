@@ -421,6 +421,59 @@ public class ProcessorTest {
         assertEquals(2, ((int[]) numsVal)[1]);
     }
 
+    // --- Test: matched-option queries on the generated path (#707) ---
+
+    private static final String MATCHED_OPTION_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"matched\", description = \"Matched option\")\n" +
+            "public class MatchedOptionCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"dir\", description = \"dir\")\n" +
+            "    String dir;\n" +
+            "\n" +
+            "    @Option(name = \"level\", description = \"level\", defaultValue = \"INFO\")\n" +
+            "    String level;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testMatchedOptionGenerated() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.MatchedOptionCommand", MATCHED_OPTION_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.MatchedOptionCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.MatchedOptionCommand_AeshMetadata");
+
+        // Verify parity between reflection and generated paths
+        assertEquivalence(commandClass, metadataClass);
+
+        // An explicitly given value counts as matched even when it equals the default
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        AeshCommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(generatedPC);
+        InvocationProviders invProviders = new AeshInvocationProviders();
+        parser.populateObject("matched --level INFO", invProviders, null, CommandLineParser.Mode.STRICT);
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+
+        ProcessedOption levelOpt = generatedPC.findLongOption("level");
+        assertNotNull(levelOpt);
+        assertTrue(levelOpt.isExplicitlyGiven());
+        assertTrue(generatedPC.findLongOption("dir") == null
+                || !generatedPC.findLongOption("dir").isExplicitlyGiven());
+    }
+
     // --- Test: Command with aliases and version ---
 
     private static final String ALIASED_SOURCE = "package test;\n" +

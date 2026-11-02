@@ -779,6 +779,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                             // Apply fallback chain if the parser left no value (#511).
                             // Idempotent: skips if the parser already set a value.
                             lastParsedOption.applyOptionalFallback();
+                            // The option token was consumed: it was explicitly
+                            // given, regardless of where its value came from.
+                            // Populate, providers, prompts and selectors never
+                            // set this, so it stays a pure CLI signal (#707).
+                            lastParsedOption.setExplicitlyGiven(true);
                         } else {
                             //if we have a -- and its not at the end of the line it is used as a
                             //marker to signal that all the values after it are arguments, so we will ignore this

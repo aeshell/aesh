@@ -21,6 +21,8 @@
 package org.aesh.command.impl.invocation;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.Command;
@@ -239,6 +241,21 @@ public final class AeshCommandInvocation implements CommandInvocation {
             return ((ReadlineConsole) console).getCommandContext();
         }
         return null;
+    }
+
+    @Override
+    public boolean hasMatchedOption(String name) {
+        return MatchedOptions.hasMatchedOption(commandContainer, name);
+    }
+
+    @Override
+    public List<String> matchedOptionValues(String name) {
+        return MatchedOptions.matchedOptionValues(commandContainer, name);
+    }
+
+    @Override
+    public Set<String> matchedOptionNames() {
+        return MatchedOptions.matchedOptionNames(commandContainer);
     }
 
     @Override

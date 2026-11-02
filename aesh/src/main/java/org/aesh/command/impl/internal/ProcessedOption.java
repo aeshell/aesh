@@ -117,6 +117,14 @@ public class ProcessedOption {
      */
     private boolean explicitEmpty = false;
     /**
+     * True when the option was explicitly given on the command line (its
+     * token was parsed), as opposed to set from a default, a fallback, a
+     * {@code DefaultValueProvider}, an interactive prompt or a selector.
+     * Set at parse time; {@link #clear()} resets it for the next parse
+     * (#707). Backs {@code CommandInvocation.hasMatchedOption} and friends.
+     */
+    private boolean explicitlyGiven = false;
+    /**
      * True when the multi-value field is an array rather than a Collection
      * ({@code String[]}, {@code int[]} ...). The {@code type} is then the
      * component type, and values are injected as arrays (#704).
@@ -765,6 +773,19 @@ public class ProcessedOption {
      * {@code optionalValue} set. Populate uses this to inject an empty
      * collection for list options instead of resetting the field (#705).
      */
+    public boolean isExplicitlyGiven() {
+        return explicitlyGiven;
+    }
+
+    /**
+     * Marks the option as explicitly given on the command line. Called by
+     * the parser when the option token is consumed; never by populate,
+     * providers, prompts or selectors (#707).
+     */
+    public void setExplicitlyGiven(boolean explicitlyGiven) {
+        this.explicitlyGiven = explicitlyGiven;
+    }
+
     public boolean isExplicitEmpty() {
         return explicitEmpty;
     }
@@ -1045,6 +1066,7 @@ public class ProcessedOption {
         cursorValue = false;
         negatedByUser = false;
         explicitEmpty = false;
+        explicitlyGiven = false;
         resolveVariables();
     }
 

@@ -21,6 +21,8 @@ package org.aesh.command.impl.invocation;
 
 import java.io.Console;
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.aesh.command.CommandException;
@@ -116,6 +118,21 @@ public class DefaultCommandInvocation implements CommandInvocation {
     @Override
     public String getHelpInfo() {
         return commandContainer.getParser().parsedCommand().printHelp();
+    }
+
+    @Override
+    public boolean hasMatchedOption(String name) {
+        return MatchedOptions.hasMatchedOption(commandContainer, name);
+    }
+
+    @Override
+    public List<String> matchedOptionValues(String name) {
+        return MatchedOptions.matchedOptionValues(commandContainer, name);
+    }
+
+    @Override
+    public Set<String> matchedOptionNames() {
+        return MatchedOptions.matchedOptionNames(commandContainer);
     }
 
     @Override

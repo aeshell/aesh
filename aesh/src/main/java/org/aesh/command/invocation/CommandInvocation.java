@@ -21,7 +21,9 @@
 package org.aesh.command.invocation;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
@@ -380,6 +382,46 @@ public interface CommandInvocation {
     default <T> T getInheritedValue(String name, Class<T> type, T defaultValue) {
         CommandContext ctx = getCommandContext();
         return ctx != null ? ctx.getInheritedValue(name, type, defaultValue) : defaultValue;
+    }
+
+    // ========== Matched Option Methods ==========
+
+    /**
+     * Whether the named option was explicitly given on the command line, as
+     * opposed to set from a default, a fallback, a
+     * {@code DefaultValueProvider}, an interactive prompt or a selector
+     * (#707). The name may be the long name with or without dashes
+     * ({@code --verbose}, {@code verbose}), the short name ({@code -v}) or
+     * an alias. When a group and its child define the same name, the child
+     * (innermost) wins.
+     *
+     * @param name the option name, short name or alias
+     * @return true if the option was explicitly given
+     */
+    default boolean hasMatchedOption(String name) {
+        return false;
+    }
+
+    /**
+     * The raw values parsed for a matched option, in order. Empty when the
+     * option was not given, or when it was given without values (a boolean
+     * flag, or a bare {@code optionalValue} option).
+     *
+     * @param name the option name, short name or alias
+     * @return the raw parsed values, or an empty list if not matched
+     */
+    default List<String> matchedOptionValues(String name) {
+        return Collections.emptyList();
+    }
+
+    /**
+     * The long names of all options explicitly given on the command line,
+     * in command order from the outermost group down to the executed command.
+     *
+     * @return the matched option names, or an empty set if none were given
+     */
+    default Set<String> matchedOptionNames() {
+        return Collections.emptySet();
     }
 
     /**
