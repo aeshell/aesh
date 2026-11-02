@@ -4,15 +4,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
 import org.aesh.command.option.Option;
+import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -112,6 +116,56 @@ public class GroupCommandArgumentsTest {
         assertNull(groupFiles);
     }
 
+    @Test
+    public void testArgumentBeforeChildName() throws Exception {
+        // doParse re-checks child names per word, so the child still wins. The
+        // earlier word must have been consumed as the group argument — anything
+        // else would fail — while the child gets no argument of its own.
+        CommandResult result = runtime(TuiGroup.class).executeCommand("tui myapp monitor");
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("monitor", executed);
+        assertNull(childName);
+        assertNull(groupName);
+    }
+
+    @Test
+    public void testRequiredGroupArgument() throws Exception {
+        try {
+            runtime(TuiReqGroup.class).executeCommand("tuireq");
+            fail("expected required group argument to fail");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("required"));
+        }
+
+        // Selecting a child bypasses the group's required argument: the group's
+        // doParse (and its required check) never runs on the child path.
+        CommandResult result = runtime(TuiReqGroup.class).executeCommand("tuireq monitor");
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("monitor", executed);
+    }
+
+    @Test
+    public void testLazyChildNameStillSelectsChild() throws Exception {
+        // With lazy child resolution the child is materialized on demand during
+        // parsing; the name still wins over the group argument (#702).
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        builder.setLazyChildResolution(true);
+        CommandContainer<CommandInvocation> container = builder.create(new TuiGroup());
+        assertTrue("child must still be unresolved before parsing",
+                container.getParser().getChildParsers() == null
+                        || container.getParser().getChildParsers().isEmpty());
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(container).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        CommandResult result = runtime.executeCommand("tui monitor myapp");
+        assertEquals(CommandResult.SUCCESS, result);
+        assertEquals("monitor", executed);
+        assertEquals("myapp", childName);
+        assertNull(groupName);
+    }
+
     @CommandDefinition(name = "monitor", description = "")
     public static class MonitorCommand implements Command<CommandInvocation> {
         @Argument
@@ -151,6 +205,19 @@ public class GroupCommandArgumentsTest {
         public CommandResult execute(CommandInvocation invocation) {
             executed = "files";
             groupFiles = files;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "tuireq", description = "", groupCommands = { MonitorCommand.class })
+    public static class TuiReqGroup implements Command<CommandInvocation> {
+        @Argument(required = true)
+        String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            executed = "tuireq";
+            groupName = name;
             return CommandResult.SUCCESS;
         }
     }
