@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.aesh.command.Command;
@@ -34,7 +35,7 @@ import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.option.Argument;
+import org.aesh.command.option.Arguments;
 import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
@@ -60,14 +61,17 @@ public class AeshRuntimeRunnerInvalidDefinitionTest {
     }
 
     @Test
-    public void testGroupCommandWithArgumentReportsTheDefinitionError() {
+    public void testDuplicateArgumentsReportsTheDefinitionError() {
+        // A group with an argument used to be invalid, but #702 allows it now;
+        // duplicate @Arguments fields are still rejected at build time (#699).
         ByteArrayOutputStream err = new ByteArrayOutputStream();
         CommandResult result = executeWithStderr(err, AeshRuntimeRunner.builder()
-                .command(GroupWithArgumentCommand.class)
-                .args("child"));
+                .command(DuplicateArgumentsCommand.class)
+                .args("a", "b"));
 
         assertEquals(CommandResult.FAILURE, result);
-        assertTrue(err.toString(), err.toString().contains("Group commands can not have arguments defined"));
+        assertTrue(err.toString(),
+                err.toString().contains("Only one @Arguments field is allowed per command"));
         assertFalse(err.toString(), err.toString().contains("Command not found"));
     }
 
@@ -122,20 +126,14 @@ public class AeshRuntimeRunnerInvalidDefinitionTest {
         }
     }
 
-    @CommandDefinition(name = "group-with-argument", description = "a group command with an argument", groupCommands = {
-            ChildCommand.class })
-    public static class GroupWithArgumentCommand implements Command<CommandInvocation> {
-        @Argument
-        private String name;
+    @CommandDefinition(name = "duplicate-arguments", description = "two @Arguments fields")
+    public static class DuplicateArgumentsCommand implements Command<CommandInvocation> {
+        @Arguments
+        private List<String> first;
 
-        @Override
-        public CommandResult execute(CommandInvocation commandInvocation) {
-            return CommandResult.SUCCESS;
-        }
-    }
+        @Arguments
+        private List<String> second;
 
-    @CommandDefinition(name = "child", description = "child")
-    public static class ChildCommand implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
