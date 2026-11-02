@@ -21,6 +21,7 @@ package org.aesh.command;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -580,6 +581,7 @@ public class MethodCommandTest {
     public static class MultiMethods {
         List<String> seenIncludes;
         List<String> seenFiles;
+        List<String> seenFinds;
 
         @MethodCommand(name = "build", description = "build it")
         public void build(@OptionList(name = "include", description = "includes") List<String> includes,
@@ -587,6 +589,28 @@ public class MethodCommandTest {
             seenIncludes = includes;
             seenFiles = files;
         }
+
+        @MethodCommand(name = "optfind", description = "optional find")
+        public void optFind(
+                @OptionList(name = "find", description = "find things", optionalValue = true) List<String> finds) {
+            seenFinds = finds;
+        }
+    }
+
+    @Test
+    public void testOptionalOptionListBareGivesEmptyList() throws Exception {
+        MultiMethods methods = new MultiMethods();
+        CommandRuntime<CommandInvocation> runtime = runtimeFor(methods, "optFind", List.class);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("optfind --find"));
+        assertNotNull("bare --find must inject an empty list, not null", methods.seenFinds);
+        assertTrue(methods.seenFinds.isEmpty());
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("optfind --find a,b"));
+        assertEquals(Arrays.asList("a", "b"), methods.seenFinds);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("optfind"));
+        assertNull("omitted --find must stay null", methods.seenFinds);
     }
 
     @Test

@@ -516,8 +516,10 @@ public class ProcessedOptionBuilder {
         if (fallbackValue != null)
             optionalValue = true;
 
-        // Validate that optionalValue requires hasValue (NORMAL type)
-        if (optionalValue && optionType != OptionType.NORMAL) {
+        // Validate that optionalValue is only used with options that accept
+        // values (normal options and lists, #705). Boolean flags never take
+        // values, so optionalValue is meaningless for them.
+        if (optionalValue && optionType == OptionType.BOOLEAN) {
             throw new OptionParserException("Option '" + name + "' is marked as optionalValue but does not accept values");
         }
 

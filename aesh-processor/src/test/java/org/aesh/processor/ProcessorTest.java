@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -50,7 +51,11 @@ import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.GeneratedProcessedOption;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.impl.parser.AeshCommandLineParser;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.metadata.MetadataRegistry;
 import org.junit.Test;
@@ -296,6 +301,58 @@ public class ProcessorTest {
         Object exampleVal = exampleField.get(instance);
         assertNotNull("example field should not be null with defaultValue=\"\"", exampleVal);
         assertEquals("example field should be empty string", "", exampleVal);
+    }
+
+    // --- Test: @OptionList with optionalValue (bare use gives an empty list, #705) ---
+
+    private static final String OPTIONAL_LIST_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"optfind\", description = \"Optional list\")\n" +
+            "public class OptionalListCommand implements Command<CommandInvocation> {\n" +
+            "    @OptionList(name = \"find\", optionalValue = true)\n" +
+            "    List<String> find;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testOptionalOptionListGenerated() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.OptionalListCommand", OPTIONAL_LIST_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.OptionalListCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.OptionalListCommand_AeshMetadata");
+
+        // Verify parity between reflection and generated paths
+        assertEquivalence(commandClass, metadataClass);
+
+        // Bare --find through the generated path must yield an empty list, not null
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        AeshCommandLineParser<CommandInvocation> parser = new AeshCommandLineParser<>(generatedPC);
+        InvocationProviders invProviders = new AeshInvocationProviders();
+        parser.populateObject("optfind --find", invProviders, null, CommandLineParser.Mode.STRICT);
+        assertTrue(parser.getProcessedCommand().parserExceptions().isEmpty());
+
+        Field findField = commandClass.getDeclaredField("find");
+        findField.setAccessible(true);
+        Object findVal = findField.get(instance);
+        assertNotNull("bare --find must inject an empty list, not null", findVal);
+        assertTrue("bare --find must be empty", ((List<?>) findVal).isEmpty());
     }
 
     // --- Test: Command with aliases and version ---

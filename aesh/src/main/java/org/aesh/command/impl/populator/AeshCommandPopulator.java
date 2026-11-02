@@ -81,7 +81,12 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
         for (ProcessedOption option : processedCommand.getOptions()) {
             if (option.getValues() != null && option.getValues().size() > 0)
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
-            else if (option.isVariableDefaultResolved()
+            else if (option.isExplicitEmpty() && option.hasMultipleValues()) {
+                // Bare use with optionalValue (e.g. --find with nothing after
+                // it): inject an empty collection, keeping "given without
+                // values" distinct from "not given" (which resets) (#705).
+                option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);
+            } else if (option.isVariableDefaultResolved()
                     && option.getDefaultValues().size() > 0 && option.selectorType() == SelectorType.NO_OP) {
                 // Annotation default resolved from env/sys var — priority over provider (#521)
                 option.injectValueIntoField(getObject(), invocationProviders, aeshContext, doValidate);

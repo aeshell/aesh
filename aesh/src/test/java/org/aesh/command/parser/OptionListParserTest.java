@@ -1,7 +1,10 @@
 package org.aesh.command.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,12 +15,17 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.console.AeshContext;
 import org.junit.Test;
 
 /**
@@ -352,6 +360,98 @@ public class OptionListParserTest {
                 "test -R -Xmx4G --verbose", "verbose").get(0));
     }
 
+    // ========== @OptionList(optionalValue): bare use gives an empty list (#705) ==========
+
+    @Test
+    public void testOptionalList_BareGivesEmptyList() throws Exception {
+        OptionalListCmd cmd = populated(OptionalListCmd.class, "test --find");
+        assertNotNull("bare --find must inject an empty list, not null", cmd.find);
+        assertTrue("bare --find must be empty", cmd.find.isEmpty());
+    }
+
+    @Test
+    public void testOptionalList_AbsentStaysNull() throws Exception {
+        OptionalListCmd cmd = populated(OptionalListCmd.class, "test");
+        assertNull("omitted --find must stay null", cmd.find);
+    }
+
+    @Test
+    public void testOptionalList_ExplicitValuesStillWork() throws Exception {
+        OptionalListCmd cmd = populated(OptionalListCmd.class, "test --find a,b");
+        assertEquals(2, cmd.find.size());
+        assertEquals("a", cmd.find.get(0));
+        assertEquals("b", cmd.find.get(1));
+
+        OptionalListCmd single = populated(OptionalListCmd.class, "test --find a");
+        assertEquals(1, single.find.size());
+        assertEquals("a", single.find.get(0));
+    }
+
+    @Test
+    public void testOptionalList_BareBeforeAnotherOption() throws Exception {
+        // Space-separated lists look the next word up as an option, so bare
+        // --files does not swallow --verbose (comma-separated lists consume
+        // dash-words as values by design).
+        SpaceOptionalListCmd cmd = populated(SpaceOptionalListCmd.class, "test --files --verbose");
+        assertNotNull(cmd.files);
+        assertTrue(cmd.files.isEmpty());
+        assertTrue(cmd.verbose);
+
+        SpaceOptionalListCmd vals = populated(SpaceOptionalListCmd.class, "test --files a b");
+        assertEquals(2, vals.files.size());
+        assertEquals("a", vals.files.get(0));
+        assertEquals("b", vals.files.get(1));
+    }
+
+    @Test
+    public void testOptionalList_FallbackValue() throws Exception {
+        OptionalListFallbackCmd cmd = populated(OptionalListFallbackCmd.class, "test --find");
+        assertEquals(1, cmd.find.size());
+        assertEquals("dflt", cmd.find.get(0));
+
+        // With a fallback set, explicit values only come via = syntax.
+        OptionalListFallbackCmd explicit = populated(OptionalListFallbackCmd.class, "test --find=x,y");
+        assertEquals(2, explicit.find.size());
+        assertEquals("x", explicit.find.get(0));
+
+        OptionalListFallbackCmd absent = populated(OptionalListFallbackCmd.class, "test");
+        assertNull(absent.find);
+    }
+
+    @Test
+    public void testOptionalList_RequiredSatisfiedByBareUse() throws Exception {
+        RequiredOptionalListCmd cmd = populated(RequiredOptionalListCmd.class, "test --find");
+        assertNotNull(cmd.find);
+        assertTrue(cmd.find.isEmpty());
+    }
+
+    @Test
+    public void testOptionalList_RequiredStillFailsWhenAbsent() throws Exception {
+        try {
+            populated(RequiredOptionalListCmd.class, "test");
+            fail("required --find omitted must fail");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("required"));
+        }
+    }
+
+    @Test
+    public void testNonOptionalList_BareStillFails() throws Exception {
+        // The exemption is opt-in: without optionalValue the old error stays.
+        assertTrue(hasParserException(RuntimeOptsCmd.class, "test -R"));
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private <T extends Command> T populated(Class<T> cmdClass, String line) throws Exception {
+        AeshCommandLineParser parser = createParser(cmdClass);
+        InvocationProviders providers = new AeshInvocationProviders();
+        AeshContext context = SettingsBuilder.builder().build().aeshContext();
+        parser.populateObject(line, providers, context, CommandLineParser.Mode.STRICT);
+        if (parser.getProcessedCommand().parserExceptions().size() > 0)
+            throw (Exception) parser.getProcessedCommand().parserExceptions().get(0);
+        return (T) parser.getCommand();
+    }
+
     // ========== Helpers ==========
 
     @SuppressWarnings("rawtypes")
@@ -428,6 +528,56 @@ public class OptionListParserTest {
     public static class CommaListCmd implements Command<CommandInvocation> {
         @OptionList(shortName = 'o', name = "option", valueSeparator = ',')
         public List<String> items;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Optional-value list test")
+    public static class OptionalListCmd implements Command<CommandInvocation> {
+        @OptionList(name = "find", optionalValue = true)
+        public List<String> find;
+
+        @Option(hasValue = false)
+        public boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Optional-value list with fallback")
+    public static class OptionalListFallbackCmd implements Command<CommandInvocation> {
+        @OptionList(name = "find", fallbackValue = "dflt")
+        public List<String> find;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Required optional-value list")
+    public static class RequiredOptionalListCmd implements Command<CommandInvocation> {
+        @OptionList(name = "find", optionalValue = true, required = true)
+        public List<String> find;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "Space-separated optional-value list")
+    public static class SpaceOptionalListCmd implements Command<CommandInvocation> {
+        @OptionList(name = "files", valueSeparator = ' ', optionalValue = true)
+        public List<String> files;
+
+        @Option(hasValue = false)
+        public boolean verbose;
 
         @Override
         public CommandResult execute(CommandInvocation ci) {

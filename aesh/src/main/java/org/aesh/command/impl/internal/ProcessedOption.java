@@ -107,6 +107,14 @@ public class ProcessedOption {
     private boolean negatedByUser = false;
     private boolean optionalValue = false;
     private boolean optionalWrapped = false;
+    /**
+     * True when the option was explicitly given without values (bare) and has
+     * {@code optionalValue} set, e.g. {@code --find} with nothing after it.
+     * Set at parse time by {@link #applyOptionalFallback()}; lets populate
+     * inject an empty list instead of resetting, so "given without values"
+     * (empty) stays distinct from "not given" (null) (#705).
+     */
+    private boolean explicitEmpty = false;
     private String fallbackValue;
     // Raw template strings for deferred resolution (#520).
     // Only set when the value contains ${...} variable references.
@@ -730,6 +738,15 @@ public class ProcessedOption {
         return optionalValue;
     }
 
+    /**
+     * Whether the option was explicitly given without values (bare) with
+     * {@code optionalValue} set. Populate uses this to inject an empty
+     * collection for list options instead of resetting the field (#705).
+     */
+    public boolean isExplicitEmpty() {
+        return explicitEmpty;
+    }
+
     public boolean hasMultipleValues() {
         return optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS || optionType == OptionType.GROUP;
     }
@@ -994,6 +1011,7 @@ public class ProcessedOption {
         cursorOption = false;
         cursorValue = false;
         negatedByUser = false;
+        explicitEmpty = false;
         resolveVariables();
     }
 
@@ -1528,6 +1546,11 @@ public class ProcessedOption {
     public void applyOptionalFallback() {
         if (!isOptionalValue() || getValue() != null)
             return;
+
+        // Bare use with optionalValue: the option was explicitly given without
+        // values. Record it so populate can tell "given" (empty) from
+        // "absent" (reset) (#705).
+        explicitEmpty = true;
 
         // Priority 1: Annotation fallbackValue resolved from env/sys var (#521)
         if (variableFallbackResolved && hasFallbackValue()) {

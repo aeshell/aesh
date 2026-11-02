@@ -203,6 +203,33 @@ public @interface OptionList {
     int order() default Integer.MAX_VALUE;
 
     /**
+     * When true, the option may be used without values (arity 0..*).
+     * If used without values, the field is set to an empty list, which
+     * distinguishes "specified without values" (empty list) from
+     * "not specified at all" (null).
+     * If used with values, those values are used.
+     *
+     * Example: {@code @OptionList(name = "find", optionalValue = true)}
+     * allows both {@code --find} (empty list) and {@code --find a,b} (two values).
+     */
+    boolean optionalValue() default false;
+
+    /**
+     * Value applied when the option is specified without values (bare).
+     * Unlike {@code defaultValue}, this is NOT applied when the option is omitted entirely.
+     * Implies {@code optionalValue = true}. For a list this becomes a
+     * single-element list.
+     *
+     * Example: {@code @OptionList(name = "find", fallbackValue = "a")}
+     * <ul>
+     * <li>{@code app} → find = null (not specified)</li>
+     * <li>{@code app --find} → find = [a] (fallback)</li>
+     * <li>{@code app --find a,b} → find = [a, b] (explicit)</li>
+     * </ul>
+     */
+    String fallbackValue() default "\u0000";
+
+    /**
      * Controls shell completion fallback behavior when no custom completer is set.
      * DEFAULT defers to the command-level setting or type-based heuristic.
      */

@@ -895,6 +895,15 @@ final class CodeGenerator {
         emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
         if (ol.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
+        if (ol.optionalValue())
+            sb.append("            ").append(var).append(".setOptionalValue(true);\n");
+        if (!"\u0000".equals(ol.fallbackValue())) {
+            sb.append("            ").append(var).append(".setFallbackValue(").append(stringLiteral(ol.fallbackValue()))
+                    .append(");\n");
+            // fallbackValue implies optionalValue
+            if (!ol.optionalValue())
+                sb.append("            ").append(var).append(".setOptionalValue(true);\n");
+        }
         if (ol.inherited())
             sb.append("            ").append(var).append(".setInherited(true);\n");
         if (!ol.descriptionUrl().isEmpty())

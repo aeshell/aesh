@@ -1090,9 +1090,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     private boolean doCheckForMissingRequiredOption(ProcessedOption o) {
         // A static defaultValue satisfies required: populate injects it when no
-        // explicit value is given (#698). Dynamic provider defaults are only
-        // known at populate time and do not satisfy the check here.
-        if (o.isRequired() && o.getValue() == null
+        // explicit value is given (#698). An explicitly given bare option with
+        // optionalValue counts as given too (#705). Dynamic provider defaults
+        // are only known at populate time and do not satisfy the check here.
+        if (o.isRequired() && o.getValue() == null && !o.isExplicitEmpty()
                 && (o.getDefaultValues() == null || o.getDefaultValues().isEmpty())) {
             boolean found = false;
             for (ProcessedOption po : processedCommand.getOptions()) {

@@ -780,6 +780,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         .parser(ol.parser());
                 processedCommand.addOption(optionListBuilder
                         .overrideRequired(ol.overrideRequired())
+                        .optionalValue(ol.optionalValue())
+                        .fallbackValue("\u0000".equals(ol.fallbackValue()) ? null : ol.fallbackValue())
                         .inherited(ol.inherited())
                         .descriptionUrl(ol.descriptionUrl())
                         .url(ol.url())
@@ -990,6 +992,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             }
             processedCommand.addOption(optionListBuilder
                     .overrideRequired(ol.overrideRequired())
+                    .optionalValue(ol.optionalValue())
+                    .fallbackValue("\u0000".equals(ol.fallbackValue()) ? null : ol.fallbackValue())
                     .inherited(ol.inherited())
                     .descriptionUrl(ol.descriptionUrl())
                     .url(ol.url())
