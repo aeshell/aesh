@@ -643,6 +643,11 @@ public class MethodCommandTest {
     public void noLabels(@Arguments(description = "x") List<String> values) {
     }
 
+    @MethodCommand(name = "dupeargs", description = "duplicate args")
+    public void dupeArgs(@Arguments(description = "x", paramLabel = "a") List<String> first,
+            @Arguments(description = "y", paramLabel = "b") List<String> second) {
+    }
+
     @Test
     public void testMissingParamLabelFailsFast() throws Exception {
         try {
@@ -658,6 +663,18 @@ public class MethodCommandTest {
             fail("expected failure for missing @Arguments paramLabel");
         } catch (CommandLineParserException expected) {
             assertTrue(expected.getMessage().contains("explicit paramLabel"));
+        }
+    }
+
+    @Test
+    public void testDuplicateArgumentsParamsFailFast() throws Exception {
+        // #699: two @Arguments params must not silently drop one side
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(this,
+                    MethodCommandTest.class.getMethod("dupeArgs", List.class, List.class));
+            fail("expected failure for duplicate @Arguments params");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("Only one @Arguments field is allowed per command"));
         }
     }
 

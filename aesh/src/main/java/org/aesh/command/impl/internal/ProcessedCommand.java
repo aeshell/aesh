@@ -332,7 +332,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return arguments;
     }
 
-    public void setArguments(ProcessedOption arguments) {
+    public void setArguments(ProcessedOption arguments) throws CommandLineParserException {
+        if (this.arguments != null) {
+            throw new CommandLineParserException("Only one @Arguments field is allowed per command, but found '"
+                    + this.arguments.getFieldName() + "' and '" + arguments.getFieldName() + "' (#699).");
+        }
         this.arguments = arguments;
         this.arguments.setParent(this);
         cachedPositionalOrder = null;

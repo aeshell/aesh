@@ -462,6 +462,88 @@ public class CommandLineParserTest {
     }
 
     @Test
+    public void testDuplicateArgumentsInHierarchyFailsFast() throws Exception {
+        // #699: Base.files + Sub.targets must not silently drop one side
+        try {
+            new AeshCommandContainerBuilder<>().create(new SubArgumentsCommand());
+            fail("expected failure for two @Arguments in one hierarchy");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("Only one @Arguments field is allowed per command"));
+            assertTrue(expected.getMessage().contains("files"));
+            assertTrue(expected.getMessage().contains("targets"));
+        }
+    }
+
+    @Test
+    public void testDuplicateArgumentsInSameClassFailsFast() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<>().create(new DoubleArgumentsCommand());
+            fail("expected failure for two @Arguments in one class");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("Only one @Arguments field is allowed per command"));
+        }
+    }
+
+    @Test
+    public void testDuplicateArgumentsViaMixinFailsFast() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<>().create(new MixinArgumentsCommand());
+            fail("expected failure for @Arguments in both mixin and command");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage().contains("Only one @Arguments field is allowed per command"));
+        }
+    }
+
+    public static class BaseArgumentsCommand {
+        @Arguments
+        List<String> files;
+    }
+
+    @CommandDefinition(name = "subargs", description = "")
+    public static class SubArgumentsCommand extends BaseArgumentsCommand implements Command<CommandInvocation> {
+        @Arguments(required = true)
+        List<String> targets;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "doubleargs", description = "")
+    public static class DoubleArgumentsCommand implements Command<CommandInvocation> {
+        @Arguments
+        List<String> first;
+
+        @Arguments
+        List<String> second;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class ArgumentsMixin {
+        @Arguments
+        List<String> mixed;
+    }
+
+    @CommandDefinition(name = "mixargs", description = "")
+    public static class MixinArgumentsCommand implements Command<CommandInvocation> {
+        @Mixin
+        ArgumentsMixin mixin;
+
+        @Arguments
+        List<String> own;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
     public void testDoubleDash() throws Exception {
         AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>().create(new Parser4Test<>())
