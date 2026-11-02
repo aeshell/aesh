@@ -61,6 +61,7 @@ import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.metadata.MetadataProviderRegistry;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
+import org.aesh.command.option.Mixin;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.SubcommandNotFoundException;
@@ -245,6 +246,53 @@ public class AeshRuntimeRunnerLazyStartupTest {
         assertEquals(eagerResult, lazyResult);
         assertEquals(err2.toString(), lazyErr);
         resetHelpFlags();
+    }
+
+    @Test
+    public void testGroupArgumentInLazyMode() {
+        // a word that is not a child name is the argument of the group itself (#702)
+        assertGroupExecutes(GroupArgRootCommand.class, "group myapp", "myapp");
+    }
+
+    @Test
+    public void testChildOfGroupWithArgumentInLazyMode() {
+        assertGroupExecutes(GroupArgRootCommand.class, "child x", "child", "x");
+        assertGroupExecutes(GroupArgRootCommand.class, "child null", "child");
+    }
+
+    @Test
+    public void testGroupArgumentsInSuperclassInLazyMode() {
+        assertGroupExecutes(GroupArgInheritedCommand.class, "files [a.yaml, b.yaml]", "a.yaml", "b.yaml");
+    }
+
+    @Test
+    public void testGroupArgumentInMixinInLazyMode() {
+        assertGroupExecutes(GroupArgMixinCommand.class, "mixin myapp", "myapp");
+    }
+
+    @Test
+    public void testProviderRouteAcceptsGroupArgument() throws Exception {
+        MetadataProviderRegistry.register(className -> className.equals(GroupArgRootCommand.class.getName())
+                ? new GroupArgRootProvider()
+                : null);
+
+        LazyRouteResolver.validate(GroupArgRootCommand.class, new String[] { "myapp" });
+        LazyRouteResolver.validate(GroupArgRootCommand.class, new String[] { "child", "x" });
+    }
+
+    // runs the command line with lazy startup, and without, which must give the same
+    private static void assertGroupExecutes(Class<? extends Command> root, String expected, String... args) {
+        for (boolean lazy : new boolean[] { true, false }) {
+            GroupArgRootCommand.executed = null;
+            CommandResult result = AeshRuntimeRunner.builder()
+                    .lazyStartup(lazy)
+                    .command(root)
+                    .args(args)
+                    .execute();
+
+            assertEquals("lazyStartup " + lazy, CommandResult.SUCCESS, result);
+            assertEquals("lazyStartup " + lazy, expected, GroupArgRootCommand.executed);
+        }
     }
 
     @Test
@@ -1587,6 +1635,34 @@ public class AeshRuntimeRunnerLazyStartupTest {
         }
     }
 
+    private static class GroupArgRootProvider extends RouteStubProvider<GroupArgRootCommand> {
+        @Override
+        public Class<GroupArgRootCommand> commandType() {
+            return GroupArgRootCommand.class;
+        }
+
+        @Override
+        public boolean isGroupCommand() {
+            return true;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Class<? extends Command>[] groupCommandClasses() {
+            return new Class[] { GroupArgChildCommand.class };
+        }
+
+        @Override
+        public String commandName() {
+            return "group";
+        }
+
+        @Override
+        public String[][] groupCommandNamesAndAliases() {
+            return new String[][] { { "child" } };
+        }
+    }
+
     private static class ProviderRoutedRootProvider extends RouteStubProvider<ProviderRoutedRoot> {
         @Override
         public Class<ProviderRoutedRoot> commandType() {
@@ -2098,6 +2174,66 @@ public class AeshRuntimeRunnerLazyStartupTest {
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "group", description = "group with an argument", groupCommands = {
+            GroupArgChildCommand.class })
+    public static class GroupArgRootCommand implements Command<CommandInvocation> {
+        static String executed;
+
+        @Argument
+        String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            executed = "group " + name;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "child", description = "child of a group with an argument")
+    public static class GroupArgChildCommand implements Command<CommandInvocation> {
+        @Argument
+        String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            GroupArgRootCommand.executed = "child " + name;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class GroupArgBase {
+        @Arguments
+        List<String> files;
+    }
+
+    @CommandDefinition(name = "files", description = "group with arguments in its superclass", groupCommands = {
+            GroupArgChildCommand.class })
+    public static class GroupArgInheritedCommand extends GroupArgBase implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            GroupArgRootCommand.executed = "files " + files;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class GroupArgMixin {
+        @Argument
+        String name;
+    }
+
+    @CommandDefinition(name = "mixed", description = "group with an argument in a mixin", groupCommands = {
+            GroupArgChildCommand.class })
+    public static class GroupArgMixinCommand implements Command<CommandInvocation> {
+        @Mixin
+        GroupArgMixin mixin;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            GroupArgRootCommand.executed = "mixin " + mixin.name;
             return CommandResult.SUCCESS;
         }
     }
