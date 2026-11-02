@@ -230,6 +230,63 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     }
 
     /**
+     * Record a command class for deferred registration under a given name
+     * and aliases instead of its {@code @CommandDefinition} ones (#706).
+     * The custom aliases replace the annotation aliases. Behaves like
+     * {@link #addCommand(Class)} otherwise: the definition builds on first
+     * use and name/alias collisions are silently ignored.
+     *
+     * @param command the command class
+     * @param name the name to register the command under
+     * @param aliases additional names to register the command under
+     * @throws CommandRegistryException if the name is empty
+     */
+    public void addCommand(Class<? extends Command> command, String name, List<String> aliases)
+            throws CommandRegistryException {
+        if (name == null || name.isEmpty())
+            throw new CommandRegistryException("Command name must not be empty");
+        List<String> names = aliases == null ? Collections.emptyList() : new ArrayList<>(aliases);
+        if (contains(name))
+            return;
+        boolean collision = false;
+        for (String alias : names) {
+            if (contains(alias)) {
+                collision = true;
+                break;
+            }
+        }
+        if (collision)
+            return;
+        sources.put(name, CommandSource.forClass(command, names));
+        emit(name, REGISTRATION_ACTION.ADDED);
+    }
+
+    /**
+     * Register a command instance under a given name and aliases instead of
+     * its {@code @CommandDefinition} ones (#706). The custom aliases replace
+     * the annotation aliases. Registering the same instance twice under
+     * different names shares it, with last-write-wins field semantics.
+     *
+     * @param command the command instance
+     * @param name the name to register the command under
+     * @param aliases additional names to register the command under
+     * @throws CommandRegistryException if the name is empty or the command
+     *         fails to build
+     */
+    public void addCommand(Command command, String name, List<String> aliases) throws CommandRegistryException {
+        if (name == null || name.isEmpty())
+            throw new CommandRegistryException("Command name must not be empty");
+        try {
+            CommandContainer<CI> container = getBuilder().create(command, name,
+                    aliases == null ? new String[0] : aliases.toArray(new String[0]));
+            sources.put(container.getParser().getProcessedCommand().name(), CommandSource.shared());
+            putIntoRegistry(container);
+        } catch (CommandLineParserException e) {
+            throw new CommandRegistryException(e.getMessage(), e.getCause());
+        }
+    }
+
+    /**
      * Resolve a command name (or recorded alias owner) to a built shared
      * container, building deferred class registrations on first read.
      * Definition failures surface here instead of at registration, as a
@@ -244,6 +301,10 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
             throw new CommandNotFoundException("Command: " + name + " was not found.", name);
         try {
             CommandContainer<CI> container = (CommandContainer<CI>) getBuilder().create(source.clazz);
+            // Apply the recorded (possibly custom, #706) name and aliases:
+            // for plain registrations these equal the annotation ones.
+            container.getParser().getProcessedCommand().setName(name);
+            container.getParser().getProcessedCommand().setAliases(source.aliases);
             if (defaultValueProvider != null)
                 injectDefaultValueProvider(container.getParser());
             if (invocationProviders != null)
@@ -510,6 +571,9 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
         if (source != null && source.kind == CommandSourceKind.CLASS && source.clazz != null) {
             try {
                 CommandContainer<CI> fork = (CommandContainer<CI>) getBuilder().create(source.clazz);
+                // Apply the recorded (possibly custom, #706) name and aliases.
+                fork.getParser().getProcessedCommand().setName(primary);
+                fork.getParser().getProcessedCommand().setAliases(source.aliases);
                 if (defaultValueProvider != null)
                     injectDefaultValueProvider(fork.getParser());
                 return fork;

@@ -84,7 +84,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             .thenComparing(BY_DECLARATION_ORDER);
     private static final Comparator<ProcessedOption> SORT_BY_ORDER_ONLY = BY_ORDER.thenComparing(BY_DECLARATION_ORDER);
 
-    private final String name;
+    private String name;
     private final String description;
     private final CommandValidator<C, CI> validator;
     private final ResultHandler resultHandler;
@@ -107,7 +107,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private ProcessedOption argument;
     private final List<ProcessedOption> argumentOptions;
     private final C command;
-    private final List<String> aliases;
+    private List<String> aliases;
     private List<CommandLineParserException> parserExceptions;
     private CompleteStatus completeStatus;
     private ParentCommandInjector parentCommandInjector;
@@ -263,6 +263,25 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public List<String> getAliases() {
         return aliases;
+    }
+
+    /**
+     * Override the command name, replacing the {@code @CommandDefinition}
+     * name. Used to register a command (class or instance) under a given
+     * name (#706). Must be called before registration; renaming a registered
+     * command corrupts the registry indexes.
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Override the command aliases, replacing the {@code @CommandDefinition}
+     * aliases. Used to register a command under given aliases (#706). Must
+     * be called before registration; see {@link #setName(String)}.
+     */
+    public void setAliases(List<String> aliases) {
+        this.aliases = aliases == null ? Collections.emptyList() : new ArrayList<>(aliases);
     }
 
     public void addOption(ProcessedOption opt) throws OptionParserException {

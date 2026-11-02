@@ -20,6 +20,7 @@
 package org.aesh.command.container;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import org.aesh.command.Command;
 import org.aesh.command.invocation.CommandInvocation;
@@ -34,6 +35,51 @@ public interface CommandContainerBuilder<CI extends CommandInvocation> {
     CommandContainer<CI> create(Command command) throws CommandLineParserException;
 
     CommandContainer<CI> create(Class<? extends Command> command) throws CommandLineParserException;
+
+    /**
+     * Build a container for a command instance, registering it under the
+     * given name and aliases instead of the {@code @CommandDefinition} ones
+     * (#706). The custom aliases replace the annotation aliases.
+     *
+     * @param command the command instance
+     * @param name the name to register the command under
+     * @param aliases additional names to register the command under
+     * @return a container whose command is known by the given name and aliases
+     * @throws CommandLineParserException if the name is empty or the command
+     *         cannot be built
+     */
+    default CommandContainer<CI> create(Command command, String name, String... aliases)
+            throws CommandLineParserException {
+        if (name == null || name.isEmpty())
+            throw new CommandLineParserException("Command name must not be empty");
+        CommandContainer<CI> container = create(command);
+        container.getParser().getProcessedCommand().setName(name);
+        container.getParser().getProcessedCommand().setAliases(Arrays.asList(aliases));
+        return container;
+    }
+
+    /**
+     * Build a container for a command class, registering it under the
+     * given name and aliases instead of the {@code @CommandDefinition} ones
+     * (#706). The custom aliases replace the annotation aliases. Registering
+     * the same class twice under different names builds independent commands.
+     *
+     * @param command the command class
+     * @param name the name to register the command under
+     * @param aliases additional names to register the command under
+     * @return a container whose command is known by the given name and aliases
+     * @throws CommandLineParserException if the name is empty or the command
+     *         cannot be built
+     */
+    default CommandContainer<CI> create(Class<? extends Command> command, String name, String... aliases)
+            throws CommandLineParserException {
+        if (name == null || name.isEmpty())
+            throw new CommandLineParserException("Command name must not be empty");
+        CommandContainer<CI> container = create(command);
+        container.getParser().getProcessedCommand().setName(name);
+        container.getParser().getProcessedCommand().setAliases(Arrays.asList(aliases));
+        return container;
+    }
 
     /**
      * Build a container for a {@code @MethodCommand}-annotated method, to be

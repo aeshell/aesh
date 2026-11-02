@@ -20,6 +20,7 @@
 
 package org.aesh.command.impl.registry;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.aesh.command.Command;
@@ -99,6 +100,36 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
 
     public AeshCommandRegistryBuilder<CI> command(Command command) throws CommandRegistryException {
         commandRegistry.addCommand(command);
+        return this;
+    }
+
+    /**
+     * Register a command class under a given name and aliases instead of its
+     * {@code @CommandDefinition} ones (#706). The registration stays deferred:
+     * the definition builds on first use. Name/alias collisions are silently
+     * ignored, as for annotation registrations.
+     *
+     * @param command the command class
+     * @param name the name to register the command under
+     * @param aliases additional names to register the command under
+     */
+    public AeshCommandRegistryBuilder<CI> command(Class<? extends Command> command, String name,
+            String... aliases) throws CommandRegistryException {
+        commandRegistry.addCommand(command, name, Arrays.asList(aliases));
+        return this;
+    }
+
+    /**
+     * Register a command instance under a given name and aliases instead of
+     * its {@code @CommandDefinition} ones (#706).
+     *
+     * @param command the command instance
+     * @param name the name to register the command under
+     * @param aliases additional names to register the command under
+     */
+    public AeshCommandRegistryBuilder<CI> command(Command command, String name, String... aliases)
+            throws CommandRegistryException {
+        commandRegistry.addCommand(command, name, Arrays.asList(aliases));
         return this;
     }
 
