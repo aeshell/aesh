@@ -2941,6 +2941,104 @@ public class AeshRuntimeRunnerTest {
         }
     }
 
+    // ========== Unknown subcommand suggestions (#723) ==========
+
+    @CommandDefinition(name = "camel", description = "Camel CLI", groupCommands = {
+            SuggestionExport.class, SuggestionExplain.class, SuggestionRun.class })
+    public static class SuggestionRoot implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "export", description = "Export data")
+    public static class SuggestionExport implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "explain", description = "Explain data")
+    public static class SuggestionExplain implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "run", description = "Run data")
+    public static class SuggestionRun implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testUnknownSubcommandSuggestsCloseMatch() {
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(SuggestionRoot.class)
+                .args("exprot")
+                .execute());
+
+        assertTrue("Should suggest export, got: " + stderr,
+                stderr.contains("Did you mean: export?"));
+        assertTrue("A single close match replaces the full list, got: " + stderr,
+                !stderr.contains("Available:"));
+    }
+
+    @Test
+    public void testUnknownSubcommandSuggestsCloseMatchNonLazy() {
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(SuggestionRoot.class)
+                .lazyStartup(false)
+                .args("exprot")
+                .execute());
+
+        assertTrue("Should suggest export, got: " + stderr,
+                stderr.contains("Did you mean: export?"));
+    }
+
+    @Test
+    public void testUnknownSubcommandWithoutMatchKeepsList() {
+        String stderr = captureStderr(() -> AeshRuntimeRunner.builder()
+                .command(SuggestionRoot.class)
+                .args("bogus")
+                .execute());
+
+        assertTrue("Should keep the available list, got: " + stderr,
+                stderr.contains("Available:"));
+        assertTrue("Should list export, got: " + stderr, stderr.contains("export"));
+        assertTrue("Should list explain, got: " + stderr, stderr.contains("explain"));
+        assertTrue("Should list run, got: " + stderr, stderr.contains("run"));
+        assertTrue("No suggestion without a close match, got: " + stderr,
+                !stderr.contains("Did you mean"));
+    }
+
+    @Test
+    public void testUnknownSubcommandDirectRuntimeCarriesSuggestions() throws Exception {
+        org.aesh.command.registry.CommandRegistry<CommandInvocation> registry = org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                .<CommandInvocation> builder()
+                .command(SuggestionRoot.class)
+                .create();
+
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(registry)
+                .build();
+
+        try {
+            runtime.executeCommand("camel exprot");
+            assertTrue("Expected SubcommandNotFoundException", false);
+        } catch (org.aesh.command.parser.SubcommandNotFoundException e) {
+            assertEquals(java.util.Collections.singletonList("export"), e.getSuggestions());
+            assertTrue("Message was: " + e.getMessage(),
+                    e.getMessage().contains("Did you mean: export?"));
+        }
+    }
+
     // ========== Issue #583: provider builder API tests ==========
 
     @Test

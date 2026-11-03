@@ -49,7 +49,8 @@ public interface CommandNotFoundHandler {
      * The default implementation delegates to the simple
      * {@link #handleCommandNotFound(String, Consumer)} method, preserving
      * backward compatibility. Override this method to implement intelligent
-     * suggestions (e.g., Levenshtein-based "did you mean?" hints).
+     * suggestions (e.g., with
+     * {@link org.aesh.command.parser.CommandSuggestions}).
      *
      * @param line the full command line that was entered
      * @param output consumer for writing output lines
