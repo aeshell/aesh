@@ -44,7 +44,9 @@ import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.map.MapCommand;
 import org.aesh.command.map.MapCommandPopulator;
 import org.aesh.command.map.MapProcessedCommand;
+import org.aesh.command.option.OptionVisibility;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.parser.CommandSuggestions;
 import org.aesh.command.parser.MutuallyExclusiveOptionException;
 import org.aesh.command.parser.OptionParserException;
 import org.aesh.command.parser.RequiredOptionException;
@@ -799,8 +801,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                                         // invalid short names and long names should be rejected.
                                         if (!(processedCommand.getCommand() instanceof MapCommand)) {
                                             processedCommand.addParserException(
-                                                    new OptionParserException("The option " + word.word()
-                                                            + " is unknown."));
+                                                    new OptionParserException(unknownOptionMessage(word.word())));
                                         } else {
                                             unknown = true;
                                         }
@@ -1327,6 +1328,36 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             c = c.getSuperclass();
         }
         return null;
+    }
+
+    /**
+     * The message for an option the command does not have, with the long options that are close to it, for example
+     * {@code The option --exper is unknown. Did you mean: --expert?}
+     */
+    private String unknownOptionMessage(String word) {
+        StringBuilder sb = new StringBuilder("The option ").append(word).append(" is unknown.");
+        if (word.startsWith("--") && word.length() > 2) {
+            int equals = word.indexOf('=');
+            String typed = equals > 0 ? word.substring(0, equals) : word;
+            List<String> names = new ArrayList<>();
+            for (ProcessedOption option : processedCommand.getOptions()) {
+                if (option.getVisibility() == OptionVisibility.HIDDEN || option.name() == null
+                        || option.name().isEmpty())
+                    continue;
+                names.add("--" + option.name());
+                for (String alias : option.getAliases())
+                    names.add("--" + alias);
+            }
+            List<String> suggestions = CommandSuggestions.suggest(typed, names);
+            if (suggestions.size() == 1) {
+                sb.append(" Did you mean: ").append(suggestions.get(0)).append("?");
+            } else if (suggestions.size() > 1) {
+                sb.append(" Did you mean: ")
+                        .append(String.join(", ", suggestions.subList(0, suggestions.size() - 1)))
+                        .append(" or ").append(suggestions.get(suggestions.size() - 1)).append("?");
+            }
+        }
+        return sb.toString();
     }
 
     /**
