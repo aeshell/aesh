@@ -58,6 +58,11 @@ import org.aesh.terminal.utils.Parser;
  */
 public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocation> {
 
+    /**
+     * The width the help is written for: longer descriptions are wrapped.
+     */
+    public static final int HELP_WIDTH = 80;
+
     private static final Pattern DESCRIPTION_VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
     private static final char DASH = '-';
     private static final char EQUALS = '=';
@@ -1191,7 +1196,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll) {
         int maxLength = 0;
         int maxOptionColumnWidth = 24;
-        int width = 80;
+        int width = HELP_WIDTH;
         DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
         List<ProcessedOption> opts = getDisplayOptions();
         List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
@@ -1211,8 +1216,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             maxLength = maxOptionColumnWidth;
 
         StringBuilder sb = new StringBuilder();
-        //first line — description
-        sb.append(descriptionResolver.resolveCommandDescription(description())).append(Config.getLineSeparator());
+        //first line — description, wrapped when it is longer than the help is wide
+        for (String line : ProcessedOption.wrapText(descriptionResolver.resolveCommandDescription(description()), width))
+            sb.append(line).append(Config.getLineSeparator());
         //second line — detailed synopsis with wrapping
         boolean ansi = !visibleOpts.isEmpty() && visibleOpts.get(0).isAnsiMode();
         String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;

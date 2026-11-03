@@ -1193,7 +1193,17 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         else
             ansiBuilder.append(" ");
 
-        ansiBuilder.append(resolveDescriptionVariables(getProcessedCommand().description(), null));
+        // a description longer than the help is wide is wrapped, aligned with the description column
+        String pad = String.format("%" + (offset + Math.max(descriptionStart, getProcessedCommand().name().length() + 1)) + "s",
+                "");
+        List<String> lines = ProcessedOption.wrapText(
+                resolveDescriptionVariables(getProcessedCommand().description(), null),
+                ProcessedCommand.HELP_WIDTH - pad.length());
+        for (int i = 0; i < lines.size(); i++) {
+            if (i > 0)
+                ansiBuilder.append(Config.getLineSeparator()).append(pad);
+            ansiBuilder.append(lines.get(i));
+        }
 
         return ansiBuilder.toString();
     }
