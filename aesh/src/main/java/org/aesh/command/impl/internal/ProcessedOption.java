@@ -847,6 +847,10 @@ public class ProcessedOption {
         return argument;
     }
 
+    public void setArgument(String argument) {
+        this.argument = argument;
+    }
+
     public List<String> getDefaultValues() {
         return defaultValues;
     }
