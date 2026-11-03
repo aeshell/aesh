@@ -22,6 +22,9 @@ package org.aesh.command.converter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import org.aesh.AeshRuntimeRunner;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
@@ -144,19 +147,21 @@ public class CustomEnumConverterTest {
 
     @Test
     public void testDefaultEnumConverterRejectsInvalid() {
-        // Without custom converter, invalid values should still be rejected
-        // AeshRuntimeRunner wraps OptionValidatorException in RuntimeException
-        boolean rejected = false;
+        // Without custom converter, invalid values should still be rejected:
+        // AeshRuntimeRunner reports the OptionValidatorException as a usage error
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        PrintStream origErr = System.err;
+        System.setErr(new PrintStream(err));
+        CommandResult result;
         try {
-            AeshRuntimeRunner.builder()
+            result = AeshRuntimeRunner.builder()
                     .command(PaintCommand.class)
                     .args("--color", "purple")
                     .execute();
-        } catch (RuntimeException e) {
-            rejected = true;
-            assertTrue("Should mention allowed values",
-                    e.getMessage().contains("Allowed values") || e.getCause().getMessage().contains("Allowed values"));
+        } finally {
+            System.setErr(origErr);
         }
-        assertTrue("Invalid enum value should be rejected", rejected);
+        assertEquals("Invalid enum value should be rejected", CommandResult.USAGE_ERROR, result);
+        assertTrue("Should mention allowed values: " + err, err.toString().contains("Allowed values"));
     }
 }
