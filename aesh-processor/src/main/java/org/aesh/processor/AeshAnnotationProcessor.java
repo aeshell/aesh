@@ -19,6 +19,7 @@ package org.aesh.processor;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -221,10 +222,68 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
             validateField(field);
         }
 
+        // Reject cyclic @Mixin graphs with a clear error instead of recursing
+        // forever in code generation (#720).
+        java.util.List<String> mixinCycle = findMixinCycle(element, new ArrayDeque<>());
+        if (mixinCycle != null) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "Cyclic @Mixin hierarchy detected: " + String.join(" -> ", mixinCycle), element);
+            valid = false;
+        }
+
         // Validate positional index ranges don't overlap
         validatePositionalIndexes(element, fields);
 
         return valid;
+    }
+
+    /**
+     * The mixin cycle reachable from the element as simple names
+     * (e.g. {@code [A, B, A]}), or null when the graph is acyclic.
+     * Depth-first search with a path stack: a mixin type already on the path
+     * is a cycle, while revisits off the path (diamonds) are fine (#720).
+     * Superclass edges need no tracking: JVM hierarchies cannot cycle.
+     */
+    private java.util.List<String> findMixinCycle(TypeElement element, ArrayDeque<TypeElement> path) {
+        String name = element.getQualifiedName().toString();
+        for (TypeElement visited : path) {
+            if (!visited.getQualifiedName().toString().equals(name))
+                continue;
+            java.util.List<String> cycle = new ArrayList<>();
+            boolean inCycle = false;
+            for (TypeElement v : path) {
+                if (v.getQualifiedName().toString().equals(name))
+                    inCycle = true;
+                if (inCycle)
+                    cycle.add(simpleName(v.getQualifiedName().toString()));
+            }
+            cycle.add(simpleName(name));
+            return cycle;
+        }
+        path.addLast(element);
+        try {
+            for (Element enclosed : element.getEnclosedElements()) {
+                if (enclosed.getKind() == ElementKind.FIELD
+                        && enclosed.getAnnotation(org.aesh.command.option.Mixin.class) != null) {
+                    Element mixinElement = typeUtils.asElement(((VariableElement) enclosed).asType());
+                    if (mixinElement instanceof TypeElement) {
+                        java.util.List<String> found = findMixinCycle((TypeElement) mixinElement, path);
+                        if (found != null)
+                            return found;
+                    }
+                }
+            }
+            return null;
+        } finally {
+            path.removeLast();
+        }
+    }
+
+    private static String simpleName(String qualifiedName) {
+        int dot = qualifiedName.lastIndexOf('.');
+        int dollar = qualifiedName.lastIndexOf('$');
+        int sep = Math.max(dot, dollar);
+        return sep >= 0 ? qualifiedName.substring(sep + 1) : qualifiedName;
     }
 
     private void validatePositionalIndexes(TypeElement element, List<VariableElement> fields) {

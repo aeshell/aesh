@@ -135,14 +135,21 @@ public final class LazyRouteResolver {
     /**
      * Whether the command declares an {@link Argument} or {@link Arguments} field, in its class
      * hierarchy or in a {@link Mixin}. Reads the annotations only, so no command is constructed.
+     * Skips already-visited mixin classes so a cyclic {@code @Mixin} graph
+     * terminates here; the command builder owns the cyclic error (#720).
      */
     private static boolean hasArguments(Class<?> commandClass) {
+        return hasArguments(commandClass, new java.util.HashSet<>());
+    }
+
+    private static boolean hasArguments(Class<?> commandClass, java.util.Set<Class<?>> visited) {
+        if (commandClass == null || !visited.add(commandClass))
+            return false;
         for (Class<?> c = commandClass; c != null && c != Object.class; c = c.getSuperclass()) {
             for (Field field : c.getDeclaredFields()) {
                 if (field.isAnnotationPresent(Argument.class) || field.isAnnotationPresent(Arguments.class))
                     return true;
-                if (field.isAnnotationPresent(Mixin.class) && field.getType() != commandClass
-                        && hasArguments(field.getType()))
+                if (field.isAnnotationPresent(Mixin.class) && hasArguments(field.getType(), visited))
                     return true;
             }
         }

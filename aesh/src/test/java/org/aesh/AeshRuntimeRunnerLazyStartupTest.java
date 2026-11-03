@@ -280,6 +280,21 @@ public class AeshRuntimeRunnerLazyStartupTest {
         LazyRouteResolver.validate(GroupArgRootCommand.class, new String[] { "child", "x" });
     }
 
+    @Test
+    public void testCyclicMixinTerminatesRouteValidation() throws Exception {
+        // #720: the argument probe must not overflow on a cyclic @Mixin graph.
+        // The mixin carries an @Argument, so validation defers to the parser,
+        // which then reports the cycle when the command builds.
+        LazyRouteResolver.validate(CyclicGroupCommand.class, new String[] { "whatever" });
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(CyclicGroupCommand.class);
+            fail("expected failure for cyclic @Mixin");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage(),
+                    expected.getMessage().contains("Cyclic @Mixin hierarchy detected"));
+        }
+    }
+
     // runs the command line with lazy startup, and without, which must give the same
     private static void assertGroupExecutes(Class<? extends Command> root, String expected, String... args) {
         for (boolean lazy : new boolean[] { true, false }) {
@@ -2234,6 +2249,31 @@ public class AeshRuntimeRunnerLazyStartupTest {
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {
             GroupArgRootCommand.executed = "mixin " + mixin.name;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class CyclicRouteA {
+        @Mixin
+        CyclicRouteB b;
+    }
+
+    public static class CyclicRouteB {
+        @Mixin
+        CyclicRouteA a;
+
+        @Argument
+        String name;
+    }
+
+    @CommandDefinition(name = "cyclic", description = "group with a cyclic mixin", groupCommands = {
+            GroupArgChildCommand.class })
+    public static class CyclicGroupCommand implements Command<CommandInvocation> {
+        @Mixin
+        CyclicRouteA mixed;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
             return CommandResult.SUCCESS;
         }
     }

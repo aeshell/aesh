@@ -4648,6 +4648,49 @@ public class ProcessorTest {
                 result.diagnostics.contains("explicit name"));
     }
 
+    // --- Test: cyclic @Mixin is a compile error, not a stack overflow (#720) ---
+
+    @Test
+    public void testCyclicMixinFailsCompilation() throws Exception {
+        String mixinA = "package test;\n"
+                + "import org.aesh.command.option.Mixin;\n"
+                + "public class CyclicA {\n"
+                + "    @Mixin\n"
+                + "    CyclicB b;\n"
+                + "}\n";
+        String mixinB = "package test;\n"
+                + "import org.aesh.command.option.Mixin;\n"
+                + "import org.aesh.command.option.Option;\n"
+                + "public class CyclicB {\n"
+                + "    @Mixin\n"
+                + "    CyclicA a;\n"
+                + "    @Option(description = \"x\")\n"
+                + "    String name;\n"
+                + "}\n";
+        String command = "package test;\n"
+                + "import org.aesh.command.Command;\n"
+                + "import org.aesh.command.CommandDefinition;\n"
+                + "import org.aesh.command.CommandResult;\n"
+                + "import org.aesh.command.invocation.CommandInvocation;\n"
+                + "import org.aesh.command.option.Mixin;\n"
+                + "@CommandDefinition(name = \"cyclic\", description = \"cyclic\")\n"
+                + "public class CyclicCommand implements Command<CommandInvocation> {\n"
+                + "    @Mixin\n"
+                + "    CyclicA mixed;\n"
+                + "    @Override\n"
+                + "    public CommandResult execute(CommandInvocation commandInvocation) {\n"
+                + "        return CommandResult.SUCCESS;\n"
+                + "    }\n"
+                + "}\n";
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CyclicA", mixinA),
+                new InMemorySource("test.CyclicB", mixinB),
+                new InMemorySource("test.CyclicCommand", command));
+        assertFalse("Cyclic @Mixin must fail compilation", result.success);
+        assertTrue("Should name the cycle: " + result.diagnostics,
+                result.diagnostics.contains("Cyclic @Mixin hierarchy detected"));
+    }
+
     // --- Test: @OptionList/@Arguments on @MethodCommand parameters (#680) ---
 
     private static final String MULTI_OWNER_SOURCE = "package test;\n" +

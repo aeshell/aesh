@@ -6,12 +6,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
@@ -608,6 +610,66 @@ public class AeshCommandRuntimeTest {
     public static class MixinWithDefaultsCommand implements Command<CommandInvocation> {
         @org.aesh.command.option.Mixin
         ConfigMixin config;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCyclicMixinPairFailsWithClearError() throws Exception {
+        // #720: A <-> B must report the cycle, not overflow the stack.
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(CyclicMixinCommand.class);
+            fail("expected failure for cyclic @Mixin");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage(),
+                    expected.getMessage().contains("Cyclic @Mixin hierarchy detected"));
+        }
+    }
+
+    @Test
+    public void testSelfMixinFailsWithClearError() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(SelfMixinCommand.class);
+            fail("expected failure for self @Mixin");
+        } catch (CommandLineParserException expected) {
+            assertTrue(expected.getMessage(),
+                    expected.getMessage().contains("Cyclic @Mixin hierarchy detected"));
+        }
+    }
+
+    public static class CyclicMixinA {
+        @org.aesh.command.option.Mixin
+        CyclicMixinB b;
+    }
+
+    public static class CyclicMixinB {
+        @org.aesh.command.option.Mixin
+        CyclicMixinA a;
+    }
+
+    @CommandDefinition(name = "cyclicmix", description = "")
+    public static class CyclicMixinCommand implements Command<CommandInvocation> {
+        @org.aesh.command.option.Mixin
+        CyclicMixinA mixed;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class SelfMixin {
+        @org.aesh.command.option.Mixin
+        SelfMixin self;
+    }
+
+    @CommandDefinition(name = "selfmix", description = "")
+    public static class SelfMixinCommand implements Command<CommandInvocation> {
+        @org.aesh.command.option.Mixin
+        SelfMixin mixed;
 
         @Override
         public CommandResult execute(CommandInvocation commandInvocation) {

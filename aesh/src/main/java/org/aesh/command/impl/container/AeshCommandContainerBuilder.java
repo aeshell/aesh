@@ -26,9 +26,11 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -552,11 +554,16 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     private static void processCommand(ProcessedCommand processedCommand, Class clazz, boolean forHelp)
             throws CommandLineParserException {
+        processCommand(processedCommand, clazz, forHelp, new ArrayDeque<>());
+    }
+
+    private static void processCommand(ProcessedCommand processedCommand, Class clazz, boolean forHelp,
+            Deque<Class<?>> mixinPath) throws CommandLineParserException {
         for (Field field : ReflectionUtil.declaredFields(clazz))
-            processField(processedCommand, field, forHelp);
+            processField(processedCommand, field, null, forHelp, mixinPath);
 
         if (clazz.getSuperclass() != null)
-            processCommand(processedCommand, clazz.getSuperclass(), forHelp);
+            processCommand(processedCommand, clazz.getSuperclass(), forHelp, mixinPath);
     }
 
     private static void validatePositionalIndexes(ProcessedCommand processedCommand) throws CommandLineParserException {
@@ -891,16 +898,22 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     private static void processField(ProcessedCommand processedCommand, Field field, boolean forHelp)
             throws CommandLineParserException {
-        processField(processedCommand, field, null, forHelp);
+        processField(processedCommand, field, null, forHelp, new ArrayDeque<>());
     }
 
     private static void processField(ProcessedCommand processedCommand, Field field, String mixinFieldName)
             throws CommandLineParserException {
-        processField(processedCommand, field, mixinFieldName, false);
+        processField(processedCommand, field, mixinFieldName, false, new ArrayDeque<>());
     }
 
     private static void processField(ProcessedCommand processedCommand, Field field, String mixinFieldName,
             boolean forHelp)
+            throws CommandLineParserException {
+        processField(processedCommand, field, mixinFieldName, forHelp, new ArrayDeque<>());
+    }
+
+    private static void processField(ProcessedCommand processedCommand, Field field, String mixinFieldName,
+            boolean forHelp, Deque<Class<?>> mixinPath)
             throws CommandLineParserException {
         Option o;
         OptionGroup og;
@@ -1195,28 +1208,49 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             String nestedMixinName = mixinFieldName != null
                     ? mixinFieldName + "." + field.getName()
                     : field.getName();
-            processMixinClass(processedCommand, field.getType(), nestedMixinName, forHelp);
+            processMixinClass(processedCommand, field.getType(), nestedMixinName, forHelp, mixinPath);
         }
     }
 
     private static void processMixinField(ProcessedCommand processedCommand, Field mixinField)
             throws CommandLineParserException {
-        processMixinClass(processedCommand, mixinField.getType(), mixinField.getName(), false);
+        processMixinClass(processedCommand, mixinField.getType(), mixinField.getName(), false, new ArrayDeque<>());
     }
 
     private static void processMixinClass(ProcessedCommand processedCommand, Class<?> clazz, String mixinFieldName)
             throws CommandLineParserException {
-        processMixinClass(processedCommand, clazz, mixinFieldName, false);
+        processMixinClass(processedCommand, clazz, mixinFieldName, false, new ArrayDeque<>());
     }
 
     private static void processMixinClass(ProcessedCommand processedCommand, Class<?> clazz, String mixinFieldName,
             boolean forHelp)
             throws CommandLineParserException {
-        for (Field field : ReflectionUtil.declaredFields(clazz)) {
-            processField(processedCommand, field, mixinFieldName, forHelp);
+        processMixinClass(processedCommand, clazz, mixinFieldName, forHelp, new ArrayDeque<>());
+    }
+
+    private static void processMixinClass(ProcessedCommand processedCommand, Class<?> clazz, String mixinFieldName,
+            boolean forHelp, Deque<Class<?>> mixinPath)
+            throws CommandLineParserException {
+        if (mixinPath.contains(clazz)) {
+            StringBuilder cycle = new StringBuilder();
+            for (Class<?> visited : mixinPath) {
+                if (cycle.length() > 0)
+                    cycle.append(" -> ");
+                cycle.append(visited.getSimpleName());
+            }
+            cycle.append(" -> ").append(clazz.getSimpleName());
+            throw new CommandLineParserException("Cyclic @Mixin hierarchy detected: " + cycle);
         }
-        if (clazz.getSuperclass() != null && clazz.getSuperclass() != Object.class) {
-            processMixinClass(processedCommand, clazz.getSuperclass(), mixinFieldName, forHelp);
+        mixinPath.addLast(clazz);
+        try {
+            for (Field field : ReflectionUtil.declaredFields(clazz)) {
+                processField(processedCommand, field, mixinFieldName, forHelp, mixinPath);
+            }
+            if (clazz.getSuperclass() != null && clazz.getSuperclass() != Object.class) {
+                processMixinClass(processedCommand, clazz.getSuperclass(), mixinFieldName, forHelp, mixinPath);
+            }
+        } finally {
+            mixinPath.removeLast();
         }
     }
 
