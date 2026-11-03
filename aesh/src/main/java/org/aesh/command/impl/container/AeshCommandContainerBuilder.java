@@ -354,6 +354,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         validatePositionalIndexes(processedCommand);
         if (command.helpGroup().length() > 0)
             processedCommand.setHelpGroup(command.helpGroup());
+        processedCommand.setShowDefaultValues(command.showDefaultValues());
         if (command.helpSectionProvider() != NullHelpSectionProvider.class)
             processedCommand.setHelpSectionProviderClass(command.helpSectionProvider());
         return processedCommand;
@@ -459,6 +460,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             validatePositionalIndexes(processedCommand);
             if (command.helpGroup().length() > 0)
                 processedCommand.setHelpGroup(command.helpGroup());
+            processedCommand.setShowDefaultValues(command.showDefaultValues());
             if (command.helpSectionProvider() != NullHelpSectionProvider.class)
                 processedCommand.setHelpSectionProviderClass(command.helpSectionProvider());
 

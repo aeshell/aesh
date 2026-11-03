@@ -102,6 +102,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private String version;
     private String helpUrl;
     private String helpGroup = "";
+    private boolean showDefaultValues;
     private Class<? extends HelpSectionProvider> helpSectionProviderClass;
     private HelpSectionProvider helpSectionProvider;
 
@@ -526,6 +527,17 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public String helpGroup() {
         return helpGroup;
+    }
+
+    /**
+     * Whether the help shows the default value of each option and positional argument.
+     */
+    public boolean showDefaultValues() {
+        return showDefaultValues;
+    }
+
+    public void setShowDefaultValues(boolean showDefaultValues) {
+        this.showDefaultValues = showDefaultValues;
     }
 
     public void setHelpGroup(String helpGroup) {
@@ -1228,20 +1240,24 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             for (Map.Entry<String, List<ProcessedOption>> entry : groups.entrySet()) {
                 if (!entry.getKey().isEmpty()) {
                     sb.append(Config.getLineSeparator()).append(entry.getKey()).append(":").append(Config.getLineSeparator());
-                    for (ProcessedOption o : entry.getValue())
+                    for (ProcessedOption o : entry.getValue()) {
                         sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
                                 descriptionResolver.resolveOptionDescription(o)))
                                 .append(Config.getLineSeparator());
+                        appendDefaultValue(sb, o, maxLength + 4);
+                    }
                 }
             }
             // Then default group
             List<ProcessedOption> defaultGroup = groups.get("");
             if (defaultGroup != null && !defaultGroup.isEmpty()) {
                 sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
-                for (ProcessedOption o : defaultGroup)
+                for (ProcessedOption o : defaultGroup) {
                     sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
                             descriptionResolver.resolveOptionDescription(o)))
                             .append(Config.getLineSeparator());
+                    appendDefaultValue(sb, o, maxLength + 4);
+                }
             }
         }
         // Render positional arguments inline after the options section
@@ -1254,6 +1270,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 sb.append(positional.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
                         descriptionResolver.resolveOptionDescription(positional)))
                         .append(Config.getLineSeparator());
+                appendDefaultValue(sb, positional, maxLength + 4);
             }
         }
         // Append documentation link if helpUrl is set
@@ -1538,6 +1555,18 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
 
         return synopsis.toString();
+    }
+
+    /**
+     * With {@code showDefaultValues}, a line {@code Default: <value>} under the description of an option or positional
+     * argument that has a default value, aligned with the description.
+     */
+    private void appendDefaultValue(StringBuilder sb, ProcessedOption option, int descriptionStart) {
+        if (!showDefaultValues || option.getDefaultValues() == null || option.getDefaultValues().isEmpty())
+            return;
+        sb.append(String.format("%" + descriptionStart + "s", ""))
+                .append("Default: ").append(String.join(", ", option.getDefaultValues()))
+                .append(Config.getLineSeparator());
     }
 
     private String formatArgumentSynopsis(ProcessedOption arg) {
