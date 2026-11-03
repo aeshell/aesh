@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -671,6 +672,38 @@ public class ProcessedOption {
      * Defensive copy of an array value so resets restore fresh mutable state
      * instead of sharing one array across executions (#697, #704).
      */
+    /**
+     * A copy of the initial value of a collection, map or array field, with the same elements, so that one execution
+     * does not change the initial value of the next (#697, #704). The copy is of the same class when that class has an
+     * accessible no-arg constructor, else an ArrayList, LinkedHashSet or LinkedHashMap. Other values are returned as
+     * they are.
+     */
+    @SuppressWarnings("unchecked")
+    protected static Object copyInitialValue(Object value) {
+        if (value instanceof Collection) {
+            Collection<Object> copy;
+            try {
+                copy = (Collection<Object>) value.getClass().getDeclaredConstructor().newInstance();
+            } catch (ReflectiveOperationException | RuntimeException e) {
+                copy = value instanceof Set ? new LinkedHashSet<>() : new ArrayList<>();
+            }
+            copy.addAll((Collection<Object>) value);
+            return copy;
+        } else if (value instanceof Map) {
+            Map<Object, Object> copy;
+            try {
+                copy = (Map<Object, Object>) value.getClass().getDeclaredConstructor().newInstance();
+            } catch (ReflectiveOperationException | RuntimeException e) {
+                copy = new LinkedHashMap<>();
+            }
+            copy.putAll((Map<Object, Object>) value);
+            return copy;
+        } else if (value != null && value.getClass().isArray()) {
+            return copyArrayValue(value);
+        }
+        return value;
+    }
+
     protected static Object copyArrayValue(Object array) {
         int length = Array.getLength(array);
         Object copy = Array.newInstance(array.getClass().getComponentType(), length);
@@ -680,23 +713,8 @@ public class ProcessedOption {
 
     @SuppressWarnings("unchecked")
     protected void restoreInitialValue(Object instance) {
+        Object val = copyInitialValue(initialValue);
         if (fieldAccessor != null || fieldSetter != null) {
-            Object val = initialValue;
-            if (initialValue instanceof Collection) {
-                try {
-                    val = initialValue.getClass().getDeclaredConstructor().newInstance();
-                } catch (ReflectiveOperationException e) {
-                    val = new ArrayList<>();
-                }
-            } else if (initialValue instanceof Map) {
-                try {
-                    val = initialValue.getClass().getDeclaredConstructor().newInstance();
-                } catch (ReflectiveOperationException e) {
-                    val = new LinkedHashMap<>();
-                }
-            } else if (initialValue != null && initialValue.getClass().isArray()) {
-                val = copyArrayValue(initialValue);
-            }
             if (fieldAccessor != null)
                 fieldAccessor.set(instance, val);
             else
@@ -710,15 +728,7 @@ public class ProcessedOption {
                 return;
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
-            if (initialValue instanceof Collection) {
-                field.set(target, initialValue.getClass().getDeclaredConstructor().newInstance());
-            } else if (initialValue instanceof Map) {
-                field.set(target, initialValue.getClass().getDeclaredConstructor().newInstance());
-            } else if (initialValue != null && initialValue.getClass().isArray()) {
-                field.set(target, copyArrayValue(initialValue));
-            } else {
-                field.set(target, initialValue);
-            }
+            field.set(target, val);
         } catch (ReflectiveOperationException e) {
             if (fieldResetter != null) {
                 fieldResetter.accept(instance);
