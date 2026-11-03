@@ -264,6 +264,24 @@ public class CompletionParserTest {
     }
 
     @Test
+    public void testNoSeparatorListAppendsASpace() throws Exception {
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>()
+                .create(new NoSeparatorCompleteCommand()).getParser();
+        InvocationProviders ip = SettingsBuilder.builder().build().invocationProviders();
+
+        // the value is not split, so after it comes a new word: a space, not the NUL char
+        AeshCompleteOperation co = new AeshCompleteOperation(aeshContext, "test --prop a=1,", 100);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals(' ', co.getSeparator());
+
+        co = new AeshCompleteOperation(aeshContext, "test --prop a=1,2 --prop a", 100);
+        clp.complete(co, ip);
+        assertEquals(1, co.getFormattedCompletionCandidates().size());
+        assertEquals(' ', co.getSeparator());
+    }
+
+    @Test
     public void testParseCompleteObject3() throws Exception {
         CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<>().create(new ParseCompleteTest3<>())
                 .getParser();
@@ -567,6 +585,24 @@ public class CompletionParserTest {
                 completerInvocation.addCompleterValue(String.valueOf(test3.values.size() + 1));
             else
                 completerInvocation.addCompleterValue("1");
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "a list that does not split its values")
+    public static class NoSeparatorCompleteCommand implements Command<CommandInvocation> {
+        @OptionList(name = "prop", valueSeparator = OptionList.NO_SEPARATOR, completer = PropCompleter.class)
+        private List<String> props;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class PropCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation completerInvocation) {
+            completerInvocation.addCompleterValue("a=1,2");
         }
     }
 
