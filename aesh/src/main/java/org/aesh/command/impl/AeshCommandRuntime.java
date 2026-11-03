@@ -208,6 +208,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     @Override
     public CommandResult executeCommand(String line) throws CommandNotFoundException,
             CommandLineParserException,
+            OptionValidatorException,
             CommandValidatorException,
             CommandException,
             InterruptedException,
@@ -240,6 +241,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     @Override
     public CommandResult executeCommand(String commandName, String[] args) throws CommandNotFoundException,
             CommandLineParserException,
+            OptionValidatorException,
             CommandValidatorException,
             CommandException,
             InterruptedException,
@@ -284,7 +286,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private CommandResult runExecutor(Executor<CI> executor) throws CommandException,
-            CommandValidatorException, CommandLineParserException, InterruptedException {
+            CommandValidatorException, CommandLineParserException, OptionValidatorException, InterruptedException {
         ProgramStatusScope scope = null;
         if (programStatusEnabled && programStatusConnection != null) {
             scope = new ProgramStatusScope(ProgramStatusReporter.create(
@@ -303,7 +305,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private CommandResult runExecutorUnits(Executor<CI> executor) throws CommandException,
-            CommandValidatorException, CommandLineParserException, InterruptedException {
+            CommandValidatorException, CommandLineParserException, OptionValidatorException, InterruptedException {
         ExecutionPlanner<CI> planner = new ExecutionPlanner<>(executor.getExecutions());
         CommandResult result = null;
         ExecutionPlanner.Unit<CI> unit;
@@ -327,7 +329,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
      * Execute a single non-piped command.
      */
     private CommandResult executeSingle(Execution exec) throws CommandException,
-            CommandValidatorException, CommandLineParserException, InterruptedException {
+            CommandValidatorException, CommandLineParserException, OptionValidatorException, InterruptedException {
         try {
             return exec.execute();
         } catch (CommandException cmd) {
@@ -335,7 +337,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 exec.getResultHandler().onExecutionFailure(CommandResult.FAILURE, cmd);
             }
             throw cmd;
-        } catch (CommandValidatorException | CommandLineParserException e) {
+        } catch (CommandValidatorException | CommandLineParserException | OptionValidatorException e) {
+            // a value that a converter or validator refuses is a usage error, not a RuntimeException (#721)
             if (exec.getResultHandler() != null) {
                 exec.getResultHandler().onValidationFailure(CommandResult.FAILURE, e);
             }
@@ -369,7 +372,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
      */
     @SuppressWarnings("unchecked")
     private CommandResult executePipeChain(List<Execution> chain) throws CommandException,
-            CommandValidatorException, CommandLineParserException, InterruptedException {
+            CommandValidatorException, CommandLineParserException, OptionValidatorException, InterruptedException {
         ExecutorService threadPool = PipeThreads.sharedPool();
 
         int stageCount = chain.size();
@@ -411,7 +414,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             try {
                 result = executeSingle(lastStage);
             } catch (CommandException | CommandValidatorException | CommandLineParserException
-                    | InterruptedException | RuntimeException | Error e) {
+                    | OptionValidatorException | InterruptedException | RuntimeException | Error e) {
                 lastStageError = e;
                 throw e;
             }
