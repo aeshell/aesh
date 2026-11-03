@@ -1252,13 +1252,19 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private void propagateInheritedOptions() {
         if (!processedCommand.hasInheritedOptions())
             return;
+        // Children may be unresolved (lazy) when the group was invoked without
+        // a subcommand; there is nothing to propagate to, so stop (#714).
+        // Deliberately no resolve here: unselected subtrees stay unbuilt.
+        List<CommandLineParser<CI>> children = getChildParsers();
+        if (children == null)
+            return;
         for (ProcessedOption parentOpt : processedCommand.getOptions()) {
             if (!parentOpt.isInherited())
                 continue;
             Object value = parentOpt.getFieldValue(getCommand());
             if (value == null)
                 continue;
-            for (CommandLineParser<CI> child : getChildParsers()) {
+            for (CommandLineParser<CI> child : children) {
                 if (child.parsedCommand() == null)
                     continue;
                 Command<CI> childCmd = child.getCommand();

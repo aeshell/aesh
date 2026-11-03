@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
+import org.aesh.command.container.CommandContainer;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
@@ -208,5 +210,111 @@ public class GroupCommandRuntimeTest {
             lastVerbose = verbose;
             return CommandResult.SUCCESS;
         }
+    }
+
+    // --- Bare group with inherited options and lazy children (#714) ---
+
+    @CommandDefinition(name = "lazychild", description = "A lazy child")
+    public static class LazyChildCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "lazygroup", description = "", groupCommands = { LazyChildCommand.class })
+    public static class LazyInheritGroup implements Command<CommandInvocation> {
+        static boolean ran;
+
+        @Option(name = "verbose", hasValue = false, inherited = true, description = "verbose")
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            ran = true;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testBareGroupWithInheritedOptionAndLazyChildren() throws Exception {
+        // Used to NPE in propagateInheritedOptions: with lazy children the
+        // group has no resolved child parsers. The bare group executes itself.
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        builder.setLazyChildResolution(true);
+        CommandContainer<CommandInvocation> group = builder.create(new LazyInheritGroup());
+        assertTrue(group.getParser().getChildParsers() == null
+                || group.getParser().getChildParsers().isEmpty());
+
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
+                .command(group).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                .commandRegistry(registry).build();
+
+        LazyInheritGroup.ran = false;
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("lazygroup"));
+        assertTrue(LazyInheritGroup.ran);
+    }
+
+    @CommandDefinition(name = "leaf", description = "A nested leaf")
+    public static class NestLeafCommand implements Command<CommandInvocation> {
+        static boolean ran;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            ran = true;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "nestmid", description = "", groupCommands = { NestLeafCommand.class })
+    public static class NestMidGroup implements Command<CommandInvocation> {
+        static boolean ran;
+        static String levelValue;
+
+        @Option(name = "level", inherited = true, description = "level")
+        String level;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            ran = true;
+            levelValue = level;
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "nestroot", description = "", groupCommands = { NestMidGroup.class })
+    public static class NestRootGroup implements Command<CommandInvocation> {
+        @Option(name = "verbose", hasValue = false, inherited = true, description = "verbose")
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testNestedGroupWithoutLeafAndLazyChildren() throws Exception {
+        // Selecting the mid group without a leaf recurses through
+        // propagateDownSelectedPath; the mid level has no resolved children.
+        // The inherited option must carry a value to reach the child loop
+        // (null values are skipped before it).
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        builder.setLazyChildResolution(true);
+        CommandContainer<CommandInvocation> group = builder.create(new NestRootGroup());
+
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.<CommandInvocation> builder()
+                .command(group).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                .commandRegistry(registry).build();
+
+        NestMidGroup.ran = false;
+        NestMidGroup.levelValue = null;
+        NestLeafCommand.ran = false;
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("nestroot nestmid --level x"));
+        assertTrue(NestMidGroup.ran);
+        assertEquals("x", NestMidGroup.levelValue);
+        assertTrue(!NestLeafCommand.ran);
     }
 }
