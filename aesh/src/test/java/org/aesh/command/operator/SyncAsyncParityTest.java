@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -83,7 +84,8 @@ public class SyncAsyncParityTest {
     }
 
     static class Run {
-        final List<CommandResult> results = new ArrayList<>();
+        // the listener fires on the job threads in interactive mode
+        final List<CommandResult> results = Collections.synchronizedList(new ArrayList<>());
         String output;
     }
 
@@ -136,16 +138,31 @@ public class SyncAsyncParityTest {
         Run async = runScript(script, true);
         Run sync = runScript(script, false);
 
-        assertEquals(async.results, sync.results);
+        // ok, nope, ok, then the pipeline terminal: per-unit listener fires.
+        // Inline (sync) execution reports each unit before the next one starts.
+        assertEquals(4, sync.results.size());
+        assertEquals(CommandResult.SUCCESS, sync.results.get(0));
+        assertEquals(CommandResult.FAILURE, sync.results.get(1));
+        assertEquals(CommandResult.SUCCESS, sync.results.get(2));
+        assertEquals(CommandResult.SUCCESS, sync.results.get(3));
+        // Interactive mode runs each unit as its own job, and the listener has no
+        // FIFO order across jobs (see ExitStatusOrderTest): the next unit can report
+        // before the listener of the previous one fires. Compare the results, not
+        // their order.
+        assertEquals(sortedValues(sync.results), sortedValues(async.results));
         assertEquals(async.output, sync.output);
-        // ok, nope, ok, then the pipeline terminal: per-unit listener fires
-        assertEquals(4, async.results.size());
-        assertEquals(CommandResult.SUCCESS, async.results.get(0));
-        assertEquals(CommandResult.FAILURE, async.results.get(1));
-        assertEquals(CommandResult.SUCCESS, async.results.get(2));
-        assertEquals(CommandResult.SUCCESS, async.results.get(3));
         // && ran the next command on success; the pipe uppercased its input
         assertTrue(async.output.contains("nope"));
         assertTrue(async.output.contains("OK"));
+    }
+
+    private static List<Integer> sortedValues(List<CommandResult> results) {
+        List<Integer> values = new ArrayList<>();
+        synchronized (results) {
+            for (CommandResult result : results)
+                values.add(result.getResultValue());
+        }
+        Collections.sort(values);
+        return values;
     }
 }
