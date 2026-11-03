@@ -539,6 +539,10 @@ final class CodeGenerator {
                     .append(stringLiteral(cmdHelpGroup)).append(");\n\n");
         }
 
+        if ("true".equals(getAnnotationValue(commandElement, "showDefaultValues", elementUtils))) {
+            sb.append("        processedCommand.setShowDefaultValues(true);\n\n");
+        }
+
         // Set helpSectionProvider if not NullHelpSectionProvider
         String providerClass = getAnnotationClassValue(commandElement, annotationName,
                 "helpSectionProvider", elementUtils);

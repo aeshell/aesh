@@ -179,6 +179,12 @@ public @interface CommandDefinition {
     boolean collapseSynopsis() default false;
 
     /**
+     * Show the default value of each option and positional argument in the help, on a line of its own under the
+     * description: {@code Default: <value>}. Options without a default value get no line.
+     */
+    boolean showDefaultValues() default false;
+
+    /**
      * Default completion fallback for all options and arguments in this command.
      * Individual options can still override with their own {@code completeFallback}.
      * <p>
