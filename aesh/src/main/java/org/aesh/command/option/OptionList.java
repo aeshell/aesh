@@ -54,6 +54,13 @@ import org.aesh.selector.SelectorType;
 public @interface OptionList {
 
     /**
+     * A {@link #valueSeparator()} that does not split a value: each time the option is given it adds
+     * one value, as it is, so a value can contain a comma.
+     * Eg: --prop a=1,2 --prop b=3 gives the values "a=1,2" and "b=3".
+     */
+    char NO_SEPARATOR = '\u0000';
+
+    /**
      * The name of the option param.
      * The first letter will be used as the short name if shortName is not defined
      * If name is not defined, the variable name will be used.
@@ -75,6 +82,9 @@ public @interface OptionList {
      * If set will force the option to be of the form:
      * name[separator]value
      * As an example, if we want to build an option like: --foo bar1,bar2
+     * <p>
+     * With a space the option takes the following words as values, until the next option.
+     * With {@link #NO_SEPARATOR} a value is not split at all.
      */
     char valueSeparator() default ',';
 

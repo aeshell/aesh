@@ -182,6 +182,47 @@ public class OptionListParserTest {
         assertEquals("gamma", vals.get(2));
     }
 
+    // ========== @OptionList(valueSeparator = NO_SEPARATOR): a value is not split ==========
+
+    @Test
+    public void testOptionList_NoSeparatorKeepsTheComma() throws Exception {
+        List<String> vals = optionValues(NoSeparatorCmd.class, "test --prop a=1,2 --prop b=3", "prop");
+        assertEquals(2, vals.size());
+        assertEquals("a=1,2", vals.get(0));
+        assertEquals("b=3", vals.get(1));
+    }
+
+    @Test
+    public void testOptionList_NoSeparatorEquals() throws Exception {
+        List<String> vals = optionValues(NoSeparatorCmd.class, "test --prop=a=1,2", "prop");
+        assertEquals(1, vals.size());
+        assertEquals("a=1,2", vals.get(0));
+    }
+
+    @Test
+    public void testOptionList_NoSeparatorValueStartingWithDash() throws Exception {
+        List<String> vals = optionValues(NoSeparatorCmd.class, "test --prop -Dfoo=bar,baz", "prop");
+        assertEquals(1, vals.size());
+        assertEquals("-Dfoo=bar,baz", vals.get(0));
+    }
+
+    @Test
+    public void testOptionList_NoSeparatorTakesOneWordEachTime() throws Exception {
+        String line = "test --prop a=1,2 route.yaml";
+        List<String> vals = optionValues(NoSeparatorCmd.class, line, "prop");
+        assertEquals(1, vals.size());
+        assertEquals("a=1,2", vals.get(0));
+        assertEquals("route.yaml", argumentValue(NoSeparatorCmd.class, line));
+    }
+
+    @Test
+    public void testOptionList_NoSeparatorArray() throws Exception {
+        List<String> vals = optionValues(NoSeparatorCmd.class, "test --dep a:b:1,c --dep d:e:2", "dep");
+        assertEquals(2, vals.size());
+        assertEquals("a:b:1,c", vals.get(0));
+        assertEquals("d:e:2", vals.get(1));
+    }
+
     // ========== @OptionList: mixed with other options ==========
 
     @Test
@@ -720,6 +761,23 @@ public class OptionListParserTest {
     public static class CommaListCmd implements Command<CommandInvocation> {
         @OptionList(shortName = 'o', name = "option", valueSeparator = ',')
         public List<String> items;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "test", description = "No separator test")
+    public static class NoSeparatorCmd implements Command<CommandInvocation> {
+        @OptionList(name = "prop", valueSeparator = OptionList.NO_SEPARATOR)
+        public List<String> props;
+
+        @OptionList(name = "dep", valueSeparator = OptionList.NO_SEPARATOR)
+        public String[] deps;
+
+        @Argument(description = "File")
+        public String file;
 
         @Override
         public CommandResult execute(CommandInvocation ci) {

@@ -1319,6 +1319,27 @@ public class ProcessorTest {
             "    }\n" +
             "}\n";
 
+    private static final String NO_SEPARATOR_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.List;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.OptionList;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"nosep\", description = \"A list that does not split its values\")\n" +
+            "public class NoSeparatorCommand implements Command<CommandInvocation> {\n" +
+            "    @OptionList(name = \"prop\", valueSeparator = OptionList.NO_SEPARATOR, description = \"Properties\")\n" +
+            "    public List<String> props;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
     // --- Test: comprehensive parity for positional arity, paramLabel, index, allowedValues, and order on OptionList/OptionGroup ---
 
     private static final String COMPREHENSIVE_POSITIONAL_SOURCE = "package test;\n" +
@@ -1735,6 +1756,27 @@ public class ProcessorTest {
         Class<?> metadataClass = result.classLoader.loadClass("test.AdvancedCommand_AeshMetadata");
 
         assertEquivalence(commandClass, metadataClass);
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testNoSeparatorOptionList() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.NoSeparatorCommand", NO_SEPARATOR_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.NoSeparatorCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.NoSeparatorCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+
+        // the generated path does not split the values either
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand((Command) commandClass.newInstance());
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        parser.parse("nosep --prop a=1,2 --prop b=3");
+        assertEquals(Arrays.asList("a=1,2", "b=3"), generatedPC.findLongOptionNoActivatorCheck("prop").getValues());
     }
 
     @Test

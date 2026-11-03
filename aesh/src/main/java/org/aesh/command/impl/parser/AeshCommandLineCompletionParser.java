@@ -29,6 +29,7 @@ import org.aesh.command.impl.internal.ParsedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
+import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
@@ -405,8 +406,11 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
 
         if (completions.getCompleterValues().size() == 1) {
             completeOperation.setAppendSeparator(completions.isAppendSpace());
+            // without a separator the next word is a new one: append a space, never the NUL char
             if (currentOption != null)
-                completeOperation.setSeparator(currentOption.getValueSeparator());
+                completeOperation.setSeparator(currentOption.getValueSeparator() == OptionList.NO_SEPARATOR
+                        ? ' '
+                        : currentOption.getValueSeparator());
         }
         //finally set flags
         completeOperation.setIgnoreOffset(completions.doIgnoreOffset());
