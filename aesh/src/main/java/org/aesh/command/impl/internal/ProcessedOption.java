@@ -21,7 +21,6 @@ package org.aesh.command.impl.internal;
 
 import java.io.File;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
@@ -1400,11 +1399,6 @@ public class ProcessedOption {
                 return;
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
-            if (!Modifier.isPublic(instance.getClass().getModifiers())) {
-                Constructor constructor = instance.getClass().getDeclaredConstructor();
-                if (constructor != null)
-                    constructor.setAccessible(true);
-            }
             if (optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
                 // Handle negatable options - when used in negated form (e.g., --no-verbose), inject false
                 if (negatedByUser && optionType == OptionType.BOOLEAN) {
@@ -1451,7 +1445,7 @@ public class ProcessedOption {
                     field.set(instance, tmpMap);
                 }
             }
-        } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InstantiationException e) {
+        } catch (NoSuchFieldException | IllegalAccessException | InstantiationException e) {
             throw new RuntimeException("Failed to inject value into field: " + fieldName, e);
         }
     }
