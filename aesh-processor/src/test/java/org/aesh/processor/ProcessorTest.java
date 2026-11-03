@@ -1842,6 +1842,37 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    private static final String OPTION_ARGUMENT_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"log\", description = \"Logging\")\n" +
+            "public class OptionArgumentCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"level\", argument = \"LEVEL\", description = \"Level\")\n" +
+            "    private String level;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testOptionArgumentMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.OptionArgumentCommand", OPTION_ARGUMENT_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.OptionArgumentCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.OptionArgumentCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     @Test
     public void testCollapsedSynopsisMetadata() throws Exception {
         CompilationResult result = compileWithProcessor(
@@ -3936,6 +3967,9 @@ public class ProcessorTest {
             assertEquals("Option name", rOpt.name(), gOpt.name());
             assertEquals("Option shortName for " + rOpt.name(), rOpt.shortName(), gOpt.shortName());
             assertEquals("Option description for " + rOpt.name(), rOpt.description(), gOpt.description());
+            assertEquals("Option argument for " + rOpt.name(),
+                    rOpt.getArgument() != null ? rOpt.getArgument() : "",
+                    gOpt.getArgument() != null ? gOpt.getArgument() : "");
             assertEquals("Option type for " + rOpt.name(), rOpt.type(), gOpt.type());
             assertEquals("Option fieldName for " + rOpt.name(), rOpt.getFieldName(), gOpt.getFieldName());
             assertEquals("Option optionType for " + rOpt.name(), rOpt.getOptionType(), gOpt.getOptionType());

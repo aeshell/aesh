@@ -789,6 +789,9 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setAskIfNotSet(true);\n");
         if (o.acceptNameWithoutDashes())
             sb.append("            ").append(var).append(".setAcceptNameWithoutDashes(true);\n");
+        if (!o.argument().isEmpty())
+            sb.append("            ").append(var).append(".setArgument(")
+                    .append(stringLiteral(o.argument())).append(");\n");
         if (o.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(o.defaultValue())).append("));\n");
