@@ -859,7 +859,11 @@ public class AeshRuntimeRunner {
     }
 
     /**
-     * Handles --aesh-doc [asciidoc|markdown]: generates documentation to stdout.
+     * Handles --aesh-doc [asciidoc|markdown|skill] [--output-dir dir] [-- path...]:
+     * generates documentation to stdout or one file per command.
+     * <p>
+     * Tokens after a {@code --} separator select a subcommand subtree,
+     * mirroring {@code --aesh-complete -- <words>}.
      * <p>
      * Examples:
      * <ul>
@@ -868,6 +872,8 @@ public class AeshRuntimeRunner {
      * <li>{@code --aesh-doc markdown} — Markdown to stdout</li>
      * <li>{@code --aesh-doc asciidoc --output-dir docs} — one file per
      * command under {@code docs} (must already exist)</li>
+     * <li>{@code --aesh-doc skill -- run} — SKILL doc for the 'run' subcommand only</li>
+     * <li>{@code --aesh-doc markdown -- jdk install} — Markdown doc for a nested subcommand</li>
      * </ul>
      */
     @SuppressWarnings("unchecked")
@@ -875,9 +881,18 @@ public class AeshRuntimeRunner {
         org.aesh.command.DocFormat format = org.aesh.command.DocFormat.ASCIIDOC;
         File outputDir = null;
 
+        int separatorIndex = -1;
         for (int i = 1; i < args.length; i++) {
+            if ("--".equals(args[i])) {
+                separatorIndex = i;
+                break;
+            }
+        }
+        int docEnd = separatorIndex >= 0 ? separatorIndex : args.length;
+
+        for (int i = 1; i < docEnd; i++) {
             if ("--output-dir".equals(args[i])) {
-                if (i + 1 >= args.length) {
+                if (i + 1 >= docEnd) {
                     System.err.println("Missing directory after --output-dir");
                     return CommandResult.FAILURE;
                 }
@@ -904,9 +919,22 @@ public class AeshRuntimeRunner {
                     .getCommand(commandName, "");
 
             String programName = completionProgramName != null ? completionProgramName : commandName;
+            CommandLineParser<?> parser = container.getParser();
+            if (separatorIndex >= 0) {
+                for (int i = separatorIndex + 1; i < args.length; i++) {
+                    CommandLineParser<?> child = parser.getChildParser(args[i]);
+                    if (child == null) {
+                        System.err.println("Unknown command: " + args[i]);
+                        return CommandResult.FAILURE;
+                    }
+                    parser = child;
+                    programName += " " + child.getProcessedCommand().name();
+                }
+            }
+
             org.aesh.util.doc.DocumentationGenerator.Builder builder = org.aesh.util.doc.DocumentationGenerator
                     .builder()
-                    .parser(container.getParser())
+                    .parser(parser)
                     .programName(programName)
                     .format(format);
             if (outputDir != null) {

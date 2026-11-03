@@ -846,6 +846,61 @@ public class AeshRuntimeRunnerTest {
     }
 
     @Test
+    public void testAeshDocSubcommandSingle() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "markdown", "--", "docchilda")
+                .execute());
+
+        assertTrue("Should target the subcommand, got: " + output,
+                output.contains("# DOCPARENT DOCCHILDA"));
+        assertTrue("Should contain targeted child docs", output.contains("first child"));
+        assertFalse("Should not contain sibling docs", output.contains("second child"));
+    }
+
+    @Test
+    public void testAeshDocSubcommandUnknown() {
+        CommandResult[] holder = new CommandResult[1];
+        String stderr = captureStderr(() -> holder[0] = AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "markdown", "--", "nosuch")
+                .execute());
+
+        assertTrue("Should report unknown command, got: " + stderr,
+                stderr.contains("Unknown command: nosuch"));
+        assertEquals(CommandResult.FAILURE, holder[0]);
+    }
+
+    @Test
+    public void testAeshDocSubcommandOutputDir() throws Exception {
+        java.io.File dir = java.nio.file.Files.createTempDirectory("aesh-doc-sub").toFile();
+        CommandResult result = AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "markdown", "--output-dir", dir.getAbsolutePath(), "--", "docchilda")
+                .execute();
+
+        assertEquals(CommandResult.SUCCESS.getResultValue(), result.getResultValue());
+        java.io.File childA = new java.io.File(dir, "docparent-docchilda.md");
+        assertTrue("Targeted child doc missing", childA.isFile());
+        assertTrue(readFile(childA).contains("first child"));
+        assertFalse("Root doc must not be generated",
+                new java.io.File(dir, "docparent.md").isFile());
+        assertFalse("Sibling doc must not be generated",
+                new java.io.File(dir, "docparent-docchildb.md").isFile());
+    }
+
+    @Test
+    public void testAeshDocSeparatorWithoutPathIsRoot() {
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .command(DocParent.class)
+                .args("--aesh-doc", "markdown", "--")
+                .execute());
+
+        assertTrue("Empty path should render the whole tree", output.contains("first child"));
+        assertTrue("Empty path should render the whole tree", output.contains("second child"));
+    }
+
+    @Test
     public void testAeshDocFlagNotInCompletionCandidates() {
         String output = captureStdout(() -> AeshRuntimeRunner.builder()
                 .command(ColorCommand.class)
