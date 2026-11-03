@@ -19,11 +19,27 @@
  */
 package org.aesh.console;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
+import org.aesh.command.shell.Shell;
+import org.aesh.readline.prompt.Prompt;
 import org.aesh.terminal.tty.Signal;
+import org.aesh.terminal.utils.Config;
 import org.aesh.tty.TestConnection;
 import org.junit.Test;
 
@@ -67,5 +83,91 @@ public class HandlerScopeTest {
         assertSame(outer, connection.signalHandler());
         outerScope.close();
         assertSame(initial, connection.signalHandler());
+    }
+
+    @Test
+    public void testStdinLeaveCurrentOnClosePreservesSuccessor() {
+        // A deliberate handoff installed before close (readline's
+        // between-cycle buffering handler) must survive the scope.
+        TestConnection connection = new TestConnection();
+        Consumer<int[]> initial = ints -> {
+        };
+        connection.setStdinHandler(initial);
+        Consumer<int[]> leased = ints -> {
+        };
+        HandlerScope scope = HandlerScope.stdinLeaveCurrentOnClose(connection, leased);
+        assertSame(leased, connection.stdinHandler());
+        Consumer<int[]> successor = ints -> {
+        };
+        connection.setStdinHandler(successor);
+        scope.close();
+        assertSame(successor, connection.stdinHandler());
+    }
+
+    @Test
+    public void testStdinScopeStillRestoresSaved() {
+        // The default mode is unchanged: close restores the captured handler.
+        TestConnection connection = new TestConnection();
+        Consumer<int[]> initial = connection.stdinHandler();
+        Consumer<int[]> leased = ints -> {
+        };
+        HandlerScope scope = HandlerScope.stdin(connection, leased);
+        assertSame(leased, connection.stdinHandler());
+        scope.close();
+        assertSame(initial, connection.stdinHandler());
+    }
+
+    @Test
+    public void testReadLineKeepsBetweenCycleHandlerWithoutWarning() throws Exception {
+        // ShellImpl.readLine() must not log the lease out-of-order warning:
+        // readline installs its between-cycle buffering handler before the
+        // read completes, and the scope must leave that handoff installed.
+        TestConnection connection = new TestConnection();
+        connection.openBlocking();
+        Consumer<int[]> initial = ints -> {
+        };
+        connection.setStdinHandler(initial);
+        Shell shell = new ShellImpl(connection);
+
+        Logger logger = Logger.getLogger("org.aesh.terminal.StdinLeaseImpl");
+        List<LogRecord> records = new CopyOnWriteArrayList<>();
+        Handler capture = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                records.add(record);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        Level previousLevel = logger.getLevel();
+        logger.addHandler(capture);
+        logger.setLevel(Level.ALL);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            Future<String> line = executor.submit(() -> shell.readLine(new Prompt("")));
+            long deadline = System.currentTimeMillis() + 5000;
+            while (connection.stdinHandler() == initial && System.currentTimeMillis() < deadline)
+                Thread.sleep(10);
+            connection.read("hello" + Config.getLineSeparator());
+            assertTrue("readLine returned the typed line",
+                    "hello".equals(line.get(10, TimeUnit.SECONDS)));
+            assertNotNull("a handler must be installed after readLine",
+                    connection.stdinHandler());
+            assertNotSame("the between-cycle handler must survive, not the captured one",
+                    initial, connection.stdinHandler());
+            assertTrue("no lease warning must be logged, got: " + records,
+                    records.stream().noneMatch(record -> String.valueOf(record.getMessage())
+                            .contains("closed out of order")));
+        } finally {
+            executor.shutdownNow();
+            logger.removeHandler(capture);
+            logger.setLevel(previousLevel);
+        }
     }
 }

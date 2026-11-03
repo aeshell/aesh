@@ -32,20 +32,42 @@ public final class HandlerScope implements AutoCloseable {
     private final Consumer<Signal> installedSignalHandler;
     private final Consumer<Signal> savedSignalHandler;
     private final StdinLease stdinLease;
+    private final boolean leaveStdinOnClose;
     private boolean closed;
 
     private HandlerScope(Connection connection, boolean signal,
             Consumer<Signal> installedSignalHandler, Consumer<Signal> savedSignalHandler,
             StdinLease stdinLease) {
+        this(connection, signal, installedSignalHandler, savedSignalHandler, stdinLease, false);
+    }
+
+    private HandlerScope(Connection connection, boolean signal,
+            Consumer<Signal> installedSignalHandler, Consumer<Signal> savedSignalHandler,
+            StdinLease stdinLease, boolean leaveStdinOnClose) {
         this.connection = connection;
         this.signal = signal;
         this.installedSignalHandler = installedSignalHandler;
         this.savedSignalHandler = savedSignalHandler;
         this.stdinLease = stdinLease;
+        this.leaveStdinOnClose = leaveStdinOnClose;
     }
 
     public static HandlerScope stdin(Connection connection, Consumer<int[]> handler) {
         return new HandlerScope(connection, false, null, null, connection.captureStdin(handler));
+    }
+
+    /**
+     * Capture the handler, but do not restore it on close.
+     * <p>
+     * Use this when the leased period ends with a deliberate handoff to a
+     * successor handler installed before close. {@code ShellImpl.readLine()}
+     * uses this mode: when the readline cycle finishes, readline installs
+     * its between-cycle buffering handler; restoring the older captured
+     * handler would discard that handoff and trigger the lease's
+     * out-of-order warning.
+     */
+    public static HandlerScope stdinLeaveCurrentOnClose(Connection connection, Consumer<int[]> handler) {
+        return new HandlerScope(connection, false, null, null, connection.captureStdin(handler), true);
     }
 
     public static HandlerScope signal(Connection connection, Consumer<Signal> handler) {
@@ -67,7 +89,7 @@ public final class HandlerScope implements AutoCloseable {
             // itself current in turn.
             if (connection.signalHandler() == installedSignalHandler)
                 connection.setSignalHandler(savedSignalHandler);
-        } else if (stdinLease != null)
+        } else if (stdinLease != null && !leaveStdinOnClose)
             stdinLease.close();
     }
 }

@@ -127,7 +127,10 @@ public class ShellImpl implements Shell {
         final String[] out = { null };
         CountDownLatch latch = new CountDownLatch(1);
         Readline readline = new Readline();
-        try (HandlerScope scope = HandlerScope.stdin(connection, connection.stdinHandler())) {
+        // Do not restore the captured handler on close: readline installs
+        // its between-cycle buffering handler when the cycle finishes, and
+        // restoring the older handler would discard that handoff.
+        try (HandlerScope scope = HandlerScope.stdinLeaveCurrentOnClose(connection, connection.stdinHandler())) {
             readline.readline(connection, prompt, event -> {
                 out[0] = event;
                 latch.countDown();
