@@ -1749,6 +1749,38 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    private static final String COLLAPSED_SYNOPSIS_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"collapsed\", description = \"Collapsed synopsis\", collapseSynopsis = true)\n" +
+            "public class CollapsedSynopsisCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Config\")\n" +
+            "    private String config;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testCollapsedSynopsisMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.CollapsedSynopsisCommand", COLLAPSED_SYNOPSIS_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.CollapsedSynopsisCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.CollapsedSynopsisCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     @Test
     public void testComprehensivePositionalAndOptionParity() throws Exception {
         CompilationResult result = compileWithProcessor(
@@ -3795,6 +3827,7 @@ public class ProcessorTest {
         assertEquals("disableParsing", reflectionPC.disableParsing(), generatedPC.disableParsing());
         assertEquals("stopAtFirstPositional", reflectionPC.stopAtFirstPositional(), generatedPC.stopAtFirstPositional());
         assertEquals("sortOptions", reflectionPC.sortOptions(), generatedPC.sortOptions());
+        assertEquals("collapseSynopsis", reflectionPC.collapseSynopsis(), generatedPC.collapseSynopsis());
         assertEquals("completeFallback", reflectionPC.getCompleteFallback(), generatedPC.getCompleteFallback());
         assertEquals("helpUrl",
                 reflectionPC.helpUrl() != null ? reflectionPC.helpUrl() : "",

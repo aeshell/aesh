@@ -344,6 +344,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 .disableParsing(!isGroup && command.disableParsing())
                 .stopAtFirstPositional(command.stopAtFirstPositional())
                 .sortOptions(command.sortOptions())
+                .collapseSynopsis(command.collapseSynopsis())
                 .version(command.version())
                 .helpUrl(command.helpUrl())
                 .create();
@@ -446,6 +447,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .disableParsing(!isGroup && command.disableParsing())
                     .stopAtFirstPositional(command.stopAtFirstPositional())
                     .sortOptions(command.sortOptions())
+                    .collapseSynopsis(command.collapseSynopsis())
                     .defaultValueProvider(command.defaultValueProvider())
                     .version(command.version())
                     .helpUrl(command.helpUrl())

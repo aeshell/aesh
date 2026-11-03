@@ -62,6 +62,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private String version;
     private String helpUrl;
     private boolean sortOptions;
+    private boolean collapseSynopsis;
     private int optionCapacity = -1;
 
     private ProcessedCommandBuilder() {
@@ -132,6 +133,11 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     public ProcessedCommandBuilder<C, CI> sortOptions(boolean sortOptions) {
         this.sortOptions = sortOptions;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> collapseSynopsis(boolean collapseSynopsis) {
+        this.collapseSynopsis = collapseSynopsis;
         return this;
     }
 
@@ -241,7 +247,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
         ProcessedCommand<C, CI> pc = new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
-                helpUrl, stopAtFirstPositional, defaultValueProvider, sortOptions);
+                helpUrl, stopAtFirstPositional, defaultValueProvider, sortOptions, collapseSynopsis);
         if (optionCapacity > 0)
             pc.ensureOptionCapacity(optionCapacity);
         return pc;

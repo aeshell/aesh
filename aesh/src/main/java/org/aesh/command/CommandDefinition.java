@@ -168,6 +168,17 @@ public @interface CommandDefinition {
     boolean sortOptions() default false;
 
     /**
+     * Collapse the synopsis {@code Usage:} line to {@code [OPTIONS]} instead
+     * of inlining every optional flag. Required options are still shown
+     * explicitly; only optional flags collapse. The grouped Options table
+     * below still lists every option in full.
+     * <p>
+     * Useful for option-heavy commands whose full synopsis would wrap
+     * across many lines (e.g. {@code Usage: jbang [OPTIONS] [COMMAND]}).
+     */
+    boolean collapseSynopsis() default false;
+
+    /**
      * Default completion fallback for all options and arguments in this command.
      * Individual options can still override with their own {@code completeFallback}.
      * <p>

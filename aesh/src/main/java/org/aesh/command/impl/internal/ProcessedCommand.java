@@ -94,6 +94,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean disableParsing;
     private final boolean stopAtFirstPositional;
     private final boolean sortOptions;
+    private final boolean collapseSynopsis;
     private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
@@ -189,6 +190,22 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             String helpUrl, boolean stopAtFirstPositional,
             DefaultValueProvider defaultValueProvider,
             boolean sortOptions) throws OptionParserException {
+        this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
+                version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional,
+                defaultValueProvider, sortOptions, false);
+    }
+
+    public ProcessedCommand(String name, List<String> aliases, C command,
+            String description, CommandValidator<C, CI> validator,
+            ResultHandler resultHandler,
+            boolean generateHelp, boolean disableParsing,
+            String version,
+            ProcessedOption arguments, List<ProcessedOption> options,
+            ProcessedOption argument,
+            CommandPopulator<Object, CI> populator, CommandActivator activator,
+            String helpUrl, boolean stopAtFirstPositional,
+            DefaultValueProvider defaultValueProvider,
+            boolean sortOptions, boolean collapseSynopsis) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -197,6 +214,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.disableParsing = disableParsing;
         this.stopAtFirstPositional = stopAtFirstPositional;
         this.sortOptions = sortOptions;
+        this.collapseSynopsis = collapseSynopsis;
         this.defaultValueProvider = defaultValueProvider;
         this.helpUrl = helpUrl;
         this.resultHandler = resultHandler;
@@ -411,6 +429,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean sortOptions() {
         return sortOptions;
+    }
+
+    public boolean collapseSynopsis() {
+        return collapseSynopsis;
     }
 
     public CompletionFallback getCompleteFallback() {
@@ -1382,8 +1404,39 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     /**
      * Core synopsis builder shared by {@code --help} and doc renderers.
+     * When {@code collapseSynopsis} is set, required options render
+     * explicitly and all optional flags collapse to {@code [OPTIONS]}.
      */
     private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
+        if (visibleOpts.isEmpty())
+            return "";
+        if (collapseSynopsis)
+            return buildCollapsedOptionsSynopsis(visibleOpts, ansi);
+        return buildExpandedOptionsSynopsis(visibleOpts, ansi);
+    }
+
+    /**
+     * Collapsed synopsis: required options render exactly as in the expanded
+     * form (exclusive groups with a required member stay explicit); every
+     * optional flag is replaced by a single {@code [OPTIONS]} token.
+     */
+    private String buildCollapsedOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
+        List<ProcessedOption> required = new ArrayList<>(visibleOpts.size());
+        for (ProcessedOption o : visibleOpts) {
+            if (o.isRequired())
+                required.add(o);
+        }
+        StringBuilder sb = new StringBuilder(buildExpandedOptionsSynopsis(required, ansi));
+        if (required.size() < visibleOpts.size()) {
+            if (ansi)
+                sb.append(" [").append(ANSI.YELLOW_TEXT).append("OPTIONS").append(ANSI.RESET).append("]");
+            else
+                sb.append(" [OPTIONS]");
+        }
+        return sb.toString();
+    }
+
+    private String buildExpandedOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
         if (visibleOpts.isEmpty())
             return "";
 

@@ -1224,6 +1224,133 @@ public class CommandLineFormatterTest {
     }
 
     @Test
+    public void collapsedSynopsisCollapsesOptionals() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("jbang").description("Run scripts").collapseSynopsis(true);
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("target").type(String.class).required(true).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("config").type(String.class).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('h').name("help").type(boolean.class).hasValue(false).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("json").type(boolean.class).hasValue(false)
+                .exclusiveWith("xml").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("xml").type(boolean.class).hasValue(false)
+                .exclusiveWith("json").build());
+
+        String synopsis = pb.create().buildSynopsisString(false, true);
+
+        assertTrue("Required option stays explicit, got: " + synopsis,
+                synopsis.contains(" --target=<target>"));
+        assertTrue("Optionals collapse to [OPTIONS], got: " + synopsis,
+                synopsis.contains("[OPTIONS]"));
+        assertFalse("Optional --config must not inline, got: " + synopsis,
+                synopsis.contains("--config"));
+        assertFalse("Optional --verbose must not inline, got: " + synopsis,
+                synopsis.contains("--verbose"));
+        assertFalse("Short cluster must not inline, got: " + synopsis,
+                synopsis.contains("[-h]"));
+        assertFalse("Optional exclusive group must not inline, got: " + synopsis,
+                synopsis.contains("--json") || synopsis.contains("--xml"));
+        assertTrue("[COMMAND] placeholder kept, got: " + synopsis,
+                synopsis.contains("[COMMAND]"));
+    }
+
+    @Test
+    public void collapsedSynopsisKeepsRequiredExclusive() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("export").description("Export data").collapseSynopsis(true);
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("json").type(boolean.class).hasValue(false)
+                .required(true).exclusiveWith("xml").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("xml").type(boolean.class).hasValue(false)
+                .exclusiveWith("json").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("config").type(String.class).build());
+
+        String synopsis = pb.create().buildSynopsisString(false, false);
+
+        assertTrue("Required exclusive group stays explicit, got: " + synopsis,
+                (synopsis.contains("--json | --xml") || synopsis.contains("--xml | --json"))
+                        && synopsis.contains("("));
+        assertTrue("Remaining optionals still collapse, got: " + synopsis,
+                synopsis.contains("[OPTIONS]"));
+        assertFalse("Optional --config must not inline, got: " + synopsis,
+                synopsis.contains("--config"));
+    }
+
+    @Test
+    public void expandedSynopsisIsDefault() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("jbang").description("Run scripts");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("target").type(String.class).required(true).build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("config").type(String.class).build());
+
+        String synopsis = pb.create().buildSynopsisString(false, true);
+
+        assertFalse("No [OPTIONS] without the flag, got: " + synopsis,
+                synopsis.contains("[OPTIONS]"));
+        assertTrue("Optional inlines by default, got: " + synopsis,
+                synopsis.contains("[--config=<config>]"));
+    }
+
+    @Test
+    public void collapsedSynopsisKeepsPositionalAndOptionsTable() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("run").description("Run app").collapseSynopsis(true);
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("config").type(String.class).build());
+        org.aesh.command.impl.internal.ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = pb.create();
+        pc.addArgument(ProcessedOptionBuilder.builder()
+                .name("").type(String.class).fieldName("script")
+                .paramLabel("script").optionType(org.aesh.command.impl.internal.OptionType.ARGUMENT).build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pc);
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+        String synopsis = extractSynopsisLine(help);
+
+        assertTrue("Synopsis collapses but keeps positional, got: " + synopsis,
+                synopsis.contains("[OPTIONS]") && synopsis.contains("<script>"));
+        assertTrue("Options table still documents the flag",
+                help.contains("--config"));
+    }
+
+    @CommandDefinition(name = "collapsed", description = "Collapsed synopsis", collapseSynopsis = true)
+    public static class CollapsedSynopsisCommand implements Command<CommandInvocation> {
+        @Option(description = "Config file")
+        String config;
+
+        @Option(description = "Verbose", hasValue = false)
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void collapsedSynopsisFromAnnotation() throws Exception {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(new CollapsedSynopsisCommand()).getParser();
+
+        String synopsis = clp.getProcessedCommand().buildSynopsisString(false, false);
+
+        assertTrue("Annotation flag collapses the synopsis, got: " + synopsis,
+                synopsis.contains("[OPTIONS]"));
+        assertFalse("Optional flags must not inline, got: " + synopsis,
+                synopsis.contains("--config") || synopsis.contains("--verbose"));
+    }
+
+    @Test
     public void testSynopsis_OptionalValueNoPlaceholder() throws CommandLineParserException {
         ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
                 .name("run").description("Run app");
