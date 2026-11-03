@@ -68,6 +68,11 @@ import org.aesh.util.ReflectionUtil;
  */
 public class ProcessedOption {
 
+    /**
+     * The smallest width a description is wrapped at in the help.
+     */
+    static final int MIN_WRAP_WIDTH = 20;
+
     private static final Logger LOGGER = Logger.getLogger(ProcessedOption.class.getName());
 
     private String shortName;
@@ -1273,20 +1278,21 @@ public class ProcessedOption {
 
             if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
                 sb.append(ANSI.hyperlink(descriptionUrl, resolvedDescription));
-            } else if (resolvedDescription.indexOf('\n') >= 0) {
-                // Multi-line description: strip common leading whitespace (text block support)
-                // and indent continuation lines to align with description column
-                String stripped = stripIndent(resolvedDescription);
+            } else {
+                // Multi-line description: strip common leading whitespace (text block support).
+                // A line longer than the width is wrapped at a space. Continuation lines are
+                // indented to align with the description column.
+                String text = resolvedDescription.indexOf('\n') >= 0
+                        ? stripIndent(resolvedDescription)
+                        : resolvedDescription;
                 String pad = String.format("%" + descriptionStart + "s", "");
-                String[] lines = stripped.split("\n", -1);
-                for (int i = 0; i < lines.length; i++) {
+                List<String> lines = wrapText(text, width - descriptionStart);
+                for (int i = 0; i < lines.size(); i++) {
                     if (i > 0) {
                         sb.append(System.lineSeparator()).append(pad);
                     }
-                    sb.append(lines[i]);
+                    sb.append(lines.get(i));
                 }
-            } else {
-                sb.append(resolvedDescription);
             }
         }
 
@@ -1694,6 +1700,38 @@ public class ProcessedOption {
      * Similar to Java 15's String.stripIndent() but compatible with Java 8+.
      * Removes the minimum number of leading spaces found across all non-blank lines.
      */
+    /**
+     * The lines of the text, each line wrapped at a space so that it is not longer than the given width. A word longer
+     * than the width keeps a line of its own. The lines keep their leading spaces. With a width smaller than
+     * {@link #MIN_WRAP_WIDTH} the text is not wrapped.
+     */
+    public static List<String> wrapText(String text, int width) {
+        List<String> lines = new ArrayList<>();
+        for (String line : text.split("\n", -1)) {
+            if (width < MIN_WRAP_WIDTH || line.length() <= width) {
+                lines.add(line);
+                continue;
+            }
+            int indent = 0;
+            while (indent < line.length() && line.charAt(indent) == ' ')
+                indent++;
+            String lead = line.substring(0, indent);
+            StringBuilder current = new StringBuilder(lead);
+            for (String word : line.substring(indent).split(" +")) {
+                if (current.length() > indent && current.length() + 1 + word.length() > width) {
+                    lines.add(current.toString());
+                    current.setLength(0);
+                    current.append(lead);
+                }
+                if (current.length() > indent)
+                    current.append(' ');
+                current.append(word);
+            }
+            lines.add(current.toString());
+        }
+        return lines;
+    }
+
     static String stripIndent(String text) {
         String[] lines = text.split("\n", -1);
         // Find minimum indentation across non-blank lines
