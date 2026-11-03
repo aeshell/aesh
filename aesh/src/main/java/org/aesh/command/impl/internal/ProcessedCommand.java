@@ -1567,11 +1567,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             return sb.toString();
         }
 
-        // Legacy behavior when no arity is set
-        if (arg.getOptionType() == OptionType.ARGUMENTS)
-            return " [<" + label + ">]";
-        else
+        // Without an arity, the brackets follow whether the argument is required
+        if (arg.isRequired())
             return " <" + label + ">";
+        else
+            return " [<" + label + ">]";
     }
 
     @Override
