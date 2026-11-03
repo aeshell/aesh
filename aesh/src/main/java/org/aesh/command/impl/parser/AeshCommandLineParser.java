@@ -102,9 +102,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         this.processedCommand = (ProcessedCommand<Command<CI>, CI>) processedCommand;
         // Propagate NO_COLOR to all options so help rendering respects it (#499)
         if (!ansiMode) {
-            for (org.aesh.command.impl.internal.ProcessedOption opt : this.processedCommand.getOptions()) {
-                opt.updateAnsiMode(false);
-            }
+            updateOptionsAnsiMode(false);
         }
     }
 
@@ -1321,12 +1319,25 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         return null;
     }
 
-    @Override
-    public void updateAnsiMode(boolean mode) {
-        this.ansiMode = mode;
+    /**
+     * Sets the ANSI mode of the options and of the positional arguments, as the help renders both.
+     */
+    private void updateOptionsAnsiMode(boolean mode) {
         for (ProcessedOption opt : processedCommand.getOptions()) {
             opt.updateAnsiMode(mode);
         }
+        for (ProcessedOption arg : processedCommand.getArgumentOptions()) {
+            arg.updateAnsiMode(mode);
+        }
+        if (processedCommand.getArguments() != null) {
+            processedCommand.getArguments().updateAnsiMode(mode);
+        }
+    }
+
+    @Override
+    public void updateAnsiMode(boolean mode) {
+        this.ansiMode = mode;
+        updateOptionsAnsiMode(mode);
         if (childParsers != null) {
             for (CommandLineParser<CI> child : childParsers) {
                 child.updateAnsiMode(mode);
