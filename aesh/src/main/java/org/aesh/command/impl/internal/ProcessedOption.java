@@ -1175,6 +1175,11 @@ public class ProcessedOption {
                 sb.append("<").append(label).append(">");
         } else if (shortName != null)
             sb.append("-").append(shortName);
+        else if (name != null && !name.isEmpty()
+                && optionType != OptionType.ARGUMENT && optionType != OptionType.ARGUMENTS)
+            // Reserve the short-flag gutter ("-x, ") so long-only options
+            // align with options that have a short form (#718).
+            sb.append("    ");
         if (name != null) {
             if (sb.toString().trim().length() > 0)
                 sb.append(", ");
@@ -1226,6 +1231,11 @@ public class ProcessedOption {
             }
         } else if (shortName != null)
             sb.append("-").append(shortName);
+        else if (name != null && name.length() > 0
+                && optionType != OptionType.ARGUMENT && optionType != OptionType.ARGUMENTS)
+            // Reserve the short-flag gutter ("-x, ") so long-only options
+            // align with options that have a short form (#718).
+            sb.append("    ");
         if (name != null && name.length() > 0) {
             if (shortName != null)
                 sb.append(", ");

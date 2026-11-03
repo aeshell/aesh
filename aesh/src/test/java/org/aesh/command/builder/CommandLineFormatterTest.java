@@ -2038,4 +2038,87 @@ public class CommandLineFormatterTest {
                 synopsis.contains("--[no-]verbose"));
     }
 
+    @Test
+    public void longOnlyOptionsAlignWithShortOptions() throws CommandLineParserException {
+        // Options without a short name reserve the short-flag gutter ("-x, ")
+        // so every --long starts in the same column (#718).
+        ProcessedOption withShort = ProcessedOptionBuilder.builder()
+                .shortName('h').name("help").type(boolean.class).hasValue(false)
+                .description("Display this help and exit").build();
+        ProcessedOption longOnly = ProcessedOptionBuilder.builder()
+                .name("jfr").type(boolean.class).hasValue(false)
+                .description("Launch with Java Flight Recorder enabled.").build();
+
+        assertEquals("-h, --help".length(), withShort.getFormattedLength());
+        assertEquals("    --jfr".length(), longOnly.getFormattedLength());
+
+        String withShortLine = stripAnsi(withShort.getFormattedOption(2, 30, 80, false));
+        String longOnlyLine = stripAnsi(longOnly.getFormattedOption(2, 30, 80, false));
+        assertTrue("Short option renders in the gutter, got: " + withShortLine,
+                withShortLine.startsWith("  -h, --help"));
+        assertTrue("Long-only option pads the gutter, got: " + longOnlyLine,
+                longOnlyLine.startsWith("      --jfr"));
+        // Both descriptions start in the same column
+        assertEquals(withShortLine.indexOf("Display"), longOnlyLine.indexOf("Launch"));
+    }
+
+    @Test
+    public void mixedOptionsAlignInPrintHelp() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("app").description("An app");
+
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('h').name("help").type(boolean.class).hasValue(false)
+                .description("Display this help and exit").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("jfr").type(boolean.class).hasValue(false)
+                .description("Launch with Java Flight Recorder enabled.").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('i').name("interactive").type(boolean.class).hasValue(false)
+                .description("Activate interactive mode").build());
+
+        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+        clp.updateAnsiMode(false);
+        String help = clp.printHelp();
+
+        assertEquals("descriptions align in one column",
+                descriptionColumn(help, "Display this help and exit"),
+                descriptionColumn(help, "Launch with Java Flight Recorder enabled."));
+        assertEquals("descriptions align in one column",
+                descriptionColumn(help, "Display this help and exit"),
+                descriptionColumn(help, "Activate interactive mode"));
+        // The long-only name itself is padded into the shared column
+        assertTrue("long-only name padded with the gutter, help was:\n" + help,
+                helpLine(help, "--jfr").startsWith("      --jfr"));
+    }
+
+    private static String helpLine(String help, String marker) {
+        for (String line : help.split("\\R")) {
+            if (line.trim().startsWith(marker))
+                return line;
+        }
+        return "";
+    }
+
+    private static int descriptionColumn(String help, String description) {
+        for (String line : help.split("\\R")) {
+            int at = line.indexOf(description);
+            if (at >= 0)
+                return at;
+        }
+        return -1;
+    }
+
+    @Test
+    public void positionalArgumentsKeepNoGutter() throws CommandLineParserException {
+        // Positional <label> entries must not gain the gutter.
+        ProcessedOption positional = ProcessedOptionBuilder.builder()
+                .name("").type(String.class).fieldName("file")
+                .paramLabel("file").optionType(org.aesh.command.impl.internal.OptionType.ARGUMENT).build();
+
+        String line = stripAnsi(positional.getFormattedOption(2, 30, 80, false));
+        assertTrue("Positional renders without gutter, got: " + line,
+                line.startsWith("  <file>"));
+    }
+
 }
