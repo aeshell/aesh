@@ -108,6 +108,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private String helpUrl;
     private String helpGroup = "";
     private boolean showDefaultValues;
+    private String helpHeader;
+    private String helpFooter;
     private Class<? extends HelpSectionProvider> helpSectionProviderClass;
     private HelpSectionProvider helpSectionProvider;
 
@@ -543,6 +545,30 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void setShowDefaultValues(boolean showDefaultValues) {
         this.showDefaultValues = showDefaultValues;
+    }
+
+    /**
+     * The header of the help, from {@code @CommandDefinition(header = ...)}, with the lines separated by newline
+     * characters, or null. A {@link HelpSectionProvider} that gives its own header is shown instead.
+     */
+    public String getHelpHeader() {
+        return helpHeader;
+    }
+
+    public void setHelpHeader(String helpHeader) {
+        this.helpHeader = helpHeader;
+    }
+
+    /**
+     * The footer of the help, from {@code @CommandDefinition(footer = ...)}, with the lines separated by newline
+     * characters, or null. A {@link HelpSectionProvider} that gives its own footer is shown instead.
+     */
+    public String getHelpFooter() {
+        return helpFooter;
+    }
+
+    public void setHelpFooter(String helpFooter) {
+        this.helpFooter = helpFooter;
     }
 
     public void setHelpGroup(String helpGroup) {

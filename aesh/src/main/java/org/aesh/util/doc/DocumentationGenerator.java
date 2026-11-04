@@ -213,15 +213,25 @@ public class DocumentationGenerator {
                 }
             }
         }
+        String commandName = parser.getProcessedCommand().name();
+        String commandHeader = parser.getProcessedCommand().getHelpHeader();
+        String commandFooter = parser.getProcessedCommand().getHelpFooter();
         if (provider == null) {
-            return HelpSectionContent.EMPTY;
+            if (commandHeader == null && commandFooter == null)
+                return HelpSectionContent.EMPTY;
+            // header and footer from @CommandDefinition
+            return new HelpSectionContent(resolveVariables(commandHeader, commandName, fullName, parentName),
+                    resolveVariables(commandFooter, commandName, fullName, parentName), Collections.emptyMap());
         }
 
         // Resolve ${COMMAND-NAME}, ${ROOT-COMMAND-NAME} etc. in provider content
         // Use format-aware methods so providers can return format-specific content
-        String commandName = parser.getProcessedCommand().name();
-        String header = resolveVariables(provider.getHeader(format), commandName, fullName, parentName);
-        String footer = resolveVariables(provider.getFooter(format), commandName, fullName, parentName);
+        String providerHeader = provider.getHeader(format);
+        String providerFooter = provider.getFooter(format);
+        String header = resolveVariables(providerHeader != null ? providerHeader : commandHeader, commandName, fullName,
+                parentName);
+        String footer = resolveVariables(providerFooter != null ? providerFooter : commandFooter, commandName, fullName,
+                parentName);
         String descriptionOverride = provider.getDescription(format);
         if (descriptionOverride != null) {
             descriptionOverride = resolveVariables(descriptionOverride, commandName, fullName, parentName);

@@ -146,6 +146,22 @@ public @interface CommandDefinition {
     Class<? extends HelpSectionProvider> helpSectionProvider() default NullHelpSectionProvider.class;
 
     /**
+     * Text shown in the help after the usage line, one line per element, for example a summary of what the command
+     * does. A {@link #helpSectionProvider()} that gives its own header is shown instead.
+     *
+     * @return the lines of the header
+     */
+    String[] header() default {};
+
+    /**
+     * Text shown at the end of the help, one line per element, for example examples of the command. A
+     * {@link #helpSectionProvider()} that gives its own footer is shown instead.
+     *
+     * @return the lines of the footer
+     */
+    String[] footer() default {};
+
+    /**
      * When set to true, option parsing stops after the first positional argument is consumed.
      * All remaining tokens are treated as positional arguments, even if they look like options.
      *

@@ -543,6 +543,17 @@ final class CodeGenerator {
             sb.append("        processedCommand.setShowDefaultValues(true);\n\n");
         }
 
+        String[] header = getAnnotationStringArrayValue(commandElement, "header", elementUtils);
+        if (header != null && header.length > 0) {
+            sb.append("        processedCommand.setHelpHeader(")
+                    .append(stringLiteral(String.join("\n", header))).append(");\n\n");
+        }
+        String[] footer = getAnnotationStringArrayValue(commandElement, "footer", elementUtils);
+        if (footer != null && footer.length > 0) {
+            sb.append("        processedCommand.setHelpFooter(")
+                    .append(stringLiteral(String.join("\n", footer))).append(");\n\n");
+        }
+
         // Set helpSectionProvider if not NullHelpSectionProvider
         String providerClass = getAnnotationClassValue(commandElement, annotationName,
                 "helpSectionProvider", elementUtils);

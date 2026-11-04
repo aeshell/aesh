@@ -534,9 +534,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             }
 
             // Inject header between synopsis and options section
-            String headerContent = (provider != null && provider.getHeader() != null)
-                    ? resolveDescriptionVariables(provider.getHeader(), null)
-                    : null;
+            String header = helpHeader(provider);
+            String headerContent = header != null ? resolveDescriptionVariables(header, null) : null;
             if (headerContent != null) {
                 String sep = Config.getLineSeparator();
                 String doubleSep = sep + sep;
@@ -610,9 +609,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             }
         } else {
             String helpText = processedCommand.printHelp(helpNames(), false, showAll);
-            String headerContent = (provider != null && provider.getHeader() != null)
-                    ? resolveDescriptionVariables(provider.getHeader(), null)
-                    : null;
+            String header = helpHeader(provider);
+            String headerContent = header != null ? resolveDescriptionVariables(header, null) : null;
             if (headerContent != null) {
                 String sep = Config.getLineSeparator();
                 String doubleSep = sep + sep;
@@ -630,14 +628,31 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             }
         }
 
-        // Footer from HelpSectionProvider — shown after everything
-        if (provider != null && provider.getFooter() != null) {
+        // Footer from HelpSectionProvider or @CommandDefinition — shown after everything
+        String footer = helpFooter(provider);
+        if (footer != null) {
             sb.append(Config.getLineSeparator())
-                    .append(resolveDescriptionVariables(provider.getFooter(), null))
+                    .append(resolveDescriptionVariables(footer, null))
                     .append(Config.getLineSeparator());
         }
 
         return sb.toString();
+    }
+
+    /**
+     * The header of the help: the one of the HelpSectionProvider, else the one of {@code @CommandDefinition}.
+     */
+    private String helpHeader(HelpSectionProvider provider) {
+        String header = provider != null ? provider.getHeader() : null;
+        return header != null ? header : processedCommand.getHelpHeader();
+    }
+
+    /**
+     * The footer of the help: the one of the HelpSectionProvider, else the one of {@code @CommandDefinition}.
+     */
+    private String helpFooter(HelpSectionProvider provider) {
+        String footer = provider != null ? provider.getFooter() : null;
+        return footer != null ? footer : processedCommand.getHelpFooter();
     }
 
     private HelpSectionProvider resolveHelpSectionProvider() {
