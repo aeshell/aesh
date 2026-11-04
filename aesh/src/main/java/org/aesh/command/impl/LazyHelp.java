@@ -48,6 +48,11 @@ public final class LazyHelp {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String render(Class<? extends Command> rootClass, String[] args) {
+        return render(rootClass, args, true);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static String render(Class<? extends Command> rootClass, String[] args, boolean ansi) {
         if (rootClass == null || !mayRequestHelp(args))
             return null;
         Walk walk = walk(rootClass, args);
@@ -62,19 +67,28 @@ public final class LazyHelp {
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> parsedCommand = parsed.getProcessedCommand();
         if (parsedCommand.getHelpDocFormat() != null)
             return null;
-        if (parsedCommand.generateHelp() && parsedCommand.isGenerateHelpOptionSet())
+        if (parsedCommand.generateHelp() && parsedCommand.isGenerateHelpOptionSet()) {
+            if (!ansi)
+                parsed.updateAnsiMode(false);
             return parsed.printHelp();
+        }
         if (parsedCommand.version() != null && parsedCommand.isGenerateVersionOptionSet())
             return parsedCommand.name() + " version: " + parsedCommand.version();
         return null;
     }
 
     public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args) {
+        return renderUnknownSubcommandHelp(rootClass, args, true);
+    }
+
+    public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args, boolean ansi) {
         if (rootClass == null)
             return null;
         Walk walk = walk(rootClass, args);
         if (walk == null)
             return null;
+        if (!ansi)
+            walk.deepest.updateAnsiMode(false);
         return walk.deepest.printHelp();
     }
 

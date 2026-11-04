@@ -49,6 +49,7 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.tty.TtyDetect;
 import org.aesh.terminal.utils.Config;
 import org.aesh.util.completer.ShellCompletionGenerator;
 import org.aesh.util.completer.ShellCompletionGenerator.ShellType;
@@ -82,12 +83,41 @@ public class AeshRuntimeRunner {
     private DefaultValueProvider pendingDefaultValueProvider;
     private Class<? extends Command> pendingCommandClass;
     private Command pendingCommandInstance;
+    private AnsiMode ansiMode = AnsiMode.AUTO;
 
     private AeshRuntimeRunner() {
     }
 
     public static AeshRuntimeRunner builder() {
         return new AeshRuntimeRunner();
+    }
+
+    /**
+     * How ANSI colors are decided for help and other output.
+     */
+    public enum AnsiMode {
+        /**
+         * Decide from the environment: no colors when {@code NO_COLOR} is set
+         * or stdout is not a terminal, colors when {@code FORCE_COLOR} (or
+         * {@code CLICOLOR_FORCE}) is set or stdout is a terminal.
+         */
+        AUTO,
+        /** Always use ANSI colors, unless {@code NO_COLOR} is set. */
+        ON,
+        /** Never use ANSI colors. */
+        OFF
+    }
+
+    /**
+     * Control ANSI colors. The default {@link AnsiMode#AUTO} keeps colors in
+     * a terminal and drops them when stdout is redirected (piped to a file,
+     * CI logs), so {@code mycli --help > help.txt} stays plain text.
+     *
+     * @param ansiMode the ANSI mode, or null for {@link AnsiMode#AUTO}
+     */
+    public AeshRuntimeRunner ansiMode(AnsiMode ansiMode) {
+        this.ansiMode = ansiMode != null ? ansiMode : AnsiMode.AUTO;
+        return this;
     }
 
     /**
@@ -343,7 +373,7 @@ public class AeshRuntimeRunner {
         pendingCommandInstance = null;
     }
 
-    private CommandResult failFastOnUnknownSubcommand() {
+    private CommandResult failFastOnUnknownSubcommand(boolean colors) {
         if (!lazyStartup || completionShellType != null || dynamicCompletionShellType != null || dynamicComplete)
             return null;
         if (pendingCommandClass == null)
@@ -361,21 +391,50 @@ public class AeshRuntimeRunner {
                         e.getUnknownSubcommand(), e.getAvailableSubcommands());
             }
             System.err.println(e.getMessage());
-            String help = LazyHelp.renderUnknownSubcommandHelp(pendingCommandClass, args);
+            String help = LazyHelp.renderUnknownSubcommandHelp(pendingCommandClass, args, colors);
             if (help != null)
                 System.err.println(help);
             return CommandResult.USAGE_ERROR;
         }
     }
 
+    /**
+     * Decide whether help and other output uses ANSI colors.
+     * {@code NO_COLOR} always wins (colors off). An explicit mode wins over
+     * the environment otherwise. In {@link AnsiMode#AUTO},
+     * {@code FORCE_COLOR} (or {@code CLICOLOR_FORCE}) forces colors on;
+     * otherwise colors follow stdout: on for a terminal, off when redirected.
+     *
+     * @param mode the configured mode
+     * @param stdoutTty whether stdout is a terminal, consulted lazily
+     * @param getenv environment lookup, so tests can pass a fixed map
+     */
+    static boolean resolveAnsiColors(AnsiMode mode,
+            java.util.function.Supplier<Boolean> stdoutTty,
+            java.util.function.Function<String, String> getenv) {
+        if (getenv.apply("NO_COLOR") != null)
+            return false;
+        if (mode == AnsiMode.OFF)
+            return false;
+        if (mode == AnsiMode.ON)
+            return true;
+        String force = getenv.apply("FORCE_COLOR");
+        if (force == null)
+            force = getenv.apply("CLICOLOR_FORCE");
+        if (force != null && !force.isEmpty() && !"0".equals(force))
+            return true;
+        return stdoutTty.get();
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
-        CommandResult fastFailure = failFastOnUnknownSubcommand();
+        boolean colors = resolveAnsiColors(ansiMode, TtyDetect::isStdoutTty, System::getenv);
+        CommandResult fastFailure = failFastOnUnknownSubcommand(colors);
         if (fastFailure != null)
             return fastFailure;
         if (lazyStartup && pendingCommandClass != null
                 && completionShellType == null && dynamicCompletionShellType == null && !dynamicComplete) {
-            String help = LazyHelp.render(pendingCommandClass, args);
+            String help = LazyHelp.render(pendingCommandClass, args, colors);
             if (help != null) {
                 System.out.println(help);
                 return CommandResult.SUCCESS;
@@ -384,6 +443,10 @@ public class AeshRuntimeRunner {
         materializePendingRoot();
         if (!lazyStartup && pendingDefaultValueProvider != null)
             registryBuilder.defaultValueProvider(pendingDefaultValueProvider);
+        // Render help without ANSI when stdout is redirected: parsers built
+        // from now on get the mode at build time, already-built ones in
+        // create(), so lazy startup never pays for an early materialization.
+        registryBuilder.ansiColors(colors);
         CommandRegistry commandRegistry = registryBuilder.create();
 
         if (commandRegistry.getAllCommandNames().isEmpty())

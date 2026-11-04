@@ -64,6 +64,17 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Set whether parsers built by this registry render help with ANSI
+     * colors. Set false to drop colors (for example when stdout is
+     * redirected); applied to already-built containers in {@link #create()}
+     * and to later builds, without forcing an early materialization.
+     */
+    public AeshCommandRegistryBuilder<CI> ansiColors(boolean ansiColors) {
+        commandRegistry.setAnsiColors(ansiColors);
+        return this;
+    }
+
     public AeshCommandRegistryBuilder<CI> command(Class<? extends Command> command) throws CommandRegistryException {
         commandRegistry.addCommand((Class<Command>) command);
         return this;
@@ -146,6 +157,7 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
 
     public CommandRegistry<CI> create() {
         commandRegistry.applyDefaultValueProvider();
+        commandRegistry.applyAnsiColors();
         return commandRegistry;
     }
 

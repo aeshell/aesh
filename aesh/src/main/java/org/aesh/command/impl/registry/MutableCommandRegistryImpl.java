@@ -61,6 +61,12 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     private CommandContainerBuilder<CI> containerBuilder;
     private DefaultValueProvider defaultValueProvider;
     private InvocationProviders invocationProviders;
+    /**
+     * Whether parsers built by this registry render help with ANSI colors.
+     * Set by runners that redirect output (plain text when not a terminal).
+     * Off is applied at build time and to already-built containers.
+     */
+    private boolean ansiColors = true;
 
     private final List<CommandRegistrationListener> listeners = new ArrayList<>();
     /**
@@ -107,6 +113,28 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
      */
     public void setDefaultValueProvider(DefaultValueProvider provider) {
         this.defaultValueProvider = provider;
+    }
+
+    /**
+     * Set whether parsers built by this registry render help with ANSI
+     * colors. Applied to containers built from now on and to already-built
+     * ones (via {@link #applyAnsiColors()}), so lazy registration never
+     * pays for an early materialization either way.
+     */
+    public void setAnsiColors(boolean ansiColors) {
+        this.ansiColors = ansiColors;
+    }
+
+    /**
+     * Drop ANSI on already-built containers. Called after all commands have
+     * been registered and the mode has been set; containers built later get
+     * it in {@code materialize} and {@code createExecutionContainer}.
+     */
+    public void applyAnsiColors() {
+        if (ansiColors)
+            return;
+        for (CommandContainer<CI> container : registry.values())
+            container.getParser().updateAnsiMode(false);
     }
 
     /**
@@ -307,6 +335,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
             container.getParser().getProcessedCommand().setAliases(source.aliases);
             if (defaultValueProvider != null)
                 injectDefaultValueProvider(container.getParser());
+            if (!ansiColors)
+                container.getParser().updateAnsiMode(false);
             if (invocationProviders != null)
                 applyProviders(container);
             registerBuilt(container);
@@ -549,6 +579,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
             CommandContainer<CI> fork = (CommandContainer<CI>) getBuilder().create(source.clazz);
             if (defaultValueProvider != null)
                 injectDefaultValueProvider(fork.getParser());
+            if (!ansiColors)
+                fork.getParser().updateAnsiMode(false);
             return fork;
         } catch (CommandLineParserException e) {
             // Registration already built this definition successfully, so a
@@ -576,6 +608,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                 fork.getParser().getProcessedCommand().setAliases(source.aliases);
                 if (defaultValueProvider != null)
                     injectDefaultValueProvider(fork.getParser());
+                if (!ansiColors)
+                    fork.getParser().updateAnsiMode(false);
                 return fork;
             } catch (CommandLineParserException e) {
                 throw new CommandDefinitionException(name, e);
