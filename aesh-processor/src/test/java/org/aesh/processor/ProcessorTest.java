@@ -1873,6 +1873,38 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    private static final String HEADER_FOOTER_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"dump\", description = \"Dump\", header = \"About \\\"dump\\\"\",\n" +
+            "        footer = { \"Examples:\", \"  dump --trace\" })\n" +
+            "public class HeaderFooterCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(hasValue = false, description = \"Trace\")\n" +
+            "    private boolean trace;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testHeaderFooterMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.HeaderFooterCommand", HEADER_FOOTER_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.HeaderFooterCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.HeaderFooterCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     @Test
     public void testCollapsedSynopsisMetadata() throws Exception {
         CompilationResult result = compileWithProcessor(
@@ -3933,6 +3965,8 @@ public class ProcessorTest {
         assertEquals("sortOptions", reflectionPC.sortOptions(), generatedPC.sortOptions());
         assertEquals("collapseSynopsis", reflectionPC.collapseSynopsis(), generatedPC.collapseSynopsis());
         assertEquals("showDefaultValues", reflectionPC.showDefaultValues(), generatedPC.showDefaultValues());
+        assertEquals("helpHeader", reflectionPC.getHelpHeader(), generatedPC.getHelpHeader());
+        assertEquals("helpFooter", reflectionPC.getHelpFooter(), generatedPC.getHelpFooter());
         assertEquals("completeFallback", reflectionPC.getCompleteFallback(), generatedPC.getCompleteFallback());
         assertEquals("helpUrl",
                 reflectionPC.helpUrl() != null ? reflectionPC.helpUrl() : "",
