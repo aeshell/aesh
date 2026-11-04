@@ -1217,7 +1217,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
         StringBuilder sb = new StringBuilder();
         //first line — description, wrapped when it is longer than the help is wide
-        for (String line : ProcessedOption.wrapText(descriptionResolver.resolveCommandDescription(description()), width))
+        String commandDescription = descriptionResolver.resolveCommandDescription(description());
+        for (String line : ProcessedOption.wrapText(commandDescription != null ? commandDescription : "", width))
             sb.append(line).append(Config.getLineSeparator());
         //second line — detailed synopsis with wrapping
         boolean ansi = !visibleOpts.isEmpty() && visibleOpts.get(0).isAnsiMode();

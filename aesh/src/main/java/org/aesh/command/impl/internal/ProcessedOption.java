@@ -1696,14 +1696,9 @@ public class ProcessedOption {
     }
 
     /**
-     * Strip common leading whitespace from a multi-line string.
-     * Similar to Java 15's String.stripIndent() but compatible with Java 8+.
-     * Removes the minimum number of leading spaces found across all non-blank lines.
-     */
-    /**
      * The lines of the text, each line wrapped at a space so that it is not longer than the given width. A word longer
      * than the width keeps a line of its own. The lines keep their leading spaces. With a width smaller than
-     * {@link #MIN_WRAP_WIDTH} the text is not wrapped.
+     * 20 the text is not wrapped.
      */
     public static List<String> wrapText(String text, int width) {
         List<String> lines = new ArrayList<>();
@@ -1732,6 +1727,11 @@ public class ProcessedOption {
         return lines;
     }
 
+    /**
+     * Strip common leading whitespace from a multi-line string.
+     * Similar to Java 15's String.stripIndent() but compatible with Java 8+.
+     * Removes the minimum number of leading spaces found across all non-blank lines.
+     */
     static String stripIndent(String text) {
         String[] lines = text.split("\n", -1);
         // Find minimum indentation across non-blank lines

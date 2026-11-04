@@ -18,6 +18,8 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -72,6 +74,17 @@ public class HelpWrapTest {
         for (String line : lines) {
             assertTrue(line, line.length() <= 80);
         }
+    }
+
+    @Test
+    public void testCommandWithoutDescription() throws Exception {
+        ProcessedCommand<?, ?> cmd = ProcessedCommandBuilder.builder()
+                .name("plain")
+                .create();
+
+        List<String> lines = lines(cmd.printHelp("plain", false));
+        assertEquals("", lines.get(0));
+        assertTrue(lines.get(1), lines.get(1).contains("plain"));
     }
 
     @Test
