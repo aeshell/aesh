@@ -100,6 +100,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean stopAtFirstPositional;
     private final boolean sortOptions;
     private final boolean collapseSynopsis;
+    private final boolean failOnDuplicateOptions;
     private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
@@ -214,6 +215,23 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             String helpUrl, boolean stopAtFirstPositional,
             DefaultValueProvider defaultValueProvider,
             boolean sortOptions, boolean collapseSynopsis) throws OptionParserException {
+        this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
+                version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional,
+                defaultValueProvider, sortOptions, collapseSynopsis, false);
+    }
+
+    public ProcessedCommand(String name, List<String> aliases, C command,
+            String description, CommandValidator<C, CI> validator,
+            ResultHandler resultHandler,
+            boolean generateHelp, boolean disableParsing,
+            String version,
+            ProcessedOption arguments, List<ProcessedOption> options,
+            ProcessedOption argument,
+            CommandPopulator<Object, CI> populator, CommandActivator activator,
+            String helpUrl, boolean stopAtFirstPositional,
+            DefaultValueProvider defaultValueProvider,
+            boolean sortOptions, boolean collapseSynopsis,
+            boolean failOnDuplicateOptions) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -223,6 +241,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.stopAtFirstPositional = stopAtFirstPositional;
         this.sortOptions = sortOptions;
         this.collapseSynopsis = collapseSynopsis;
+        this.failOnDuplicateOptions = failOnDuplicateOptions;
         this.defaultValueProvider = defaultValueProvider;
         this.helpUrl = helpUrl;
         this.resultHandler = resultHandler;
@@ -437,6 +456,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public boolean sortOptions() {
         return sortOptions;
+    }
+
+    public boolean failOnDuplicateOptions() {
+        return failOnDuplicateOptions;
     }
 
     public boolean collapseSynopsis() {
@@ -669,6 +692,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 // Check for negated options (e.g., --no-verbose)
                 if (currentOption == null) {
                     currentOption = findNegatedOptionNoActivatorCheck(optionName);
+                } else {
+                    // A non-negated match clears a stale negated flag left by
+                    // an earlier word, so each occurrence is judged on its own
+                    // form (e.g. "--no-verbose --verbose" must not crash) (#733)
+                    currentOption.setNegatedByUser(false);
                 }
                 if (currentOption != null)
                     currentOption.setLongNameUsed(true);
@@ -699,6 +727,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     currentOption = findBareLongOption(input.substring(0, eqIdx));
             }
             if (currentOption != null) {
+                // Bare matches are never negated; clear a stale flag as above
+                currentOption.setNegatedByUser(false);
                 currentOption.setLongNameUsed(true);
             }
             return currentOption;

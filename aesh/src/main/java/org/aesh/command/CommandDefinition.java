@@ -184,6 +184,15 @@ public @interface CommandDefinition {
     boolean sortOptions() default false;
 
     /**
+     * Fail parsing when a single-value option is given more than once.
+     * By default the last value wins, so {@code --level debug --level info}
+     * runs with {@code info}. With this set, repeating an option is a usage
+     * error instead. Boolean flags, {@code @OptionList}, {@code @OptionGroup}
+     * and positional arguments are never affected.
+     */
+    boolean failOnDuplicateOptions() default false;
+
+    /**
      * Collapse the synopsis {@code Usage:} line to {@code [OPTIONS]} instead
      * of inlining every optional flag. Required options are still shown
      * explicitly; only optional flags collapse. The grouped Options table

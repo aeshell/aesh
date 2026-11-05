@@ -875,6 +875,19 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 MutuallyExclusiveOptionException me = checkForMutuallyExclusiveOptions(processedCommand);
                 if (me != null)
                     processedCommand.addParserException(me);
+                // A repeated single-value option keeps its last value, unless
+                // the command opts into strictness (#733). Recorded, not
+                // thrown, so lazy --help falls through to real execution.
+                if (processedCommand.failOnDuplicateOptions()) {
+                    for (ProcessedOption o : processedCommand.getOptions()) {
+                        if (!o.hasMultipleValues() && o.hasValue() && o.getValues().size() > 1) {
+                            String name = o.getDisplayName() != null ? o.getDisplayName() : o.getFieldName();
+                            processedCommand.addParserException(new OptionParserException(
+                                    "The option " + name + " is given more than once"));
+                            break;
+                        }
+                    }
+                }
                 // Check arity min constraints on arguments (skip if overrideRequired is active)
                 if (!processedCommand.hasOptionWithOverrideRequired()) {
                     RequiredOptionException arityEx = null;

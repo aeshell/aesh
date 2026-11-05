@@ -488,6 +488,9 @@ final class CodeGenerator {
         sb.append("                .collapseSynopsis(").append(
                 "true".equals(getAnnotationValue(commandElement, "collapseSynopsis", elementUtils)))
                 .append(")\n");
+        sb.append("                .failOnDuplicateOptions(").append(
+                "true".equals(getAnnotationValue(commandElement, "failOnDuplicateOptions", elementUtils)))
+                .append(")\n");
         generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils, forHelp);
         sb.append("                .version(\"\")\n");
         String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);

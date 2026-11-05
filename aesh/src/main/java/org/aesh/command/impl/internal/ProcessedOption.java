@@ -1360,12 +1360,10 @@ public class ProcessedOption {
     protected void injectValueWithSetter(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
             boolean doValidation) throws OptionValidatorException {
         if (optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
-            if (negatedByUser && optionType == OptionType.BOOLEAN) {
+            // A repeated option keeps its last value; a negated boolean keeps "false" (#733)
+            if (getLastValue() != null)
                 setField(instance,
-                        wrapIfOptional(doConvert("false", invocationProviders, instance, aeshContext, doValidation)));
-            } else if (getValue() != null)
-                setField(instance,
-                        wrapIfOptional(doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation)));
+                        wrapIfOptional(doConvert(getLastValue(), invocationProviders, instance, aeshContext, doValidation)));
             else if (defaultValues.size() > 0) {
                 setField(instance,
                         wrapIfOptional(
@@ -1420,13 +1418,11 @@ public class ProcessedOption {
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             if (optionType == OptionType.NORMAL || optionType == OptionType.BOOLEAN || optionType == OptionType.ARGUMENT) {
-                // Handle negatable options - when used in negated form (e.g., --no-verbose), inject false
-                if (negatedByUser && optionType == OptionType.BOOLEAN) {
+                // A repeated option keeps its last value; a negated boolean keeps "false" (#733)
+                if (getLastValue() != null)
                     field.set(instance,
-                            wrapIfOptional(doConvert("false", invocationProviders, instance, aeshContext, doValidation)));
-                } else if (getValue() != null)
-                    field.set(instance,
-                            wrapIfOptional(doConvert(getValue(), invocationProviders, instance, aeshContext, doValidation)));
+                            wrapIfOptional(
+                                    doConvert(getLastValue(), invocationProviders, instance, aeshContext, doValidation)));
                 else if (defaultValues.size() > 0) {
                     field.set(instance,
                             wrapIfOptional(

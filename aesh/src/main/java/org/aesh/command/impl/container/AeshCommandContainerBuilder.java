@@ -345,6 +345,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 .stopAtFirstPositional(command.stopAtFirstPositional())
                 .sortOptions(command.sortOptions())
                 .collapseSynopsis(command.collapseSynopsis())
+                .failOnDuplicateOptions(command.failOnDuplicateOptions())
                 .version(command.version())
                 .helpUrl(command.helpUrl())
                 .create();
@@ -453,6 +454,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .stopAtFirstPositional(command.stopAtFirstPositional())
                     .sortOptions(command.sortOptions())
                     .collapseSynopsis(command.collapseSynopsis())
+                    .failOnDuplicateOptions(command.failOnDuplicateOptions())
                     .defaultValueProvider(command.defaultValueProvider())
                     .version(command.version())
                     .helpUrl(command.helpUrl())
