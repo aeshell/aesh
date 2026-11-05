@@ -109,6 +109,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private String helpUrl;
     private String helpGroup = "";
     private boolean showDefaultValues;
+    private boolean defaultOptionsFirst;
     private String helpHeader;
     private String helpFooter;
     private Class<? extends HelpSectionProvider> helpSectionProviderClass;
@@ -568,6 +569,18 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void setShowDefaultValues(boolean showDefaultValues) {
         this.showDefaultValues = showDefaultValues;
+    }
+
+    /**
+     * Whether the default (ungrouped) {@code Options:} section is printed
+     * before the named {@code helpGroup} sections instead of after them.
+     */
+    public boolean defaultOptionsFirst() {
+        return defaultOptionsFirst;
+    }
+
+    public void setDefaultOptionsFirst(boolean defaultOptionsFirst) {
+        this.defaultOptionsFirst = defaultOptionsFirst;
     }
 
     /**
@@ -1299,29 +1312,19 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
             }
 
-            // Print named groups first
+            // The default (ungrouped) section goes first only when asked for;
+            // named groups keep their relative order either way.
+            if (defaultOptionsFirst)
+                appendOptionGroup(sb, groups.get(""), "Options:", maxLength + 4, width, supportsHyperlinks,
+                        descriptionResolver);
             for (Map.Entry<String, List<ProcessedOption>> entry : groups.entrySet()) {
-                if (!entry.getKey().isEmpty()) {
-                    sb.append(Config.getLineSeparator()).append(entry.getKey()).append(":").append(Config.getLineSeparator());
-                    for (ProcessedOption o : entry.getValue()) {
-                        sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
-                                descriptionResolver.resolveOptionDescription(o)))
-                                .append(Config.getLineSeparator());
-                        appendDefaultValue(sb, o, maxLength + 4);
-                    }
-                }
+                if (!entry.getKey().isEmpty())
+                    appendOptionGroup(sb, entry.getValue(), entry.getKey() + ":", maxLength + 4, width,
+                            supportsHyperlinks, descriptionResolver);
             }
-            // Then default group
-            List<ProcessedOption> defaultGroup = groups.get("");
-            if (defaultGroup != null && !defaultGroup.isEmpty()) {
-                sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
-                for (ProcessedOption o : defaultGroup) {
-                    sb.append(o.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
-                            descriptionResolver.resolveOptionDescription(o)))
-                            .append(Config.getLineSeparator());
-                    appendDefaultValue(sb, o, maxLength + 4);
-                }
-            }
+            if (!defaultOptionsFirst)
+                appendOptionGroup(sb, groups.get(""), "Options:", maxLength + 4, width, supportsHyperlinks,
+                        descriptionResolver);
         }
         // Render positional arguments inline after the options section
         if (!positionalOptions.isEmpty()) {
@@ -1618,6 +1621,25 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
 
         return synopsis.toString();
+    }
+
+    /**
+     * Render one help section: a heading line followed by its options, with
+     * descriptions aligned to the option column. A null or empty group renders
+     * nothing, so callers express section order by call order — a future
+     * named-group ordering needs no restructuring here.
+     */
+    private void appendOptionGroup(StringBuilder sb, List<ProcessedOption> group, String heading,
+            int descriptionStart, int width, boolean supportsHyperlinks, DescriptionResolver descriptionResolver) {
+        if (group == null || group.isEmpty())
+            return;
+        sb.append(Config.getLineSeparator()).append(heading).append(Config.getLineSeparator());
+        for (ProcessedOption o : group) {
+            sb.append(o.getFormattedOption(2, descriptionStart, width, supportsHyperlinks,
+                    descriptionResolver.resolveOptionDescription(o)))
+                    .append(Config.getLineSeparator());
+            appendDefaultValue(sb, o, descriptionStart);
+        }
     }
 
     /**

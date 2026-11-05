@@ -210,6 +210,13 @@ public @interface CommandDefinition {
     boolean showDefaultValues() default false;
 
     /**
+     * Print the default (ungrouped) {@code Options:} section before the
+     * named {@code helpGroup} sections instead of after them, so the
+     * command's own options come first.
+     */
+    boolean defaultOptionsFirst() default false;
+
+    /**
      * Default completion fallback for all options and arguments in this command.
      * Individual options can still override with their own {@code completeFallback}.
      * <p>

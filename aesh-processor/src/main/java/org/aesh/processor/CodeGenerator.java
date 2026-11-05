@@ -546,6 +546,10 @@ final class CodeGenerator {
             sb.append("        processedCommand.setShowDefaultValues(true);\n\n");
         }
 
+        if ("true".equals(getAnnotationValue(commandElement, "defaultOptionsFirst", elementUtils))) {
+            sb.append("        processedCommand.setDefaultOptionsFirst(true);\n\n");
+        }
+
         String[] header = getAnnotationStringArrayValue(commandElement, "header", elementUtils);
         if (header != null && header.length > 0) {
             sb.append("        processedCommand.setHelpHeader(")

@@ -1936,6 +1936,37 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    private static final String DEFAULT_OPTIONS_FIRST_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"first\", description = \"Default group first\", defaultOptionsFirst = true)\n" +
+            "public class DefaultOptionsFirstCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Verbose\", hasValue = false)\n" +
+            "    private boolean verbose;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testDefaultOptionsFirstMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.DefaultOptionsFirstCommand", DEFAULT_OPTIONS_FIRST_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.DefaultOptionsFirstCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.DefaultOptionsFirstCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     @Test
     public void testCollapsedSynopsisMetadata() throws Exception {
         CompilationResult result = compileWithProcessor(
@@ -3998,6 +4029,7 @@ public class ProcessorTest {
         assertEquals("failOnDuplicateOptions", reflectionPC.failOnDuplicateOptions(),
                 generatedPC.failOnDuplicateOptions());
         assertEquals("showDefaultValues", reflectionPC.showDefaultValues(), generatedPC.showDefaultValues());
+        assertEquals("defaultOptionsFirst", reflectionPC.defaultOptionsFirst(), generatedPC.defaultOptionsFirst());
         assertEquals("helpHeader", reflectionPC.getHelpHeader(), generatedPC.getHelpHeader());
         assertEquals("helpFooter", reflectionPC.getHelpFooter(), generatedPC.getHelpFooter());
         assertEquals("completeFallback", reflectionPC.getCompleteFallback(), generatedPC.getCompleteFallback());

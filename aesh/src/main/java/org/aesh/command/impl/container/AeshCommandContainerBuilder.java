@@ -356,6 +356,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         if (command.helpGroup().length() > 0)
             processedCommand.setHelpGroup(command.helpGroup());
         processedCommand.setShowDefaultValues(command.showDefaultValues());
+        processedCommand.setDefaultOptionsFirst(command.defaultOptionsFirst());
         if (command.header().length > 0)
             processedCommand.setHelpHeader(String.join("\n", command.header()));
         if (command.footer().length > 0)
@@ -467,6 +468,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             if (command.helpGroup().length() > 0)
                 processedCommand.setHelpGroup(command.helpGroup());
             processedCommand.setShowDefaultValues(command.showDefaultValues());
+            processedCommand.setDefaultOptionsFirst(command.defaultOptionsFirst());
             if (command.header().length > 0)
                 processedCommand.setHelpHeader(String.join("\n", command.header()));
             if (command.footer().length > 0)

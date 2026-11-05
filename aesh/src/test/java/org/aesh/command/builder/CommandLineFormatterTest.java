@@ -380,6 +380,106 @@ public class CommandLineFormatterTest {
         assertTrue("--include should appear after Filters:", help.indexOf("--include", filtersIdx) > filtersIdx);
     }
 
+    @CommandDefinition(name = "groupedfirst", description = "Default group first", defaultOptionsFirst = true)
+    public static class GroupedOptionsFirstCommand implements Command<CommandInvocation> {
+        @Option(description = "Output as JSON", hasValue = false, helpGroup = "Output")
+        boolean json;
+
+        @Option(description = "Verbose output", hasValue = false)
+        boolean verbose;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testDefaultOptionsFirstFromAnnotation() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(new GroupedOptionsFirstCommand()).getParser();
+
+        String help = clp.printHelp();
+
+        int outputIdx = help.indexOf("Output:");
+        int optionsIdx = help.indexOf("Options:");
+        assertTrue("Output section should appear", outputIdx > 0);
+        assertTrue("Default Options: should appear", optionsIdx > 0);
+        assertTrue("Default Options: should come first, got:\n" + help, optionsIdx < outputIdx);
+        assertTrue("--verbose should appear after Options:", help.indexOf("--verbose", optionsIdx) > optionsIdx);
+        assertTrue("--json should appear after Output:", help.indexOf("--json", outputIdx) > outputIdx);
+    }
+
+    @Test
+    public void testDefaultOptionsLastByDefault() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(new GroupedOptionsCommand()).getParser();
+
+        String help = clp.printHelp();
+
+        int outputIdx = help.indexOf("Output:");
+        int optionsIdx = help.indexOf("Options:");
+        assertTrue("Output section should appear", outputIdx > 0);
+        assertTrue("Default Options: should appear", optionsIdx > 0);
+        assertTrue("Named groups stay first by default, got:\n" + help, outputIdx < optionsIdx);
+    }
+
+    @Test
+    public void testDefaultOptionsFirstViaSetter() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("grouped").description("Grouped options test");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .shortName('j').name("json").type(boolean.class).hasValue(false)
+                .description("Output as JSON").helpGroup("Output").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("verbose").type(boolean.class).hasValue(false)
+                .description("Verbose output").build());
+        org.aesh.command.impl.internal.ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = pb.create();
+        pc.setDefaultOptionsFirst(true);
+
+        String help = new AeshCommandLineParser<>(pc).printHelp();
+
+        int outputIdx = help.indexOf("Output:");
+        int optionsIdx = help.indexOf("Options:");
+        assertTrue("Output section should appear", outputIdx > 0);
+        assertTrue("Default Options: should appear", optionsIdx > 0);
+        assertTrue("Default Options: should come first, got:\n" + help, optionsIdx < outputIdx);
+    }
+
+    @CommandDefinition(name = "groupedpos", description = "Default group first with positional", defaultOptionsFirst = true)
+    public static class GroupedPositionalFirstCommand implements Command<CommandInvocation> {
+        @Option(description = "Output as JSON", hasValue = false, helpGroup = "Output")
+        boolean json;
+
+        @Option(description = "Verbose output", hasValue = false)
+        boolean verbose;
+
+        @Argument(description = "Input file")
+        String file;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testPositionalStaysLastWithDefaultFirst() throws CommandLineParserException {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        CommandLineParser<CommandInvocation> clp = builder.create(new GroupedPositionalFirstCommand()).getParser();
+        clp.updateAnsiMode(false);
+
+        String help = clp.printHelp();
+
+        int optionsIdx = help.indexOf("Options:");
+        int outputIdx = help.indexOf("Output:");
+        // the usage line also mentions <file>; the positional entry is the last occurrence
+        int fileIdx = help.lastIndexOf("<file>");
+        assertTrue("All sections should appear", optionsIdx > 0 && outputIdx > 0 && fileIdx > 0);
+        assertTrue("Order should be Options, Output, positional, got:\n" + help,
+                optionsIdx < outputIdx && outputIdx < fileIdx);
+    }
+
     @CommandDefinition(name = "grouped", description = "Grouped options test")
     public static class GroupedOptionsCommand implements Command<CommandInvocation> {
         @Option(description = "Output as JSON", hasValue = false, helpGroup = "Output")
