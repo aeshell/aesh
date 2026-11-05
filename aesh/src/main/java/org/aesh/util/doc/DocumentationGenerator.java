@@ -36,7 +36,6 @@ import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
-import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.parser.CommandLineParserException;
 
 /**
@@ -202,17 +201,7 @@ public class DocumentationGenerator {
      */
     private HelpSectionContent resolveHelpContent(CommandLineParser<?> parser,
             String fullName, String parentName) {
-        HelpSectionProvider provider = parser.getProcessedCommand().getHelpSectionProvider();
-        if (provider == null) {
-            Class<? extends HelpSectionProvider> providerClass = parser.getProcessedCommand().getHelpSectionProviderClass();
-            if (providerClass != null && providerClass != NullHelpSectionProvider.class) {
-                try {
-                    provider = providerClass.getDeclaredConstructor().newInstance();
-                } catch (Exception e) {
-                    // fall through
-                }
-            }
-        }
+        HelpSectionProvider provider = parser.getProcessedCommand().resolveHelpSectionProvider();
         String commandName = parser.getProcessedCommand().name();
         String commandHeader = parser.getProcessedCommand().getHelpHeader();
         String commandFooter = parser.getProcessedCommand().getHelpFooter();

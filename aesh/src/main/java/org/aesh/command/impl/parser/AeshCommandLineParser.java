@@ -38,7 +38,6 @@ import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
-import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.map.MapCommand;
@@ -509,7 +508,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         }
         boolean showAll = processedCommand.isFullHelpRequested();
         List<CommandLineParser<CI>> parsers = getChildParsers();
-        HelpSectionProvider provider = resolveHelpSectionProvider();
+        HelpSectionProvider provider = processedCommand.resolveHelpSectionProvider();
         Map<String, List<HelpEntry>> additionalSections = provider != null
                 ? provider.getAdditionalSections()
                 : Collections.emptyMap();
@@ -653,22 +652,6 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private String helpFooter(HelpSectionProvider provider) {
         String footer = provider != null ? provider.getFooter() : null;
         return footer != null ? footer : processedCommand.getHelpFooter();
-    }
-
-    private HelpSectionProvider resolveHelpSectionProvider() {
-        HelpSectionProvider provider = processedCommand.getHelpSectionProvider();
-        if (provider != null)
-            return provider;
-
-        Class<? extends HelpSectionProvider> providerClass = processedCommand.getHelpSectionProviderClass();
-        if (providerClass != null && providerClass != NullHelpSectionProvider.class) {
-            try {
-                return providerClass.getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
-                // fall through
-            }
-        }
-        return null;
     }
 
     private String formatHelpEntry(HelpEntry entry, int offset, int descriptionStart) {

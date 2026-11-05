@@ -38,6 +38,7 @@ import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
+import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.CompletionFallback;
@@ -625,6 +626,24 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void setHelpSectionProvider(HelpSectionProvider helpSectionProvider) {
         this.helpSectionProvider = helpSectionProvider;
+    }
+
+    /**
+     * The provider to render help with, told which command it renders for, or null if there is none.
+     * A provider set as an instance wins over the one of {@code @CommandDefinition}, which is new for every call.
+     */
+    public HelpSectionProvider resolveHelpSectionProvider() {
+        HelpSectionProvider provider = helpSectionProvider;
+        if (provider == null && helpSectionProviderClass != null && helpSectionProviderClass != NullHelpSectionProvider.class) {
+            try {
+                provider = helpSectionProviderClass.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        if (provider != null)
+            provider.init(this);
+        return provider;
     }
 
     public void setParentCommandInjector(ParentCommandInjector injector) {

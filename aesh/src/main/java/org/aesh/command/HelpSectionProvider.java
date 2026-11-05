@@ -22,6 +22,8 @@ package org.aesh.command;
 import java.util.List;
 import java.util.Map;
 
+import org.aesh.command.impl.internal.ProcessedCommand;
+
 /**
  * Provider interface for dynamically adding entries to help output.
  * Implementations can discover external plugins, aliases, or any
@@ -41,6 +43,21 @@ import java.util.Map;
  * @author Aesh team
  */
 public interface HelpSectionProvider {
+
+    /**
+     * Tells the provider which command it renders for. Called right before the other methods each time
+     * help or documentation is rendered, so a single provider can serve every command, for example by
+     * looking up its text in a resource bundle keyed by the command name.
+     *
+     * <p>
+     * A provider created from {@code @CommandDefinition(helpSectionProvider=...)} is new for every render.
+     * A provider instance set on the command is initialized again each time, so keep this idempotent.
+     * </p>
+     *
+     * @param command the command the help is rendered for
+     */
+    default void init(ProcessedCommand<?, ?> command) {
+    }
 
     /**
      * Returns additional sections to display in help output.
