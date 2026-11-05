@@ -1402,6 +1402,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     @Override
+    public boolean isAnsiMode() {
+        return ansiMode;
+    }
+
+    @Override
     public String toString() {
         return "AeshCommandLineParser{" +
                 "processedCommand=" + processedCommand +

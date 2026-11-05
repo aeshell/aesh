@@ -106,6 +106,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private boolean programStatusEnabled;
     private String programStatusAppName;
     private Connection programStatusConnection;
+    private boolean ansiWhenRedirected;
 
     public AeshCommandRuntime(AeshContext ctx,
             CommandRegistry<CI> registry,
@@ -193,6 +194,19 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         this.programStatusEnabled = enabled;
         this.programStatusAppName = appName;
         this.programStatusConnection = connection;
+    }
+
+    /**
+     * Whether help keeps ANSI colors when a command redirects its output to
+     * a file or pipe. Off by default; set by builders that resolve an
+     * explicit force (mode {@code ON}, {@code FORCE_COLOR}).
+     */
+    public void setAnsiWhenRedirected(boolean ansiWhenRedirected) {
+        this.ansiWhenRedirected = ansiWhenRedirected;
+    }
+
+    boolean ansiWhenRedirected() {
+        return ansiWhenRedirected;
     }
 
     @Override

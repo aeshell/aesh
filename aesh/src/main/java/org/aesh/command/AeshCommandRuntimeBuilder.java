@@ -75,6 +75,11 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     private boolean programStatusEnabled;
     private String programStatusAppName;
     private Connection programStatusConnection;
+    /**
+     * Keep ANSI colors when a command redirects its output to a file or pipe.
+     * Off by default: redirected output is plain unless explicitly forced.
+     */
+    private boolean ansiWhenRedirected;
 
     private AeshCommandRuntimeBuilder() {
     }
@@ -136,6 +141,18 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      */
     public AeshCommandRuntimeBuilder<CI> programStatusConnection(Connection connection) {
         this.programStatusConnection = connection;
+        return this;
+    }
+
+    /**
+     * Keep ANSI colors when a command redirects its output. File redirects
+     * always strip ANSI codes when writing; pipes preserve them, so this
+     * decides what a downstream command receives. Off by default; forced on
+     * by {@code AeshRuntimeRunner} with explicit {@code ON} or
+     * {@code FORCE_COLOR}/{@code CLICOLOR_FORCE}.
+     */
+    public AeshCommandRuntimeBuilder<CI> ansiWhenRedirected(boolean ansiWhenRedirected) {
+        this.ansiWhenRedirected = ansiWhenRedirected;
         return this;
     }
 
@@ -300,6 +317,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         if (pipelineConfig != null)
             runtime.setPipelineConfig(pipelineConfig);
         runtime.setProgramStatus(programStatusEnabled, programStatusAppName, programStatusConnection);
+        runtime.setAnsiWhenRedirected(ansiWhenRedirected);
         return runtime;
     }
 }

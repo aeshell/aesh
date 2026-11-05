@@ -102,6 +102,24 @@ public class AeshRuntimeRunnerAnsiTest {
     }
 
     @Test
+    public void testForceWhenRedirected() {
+        assertTrue(AeshRuntimeRunner.resolveForceWhenRedirected(AeshRuntimeRunner.AnsiMode.ON,
+                env(Collections.emptyMap())));
+        assertTrue(AeshRuntimeRunner.resolveForceWhenRedirected(AeshRuntimeRunner.AnsiMode.AUTO,
+                env(envOf("FORCE_COLOR", "1"))));
+        assertTrue(AeshRuntimeRunner.resolveForceWhenRedirected(AeshRuntimeRunner.AnsiMode.AUTO,
+                env(envOf("CLICOLOR_FORCE", "yes"))));
+        assertFalse(AeshRuntimeRunner.resolveForceWhenRedirected(AeshRuntimeRunner.AnsiMode.AUTO,
+                env(Collections.emptyMap())));
+        assertFalse(AeshRuntimeRunner.resolveForceWhenRedirected(AeshRuntimeRunner.AnsiMode.OFF,
+                env(envOf("FORCE_COLOR", "1"))));
+        assertFalse(AeshRuntimeRunner.resolveForceWhenRedirected(AeshRuntimeRunner.AnsiMode.ON,
+                env(envOf("NO_COLOR", ""))));
+        assertFalse(AeshRuntimeRunner.resolveForceWhenRedirected(AeshRuntimeRunner.AnsiMode.AUTO,
+                env(envOf("FORCE_COLOR", "0"))));
+    }
+
+    @Test
     public void testAutoWhenPipedHasNoAnsi() {
         // Surefire pipes stdout, so AUTO resolves to plain text here
         assumeCleanEnv();
@@ -147,6 +165,115 @@ public class AeshRuntimeRunnerAnsiTest {
                 .execute());
 
         assertTrue("Fail-fast help must honor forced colors, got: " + stderr, stderr.contains(ESC));
+    }
+
+    @Test
+    public void testLazyHelpOverloads() throws Exception {
+        String plain = org.aesh.command.impl.LazyHelp.renderUnknownSubcommandHelp(
+                GrpCommand.class, new String[] { "bogus" }, false);
+        assertFalse("Explicit off must be plain, got: " + plain, plain.contains(ESC));
+
+        String colored = org.aesh.command.impl.LazyHelp.renderUnknownSubcommandHelp(
+                GrpCommand.class, new String[] { "bogus" }, true);
+        assertTrue("Explicit on must color, got: " + colored, colored.contains(ESC));
+    }
+
+    @Test
+    public void testUsageErrorHelpRespectsMode() {
+        assumeTrue(System.getenv("NO_COLOR") == null);
+        CommandResult[] result = new CommandResult[1];
+        String stderr = captureStderr(() -> result[0] = AeshRuntimeRunner.builder()
+                .command(PaintCommand.class)
+                .lazyStartup(false)
+                .ansiMode(AeshRuntimeRunner.AnsiMode.ON)
+                .args("--bogus", "x")
+                .execute());
+
+        assertEquals(CommandResult.USAGE_ERROR, result[0]);
+        assertTrue("Usage-error help must honor forced colors, got: " + stderr, stderr.contains(ESC));
+    }
+
+    @Test
+    public void testRedirectedExecutionHelpIsPlain() throws Exception {
+        java.io.File tmp = java.io.File.createTempFile("aesh-ansi", ".txt");
+        try {
+            org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                    .<CommandInvocation> builder()
+                    .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                            .<CommandInvocation> builder().command(PaintCommand.class).create())
+                    .operators(java.util.EnumSet.allOf(org.aesh.command.operator.OperatorType.class))
+                    .build();
+
+            assertEquals(CommandResult.SUCCESS,
+                    runtime.executeCommand("paint --help > " + tmp.getAbsolutePath()));
+            String content = new String(java.nio.file.Files.readAllBytes(tmp.toPath()));
+            assertTrue("Help must land in the file, got: " + content, content.contains("Usage:"));
+            assertFalse("Redirected help must be plain, got: " + content, content.contains(ESC));
+        } finally {
+            tmp.delete();
+        }
+    }
+
+    @Test
+    public void testRedirectedExecutionHelpForced() throws Exception {
+        // Pipes preserve ANSI (the receiving command may be color-aware),
+        // so forced colors survive there -- unlike file redirects, which
+        // always strip them when writing.
+        SinkDrainCommand.lines.clear();
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                        .<CommandInvocation> builder().command(PaintCommand.class)
+                        .command(SinkDrainCommand.class).create())
+                .operators(java.util.EnumSet.allOf(org.aesh.command.operator.OperatorType.class))
+                .ansiWhenRedirected(true)
+                .build();
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("paint --help | sinkdrain"));
+        assertTrue("Help must flow through the pipe, got: " + SinkDrainCommand.lines,
+                SinkDrainCommand.lines.stream().anyMatch(l -> l.contains("Usage:")));
+        assertTrue("Forced colors must survive the pipe, got: " + SinkDrainCommand.lines,
+                SinkDrainCommand.lines.stream().anyMatch(l -> l.contains(ESC)));
+    }
+
+    @Test
+    public void testPipedExecutionHelpIsPlain() throws Exception {
+        SinkDrainCommand.lines.clear();
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                        .<CommandInvocation> builder().command(PaintCommand.class)
+                        .command(SinkDrainCommand.class).create())
+                .operators(java.util.EnumSet.allOf(org.aesh.command.operator.OperatorType.class))
+                .build();
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("paint --help | sinkdrain"));
+        assertTrue("Help must flow through the pipe, got: " + SinkDrainCommand.lines,
+                SinkDrainCommand.lines.stream().anyMatch(l -> l.contains("Usage:")));
+        assertTrue("Piped help must be plain, got: " + SinkDrainCommand.lines,
+                SinkDrainCommand.lines.stream().noneMatch(l -> l.contains(ESC)));
+    }
+
+    @CommandDefinition(name = "sinkdrain", description = "Drain stdin")
+    public static class SinkDrainCommand implements Command<CommandInvocation> {
+        static final java.util.List<String> lines = new java.util.ArrayList<>();
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            try {
+                java.io.InputStream stdin = invocation.getStdin();
+                if (stdin != null) {
+                    java.io.BufferedReader reader = new java.io.BufferedReader(
+                            new java.io.InputStreamReader(stdin));
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                        lines.add(line);
+                }
+            } catch (Exception e) {
+                return CommandResult.FAILURE;
+            }
+            return CommandResult.SUCCESS;
+        }
     }
 
     @Test

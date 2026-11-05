@@ -426,10 +426,31 @@ public class AeshRuntimeRunner {
         return stdoutTty.get();
     }
 
+    /**
+     * Whether ANSI colors survive an output redirect to a file or pipe.
+     * Only explicit {@code ON} or {@code FORCE_COLOR}/{@code CLICOLOR_FORCE}
+     * force them; {@code NO_COLOR} always wins.
+     */
+    static boolean resolveForceWhenRedirected(AnsiMode mode,
+            java.util.function.Function<String, String> getenv) {
+        if (getenv.apply("NO_COLOR") != null)
+            return false;
+        if (mode == AnsiMode.OFF)
+            return false;
+        if (mode == AnsiMode.ON)
+            return true;
+        String force = getenv.apply("FORCE_COLOR");
+        if (force == null)
+            force = getenv.apply("CLICOLOR_FORCE");
+        return force != null && !force.isEmpty() && !"0".equals(force);
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
         boolean colors = resolveAnsiColors(ansiMode, TtyDetect::isStdoutTty, System::getenv);
-        CommandResult fastFailure = failFastOnUnknownSubcommand(colors);
+        // Errors and usage go to stderr, which may be redirected on its own
+        boolean stderrColors = resolveAnsiColors(ansiMode, TtyDetect::isStderrTty, System::getenv);
+        CommandResult fastFailure = failFastOnUnknownSubcommand(stderrColors);
         if (fastFailure != null)
             return fastFailure;
         if (lazyStartup && pendingCommandClass != null
@@ -481,6 +502,7 @@ public class AeshRuntimeRunner {
         AeshCommandRuntimeBuilder runtimeBuilder = AeshCommandRuntimeBuilder.builder()
                 .commandRegistry(commandRegistry)
                 .shell(effectiveShell)
+                .ansiWhenRedirected(resolveForceWhenRedirected(ansiMode, System::getenv))
                 .enableProgramStatus(programStatusEnabled)
                 .programStatusAppName(programStatusAppName)
                 .programStatusConnection(programStatusConnection);
@@ -527,10 +549,10 @@ public class AeshRuntimeRunner {
                 commandNotFoundHandler.handleCommandNotFound(fullLine, System.err::println,
                         snfe.getUnknownSubcommand(), snfe.getAvailableSubcommands());
             }
-            showHelp(runtime, commandName, args, e);
+            showHelp(runtime, commandName, args, e, stderrColors);
             return CommandResult.USAGE_ERROR;
         } catch (CommandException | CommandValidatorException e) {
-            showHelp(runtime, commandName, args, e);
+            showHelp(runtime, commandName, args, e, stderrColors);
             return CommandResult.FAILURE;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -1252,9 +1274,20 @@ public class AeshRuntimeRunner {
         }
     }
 
-    private static void showHelp(CommandRuntime runtime, String commandName, String[] args, Exception e) {
+    private static void showHelp(CommandRuntime runtime, String commandName, String[] args, Exception e,
+            boolean colors) {
         System.err.println(e.getMessage());
         String helpLine = resolveHelpCommand(runtime, commandName, args);
+        if (!colors) {
+            // Usage errors go to stderr, which may be redirected on its own.
+            // Already resolved above, so this never builds.
+            try {
+                CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) runtime
+                        .getCommandRegistry().getCommand(commandName, "");
+                container.getParser().updateAnsiMode(false);
+            } catch (CommandNotFoundException ignored) {
+            }
+        }
         System.err.println(runtime.commandInfo(helpLine));
     }
 

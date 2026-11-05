@@ -213,6 +213,29 @@ class Executions {
             return cmd.resultHandler();
         }
 
+        /**
+         * Print the help, without ANSI colors when the command redirects its
+         * output to a file or pipe and colors were not explicitly forced.
+         * The mode is restored afterwards, so shared parsers reused by later
+         * executions keep their mode.
+         */
+        private void printHelpRespectingRedirection(T invocation) {
+            CommandLineParser<T> parsed = commandContainer.getParser().parsedCommand();
+            if (parsed == null || !invocationConfiguration.hasOutputRedirection()
+                    || runtime.ansiWhenRedirected()) {
+                invocation.println(invocation.getHelpInfo());
+                return;
+            }
+            boolean restore = parsed.isAnsiMode();
+            parsed.updateAnsiMode(false);
+            try {
+                invocation.println(invocation.getHelpInfo());
+            } finally {
+                if (restore)
+                    parsed.updateAnsiMode(true);
+            }
+        }
+
         @Override
         public CommandResult execute() throws CommandException, InterruptedException, CommandValidatorException,
                 CommandLineParserException, OptionValidatorException {
@@ -293,7 +316,7 @@ class Executions {
                                 .generateSingle();
                         invocation.println(doc);
                     } else {
-                        invocation.println(invocation.getHelpInfo());
+                        printHelpRespectingRedirection(invocation);
                     }
                     result = CommandResult.SUCCESS;
                 }

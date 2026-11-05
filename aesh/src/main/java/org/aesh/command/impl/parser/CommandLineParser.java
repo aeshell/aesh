@@ -161,6 +161,14 @@ public interface CommandLineParser<CI extends CommandInvocation> {
 
     void updateAnsiMode(boolean mode);
 
+    /**
+     * Whether help rendering uses ANSI escape codes. Defaults to true,
+     * mirroring the constructor default (off only with {@code NO_COLOR}).
+     */
+    default boolean isAnsiMode() {
+        return true;
+    }
+
     enum Mode {
         COMPLETION,
         STRICT,
