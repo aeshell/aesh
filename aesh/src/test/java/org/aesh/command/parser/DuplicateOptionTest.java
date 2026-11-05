@@ -32,6 +32,7 @@ import org.aesh.AeshRuntimeRunner;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.Toggle;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
 import org.aesh.command.option.OptionList;
@@ -189,7 +190,7 @@ public class DuplicateOptionTest {
         }
     }
 
-    @CommandDefinition(name = "c", description = "Strict repeats", failOnDuplicateOptions = true)
+    @CommandDefinition(name = "c", description = "Strict repeats", failOnDuplicateOptions = Toggle.ON)
     public static class StrictCommand implements Command<CommandInvocation> {
         @Option(description = "A value")
         String x;

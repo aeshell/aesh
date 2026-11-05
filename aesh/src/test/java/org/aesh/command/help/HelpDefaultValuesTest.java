@@ -16,6 +16,7 @@ import java.util.List;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.Toggle;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -81,7 +82,7 @@ public class HelpDefaultValuesTest {
         throw new AssertionError("No line with " + text);
     }
 
-    @CommandDefinition(name = "list", description = "List things", generateHelp = true, showDefaultValues = true)
+    @CommandDefinition(name = "list", description = "List things", generateHelp = true, showDefaultValues = Toggle.ON)
     public static class ListCommand implements Command<CommandInvocation> {
         @Option(description = "Sort by name or age", defaultValue = "name")
         String sort;

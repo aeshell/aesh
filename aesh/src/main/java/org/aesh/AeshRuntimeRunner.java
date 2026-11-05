@@ -22,6 +22,7 @@ package org.aesh;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.EnumSet;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.Command;
@@ -32,6 +33,8 @@ import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpFeature;
+import org.aesh.command.Toggle;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.LazyHelp;
@@ -84,6 +87,7 @@ public class AeshRuntimeRunner {
     private Class<? extends Command> pendingCommandClass;
     private Command pendingCommandInstance;
     private AnsiMode ansiMode = AnsiMode.AUTO;
+    private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
 
     private AeshRuntimeRunner() {
     }
@@ -117,6 +121,18 @@ public class AeshRuntimeRunner {
      */
     public AeshRuntimeRunner ansiMode(AnsiMode ansiMode) {
         this.ansiMode = ansiMode != null ? ansiMode : AnsiMode.AUTO;
+        return this;
+    }
+
+    /**
+     * Fleet-wide help toggles applied when a command leaves them
+     * {@code INHERIT} (see {@link Toggle} and {@link HelpFeature}).
+     * Useful for large CLIs instead of repeating the same attributes on
+     * every command; per-command {@code ON}/{@code OFF} always wins.
+     */
+    public AeshRuntimeRunner helpDefaults(EnumSet<HelpFeature> helpDefaults) {
+        this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
+        this.registryBuilder.helpDefaults(helpDefaults);
         return this;
     }
 
@@ -391,7 +407,7 @@ public class AeshRuntimeRunner {
                         e.getUnknownSubcommand(), e.getAvailableSubcommands());
             }
             System.err.println(e.getMessage());
-            String help = LazyHelp.renderUnknownSubcommandHelp(pendingCommandClass, args, colors);
+            String help = LazyHelp.renderUnknownSubcommandHelp(pendingCommandClass, args, colors, helpDefaults);
             if (help != null)
                 System.err.println(help);
             return CommandResult.USAGE_ERROR;
@@ -455,7 +471,7 @@ public class AeshRuntimeRunner {
             return fastFailure;
         if (lazyStartup && pendingCommandClass != null
                 && completionShellType == null && dynamicCompletionShellType == null && !dynamicComplete) {
-            String help = LazyHelp.render(pendingCommandClass, args, colors);
+            String help = LazyHelp.render(pendingCommandClass, args, colors, helpDefaults);
             if (help != null) {
                 System.out.println(help);
                 return CommandResult.SUCCESS;

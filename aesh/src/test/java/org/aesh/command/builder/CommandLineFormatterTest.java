@@ -38,6 +38,7 @@ import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
+import org.aesh.command.Toggle;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -380,7 +381,7 @@ public class CommandLineFormatterTest {
         assertTrue("--include should appear after Filters:", help.indexOf("--include", filtersIdx) > filtersIdx);
     }
 
-    @CommandDefinition(name = "groupedfirst", description = "Default group first", defaultOptionsFirst = true)
+    @CommandDefinition(name = "groupedfirst", description = "Default group first", defaultOptionsFirst = Toggle.ON)
     public static class GroupedOptionsFirstCommand implements Command<CommandInvocation> {
         @Option(description = "Output as JSON", hasValue = false, helpGroup = "Output")
         boolean json;
@@ -425,9 +426,10 @@ public class CommandLineFormatterTest {
     }
 
     @Test
-    public void testDefaultOptionsFirstViaSetter() throws CommandLineParserException {
+    public void testDefaultOptionsFirstViaBuilder() throws CommandLineParserException {
         ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
-                .name("grouped").description("Grouped options test");
+                .name("grouped").description("Grouped options test")
+                .defaultOptionsFirst(Toggle.ON);
         pb.addOption(ProcessedOptionBuilder.builder()
                 .shortName('j').name("json").type(boolean.class).hasValue(false)
                 .description("Output as JSON").helpGroup("Output").build());
@@ -435,7 +437,6 @@ public class CommandLineFormatterTest {
                 .name("verbose").type(boolean.class).hasValue(false)
                 .description("Verbose output").build());
         org.aesh.command.impl.internal.ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = pb.create();
-        pc.setDefaultOptionsFirst(true);
 
         String help = new AeshCommandLineParser<>(pc).printHelp();
 
@@ -446,7 +447,7 @@ public class CommandLineFormatterTest {
         assertTrue("Default Options: should come first, got:\n" + help, optionsIdx < outputIdx);
     }
 
-    @CommandDefinition(name = "groupedpos", description = "Default group first with positional", defaultOptionsFirst = true)
+    @CommandDefinition(name = "groupedpos", description = "Default group first with positional", defaultOptionsFirst = Toggle.ON)
     public static class GroupedPositionalFirstCommand implements Command<CommandInvocation> {
         @Option(description = "Output as JSON", hasValue = false, helpGroup = "Output")
         boolean json;
@@ -1326,7 +1327,7 @@ public class CommandLineFormatterTest {
     @Test
     public void collapsedSynopsisCollapsesOptionals() throws CommandLineParserException {
         ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
-                .name("jbang").description("Run scripts").collapseSynopsis(true);
+                .name("jbang").description("Run scripts").collapseSynopsis(Toggle.ON);
         pb.addOption(ProcessedOptionBuilder.builder()
                 .name("target").type(String.class).required(true).build());
         pb.addOption(ProcessedOptionBuilder.builder()
@@ -1363,7 +1364,7 @@ public class CommandLineFormatterTest {
     @Test
     public void collapsedSynopsisKeepsRequiredExclusive() throws CommandLineParserException {
         ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
-                .name("export").description("Export data").collapseSynopsis(true);
+                .name("export").description("Export data").collapseSynopsis(Toggle.ON);
         pb.addOption(ProcessedOptionBuilder.builder()
                 .name("json").type(boolean.class).hasValue(false)
                 .required(true).exclusiveWith("xml").build());
@@ -1404,7 +1405,7 @@ public class CommandLineFormatterTest {
     @Test
     public void collapsedSynopsisKeepsPositionalAndOptionsTable() throws CommandLineParserException {
         ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
-                .name("run").description("Run app").collapseSynopsis(true);
+                .name("run").description("Run app").collapseSynopsis(Toggle.ON);
         pb.addOption(ProcessedOptionBuilder.builder()
                 .name("config").type(String.class).build());
         org.aesh.command.impl.internal.ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = pb.create();
@@ -1423,7 +1424,7 @@ public class CommandLineFormatterTest {
                 help.contains("--config"));
     }
 
-    @CommandDefinition(name = "collapsed", description = "Collapsed synopsis", collapseSynopsis = true)
+    @CommandDefinition(name = "collapsed", description = "Collapsed synopsis", collapseSynopsis = Toggle.ON)
     public static class CollapsedSynopsisCommand implements Command<CommandInvocation> {
         @Option(description = "Config file")
         String config;

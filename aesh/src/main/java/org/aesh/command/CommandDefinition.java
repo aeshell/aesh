@@ -186,11 +186,13 @@ public @interface CommandDefinition {
     /**
      * Fail parsing when a single-value option is given more than once.
      * By default the last value wins, so {@code --level debug --level info}
-     * runs with {@code info}. With this set, repeating an option is a usage
-     * error instead. Boolean flags, {@code @OptionList}, {@code @OptionGroup}
-     * and positional arguments are never affected.
+     * runs with {@code info}. With this set to {@code ON}, repeating an option
+     * is a usage error instead. Boolean flags, {@code @OptionList},
+     * {@code @OptionGroup} and positional arguments are never affected.
+     * {@code INHERIT} (the default) takes the value from the parent command,
+     * else the fleet default (see {@code HelpFeature}).
      */
-    boolean failOnDuplicateOptions() default false;
+    Toggle failOnDuplicateOptions() default Toggle.INHERIT;
 
     /**
      * Collapse the synopsis {@code Usage:} line to {@code [OPTIONS]} instead
@@ -200,21 +202,27 @@ public @interface CommandDefinition {
      * <p>
      * Useful for option-heavy commands whose full synopsis would wrap
      * across many lines (e.g. {@code Usage: jbang [OPTIONS] [COMMAND]}).
+     * {@code INHERIT} (the default) takes the value from the parent command,
+     * else the fleet default (see {@code HelpFeature}).
      */
-    boolean collapseSynopsis() default false;
+    Toggle collapseSynopsis() default Toggle.INHERIT;
 
     /**
      * Show the default value of each option and positional argument in the help, on a line of its own under the
      * description: {@code Default: <value>}. Options without a default value get no line.
+     * {@code INHERIT} (the default) takes the value from the parent command,
+     * else the fleet default (see {@code HelpFeature}).
      */
-    boolean showDefaultValues() default false;
+    Toggle showDefaultValues() default Toggle.INHERIT;
 
     /**
      * Print the default (ungrouped) {@code Options:} section before the
      * named {@code helpGroup} sections instead of after them, so the
      * command's own options come first.
+     * {@code INHERIT} (the default) takes the value from the parent command,
+     * else the fleet default (see {@code HelpFeature}).
      */
-    boolean defaultOptionsFirst() default false;
+    Toggle defaultOptionsFirst() default Toggle.INHERIT;
 
     /**
      * Default completion fallback for all options and arguments in this command.

@@ -21,10 +21,13 @@ package org.aesh.command.impl.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpFeature;
+import org.aesh.command.Toggle;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.impl.activator.NullCommandActivator;
 import org.aesh.command.impl.provider.NullDefaultValueProvider;
@@ -62,8 +65,11 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private String version;
     private String helpUrl;
     private boolean sortOptions;
-    private boolean collapseSynopsis;
-    private boolean failOnDuplicateOptions;
+    private Toggle collapseSynopsis = Toggle.INHERIT;
+    private Toggle defaultOptionsFirst = Toggle.INHERIT;
+    private Toggle showDefaultValues = Toggle.INHERIT;
+    private Toggle failOnDuplicateOptions = Toggle.INHERIT;
+    private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
     private int optionCapacity = -1;
 
     private ProcessedCommandBuilder() {
@@ -137,13 +143,33 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         return this;
     }
 
-    public ProcessedCommandBuilder<C, CI> collapseSynopsis(boolean collapseSynopsis) {
-        this.collapseSynopsis = collapseSynopsis;
+    public ProcessedCommandBuilder<C, CI> collapseSynopsis(Toggle collapseSynopsis) {
+        this.collapseSynopsis = collapseSynopsis != null ? collapseSynopsis : Toggle.INHERIT;
         return this;
     }
 
-    public ProcessedCommandBuilder<C, CI> failOnDuplicateOptions(boolean failOnDuplicateOptions) {
-        this.failOnDuplicateOptions = failOnDuplicateOptions;
+    public ProcessedCommandBuilder<C, CI> defaultOptionsFirst(Toggle defaultOptionsFirst) {
+        this.defaultOptionsFirst = defaultOptionsFirst != null ? defaultOptionsFirst : Toggle.INHERIT;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> showDefaultValues(Toggle showDefaultValues) {
+        this.showDefaultValues = showDefaultValues != null ? showDefaultValues : Toggle.INHERIT;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> failOnDuplicateOptions(Toggle failOnDuplicateOptions) {
+        this.failOnDuplicateOptions = failOnDuplicateOptions != null ? failOnDuplicateOptions : Toggle.INHERIT;
+        return this;
+    }
+
+    /**
+     * Fleet-wide defaults applied when a toggle is inherited. The container
+     * builder sets this from the registry; direct programmatic use may set it
+     * explicitly (empty by default).
+     */
+    public ProcessedCommandBuilder<C, CI> helpDefaults(EnumSet<HelpFeature> helpDefaults) {
+        this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
         return this;
     }
 
@@ -254,7 +280,10 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         ProcessedCommand<C, CI> pc = new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
                 helpUrl, stopAtFirstPositional, defaultValueProvider, sortOptions, collapseSynopsis,
-                failOnDuplicateOptions);
+                defaultOptionsFirst, showDefaultValues, failOnDuplicateOptions);
+        // Resolve without a parent: direct programmatic use has none, and
+        // attached children are re-resolved with the real parent on attach.
+        pc.resolveHelpToggles(null, helpDefaults);
         if (optionCapacity > 0)
             pc.ensureOptionCapacity(optionCapacity);
         return pc;

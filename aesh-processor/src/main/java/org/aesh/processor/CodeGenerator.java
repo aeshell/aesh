@@ -485,11 +485,17 @@ final class CodeGenerator {
         sb.append("                .sortOptions(").append(
                 "true".equals(getAnnotationValue(commandElement, "sortOptions", elementUtils)))
                 .append(")\n");
-        sb.append("                .collapseSynopsis(").append(
-                "true".equals(getAnnotationValue(commandElement, "collapseSynopsis", elementUtils)))
+        sb.append("                .collapseSynopsis(")
+                .append(toggleValue(getAnnotationValue(commandElement, "collapseSynopsis", elementUtils)))
                 .append(")\n");
-        sb.append("                .failOnDuplicateOptions(").append(
-                "true".equals(getAnnotationValue(commandElement, "failOnDuplicateOptions", elementUtils)))
+        sb.append("                .showDefaultValues(")
+                .append(toggleValue(getAnnotationValue(commandElement, "showDefaultValues", elementUtils)))
+                .append(")\n");
+        sb.append("                .defaultOptionsFirst(")
+                .append(toggleValue(getAnnotationValue(commandElement, "defaultOptionsFirst", elementUtils)))
+                .append(")\n");
+        sb.append("                .failOnDuplicateOptions(")
+                .append(toggleValue(getAnnotationValue(commandElement, "failOnDuplicateOptions", elementUtils)))
                 .append(")\n");
         generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils, forHelp);
         sb.append("                .version(\"\")\n");
@@ -540,14 +546,6 @@ final class CodeGenerator {
         if (cmdHelpGroup != null && !cmdHelpGroup.isEmpty()) {
             sb.append("        processedCommand.setHelpGroup(")
                     .append(stringLiteral(cmdHelpGroup)).append(");\n\n");
-        }
-
-        if ("true".equals(getAnnotationValue(commandElement, "showDefaultValues", elementUtils))) {
-            sb.append("        processedCommand.setShowDefaultValues(true);\n\n");
-        }
-
-        if ("true".equals(getAnnotationValue(commandElement, "defaultOptionsFirst", elementUtils))) {
-            sb.append("        processedCommand.setDefaultOptionsFirst(true);\n\n");
         }
 
         String[] header = getAnnotationStringArrayValue(commandElement, "header", elementUtils);
@@ -1799,6 +1797,20 @@ final class CodeGenerator {
             }
         }
         return null;
+    }
+
+    /**
+     * Resolve an annotated {@code Toggle} to generated source. Defaults to
+     * {@code INHERIT} when the annotation is absent or unreadable, so help
+     * toggles behave the same with and without the processor.
+     */
+    private static String toggleValue(String annotated) {
+        try {
+            return "org.aesh.command.Toggle."
+                    + org.aesh.command.Toggle.valueOf(annotated).name();
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return "org.aesh.command.Toggle.INHERIT";
+        }
     }
 
     /**

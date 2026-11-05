@@ -23,6 +23,7 @@ package org.aesh.command.impl.registry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpFeature;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
@@ -67,6 +69,12 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
      * Off is applied at build time and to already-built containers.
      */
     private boolean ansiColors = true;
+    /**
+     * Fleet-wide help toggles applied when a command leaves them
+     * {@code INHERIT}. Propagated to the container builder and re-applied to
+     * already-built commands (top-down, so children see resolved parents).
+     */
+    private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
 
     private final List<CommandRegistrationListener> listeners = new ArrayList<>();
     /**
@@ -135,6 +143,32 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
             return;
         for (CommandContainer<CI> container : registry.values())
             container.getParser().updateAnsiMode(false);
+    }
+
+    /**
+     * Set fleet-wide help toggles applied when a command leaves them
+     * {@code INHERIT}. Already-built commands are re-resolved top-down so a
+     * late call still takes effect before any help is rendered.
+     */
+    public void setHelpDefaults(EnumSet<HelpFeature> helpDefaults) {
+        this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
+        applyHelpToggles();
+    }
+
+    private void applyHelpToggles() {
+        for (CommandContainer<CI> container : registry.values())
+            applyHelpToggles(container.getParser(), null);
+    }
+
+    private void applyHelpToggles(CommandLineParser<CI> parser, ProcessedCommand<?, ?> parent) {
+        ProcessedCommand<?, ?> command = parser.getProcessedCommand();
+        if (command != null) {
+            command.resolveHelpToggles(parent, helpDefaults);
+            if (parser.getChildParsers() != null) {
+                for (CommandLineParser<CI> child : parser.getChildParsers())
+                    applyHelpToggles(child, command);
+            }
+        }
     }
 
     /**
@@ -643,6 +677,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     private CommandContainerBuilder<CI> getBuilder() {
         if (containerBuilder == null)
             containerBuilder = new AeshCommandContainerBuilder<>();
+        if (containerBuilder instanceof AeshCommandContainerBuilder)
+            ((AeshCommandContainerBuilder<CI>) containerBuilder).setHelpDefaults(helpDefaults);
         return containerBuilder;
     }
 

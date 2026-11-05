@@ -114,8 +114,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             childParsers = new ArrayList<>();
         commandLineParser.setChild(true);
         childParsers.add(commandLineParser);
-        if (commandLineParser instanceof AeshCommandLineParser)
-            ((AeshCommandLineParser<CI>) commandLineParser).setParent(this);
+        if (commandLineParser instanceof AeshCommandLineParser) {
+            AeshCommandLineParser<CI> child = (AeshCommandLineParser<CI>) commandLineParser;
+            child.setParent(this);
+            // Inherit help toggles from the real parent. The parent's values
+            // already fold in fleet defaults, so no globals are needed here.
+            child.getProcessedCommand().resolveHelpToggles(processedCommand, null);
+        }
     }
 
     @Override

@@ -1797,10 +1797,11 @@ public class ProcessorTest {
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.Toggle;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@CommandDefinition(name = \"collapsed\", description = \"Collapsed synopsis\", collapseSynopsis = true)\n" +
+            "@CommandDefinition(name = \"collapsed\", description = \"Collapsed synopsis\", collapseSynopsis = Toggle.ON)\n" +
             "public class CollapsedSynopsisCommand implements Command<CommandInvocation> {\n" +
             "    @Option(description = \"Config\")\n" +
             "    private String config;\n" +
@@ -1816,10 +1817,11 @@ public class ProcessorTest {
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.Toggle;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@CommandDefinition(name = \"defaults\", description = \"Default values\", showDefaultValues = true)\n" +
+            "@CommandDefinition(name = \"defaults\", description = \"Default values\", showDefaultValues = Toggle.ON)\n" +
             "public class ShowDefaultValuesCommand implements Command<CommandInvocation> {\n" +
             "    @Option(description = \"Sort\", defaultValue = \"name\")\n" +
             "    private String sort;\n" +
@@ -1910,10 +1912,11 @@ public class ProcessorTest {
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.Toggle;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@CommandDefinition(name = \"dup\", description = \"Strict repeats\", failOnDuplicateOptions = true)\n" +
+            "@CommandDefinition(name = \"dup\", description = \"Strict repeats\", failOnDuplicateOptions = Toggle.ON)\n" +
             "public class FailOnDuplicateCommand implements Command<CommandInvocation> {\n" +
             "    @Option(description = \"A value\")\n" +
             "    private String value;\n" +
@@ -1941,10 +1944,11 @@ public class ProcessorTest {
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.Toggle;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@CommandDefinition(name = \"first\", description = \"Default group first\", defaultOptionsFirst = true)\n" +
+            "@CommandDefinition(name = \"first\", description = \"Default group first\", defaultOptionsFirst = Toggle.ON)\n" +
             "public class DefaultOptionsFirstCommand implements Command<CommandInvocation> {\n" +
             "    @Option(description = \"Verbose\", hasValue = false)\n" +
             "    private boolean verbose;\n" +

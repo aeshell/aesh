@@ -21,10 +21,12 @@
 package org.aesh.command.impl.registry;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpFeature;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.container.AeshCommandContainer;
@@ -72,6 +74,17 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
      */
     public AeshCommandRegistryBuilder<CI> ansiColors(boolean ansiColors) {
         commandRegistry.setAnsiColors(ansiColors);
+        return this;
+    }
+
+    /**
+     * Fleet-wide help toggles applied when a command leaves them
+     * {@code INHERIT} (see {@link org.aesh.command.Toggle}). Useful for
+     * large CLIs instead of repeating the same attributes on every
+     * command; per-command {@code ON}/{@code OFF} always wins.
+     */
+    public AeshCommandRegistryBuilder<CI> helpDefaults(EnumSet<HelpFeature> helpDefaults) {
+        commandRegistry.setHelpDefaults(helpDefaults);
         return this;
     }
 

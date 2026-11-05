@@ -22,6 +22,7 @@ package org.aesh.command.impl.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -33,7 +34,9 @@ import java.util.regex.Pattern;
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.DocFormat;
+import org.aesh.command.HelpFeature;
 import org.aesh.command.HelpSectionProvider;
+import org.aesh.command.Toggle;
 import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.parser.CompleteStatus;
@@ -99,8 +102,17 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private final boolean disableParsing;
     private final boolean stopAtFirstPositional;
     private final boolean sortOptions;
-    private final boolean collapseSynopsis;
-    private final boolean failOnDuplicateOptions;
+    /**
+     * The annotated toggles, kept so inheritance and fleet defaults can be
+     * resolved when the parent is known (at attach time). The plain boolean
+     * fields below always hold the resolved value.
+     */
+    private Toggle collapseSynopsisSource = Toggle.INHERIT;
+    private Toggle defaultOptionsFirstSource = Toggle.INHERIT;
+    private Toggle showDefaultValuesSource = Toggle.INHERIT;
+    private Toggle failOnDuplicateOptionsSource = Toggle.INHERIT;
+    private boolean collapseSynopsis;
+    private boolean failOnDuplicateOptions;
     private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
@@ -202,7 +214,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             boolean sortOptions) throws OptionParserException {
         this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
                 version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional,
-                defaultValueProvider, sortOptions, false);
+                defaultValueProvider, sortOptions, Toggle.INHERIT, Toggle.INHERIT, Toggle.INHERIT,
+                Toggle.INHERIT);
     }
 
     public ProcessedCommand(String name, List<String> aliases, C command,
@@ -215,24 +228,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             CommandPopulator<Object, CI> populator, CommandActivator activator,
             String helpUrl, boolean stopAtFirstPositional,
             DefaultValueProvider defaultValueProvider,
-            boolean sortOptions, boolean collapseSynopsis) throws OptionParserException {
-        this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
-                version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional,
-                defaultValueProvider, sortOptions, collapseSynopsis, false);
-    }
-
-    public ProcessedCommand(String name, List<String> aliases, C command,
-            String description, CommandValidator<C, CI> validator,
-            ResultHandler resultHandler,
-            boolean generateHelp, boolean disableParsing,
-            String version,
-            ProcessedOption arguments, List<ProcessedOption> options,
-            ProcessedOption argument,
-            CommandPopulator<Object, CI> populator, CommandActivator activator,
-            String helpUrl, boolean stopAtFirstPositional,
-            DefaultValueProvider defaultValueProvider,
-            boolean sortOptions, boolean collapseSynopsis,
-            boolean failOnDuplicateOptions) throws OptionParserException {
+            boolean sortOptions, Toggle collapseSynopsis, Toggle defaultOptionsFirst,
+            Toggle showDefaultValues, Toggle failOnDuplicateOptions) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -241,8 +238,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.disableParsing = disableParsing;
         this.stopAtFirstPositional = stopAtFirstPositional;
         this.sortOptions = sortOptions;
-        this.collapseSynopsis = collapseSynopsis;
-        this.failOnDuplicateOptions = failOnDuplicateOptions;
+        this.collapseSynopsisSource = collapseSynopsis != null ? collapseSynopsis : Toggle.INHERIT;
+        this.defaultOptionsFirstSource = defaultOptionsFirst != null ? defaultOptionsFirst : Toggle.INHERIT;
+        this.showDefaultValuesSource = showDefaultValues != null ? showDefaultValues : Toggle.INHERIT;
+        this.failOnDuplicateOptionsSource = failOnDuplicateOptions != null ? failOnDuplicateOptions
+                : Toggle.INHERIT;
         this.defaultValueProvider = defaultValueProvider;
         this.helpUrl = helpUrl;
         this.resultHandler = resultHandler;
@@ -567,10 +567,6 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return showDefaultValues;
     }
 
-    public void setShowDefaultValues(boolean showDefaultValues) {
-        this.showDefaultValues = showDefaultValues;
-    }
-
     /**
      * Whether the default (ungrouped) {@code Options:} section is printed
      * before the named {@code helpGroup} sections instead of after them.
@@ -579,8 +575,76 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return defaultOptionsFirst;
     }
 
-    public void setDefaultOptionsFirst(boolean defaultOptionsFirst) {
-        this.defaultOptionsFirst = defaultOptionsFirst;
+    /**
+     * The annotated {@code Toggle} sources, kept so inheritance and fleet
+     * defaults can be resolved when the parent is known. See
+     * {@link #resolveHelpToggles(ProcessedCommand, java.util.EnumSet)}.
+     */
+    public Toggle collapseSynopsisSource() {
+        return collapseSynopsisSource;
+    }
+
+    public void setCollapseSynopsisSource(Toggle collapseSynopsisSource) {
+        this.collapseSynopsisSource = collapseSynopsisSource == null ? Toggle.INHERIT : collapseSynopsisSource;
+    }
+
+    public Toggle defaultOptionsFirstSource() {
+        return defaultOptionsFirstSource;
+    }
+
+    public void setDefaultOptionsFirstSource(Toggle defaultOptionsFirstSource) {
+        this.defaultOptionsFirstSource = defaultOptionsFirstSource == null ? Toggle.INHERIT : defaultOptionsFirstSource;
+    }
+
+    public Toggle showDefaultValuesSource() {
+        return showDefaultValuesSource;
+    }
+
+    public void setShowDefaultValuesSource(Toggle showDefaultValuesSource) {
+        this.showDefaultValuesSource = showDefaultValuesSource == null ? Toggle.INHERIT : showDefaultValuesSource;
+    }
+
+    public Toggle failOnDuplicateOptionsSource() {
+        return failOnDuplicateOptionsSource;
+    }
+
+    public void setFailOnDuplicateOptionsSource(Toggle failOnDuplicateOptionsSource) {
+        this.failOnDuplicateOptionsSource = failOnDuplicateOptionsSource == null ? Toggle.INHERIT
+                : failOnDuplicateOptionsSource;
+    }
+
+    /**
+     * Resolve the toggle booleans from their annotated sources. An explicit
+     * {@code ON}/{@code OFF} always wins; otherwise the parent command's
+     * resolved value wins; otherwise the fleet default wins; otherwise the
+     * behavior stays off. Idempotent: re-resolving with more context only
+     * upgrades {@code INHERIT} sources, never explicit choices.
+     *
+     * @param parent the parent command, or null for top-level commands
+     * @param fleetDefaults the fleet-wide enabled toggles, or null for none
+     */
+    public void resolveHelpToggles(ProcessedCommand<?, ?> parent, EnumSet<HelpFeature> fleetDefaults) {
+        collapseSynopsis = resolveToggle(collapseSynopsisSource,
+                parent != null ? parent.collapseSynopsis() : null, fleetDefaults, HelpFeature.COLLAPSE_SYNOPSIS);
+        defaultOptionsFirst = resolveToggle(defaultOptionsFirstSource,
+                parent != null ? parent.defaultOptionsFirst() : null, fleetDefaults,
+                HelpFeature.DEFAULT_OPTIONS_FIRST);
+        showDefaultValues = resolveToggle(showDefaultValuesSource,
+                parent != null ? parent.showDefaultValues() : null, fleetDefaults, HelpFeature.SHOW_DEFAULT_VALUES);
+        failOnDuplicateOptions = resolveToggle(failOnDuplicateOptionsSource,
+                parent != null ? parent.failOnDuplicateOptions() : null, fleetDefaults,
+                HelpFeature.FAIL_ON_DUPLICATE_OPTIONS);
+    }
+
+    private static boolean resolveToggle(Toggle source, Boolean parent, EnumSet<HelpFeature> fleetDefaults,
+            HelpFeature feature) {
+        if (source == Toggle.ON)
+            return true;
+        if (source == Toggle.OFF)
+            return false;
+        if (parent != null)
+            return parent;
+        return fleetDefaults != null && fleetDefaults.contains(feature);
     }
 
     /**

@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,6 +42,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.GroupCommand;
+import org.aesh.command.HelpFeature;
 import org.aesh.command.MethodCommand;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
@@ -78,6 +80,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     private boolean lazyChildResolution;
     private DefaultValueProvider defaultValueProvider;
+    private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
 
     public void setLazyChildResolution(boolean lazyChildResolution) {
         this.lazyChildResolution = lazyChildResolution;
@@ -85,6 +88,14 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     public void setDefaultValueProvider(DefaultValueProvider defaultValueProvider) {
         this.defaultValueProvider = defaultValueProvider;
+    }
+
+    /**
+     * Fleet-wide help toggles applied when an annotated value is
+     * {@code INHERIT}. Set by the registry; direct use may set it explicitly.
+     */
+    public void setHelpDefaults(EnumSet<HelpFeature> helpDefaults) {
+        this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
     }
 
     @Override
@@ -242,6 +253,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 .aliases(Arrays.asList(command.aliases()))
                 .description(command.description())
                 .command(adapter)
+                .helpDefaults(helpDefaults)
                 .create();
         processMethod(processedCommand, slots, method);
         validatePositionalIndexes(processedCommand);
@@ -288,6 +300,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             Object owner) throws CommandLineParserException {
         ProcessedCommand<Command<CI>, CI> processedCommand = (ProcessedCommand<Command<CI>, CI>) provider
                 .buildProcessedCommand(owner);
+        // Generated builders have no parent context; resolve with the fleet
+        // defaults now, and re-resolve on attach for subcommands.
+        processedCommand.resolveHelpToggles(null, helpDefaults);
         AeshCommandContainer<CI> container = new AeshCommandContainer<>(new AeshCommandLineParser<>(processedCommand));
         applyDefaultValueProvider(container);
         return container;
@@ -346,6 +361,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 .sortOptions(command.sortOptions())
                 .collapseSynopsis(command.collapseSynopsis())
                 .failOnDuplicateOptions(command.failOnDuplicateOptions())
+                .showDefaultValues(command.showDefaultValues())
+                .defaultOptionsFirst(command.defaultOptionsFirst())
+                .helpDefaults(helpDefaults)
                 .version(command.version())
                 .helpUrl(command.helpUrl())
                 .create();
@@ -355,8 +373,6 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         validatePositionalIndexes(processedCommand);
         if (command.helpGroup().length() > 0)
             processedCommand.setHelpGroup(command.helpGroup());
-        processedCommand.setShowDefaultValues(command.showDefaultValues());
-        processedCommand.setDefaultOptionsFirst(command.defaultOptionsFirst());
         if (command.header().length > 0)
             processedCommand.setHelpHeader(String.join("\n", command.header()));
         if (command.footer().length > 0)
@@ -379,6 +395,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     private AeshCommandContainer<CI> buildFromProvider(CommandMetadataProvider provider, Command command)
             throws CommandLineParserException {
         ProcessedCommand<Command<CI>, CI> processedCommand = provider.buildProcessedCommand(command);
+        // Generated builders have no parent context; resolve with the fleet
+        // defaults now, and re-resolve on attach for subcommands.
+        processedCommand.resolveHelpToggles(null, helpDefaults);
 
         AeshCommandLineParser<CI> parser = new AeshCommandLineParser<>(processedCommand);
         AeshCommandContainer<CI> container = new AeshCommandContainer<>(parser);
@@ -456,6 +475,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .sortOptions(command.sortOptions())
                     .collapseSynopsis(command.collapseSynopsis())
                     .failOnDuplicateOptions(command.failOnDuplicateOptions())
+                    .showDefaultValues(command.showDefaultValues())
+                    .defaultOptionsFirst(command.defaultOptionsFirst())
+                    .helpDefaults(helpDefaults)
                     .defaultValueProvider(command.defaultValueProvider())
                     .version(command.version())
                     .helpUrl(command.helpUrl())
@@ -467,8 +489,6 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
             validatePositionalIndexes(processedCommand);
             if (command.helpGroup().length() > 0)
                 processedCommand.setHelpGroup(command.helpGroup());
-            processedCommand.setShowDefaultValues(command.showDefaultValues());
-            processedCommand.setDefaultOptionsFirst(command.defaultOptionsFirst());
             if (command.header().length > 0)
                 processedCommand.setHelpHeader(String.join("\n", command.header()));
             if (command.footer().length > 0)
