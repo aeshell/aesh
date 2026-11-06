@@ -2051,6 +2051,57 @@ public class ProcessorTest {
                 help.contains("Footer of the command itself"));
     }
 
+    private static final String SEPARATE_ARGUMENTS_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.Toggle;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"deploy\", description = \"Deploy app\", separateArgumentsSection = Toggle.ON)\n" +
+            "public class SeparateArgumentsCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Target environment\")\n" +
+            "    private String target;\n" +
+            "\n" +
+            "    @Argument(description = \"The artifact to deploy\")\n" +
+            "    private String artifact;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testSeparateArgumentsSectionMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SeparateArgumentsCommand", SEPARATE_ARGUMENTS_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.SeparateArgumentsCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.SeparateArgumentsCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+
+        // The generated toggle must render the Arguments section (#751)
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        assertTrue("Generated help should contain Arguments section: " + help,
+                help.indexOf("Arguments:") > help.indexOf("Usage:")
+                        && help.indexOf("Arguments:") < help.indexOf("Options:"));
+    }
+
     @Test
     public void testComprehensivePositionalAndOptionParity() throws Exception {
         CompilationResult result = compileWithProcessor(
@@ -4102,6 +4153,8 @@ public class ProcessorTest {
                 generatedPC.failOnDuplicateOptions());
         assertEquals("showDefaultValues", reflectionPC.showDefaultValues(), generatedPC.showDefaultValues());
         assertEquals("defaultOptionsFirst", reflectionPC.defaultOptionsFirst(), generatedPC.defaultOptionsFirst());
+        assertEquals("separateArgumentsSection", reflectionPC.separateArgumentsSection(),
+                generatedPC.separateArgumentsSection());
         assertEquals("helpHeader", reflectionPC.getHelpHeader(), generatedPC.getHelpHeader());
         assertEquals("helpFooter", reflectionPC.getHelpFooter(), generatedPC.getHelpFooter());
         assertEquals("completeFallback", reflectionPC.getCompleteFallback(), generatedPC.getCompleteFallback());

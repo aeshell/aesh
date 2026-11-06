@@ -497,6 +497,9 @@ final class CodeGenerator {
         sb.append("                .failOnDuplicateOptions(")
                 .append(toggleValue(getAnnotationValue(commandElement, "failOnDuplicateOptions", elementUtils)))
                 .append(")\n");
+        sb.append("                .separateArgumentsSection(")
+                .append(toggleValue(getAnnotationValue(commandElement, "separateArgumentsSection", elementUtils)))
+                .append(")\n");
         generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils, forHelp);
         sb.append("                .version(\"\")\n");
         String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);

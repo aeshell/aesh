@@ -112,8 +112,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private Toggle defaultOptionsFirstSource = Toggle.INHERIT;
     private Toggle showDefaultValuesSource = Toggle.INHERIT;
     private Toggle failOnDuplicateOptionsSource = Toggle.INHERIT;
+    private Toggle separateArgumentsSectionSource = Toggle.INHERIT;
     private boolean collapseSynopsis;
     private boolean failOnDuplicateOptions;
+    private boolean separateArgumentsSection;
     private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
@@ -216,7 +218,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
                 version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional,
                 defaultValueProvider, sortOptions, Toggle.INHERIT, Toggle.INHERIT, Toggle.INHERIT,
-                Toggle.INHERIT);
+                Toggle.INHERIT, Toggle.INHERIT);
     }
 
     public ProcessedCommand(String name, List<String> aliases, C command,
@@ -230,7 +232,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             String helpUrl, boolean stopAtFirstPositional,
             DefaultValueProvider defaultValueProvider,
             boolean sortOptions, Toggle collapseSynopsis, Toggle defaultOptionsFirst,
-            Toggle showDefaultValues, Toggle failOnDuplicateOptions) throws OptionParserException {
+            Toggle showDefaultValues, Toggle failOnDuplicateOptions,
+            Toggle separateArgumentsSection) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -243,6 +246,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.defaultOptionsFirstSource = defaultOptionsFirst != null ? defaultOptionsFirst : Toggle.INHERIT;
         this.showDefaultValuesSource = showDefaultValues != null ? showDefaultValues : Toggle.INHERIT;
         this.failOnDuplicateOptionsSource = failOnDuplicateOptions != null ? failOnDuplicateOptions
+                : Toggle.INHERIT;
+        this.separateArgumentsSectionSource = separateArgumentsSection != null ? separateArgumentsSection
                 : Toggle.INHERIT;
         this.defaultValueProvider = defaultValueProvider;
         this.helpUrl = helpUrl;
@@ -615,6 +620,23 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     /**
+     * Whether positional arguments are printed under their own
+     * {@code Arguments:} heading right after the usage line.
+     */
+    public boolean separateArgumentsSection() {
+        return separateArgumentsSection;
+    }
+
+    public Toggle separateArgumentsSectionSource() {
+        return separateArgumentsSectionSource;
+    }
+
+    public void setSeparateArgumentsSectionSource(Toggle separateArgumentsSectionSource) {
+        this.separateArgumentsSectionSource = separateArgumentsSectionSource == null ? Toggle.INHERIT
+                : separateArgumentsSectionSource;
+    }
+
+    /**
      * Resolve the toggle booleans from their annotated sources. An explicit
      * {@code ON}/{@code OFF} always wins; otherwise the parent command's
      * resolved value wins; otherwise the fleet default wins; otherwise the
@@ -635,6 +657,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         failOnDuplicateOptions = resolveToggle(failOnDuplicateOptionsSource,
                 parent != null ? parent.failOnDuplicateOptions() : null, fleetDefaults,
                 HelpFeature.FAIL_ON_DUPLICATE_OPTIONS);
+        separateArgumentsSection = resolveToggle(separateArgumentsSectionSource,
+                parent != null ? parent.separateArgumentsSection() : null, fleetDefaults,
+                HelpFeature.SEPARATE_ARGUMENTS_SECTION);
     }
 
     private static boolean resolveToggle(Toggle source, Boolean parent, EnumSet<HelpFeature> fleetDefaults,
@@ -1395,6 +1420,19 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         sb.append(Config.getLineSeparator());
 
         //options and arguments — group by helpGroup
+        // Positional arguments get their own section right after the usage
+        // line when asked for, sharing the option description column so
+        // they no longer trail the last option group.
+        if (separateArgumentsSection && !positionalOptions.isEmpty()) {
+            for (ProcessedOption positional : positionalOptions) {
+                if (positional.getFormattedLength() > maxLength)
+                    maxLength = positional.getFormattedLength();
+            }
+            if (maxLength > maxOptionColumnWidth)
+                maxLength = maxOptionColumnWidth;
+            appendOptionGroup(sb, positionalOptions, "Arguments:", maxLength + 4, width, supportsHyperlinks,
+                    descriptionResolver);
+        }
         if (visibleOpts.size() > 0) {
             Map<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
             for (ProcessedOption o : visibleOpts) {
@@ -1416,8 +1454,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 appendOptionGroup(sb, groups.get(""), "Options:", maxLength + 4, width, supportsHyperlinks,
                         descriptionResolver);
         }
-        // Render positional arguments inline after the options section
-        if (!positionalOptions.isEmpty()) {
+        // Render positional arguments inline after the options section,
+        // unless they already have their own section above.
+        if (!separateArgumentsSection && !positionalOptions.isEmpty()) {
             // If no options were rendered, start the Options section for positionals
             if (visibleOpts.isEmpty()) {
                 sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());

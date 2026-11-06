@@ -228,6 +228,17 @@ public @interface CommandDefinition {
     Toggle defaultOptionsFirst() default Toggle.INHERIT;
 
     /**
+     * Print positional arguments under their own {@code Arguments:} heading
+     * right after the usage line instead of trailing the last option
+     * section, so they no longer look like part of whichever option group
+     * happens to be last. Their descriptions share the option description
+     * column.
+     * {@code INHERIT} (the default) takes the value from the parent command,
+     * else the fleet default (see {@code HelpFeature}).
+     */
+    Toggle separateArgumentsSection() default Toggle.INHERIT;
+
+    /**
      * Default completion fallback for all options and arguments in this command.
      * Individual options can still override with their own {@code completeFallback}.
      * <p>
