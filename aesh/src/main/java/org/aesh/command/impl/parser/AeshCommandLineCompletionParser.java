@@ -19,6 +19,7 @@
  */
 package org.aesh.command.impl.parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.aesh.command.completer.CompleterInvocation;
@@ -221,7 +222,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
             if (completeOperation.getCompletionCandidates().isEmpty()
                     && invocationProviders != null && invocationProviders.fuzzyCompletion()
                     && FuzzyCompletionMatcher.isEligible(name)) {
-                List<String> childNames = new java.util.ArrayList<>();
+                List<String> childNames = new ArrayList<>();
                 for (CommandLineParser child : parser.getAllChildParsers()) {
                     if (child.getProcessedCommand().isActivated(new ParsedCommand(child.getProcessedCommand())))
                         childNames.add(child.getProcessedCommand().name());
@@ -365,7 +366,7 @@ public class AeshCommandLineCompletionParser<CI extends CommandInvocation> imple
     }
 
     private static List<String> terminalStringsAsStrings(List<TerminalString> candidates) {
-        List<String> names = new java.util.ArrayList<>(candidates.size());
+        List<String> names = new ArrayList<>(candidates.size());
         for (TerminalString candidate : candidates)
             names.add(candidate.getCharacters());
         return names;
