@@ -41,6 +41,7 @@ import org.aesh.command.activator.CommandActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.parser.CompleteStatus;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
+import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.option.CompletionFallback;
@@ -689,6 +690,31 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public void setHelpSectionProvider(HelpSectionProvider helpSectionProvider) {
         this.helpSectionProvider = helpSectionProvider;
+    }
+
+    /**
+     * Resolve the effective HelpSectionProvider for help rendering (#749):
+     * a programmatically set instance first, then the annotated class,
+     * then the command itself when it implements {@code HelpSectionProvider}.
+     * An explicit annotation value always wins over the command itself.
+     * Render-time only, so there is no startup cost on any path.
+     *
+     * @return the provider to render with, or null when there is none
+     */
+    public HelpSectionProvider resolveHelpSectionProvider() {
+        if (helpSectionProvider != null)
+            return helpSectionProvider;
+        if (helpSectionProviderClass != null && helpSectionProviderClass != NullHelpSectionProvider.class) {
+            try {
+                return helpSectionProviderClass.getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                // fall through to the command itself
+            }
+        }
+        Command command = getCommand();
+        if (command instanceof HelpSectionProvider)
+            return (HelpSectionProvider) command;
+        return null;
     }
 
     public void setParentCommandInjector(ParentCommandInjector injector) {

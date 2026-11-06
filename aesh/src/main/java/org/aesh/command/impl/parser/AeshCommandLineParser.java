@@ -38,7 +38,6 @@ import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.populator.AeshCommandPopulator;
-import org.aesh.command.impl.provider.NullHelpSectionProvider;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.map.MapCommand;
@@ -661,19 +660,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     private HelpSectionProvider resolveHelpSectionProvider() {
-        HelpSectionProvider provider = processedCommand.getHelpSectionProvider();
-        if (provider != null)
-            return provider;
-
-        Class<? extends HelpSectionProvider> providerClass = processedCommand.getHelpSectionProviderClass();
-        if (providerClass != null && providerClass != NullHelpSectionProvider.class) {
-            try {
-                return providerClass.getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
-                // fall through
-            }
-        }
-        return null;
+        return processedCommand.resolveHelpSectionProvider();
     }
 
     private String formatHelpEntry(HelpEntry entry, int offset, int descriptionStart) {

@@ -1983,6 +1983,74 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    private static final String SELF_PROVIDED_SOURCE = "package test;\n" +
+            "\n" +
+            "import java.util.Collections;\n" +
+            "import java.util.List;\n" +
+            "import java.util.Map;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.HelpEntry;\n" +
+            "import org.aesh.command.HelpSectionProvider;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"self\", description = \"Self-provided help\")\n" +
+            "public class SelfProvidedCommand implements Command<CommandInvocation>, HelpSectionProvider {\n" +
+            "    @Option(description = \"Config\")\n" +
+            "    private String config;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public Map<String, List<HelpEntry>> getAdditionalSections() {\n" +
+            "        return Collections.emptyMap();\n" +
+            "    }\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public String getHeader() {\n" +
+            "        return \"Header of the command itself\";\n" +
+            "    }\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public String getFooter() {\n" +
+            "        return \"Footer of the command itself\";\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testCommandItselfAsProviderMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SelfProvidedCommand", SELF_PROVIDED_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.SelfProvidedCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.SelfProvidedCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+
+        // The generated path sets no provider (no annotation), so the
+        // command itself must resolve at render time (#749)
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        assertTrue("Generated help should contain self header: " + help,
+                help.contains("Header of the command itself"));
+        assertTrue("Generated help should contain self footer: " + help,
+                help.contains("Footer of the command itself"));
+    }
+
     @Test
     public void testComprehensivePositionalAndOptionParity() throws Exception {
         CompilationResult result = compileWithProcessor(

@@ -140,6 +140,9 @@ public @interface CommandDefinition {
     /**
      * Specify a HelpSectionProvider that dynamically adds entries to help output.
      * Only invoked at help-render time — no startup cost.
+     * When unset and the command class itself implements
+     * {@code HelpSectionProvider}, the command instance is used.
+     * An explicit value always wins over the command itself.
      *
      * @return HelpSectionProvider class
      */

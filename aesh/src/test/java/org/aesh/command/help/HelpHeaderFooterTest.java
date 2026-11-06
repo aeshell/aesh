@@ -84,6 +84,47 @@ public class HelpHeaderFooterTest {
         assertTrue(doc, doc.contains("  thread-dump --trace"));
     }
 
+    @Test
+    public void testCommandItselfAsProvider() throws Exception {
+        String help = help(new SelfProvidedCommand());
+
+        assertTrue(help, help.contains("Header of the command itself"));
+        assertTrue(help, help.contains("Footer of the command itself"));
+        assertTrue(help, help.contains("Self examples:"));
+        assertTrue(help, help.contains("self-cmd --trace"));
+    }
+
+    @Test
+    public void testExplicitProviderWinsOverCommandItself() throws Exception {
+        String help = help(new SelfProvidedWithAnnotation());
+
+        assertTrue(help, help.contains("Footer of the provider"));
+        assertFalse(help, help.contains("Footer of the command itself"));
+    }
+
+    @Test
+    public void testProgrammaticInstanceWinsOverCommandItself() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new SelfProvidedCommand()).getParser();
+        parser.getProcessedCommand().setHelpSectionProvider(new FooterProvider());
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        assertTrue(help, help.contains("Footer of the provider"));
+        assertFalse(help, help.contains("Footer of the command itself"));
+    }
+
+    @Test
+    public void testCommandItselfInTheDocumentation() throws Exception {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(SelfProvidedCommand.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+
+        assertTrue(doc, doc.contains("Header of the command itself"));
+        assertTrue(doc, doc.contains("Footer of the command itself"));
+    }
+
     private static String help(Command<CommandInvocation> command) throws Exception {
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>().create(command)
                 .getParser();
@@ -131,6 +172,51 @@ public class HelpHeaderFooterTest {
         @Override
         public String getFooter() {
             return "Footer of the provider";
+        }
+    }
+
+    @CommandDefinition(name = "self-cmd", description = "Provides its own help", generateHelp = true)
+    public static class SelfProvidedCommand implements Command<CommandInvocation>, HelpSectionProvider {
+        @Option(hasValue = false, description = "Include the stack trace")
+        boolean trace;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return Collections.singletonMap("Self examples:",
+                    Collections.singletonList(new HelpEntry("self-cmd --trace", "Trace it")));
+        }
+
+        @Override
+        public String getHeader() {
+            return "Header of the command itself";
+        }
+
+        @Override
+        public String getFooter() {
+            return "Footer of the command itself";
+        }
+    }
+
+    @CommandDefinition(name = "self-annotated", description = "Self provider plus annotation", generateHelp = true, helpSectionProvider = FooterProvider.class)
+    public static class SelfProvidedWithAnnotation implements Command<CommandInvocation>, HelpSectionProvider {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public String getFooter() {
+            return "Footer of the command itself";
         }
     }
 }
