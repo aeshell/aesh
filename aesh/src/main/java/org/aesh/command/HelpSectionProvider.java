@@ -92,6 +92,24 @@ public interface HelpSectionProvider {
         return getAdditionalSections();
     }
 
+    // --- Context-aware overloads ---
+
+    /**
+     * Returns additional sections for the command being rendered.
+     * Override this when one provider serves many commands, keying content
+     * off {@code context} (e.g. {@code context.fullName()}) instead of
+     * writing a subclass per command. The default delegates to the
+     * format-aware variant when a format is present, else to the
+     * parameterless method, so existing overrides keep working.
+     *
+     * @param context which command is being rendered, and how
+     * @return map of section name to help entries, never null
+     */
+    default Map<String, List<HelpEntry>> getAdditionalSections(HelpContext context) {
+        return context != null && context.format() != null ? getAdditionalSections(context.format())
+                : getAdditionalSections();
+    }
+
     /**
      * Returns format-specific header text.
      *
@@ -103,6 +121,19 @@ public interface HelpSectionProvider {
     }
 
     /**
+     * Returns header text for the command being rendered.
+     * The default delegates to the format-aware variant when a format is
+     * present, else to the parameterless method, so existing overrides
+     * keep working.
+     *
+     * @param context which command is being rendered, and how
+     * @return header text, or null if no header should be shown
+     */
+    default String getHeader(HelpContext context) {
+        return context != null && context.format() != null ? getHeader(context.format()) : getHeader();
+    }
+
+    /**
      * Returns format-specific footer text.
      *
      * @param format the documentation output format
@@ -110,6 +141,19 @@ public interface HelpSectionProvider {
      */
     default String getFooter(DocFormat format) {
         return getFooter();
+    }
+
+    /**
+     * Returns footer text for the command being rendered.
+     * The default delegates to the format-aware variant when a format is
+     * present, else to the parameterless method, so existing overrides
+     * keep working.
+     *
+     * @param context which command is being rendered, and how
+     * @return footer text, or null if no footer should be shown
+     */
+    default String getFooter(HelpContext context) {
+        return context != null && context.format() != null ? getFooter(context.format()) : getFooter();
     }
 
     /**
@@ -129,6 +173,19 @@ public interface HelpSectionProvider {
     }
 
     /**
+     * Returns a format-specific description override for the command being
+     * rendered. The default delegates to the format-aware variant when a
+     * format is present, else returns null, so existing overrides keep
+     * working.
+     *
+     * @param context which command is being rendered, and how
+     * @return description override, or null to use the annotation description
+     */
+    default String getDescription(HelpContext context) {
+        return context != null && context.format() != null ? getDescription(context.format()) : null;
+    }
+
+    /**
      * Returns additional YAML front matter key-value pairs for formats
      * that support it (e.g., {@link DocFormat#SKILL}).
      * <p>
@@ -141,5 +198,17 @@ public interface HelpSectionProvider {
      */
     default Map<String, String> getFrontMatter(DocFormat format) {
         return null;
+    }
+
+    /**
+     * Returns additional YAML front matter for the command being rendered.
+     * The default delegates to the format-aware variant when a format is
+     * present, else returns null, so existing overrides keep working.
+     *
+     * @param context which command is being rendered, and how
+     * @return map of front matter keys to values, or null
+     */
+    default Map<String, String> getFrontMatter(HelpContext context) {
+        return context != null && context.format() != null ? getFrontMatter(context.format()) : null;
     }
 }

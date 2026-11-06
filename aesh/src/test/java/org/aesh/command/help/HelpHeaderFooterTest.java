@@ -19,6 +19,7 @@ import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.DocFormat;
+import org.aesh.command.HelpContext;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
@@ -125,6 +126,37 @@ public class HelpHeaderFooterTest {
         assertTrue(doc, doc.contains("Footer of the command itself"));
     }
 
+    @Test
+    public void testSharedProviderSeesCommandContext() throws Exception {
+        // One provider class serves two commands, keying content off the context
+        String alpha = help(new BundleAlphaCommand());
+        assertTrue(alpha, alpha.contains("Header for bundle-alpha"));
+
+        CommandLineParser<CommandInvocation> group = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new BundleGroup()).getParser();
+        CommandLineParser<CommandInvocation> child = null;
+        for (CommandLineParser<CommandInvocation> c : group.getAllChildParsers()) {
+            if (c.getProcessedCommand().name().equals("bundle-child"))
+                child = c;
+        }
+        assertTrue("group should have a bundle-child", child != null);
+        child.updateAnsiMode(false);
+        String childHelp = child.printHelp();
+        assertTrue(childHelp, childHelp.contains("Header for bundle-group bundle-child"));
+    }
+
+    @Test
+    public void testContextCarriesFormatInDocumentation() throws Exception {
+        String help = help(new FormatCommand());
+        assertTrue("context path is used for terminal help", help.contains("Format is "));
+
+        String doc = DocumentationGenerator.builder()
+                .commandClass(FormatCommand.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+        assertTrue(doc, doc.contains("Format is MARKDOWN"));
+    }
+
     private static String help(Command<CommandInvocation> command) throws Exception {
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>().create(command)
                 .getParser();
@@ -217,6 +249,67 @@ public class HelpHeaderFooterTest {
         @Override
         public String getFooter() {
             return "Footer of the command itself";
+        }
+    }
+
+    /**
+     * One provider serving many commands: content is keyed off the render
+     * context instead of needing a subclass per command (#750).
+     */
+    public static class BundleProvider implements HelpSectionProvider {
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public String getHeader(HelpContext context) {
+            return "Header for " + context.fullName();
+        }
+    }
+
+    @CommandDefinition(name = "bundle-alpha", description = "Bundled alpha", generateHelp = true, helpSectionProvider = BundleProvider.class)
+    public static class BundleAlphaCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "bundle-child", description = "Bundled child", generateHelp = true, helpSectionProvider = BundleProvider.class)
+    public static class BundleChildCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "bundle-group", description = "Bundled group", generateHelp = true, groupCommands = {
+            BundleChildCommand.class })
+    public static class BundleGroup implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class FormatProvider implements HelpSectionProvider {
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public String getHeader(HelpContext context) {
+            return "Format is " + context.format();
+        }
+    }
+
+    @CommandDefinition(name = "fmt", description = "Format in context", generateHelp = true, helpSectionProvider = FormatProvider.class)
+    public static class FormatCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
         }
     }
 }

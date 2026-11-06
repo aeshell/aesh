@@ -31,6 +31,7 @@ import java.util.Map;
 
 import org.aesh.command.Command;
 import org.aesh.command.DocFormat;
+import org.aesh.command.HelpContext;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.container.CommandContainer;
@@ -205,6 +206,8 @@ public class DocumentationGenerator {
         String commandName = parser.getProcessedCommand().name();
         String commandHeader = parser.getProcessedCommand().getHelpHeader();
         String commandFooter = parser.getProcessedCommand().getHelpFooter();
+        HelpContext context = new HelpContext(
+                parser.getProcessedCommand().getCommand(), commandName, fullName, format);
         if (provider == null) {
             if (commandHeader == null && commandFooter == null)
                 return HelpSectionContent.EMPTY;
@@ -214,21 +217,21 @@ public class DocumentationGenerator {
         }
 
         // Resolve ${COMMAND-NAME}, ${ROOT-COMMAND-NAME} etc. in provider content
-        // Use format-aware methods so providers can return format-specific content
-        String providerHeader = provider.getHeader(format);
-        String providerFooter = provider.getFooter(format);
+        // Use context-aware methods so one provider can serve many commands
+        String providerHeader = provider.getHeader(context);
+        String providerFooter = provider.getFooter(context);
         String header = resolveVariables(providerHeader != null ? providerHeader : commandHeader, commandName, fullName,
                 parentName);
         String footer = resolveVariables(providerFooter != null ? providerFooter : commandFooter, commandName, fullName,
                 parentName);
-        String descriptionOverride = provider.getDescription(format);
+        String descriptionOverride = provider.getDescription(context);
         if (descriptionOverride != null) {
             descriptionOverride = resolveVariables(descriptionOverride, commandName, fullName, parentName);
         }
-        Map<String, String> frontMatter = provider.getFrontMatter(format);
+        Map<String, String> frontMatter = provider.getFrontMatter(context);
 
         // Resolve variables in additional section entries
-        Map<String, List<HelpEntry>> sections = provider.getAdditionalSections(format);
+        Map<String, List<HelpEntry>> sections = provider.getAdditionalSections(context);
         if (sections != null && !sections.isEmpty()) {
             Map<String, List<HelpEntry>> resolved = new java.util.LinkedHashMap<>();
             for (Map.Entry<String, List<HelpEntry>> entry : sections.entrySet()) {

@@ -31,6 +31,7 @@ import java.util.function.Function;
 import org.aesh.command.Command;
 import org.aesh.command.CommandLifecycle;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpContext;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.container.CommandContainer;
@@ -515,7 +516,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         List<CommandLineParser<CI>> parsers = getChildParsers();
         HelpSectionProvider provider = resolveHelpSectionProvider();
         Map<String, List<HelpEntry>> additionalSections = provider != null
-                ? provider.getAdditionalSections()
+                ? provider.getAdditionalSections(helpContext())
                 : Collections.emptyMap();
         boolean hasChildren = parsers != null && parsers.size() > 0;
         boolean hasAdditional = !additionalSections.isEmpty();
@@ -647,7 +648,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      * The header of the help: the one of the HelpSectionProvider, else the one of {@code @CommandDefinition}.
      */
     private String helpHeader(HelpSectionProvider provider) {
-        String header = provider != null ? provider.getHeader() : null;
+        String header = provider != null ? provider.getHeader(helpContext()) : null;
         return header != null ? header : processedCommand.getHelpHeader();
     }
 
@@ -655,8 +656,16 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      * The footer of the help: the one of the HelpSectionProvider, else the one of {@code @CommandDefinition}.
      */
     private String helpFooter(HelpSectionProvider provider) {
-        String footer = provider != null ? provider.getFooter() : null;
+        String footer = provider != null ? provider.getFooter(helpContext()) : null;
         return footer != null ? footer : processedCommand.getHelpFooter();
+    }
+
+    /**
+     * Which command is being rendered, for context-aware providers.
+     * Terminal help has no output format.
+     */
+    private HelpContext helpContext() {
+        return new HelpContext(processedCommand.getCommand(), processedCommand.name(), helpNames(), null);
     }
 
     private HelpSectionProvider resolveHelpSectionProvider() {
