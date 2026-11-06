@@ -37,6 +37,17 @@ import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
 
 /**
+ * Defines a command class.
+ *
+ * <p>
+ * The attributes that shape {@code --help} output are described together in the
+ * <a href="/docs/aesh/customizing-help">Customizing help output</a> guide: layout
+ * ({@link #collapseSynopsis()}, {@link #defaultOptionsFirst()},
+ * {@link #separateArgumentsSection()}, {@link #sortOptions()}), content
+ * ({@link #header()}, {@link #footer()}, {@link #helpUrl()},
+ * {@link #showDefaultValues()}, {@link #helpGroup()}) and dynamic sections
+ * ({@link #helpSectionProvider()}).
+ *
  * @author Aesh team
  */
 @Inherited
@@ -116,6 +127,8 @@ public @interface CommandDefinition {
      * When the terminal supports hyperlinks, this is shown as a clickable link in --help output.
      *
      * @return documentation URL
+     *         <p>
+     *         See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     String helpUrl() default "";
 
@@ -134,6 +147,8 @@ public @interface CommandDefinition {
      * Commands with no helpGroup appear under the default "Commands:" heading.
      *
      * @return help group heading
+     *         <p>
+     *         See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     String helpGroup() default "";
 
@@ -145,6 +160,8 @@ public @interface CommandDefinition {
      * An explicit value always wins over the command itself.
      *
      * @return HelpSectionProvider class
+     *         <p>
+     *         See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     Class<? extends HelpSectionProvider> helpSectionProvider() default NullHelpSectionProvider.class;
 
@@ -153,6 +170,8 @@ public @interface CommandDefinition {
      * does. A {@link #helpSectionProvider()} that gives its own header is shown instead.
      *
      * @return the lines of the header
+     *         <p>
+     *         See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     String[] header() default {};
 
@@ -161,6 +180,8 @@ public @interface CommandDefinition {
      * {@link #helpSectionProvider()} that gives its own footer is shown instead.
      *
      * @return the lines of the footer
+     *         <p>
+     *         See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     String[] footer() default {};
 
@@ -183,6 +204,8 @@ public @interface CommandDefinition {
      * When true, options are sorted alphabetically by name.
      * When false (default), options keep declaration order, with optional
      * per-option {@code order} overrides.
+     * <p>
+     * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     boolean sortOptions() default false;
 
@@ -194,6 +217,8 @@ public @interface CommandDefinition {
      * {@code @OptionGroup} and positional arguments are never affected.
      * {@code INHERIT} (the default) takes the value from the parent command,
      * else the fleet default (see {@code HelpFeature}).
+     * <p>
+     * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     Toggle failOnDuplicateOptions() default Toggle.INHERIT;
 
@@ -207,6 +232,8 @@ public @interface CommandDefinition {
      * across many lines (e.g. {@code Usage: jbang [OPTIONS] [COMMAND]}).
      * {@code INHERIT} (the default) takes the value from the parent command,
      * else the fleet default (see {@code HelpFeature}).
+     * <p>
+     * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     Toggle collapseSynopsis() default Toggle.INHERIT;
 
@@ -215,6 +242,8 @@ public @interface CommandDefinition {
      * description: {@code Default: <value>}. Options without a default value get no line.
      * {@code INHERIT} (the default) takes the value from the parent command,
      * else the fleet default (see {@code HelpFeature}).
+     * <p>
+     * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     Toggle showDefaultValues() default Toggle.INHERIT;
 
@@ -224,6 +253,8 @@ public @interface CommandDefinition {
      * command's own options come first.
      * {@code INHERIT} (the default) takes the value from the parent command,
      * else the fleet default (see {@code HelpFeature}).
+     * <p>
+     * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     Toggle defaultOptionsFirst() default Toggle.INHERIT;
 
@@ -235,6 +266,8 @@ public @interface CommandDefinition {
      * column.
      * {@code INHERIT} (the default) takes the value from the parent command,
      * else the fleet default (see {@code HelpFeature}).
+     * <p>
+     * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     Toggle separateArgumentsSection() default Toggle.INHERIT;
 
