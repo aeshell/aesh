@@ -34,6 +34,8 @@ import java.util.function.Supplier;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
 import org.junit.Test;
@@ -165,6 +167,50 @@ public class AeshRuntimeRunnerAnsiTest {
                 .execute());
 
         assertTrue("Fail-fast help must honor forced colors, got: " + stderr, stderr.contains(ESC));
+    }
+
+    @Test
+    public void testLazySubcommandHelpHasNoAnsiWhenPiped() {
+        // Surefire pipes stdout, so AUTO resolves to plain text here; the
+        // lazily resolved subcommand must inherit the root's mode (#753)
+        assumeCleanEnv();
+        AeshCommandContainerBuilder<CommandInvocation> containerBuilder = new AeshCommandContainerBuilder<>();
+        containerBuilder.setLazyChildResolution(true);
+        String output = captureStdout(() -> AeshRuntimeRunner.builder()
+                .containerBuilder(containerBuilder)
+                .command(GrpCommand.class)
+                .lazyStartup(false)
+                .args("paint", "--help")
+                .execute());
+
+        assertFalse("Lazy subcommand help must be plain when piped, got: " + output, output.contains(ESC));
+    }
+
+    @Test
+    public void testLazyGrandchildrenInheritNoColorMode() throws Exception {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        builder.setLazyChildResolution(true);
+        CommandLineParser<CommandInvocation> root = builder.create(new AnsiRootGroup()).getParser();
+        // The registry applies no-color after registration but before
+        // lazy children resolve; attach must propagate it (#753)
+        root.updateAnsiMode(false);
+
+        CommandLineParser<CommandInvocation> mid = findChild(root, "ansi-mid");
+        CommandLineParser<CommandInvocation> leaf = findChild(mid, "ansi-leaf");
+
+        String midHelp = mid.printHelp();
+        assertFalse("Lazy child help must be plain, got: " + midHelp, midHelp.contains(ESC));
+        String leafHelp = leaf.printHelp();
+        assertFalse("Lazy grandchild help must be plain, got: " + leafHelp, leafHelp.contains(ESC));
+    }
+
+    private static CommandLineParser<CommandInvocation> findChild(CommandLineParser<CommandInvocation> parent,
+            String name) {
+        for (CommandLineParser<CommandInvocation> child : parent.getAllChildParsers()) {
+            if (child.getProcessedCommand().name().equals(name))
+                return child;
+        }
+        throw new AssertionError("No child named " + name);
     }
 
     @Test
@@ -348,6 +394,36 @@ public class AeshRuntimeRunnerAnsiTest {
 
     @CommandDefinition(name = "grp", description = "A group", generateHelp = true, groupCommands = { PaintCommand.class })
     public static class GrpCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "ansi-leaf", description = "Leaf", generateHelp = true)
+    public static class AnsiLeafCommand implements Command<CommandInvocation> {
+        @Option(description = "A value")
+        String value;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "ansi-mid", description = "Mid", generateHelp = true, groupCommands = { AnsiLeafCommand.class })
+    public static class AnsiMidGroup implements Command<CommandInvocation> {
+        @Option(description = "Mid value")
+        String mid;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "ansi-root", description = "Root", generateHelp = true, groupCommands = { AnsiMidGroup.class })
+    public static class AnsiRootGroup implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation invocation) {
             return CommandResult.SUCCESS;
