@@ -144,6 +144,12 @@ public final class AeshCommandInvocation implements CommandInvocation {
     }
 
     private int terminalWidth() {
+        // Ask the controlling terminal directly first: it is correct even when
+        // the command's stdout is captured/redirected (so the shell's own
+        // terminal looks absent). Fall back to the shell's reported size.
+        int width = org.aesh.command.impl.internal.ProcessedCommand.detectTerminalWidth();
+        if (width > 0)
+            return width;
         try {
             return shell.size().getWidth();
         } catch (Throwable t) {

@@ -97,6 +97,14 @@ public class HelpWidthTest {
     }
 
     @Test
+    public void testDetectTerminalWidthIsSafeWithoutTerminal() {
+        // In a non-terminal test/CI environment this must not throw and must
+        // yield -1 (no tty) or a positive width; never zero or an exception.
+        int width = ProcessedCommand.detectTerminalWidth();
+        assertTrue("detectTerminalWidth returned " + width, width == -1 || width > 0);
+    }
+
+    @Test
     public void testDescriptionWrapsAtConfiguredWidth() throws Exception {
         System.setProperty("aesh.help.width", "120");
         String wide = help(new WideCommand());

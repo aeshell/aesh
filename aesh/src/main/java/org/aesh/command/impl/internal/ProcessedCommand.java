@@ -157,6 +157,50 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
     }
 
+    /**
+     * Read the width of the controlling terminal by asking it directly, so it
+     * works even when stdin or stdout is redirected (e.g. a launcher that
+     * captures the command's stdout). On POSIX this runs {@code stty size}
+     * against {@code /dev/tty} and returns its column count; everything is
+     * guarded and time-boxed, so no terminal, no {@code stty}, or any failure
+     * simply yields {@code -1}. Not supported on Windows (returns {@code -1}).
+     * <p>
+     * This is deliberately an on-demand probe: call it only when usage is
+     * actually printed, never eagerly, and wire it through
+     * {@link #setTerminalWidthSupplier}.
+     *
+     * @return the controlling terminal width in columns, or {@code -1}
+     */
+    public static int detectTerminalWidth() {
+        if (Config.isWindows())
+            return -1;
+        Process process = null;
+        try {
+            process = new ProcessBuilder("sh", "-c", "stty size </dev/tty 2>/dev/null")
+                    .redirectErrorStream(false)
+                    .start();
+            String line;
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                line = reader.readLine();
+            }
+            if (!process.waitFor(500, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+                process.destroyForcibly();
+                return -1;
+            }
+            if (line != null) {
+                // stty size prints "<rows> <cols>"
+                String[] parts = line.trim().split("\\s+");
+                if (parts.length == 2)
+                    return parseWidth(parts[1]);
+            }
+        } catch (Throwable ignored) {
+            if (process != null)
+                process.destroyForcibly();
+        }
+        return -1;
+    }
+
     private static final Pattern DESCRIPTION_VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
     private static final char DASH = '-';
     private static final char EQUALS = '=';
