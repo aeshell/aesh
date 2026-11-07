@@ -117,7 +117,24 @@ public class DefaultCommandInvocation implements CommandInvocation {
 
     @Override
     public String getHelpInfo() {
-        return commandContainer.getParser().parsedCommand().printHelp();
+        org.aesh.command.impl.parser.CommandLineParser<?> parser = commandContainer.getParser().parsedCommand();
+        // Resolve help to the live terminal width, consulted lazily (only now,
+        // when usage prints) and guarded: probe the controlling terminal first
+        // so it is correct even when stdout is captured/redirected, then fall
+        // back to the shell's reported size, then the default width.
+        parser.getProcessedCommand().setTerminalWidthSupplier(this::terminalWidth);
+        return parser.printHelp();
+    }
+
+    private int terminalWidth() {
+        int width = org.aesh.command.impl.internal.ProcessedCommand.detectTerminalWidth();
+        if (width > 0)
+            return width;
+        try {
+            return shell.size().getWidth();
+        } catch (Throwable t) {
+            return -1;
+        }
     }
 
     @Override

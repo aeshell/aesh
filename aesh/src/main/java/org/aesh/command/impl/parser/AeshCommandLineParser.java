@@ -560,6 +560,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             int maxLength = 0;
             if (hasChildren) {
                 for (CommandLineParser child : parsers) {
+                    // Children format their own one-line entry; let them resolve
+                    // the same width as this command (e.g. the live terminal).
+                    child.getProcessedCommand().setTerminalWidthSupplier(
+                            processedCommand.terminalWidthSupplier());
                     int length = child.getProcessedCommand().name().length();
                     if (length > maxLength)
                         maxLength = length;
@@ -1228,7 +1232,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 "");
         List<String> lines = ProcessedOption.wrapText(
                 resolveDescriptionVariables(getProcessedCommand().description(), null),
-                ProcessedCommand.HELP_WIDTH - pad.length());
+                getProcessedCommand().helpWidth() - pad.length());
         for (int i = 0; i < lines.size(); i++) {
             if (i > 0)
                 ansiBuilder.append(Config.getLineSeparator()).append(pad);

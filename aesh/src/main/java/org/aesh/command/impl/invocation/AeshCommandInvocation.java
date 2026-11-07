@@ -134,7 +134,27 @@ public final class AeshCommandInvocation implements CommandInvocation {
 
     @Override
     public String getHelpInfo() {
-        return commandContainer.getParser().parsedCommand().printHelp();
+        org.aesh.command.impl.parser.CommandLineParser<?> parser = commandContainer.getParser().parsedCommand();
+        // Resolve help to the live terminal width when printing interactively.
+        // The supplier is consulted lazily inside printHelp (only when usage
+        // actually prints) and is guarded, so a non-terminal shell or a size()
+        // failure simply falls back to the default width.
+        parser.getProcessedCommand().setTerminalWidthSupplier(this::terminalWidth);
+        return parser.printHelp();
+    }
+
+    private int terminalWidth() {
+        // Ask the controlling terminal directly first: it is correct even when
+        // the command's stdout is captured/redirected (so the shell's own
+        // terminal looks absent). Fall back to the shell's reported size.
+        int width = org.aesh.command.impl.internal.ProcessedCommand.detectTerminalWidth();
+        if (width > 0)
+            return width;
+        try {
+            return shell.size().getWidth();
+        } catch (Throwable t) {
+            return -1;
+        }
     }
 
     @Override
