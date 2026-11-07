@@ -59,6 +59,44 @@ public class HelpWidthTest {
     }
 
     @Test
+    public void testTerminalWidthSupplierUsedWhenNoOverride() throws Exception {
+        ProcessedCommand<?, ?> pc = processedCommand(new WideCommand());
+        pc.setTerminalWidthSupplier(() -> 100);
+        assertEquals(100, pc.helpWidth());
+    }
+
+    @Test
+    public void testOverrideBeatsTerminalWidthSupplier() throws Exception {
+        System.setProperty("aesh.help.width", "120");
+        ProcessedCommand<?, ?> pc = processedCommand(new WideCommand());
+        pc.setTerminalWidthSupplier(() -> 100);
+        assertEquals(120, pc.helpWidth());
+    }
+
+    @Test
+    public void testSupplierFailureFallsBackToDefault() throws Exception {
+        ProcessedCommand<?, ?> pc = processedCommand(new WideCommand());
+        pc.setTerminalWidthSupplier(() -> {
+            throw new IllegalStateException("no terminal");
+        });
+        assertEquals(ProcessedCommand.HELP_WIDTH, pc.helpWidth());
+    }
+
+    @Test
+    public void testSupplierNonPositiveFallsBackToDefault() throws Exception {
+        ProcessedCommand<?, ?> pc = processedCommand(new WideCommand());
+        pc.setTerminalWidthSupplier(() -> 0);
+        assertEquals(ProcessedCommand.HELP_WIDTH, pc.helpWidth());
+    }
+
+    @Test
+    public void testSupplierTinyWidthIsClamped() throws Exception {
+        ProcessedCommand<?, ?> pc = processedCommand(new WideCommand());
+        pc.setTerminalWidthSupplier(() -> 5);
+        assertTrue("tiny terminal width clamped, got: " + pc.helpWidth(), pc.helpWidth() >= 40);
+    }
+
+    @Test
     public void testDescriptionWrapsAtConfiguredWidth() throws Exception {
         System.setProperty("aesh.help.width", "120");
         String wide = help(new WideCommand());
@@ -76,6 +114,10 @@ public class HelpWidthTest {
                 .create(command).getParser();
         parser.updateAnsiMode(false);
         return parser.printHelp();
+    }
+
+    private static ProcessedCommand<?, ?> processedCommand(Command<CommandInvocation> command) throws Exception {
+        return new AeshCommandContainerBuilder<CommandInvocation>().create(command).getParser().getProcessedCommand();
     }
 
     @CommandDefinition(name = "wide", description = "This command has a deliberately long description so that it wraps differently depending on the configured help width used by the renderer.", generateHelp = true)
