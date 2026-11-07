@@ -63,9 +63,42 @@ import org.aesh.terminal.utils.Parser;
 public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocation> {
 
     /**
-     * The width the help is written for: longer descriptions are wrapped.
+     * The default width the help is written for when no override is set:
+     * longer descriptions are wrapped. See {@link #resolveHelpWidth()}.
      */
     public static final int HELP_WIDTH = 80;
+
+    /** Lower bound for a resolved help width, so a tiny override never garbles wrapping. */
+    private static final int MIN_HELP_WIDTH = 40;
+
+    /**
+     * The width help is wrapped to. An explicit override wins, in order: the
+     * {@code aesh.help.width} system property, then the {@code COLUMNS}
+     * environment variable (as many CLIs honour); otherwise the default
+     * {@link #HELP_WIDTH}. A resolved value is clamped to at least
+     * {@link #MIN_HELP_WIDTH} so a bogus or tiny override cannot garble the
+     * output. Non-numeric values are ignored.
+     *
+     * @return the help width in columns
+     */
+    public static int resolveHelpWidth() {
+        int width = parseWidth(System.getProperty("aesh.help.width"));
+        if (width <= 0)
+            width = parseWidth(System.getenv("COLUMNS"));
+        if (width <= 0)
+            return HELP_WIDTH;
+        return Math.max(width, MIN_HELP_WIDTH);
+    }
+
+    private static int parseWidth(String value) {
+        if (value == null)
+            return -1;
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
 
     private static final Pattern DESCRIPTION_VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
     private static final char DASH = '-';
@@ -1380,7 +1413,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll) {
         int maxLength = 0;
         int maxOptionColumnWidth = 24;
-        int width = HELP_WIDTH;
+        int width = resolveHelpWidth();
         DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
         List<ProcessedOption> opts = getDisplayOptions();
         List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
