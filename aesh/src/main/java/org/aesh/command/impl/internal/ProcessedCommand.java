@@ -113,9 +113,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private Toggle showDefaultValuesSource = Toggle.INHERIT;
     private Toggle failOnDuplicateOptionsSource = Toggle.INHERIT;
     private Toggle separateArgumentsSectionSource = Toggle.INHERIT;
+    private Toggle headerBeforeSynopsisSource = Toggle.INHERIT;
     private boolean collapseSynopsis;
     private boolean failOnDuplicateOptions;
     private boolean separateArgumentsSection;
+    private boolean headerBeforeSynopsis;
     private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
@@ -218,7 +220,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
                 version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional,
                 defaultValueProvider, sortOptions, Toggle.INHERIT, Toggle.INHERIT, Toggle.INHERIT,
-                Toggle.INHERIT, Toggle.INHERIT);
+                Toggle.INHERIT, Toggle.INHERIT, Toggle.INHERIT);
     }
 
     public ProcessedCommand(String name, List<String> aliases, C command,
@@ -233,7 +235,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             DefaultValueProvider defaultValueProvider,
             boolean sortOptions, Toggle collapseSynopsis, Toggle defaultOptionsFirst,
             Toggle showDefaultValues, Toggle failOnDuplicateOptions,
-            Toggle separateArgumentsSection) throws OptionParserException {
+            Toggle separateArgumentsSection, Toggle headerBeforeSynopsis) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -248,6 +250,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.failOnDuplicateOptionsSource = failOnDuplicateOptions != null ? failOnDuplicateOptions
                 : Toggle.INHERIT;
         this.separateArgumentsSectionSource = separateArgumentsSection != null ? separateArgumentsSection
+                : Toggle.INHERIT;
+        this.headerBeforeSynopsisSource = headerBeforeSynopsis != null ? headerBeforeSynopsis
                 : Toggle.INHERIT;
         this.defaultValueProvider = defaultValueProvider;
         this.helpUrl = helpUrl;
@@ -637,6 +641,24 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     /**
+     * Whether the HelpSectionProvider/@CommandDefinition header is printed
+     * before the usage line (after the one-line description) instead of
+     * between the usage line and the options sections.
+     */
+    public boolean headerBeforeSynopsis() {
+        return headerBeforeSynopsis;
+    }
+
+    public Toggle headerBeforeSynopsisSource() {
+        return headerBeforeSynopsisSource;
+    }
+
+    public void setHeaderBeforeSynopsisSource(Toggle headerBeforeSynopsisSource) {
+        this.headerBeforeSynopsisSource = headerBeforeSynopsisSource == null ? Toggle.INHERIT
+                : headerBeforeSynopsisSource;
+    }
+
+    /**
      * Resolve the toggle booleans from their annotated sources. An explicit
      * {@code ON}/{@code OFF} always wins; otherwise the parent command's
      * resolved value wins; otherwise the fleet default wins; otherwise the
@@ -660,6 +682,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         separateArgumentsSection = resolveToggle(separateArgumentsSectionSource,
                 parent != null ? parent.separateArgumentsSection() : null, fleetDefaults,
                 HelpFeature.SEPARATE_ARGUMENTS_SECTION);
+        headerBeforeSynopsis = resolveToggle(headerBeforeSynopsisSource,
+                parent != null ? parent.headerBeforeSynopsis() : null, fleetDefaults,
+                HelpFeature.HEADER_BEFORE_SYNOPSIS);
     }
 
     private static boolean resolveToggle(Toggle source, Boolean parent, EnumSet<HelpFeature> fleetDefaults,

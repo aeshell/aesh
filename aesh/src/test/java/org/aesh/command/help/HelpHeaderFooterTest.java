@@ -57,6 +57,18 @@ public class HelpHeaderFooterTest {
     }
 
     @Test
+    public void testHeaderBeforeSynopsisWhenRequested() throws Exception {
+        String help = help(new HeaderFirstCommand());
+
+        int description = help.indexOf("List threads first");
+        int header = help.indexOf("Shows the threads of header-first.");
+        int usage = help.indexOf("Usage: header-first");
+        int options = help.indexOf("Options:");
+        // description, then header, then usage, then options
+        assertTrue(help, description >= 0 && description < header && header < usage && usage < options);
+    }
+
+    @Test
     public void testProviderTakesPrecedence() throws Exception {
         String help = help(new ProviderCommand());
 
@@ -162,6 +174,17 @@ public class HelpHeaderFooterTest {
                 .getParser();
         parser.updateAnsiMode(false);
         return parser.printHelp();
+    }
+
+    @CommandDefinition(name = "header-first", description = "List threads first", generateHelp = true, headerBeforeSynopsis = org.aesh.command.Toggle.ON, header = "Shows the threads of ${COMMAND-NAME}.")
+    public static class HeaderFirstCommand implements Command<CommandInvocation> {
+        @Option(hasValue = false, description = "Include the stack trace")
+        boolean trace;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
     }
 
     @CommandDefinition(name = "thread-dump", description = "List threads", generateHelp = true, header = "Shows the threads of ${COMMAND-NAME}.", footer = {
