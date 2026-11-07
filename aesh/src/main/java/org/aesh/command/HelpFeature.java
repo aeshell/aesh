@@ -37,5 +37,7 @@ public enum HelpFeature {
     /** Mirror of {@code failOnDuplicateOptions}. */
     FAIL_ON_DUPLICATE_OPTIONS,
     /** Mirror of {@code separateArgumentsSection}. */
-    SEPARATE_ARGUMENTS_SECTION
+    SEPARATE_ARGUMENTS_SECTION,
+    /** Mirror of {@code headerBeforeSynopsis}. */
+    HEADER_BEFORE_SYNOPSIS
 }

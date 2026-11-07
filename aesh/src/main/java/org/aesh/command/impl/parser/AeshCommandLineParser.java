@@ -538,24 +538,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 }
             }
 
-            // Inject header between synopsis and options section
+            // Inject header (before or after the synopsis, per the toggle)
             String header = helpHeader(provider);
             String headerContent = header != null ? resolveDescriptionVariables(header, null) : null;
-            if (headerContent != null) {
-                String sep = Config.getLineSeparator();
-                String doubleSep = sep + sep;
-                int splitPoint = helpText.indexOf(doubleSep);
-                if (splitPoint >= 0) {
-                    sb.append(helpText, 0, splitPoint + doubleSep.length());
-                    sb.append(headerContent).append(sep);
-                    sb.append(helpText.substring(splitPoint + doubleSep.length()));
-                } else {
-                    sb.append(helpText);
-                    sb.append(sep).append(headerContent).append(sep);
-                }
-            } else {
-                sb.append(helpText);
-            }
+            sb.append(injectHeader(helpText, headerContent));
 
             int maxLength = 0;
             if (hasChildren) {
@@ -616,21 +602,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             String helpText = processedCommand.printHelp(helpNames(), false, showAll);
             String header = helpHeader(provider);
             String headerContent = header != null ? resolveDescriptionVariables(header, null) : null;
-            if (headerContent != null) {
-                String sep = Config.getLineSeparator();
-                String doubleSep = sep + sep;
-                int splitPoint = helpText.indexOf(doubleSep);
-                if (splitPoint >= 0) {
-                    sb.append(helpText, 0, splitPoint + doubleSep.length());
-                    sb.append(headerContent).append(sep);
-                    sb.append(helpText.substring(splitPoint + doubleSep.length()));
-                } else {
-                    sb.append(helpText);
-                    sb.append(sep).append(headerContent).append(sep);
-                }
-            } else {
-                sb.append(helpText);
-            }
+            sb.append(injectHeader(helpText, headerContent));
         }
 
         // Footer from HelpSectionProvider or @CommandDefinition — shown after everything
@@ -647,6 +619,38 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     /**
      * The header of the help: the one of the HelpSectionProvider, else the one of {@code @CommandDefinition}.
      */
+    /**
+     * Place the help header into the rendered help text. By default it goes
+     * between the synopsis and the options sections; when
+     * {@code headerBeforeSynopsis} is set it goes after the one-line
+     * description and before the {@code Usage:} line, so descriptive prose and
+     * examples read ahead of the synopsis.
+     */
+    private String injectHeader(String helpText, String headerContent) {
+        if (headerContent == null)
+            return helpText;
+        String sep = Config.getLineSeparator();
+        if (processedCommand.headerBeforeSynopsis()) {
+            int usageIdx = helpText.indexOf("Usage:");
+            if (usageIdx >= 0) {
+                int lineStart = helpText.lastIndexOf(sep, usageIdx);
+                int insertAt = lineStart < 0 ? 0 : lineStart + sep.length();
+                return helpText.substring(0, insertAt)
+                        + sep + headerContent + sep
+                        + helpText.substring(insertAt);
+            }
+            return sep + headerContent + sep + helpText;
+        }
+        String doubleSep = sep + sep;
+        int splitPoint = helpText.indexOf(doubleSep);
+        if (splitPoint >= 0) {
+            return helpText.substring(0, splitPoint + doubleSep.length())
+                    + headerContent + sep
+                    + helpText.substring(splitPoint + doubleSep.length());
+        }
+        return helpText + sep + headerContent + sep;
+    }
+
     private String helpHeader(HelpSectionProvider provider) {
         String header = provider != null ? provider.getHeader(helpContext()) : null;
         return header != null ? header : processedCommand.getHelpHeader();

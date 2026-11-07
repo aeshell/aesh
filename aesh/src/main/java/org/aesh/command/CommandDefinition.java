@@ -272,6 +272,17 @@ public @interface CommandDefinition {
     Toggle separateArgumentsSection() default Toggle.INHERIT;
 
     /**
+     * Print the help header (from a {@link HelpSectionProvider} or the
+     * {@code header} attribute) before the usage line, right after the
+     * one-line description, instead of between the usage line and the
+     * options sections. Useful when the header is descriptive prose and
+     * examples that read better ahead of the synopsis.
+     * {@code INHERIT} (the default) takes the value from the parent command,
+     * else the fleet default (see {@code HelpFeature}).
+     */
+    Toggle headerBeforeSynopsis() default Toggle.INHERIT;
+
+    /**
      * Default completion fallback for all options and arguments in this command.
      * Individual options can still override with their own {@code completeFallback}.
      * <p>
