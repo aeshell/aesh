@@ -1420,26 +1420,48 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         sb.append(Config.getLineSeparator());
 
         //options and arguments — group by helpGroup
+        // Grouped positionals leave the positional flow and join their
+        // option group, sharing its description column. The rest render in
+        // the Arguments: section or inline.
+        for (ProcessedOption positional : positionalOptions) {
+            if (!positional.getHelpGroup().isEmpty() && positional.getFormattedLength() > maxLength)
+                maxLength = positional.getFormattedLength();
+        }
+        if (maxLength > maxOptionColumnWidth)
+            maxLength = maxOptionColumnWidth;
+        // Stable sort by order keeps each kind's internal order on ties,
+        // with options ahead of positionals.
+        List<ProcessedOption> plainPositionals = new ArrayList<>(positionalOptions.size());
+        for (ProcessedOption positional : positionalOptions) {
+            if (positional.getHelpGroup().isEmpty())
+                plainPositionals.add(positional);
+        }
+        plainPositionals.sort(BY_ORDER);
         // Positional arguments get their own section right after the usage
         // line when asked for, sharing the option description column so
         // they no longer trail the last option group.
-        if (separateArgumentsSection && !positionalOptions.isEmpty()) {
-            for (ProcessedOption positional : positionalOptions) {
+        if (separateArgumentsSection && !plainPositionals.isEmpty()) {
+            for (ProcessedOption positional : plainPositionals) {
                 if (positional.getFormattedLength() > maxLength)
                     maxLength = positional.getFormattedLength();
             }
             if (maxLength > maxOptionColumnWidth)
                 maxLength = maxOptionColumnWidth;
-            appendOptionGroup(sb, positionalOptions, "Arguments:", maxLength + 4, width, supportsHyperlinks,
+            appendOptionGroup(sb, plainPositionals, "Arguments:", maxLength + 4, width, supportsHyperlinks,
                     descriptionResolver);
         }
-        if (visibleOpts.size() > 0) {
-            Map<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
-            for (ProcessedOption o : visibleOpts) {
-                String group = o.getHelpGroup().isEmpty() ? "" : o.getHelpGroup();
-                groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
-            }
-
+        Map<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
+        for (ProcessedOption o : visibleOpts) {
+            String group = o.getHelpGroup().isEmpty() ? "" : o.getHelpGroup();
+            groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
+        }
+        for (ProcessedOption positional : positionalOptions) {
+            if (!positional.getHelpGroup().isEmpty())
+                groups.computeIfAbsent(positional.getHelpGroup(), k -> new ArrayList<>()).add(positional);
+        }
+        if (!groups.isEmpty()) {
+            for (List<ProcessedOption> group : groups.values())
+                group.sort(BY_ORDER);
             // The default (ungrouped) section goes first only when asked for;
             // named groups keep their relative order either way.
             if (defaultOptionsFirst)
@@ -1456,12 +1478,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
         // Render positional arguments inline after the options section,
         // unless they already have their own section above.
-        if (!separateArgumentsSection && !positionalOptions.isEmpty()) {
+        if (!separateArgumentsSection && !plainPositionals.isEmpty()) {
             // If no options were rendered, start the Options section for positionals
             if (visibleOpts.isEmpty()) {
                 sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
             }
-            for (ProcessedOption positional : positionalOptions) {
+            for (ProcessedOption positional : plainPositionals) {
                 sb.append(positional.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
                         descriptionResolver.resolveOptionDescription(positional)))
                         .append(Config.getLineSeparator());

@@ -67,6 +67,23 @@ public @interface Argument {
     String paramLabel() default "";
 
     /**
+     * Optional heading under which this argument is printed in help output,
+     * alongside the options of the same group. Arguments without a helpGroup
+     * print in the positional flow (the {@code Arguments:} section or the
+     * trailing inline list).
+     */
+    String helpGroup() default "";
+
+    /**
+     * Controls the position of this argument within its help section: its
+     * helpGroup, or the Arguments: section / positional list when ungrouped.
+     * Arguments and options share the order namespace: lower values print
+     * first. When unset, options keep their relative order and print before
+     * unordered arguments; unordered arguments keep index order.
+     */
+    int order() default Integer.MAX_VALUE;
+
+    /**
      * Specifies how many values this argument accepts.
      * Format: "min..max" or a single number for an exact count.
      * Use "*" for unlimited maximum.

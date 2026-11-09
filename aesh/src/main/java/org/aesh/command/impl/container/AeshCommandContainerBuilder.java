@@ -759,6 +759,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         .paramLabel(arg.paramLabel())
                         .arity(arg.arity())
                         .index(arg.index())
+                        .helpGroup(arg.helpGroup())
+                        .order(arg.order())
                         .optionType(OptionType.ARGUMENT);
                 argumentBuilder.converter(arg.converter())
                         .completer(arg.completer())
@@ -902,6 +904,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                         .paramLabel(a.paramLabel())
                         .arity(a.arity())
                         .index(a.index())
+                        .helpGroup(a.helpGroup())
+                        .order(a.order())
                         .optionType(OptionType.ARGUMENTS);
                 argumentsBuilder.converter(a.converter())
                         .completer(a.completer())
@@ -1188,6 +1192,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .paramLabel(a.paramLabel())
                     .arity(a.arity())
                     .index(a.index())
+                    .helpGroup(a.helpGroup())
+                    .order(a.order())
                     .optionType(OptionType.ARGUMENTS);
             if (!forHelp) {
                 argumentsBuilder.converter(a.converter())
@@ -1226,6 +1232,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .paramLabel(arg.paramLabel())
                     .arity(arg.arity())
                     .index(arg.index())
+                    .helpGroup(arg.helpGroup())
+                    .order(arg.order())
                     .optionType(optionType);
             if (!forHelp) {
                 argumentBuilder.converter(arg.converter())

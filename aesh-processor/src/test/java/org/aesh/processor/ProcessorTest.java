@@ -2102,6 +2102,64 @@ public class ProcessorTest {
                         && help.indexOf("Arguments:") < help.indexOf("Options:"));
     }
 
+    private static final String GROUPED_POSITIONAL_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"deploy\", description = \"Deploy app\")\n" +
+            "public class GroupedPositionalCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Target environment\", helpGroup = \"Environments\", order = 1)\n" +
+            "    private String target;\n" +
+            "\n" +
+            "    @Option(description = \"Mode\", helpGroup = \"Environments\", order = 3)\n" +
+            "    private String mode;\n" +
+            "\n" +
+            "    @Argument(description = \"The artifact to deploy\", helpGroup = \"Environments\", order = 2)\n" +
+            "    private String artifact;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testGroupedPositionalMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.GroupedPositionalCommand", GROUPED_POSITIONAL_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.GroupedPositionalCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.GroupedPositionalCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+
+        // The generated positional must render inside its group, ordered
+        // between the two options (#755)
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        int group = help.indexOf("Environments:");
+        assertTrue("Generated help should contain Environments section: " + help, group >= 0);
+        int target = help.indexOf("--target", group);
+        int artifact = help.indexOf("<artifact>", group);
+        int mode = help.indexOf("--mode", group);
+        assertTrue("Generated order should be target, artifact, mode: " + help,
+                target > group && artifact > target && mode > artifact);
+    }
+
     @Test
     public void testComprehensivePositionalAndOptionParity() throws Exception {
         CompilationResult result = compileWithProcessor(
@@ -4313,6 +4371,8 @@ public class ProcessorTest {
         assertEquals(label + " mixinFieldName", rOpt.getMixinFieldName(), gOpt.getMixinFieldName());
         assertEquals(label + " selectorType", rOpt.selectorType(), gOpt.selectorType());
         assertEquals(label + " completeFallback", rOpt.getCompleteFallback(), gOpt.getCompleteFallback());
+        assertEquals(label + " helpGroup", rOpt.getHelpGroup(), gOpt.getHelpGroup());
+        assertEquals(label + " order", rOpt.getOrder(), gOpt.getOrder());
         assertCallbackEquivalence("converter", label, rOpt.converter(), gOpt.converter());
         assertCallbackEquivalence("completer", label, rOpt.completer(), gOpt.completer());
         assertCallbackEquivalence("validator", label, rOpt.validator(), gOpt.validator());

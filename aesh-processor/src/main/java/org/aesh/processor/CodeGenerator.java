@@ -1104,6 +1104,9 @@ final class CodeGenerator {
         if (!a.arity().isEmpty())
             sb.append("            ").append(var).append(".setArity(").append(stringLiteral(a.arity())).append(");\n");
         sb.append("            ").append(var).append(".setIndex(").append(stringLiteral(a.index())).append(");\n");
+        emitHelpGroupSetter(sb, var, a.helpGroup());
+        if (a.order() != Integer.MAX_VALUE)
+            sb.append("            ").append(var).append(".setOrder(").append(a.order()).append(");\n");
         emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
@@ -1172,6 +1175,9 @@ final class CodeGenerator {
         if (!arg.arity().isEmpty())
             sb.append("            ").append(var).append(".setArity(").append(stringLiteral(arg.arity())).append(");\n");
         sb.append("            ").append(var).append(".setIndex(").append(stringLiteral(arg.index())).append(");\n");
+        emitHelpGroupSetter(sb, var, arg.helpGroup());
+        if (arg.order() != Integer.MAX_VALUE)
+            sb.append("            ").append(var).append(".setOrder(").append(arg.order()).append(");\n");
         emitCompleterSetter(sb, var, field, "completer", false, isFileOrResourceType(field.asType(), typeUtils),
                 elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
