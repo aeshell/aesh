@@ -12,6 +12,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +22,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.DocFormat;
 import org.aesh.command.HelpContext;
 import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpFeature;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.Toggle;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
@@ -67,6 +69,48 @@ public class HelpHeaderFooterTest {
         int options = help.indexOf("Options:");
         // description, then header, then usage, then options
         assertTrue(help, description >= 0 && description < header && header < usage && usage < options);
+    }
+
+    @Test
+    public void testHeaderAppendedWhenNoBlankLine() throws Exception {
+        // Minimal help has no blank line after the usage, so the default
+        // placement appends the header at the end instead of injecting it
+        String help = help(new MinimalCommand());
+
+        int usage = help.indexOf("Usage: minimal");
+        int header = help.indexOf("Minimal header");
+        assertTrue(help, usage >= 0 && header > usage);
+    }
+
+    @Test
+    public void testFleetDefaultPutsHeaderFirst() throws Exception {
+        AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
+        builder.setHelpDefaults(EnumSet.of(HelpFeature.HEADER_BEFORE_SYNOPSIS));
+        CommandLineParser<CommandInvocation> parser = builder.create(new ThreadDumpCommand()).getParser();
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        int usage = help.indexOf("Usage: thread-dump");
+        int header = help.indexOf("Shows the threads of thread-dump.");
+        assertTrue("fleet default puts header before usage, got:\n" + help, usage >= 0 && header >= 0 && header < usage);
+    }
+
+    @Test
+    public void testChildInheritsHeaderBeforeSynopsis() throws Exception {
+        CommandLineParser<CommandInvocation> group = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new HeaderFirstGroup()).getParser();
+        CommandLineParser<CommandInvocation> child = null;
+        for (CommandLineParser<CommandInvocation> c : group.getAllChildParsers()) {
+            if (c.getProcessedCommand().name().equals("header-child"))
+                child = c;
+        }
+        assertTrue("group should have a header-child", child != null);
+        child.updateAnsiMode(false);
+        String help = child.printHelp();
+
+        int usage = help.indexOf("Usage:");
+        int header = help.indexOf("Child header");
+        assertTrue("inherited toggle puts header before usage, got:\n" + help, usage >= 0 && header >= 0 && header < usage);
     }
 
     @Test
@@ -182,6 +226,31 @@ public class HelpHeaderFooterTest {
         @Option(hasValue = false, description = "Include the stack trace")
         boolean trace;
 
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "minimal", description = "Minimal", header = "Minimal header")
+    public static class MinimalCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "header-child", description = "Inheriting child", generateHelp = true, header = "Child header")
+    public static class HeaderChildCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "header-group", description = "Header group", generateHelp = true, headerBeforeSynopsis = Toggle.ON, groupCommands = {
+            HeaderChildCommand.class })
+    public static class HeaderFirstGroup implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation invocation) {
             return CommandResult.SUCCESS;

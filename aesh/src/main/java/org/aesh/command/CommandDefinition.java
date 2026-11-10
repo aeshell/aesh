@@ -278,6 +278,8 @@ public @interface CommandDefinition {
      * examples that read better ahead of the synopsis.
      * {@code INHERIT} (the default) takes the value from the parent command,
      * else the fleet default (see {@code HelpFeature}).
+     * This only affects terminal {@code --help} output; generated
+     * documentation keeps its own section layout.
      * <p>
      * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
