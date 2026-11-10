@@ -303,8 +303,11 @@ class Executions {
             }
 
             try {
-                //if the generated help option is set, we "execute" it instead of normal execution
-                if (cmd.generateHelp() && cmd.isGenerateHelpOptionSet()) {
+                //if the generated help option is set here or on an ancestor group
+                //command (`group -h sub` behaves like `group sub -h`, #762),
+                //we "execute" it instead of normal execution
+                if (commandContainer.getParser().parsedCommand() != null
+                        && commandContainer.getParser().parsedCommand().isHelpRequested()) {
                     T invocation = getCommandInvocation();
                     DocFormat helpFormat = cmd.getHelpDocFormat();
                     if (helpFormat != null) {

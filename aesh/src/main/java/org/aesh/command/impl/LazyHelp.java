@@ -76,7 +76,8 @@ public final class LazyHelp {
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> parsedCommand = parsed.getProcessedCommand();
         if (parsedCommand.getHelpDocFormat() != null)
             return null;
-        if (parsedCommand.generateHelp() && parsedCommand.isGenerateHelpOptionSet()) {
+        // A group-level -h counts too: `group -h sub` behaves like `group sub -h` (#762).
+        if (parsed.isHelpRequested()) {
             if (!ansi)
                 parsed.updateAnsiMode(false);
             return parsed.printHelp();

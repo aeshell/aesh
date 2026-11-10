@@ -132,6 +132,19 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         return childParsers;
     }
 
+    /**
+     * Help requested here or on any ancestor group command: a group-level
+     * {@code -h} (e.g. {@code group -h sub}) excuses the parsed child from
+     * required options just like its own {@code -h} would (#762).
+     */
+    @Override
+    public boolean isHelpRequested() {
+        if (CommandLineParser.super.isHelpRequested())
+            return true;
+        AeshCommandLineParser<CI> parent = getParentParser();
+        return parent != null && parent.isHelpRequested();
+    }
+
     @SuppressWarnings("unchecked")
     public void addLazyChild(String name, Class<? extends Command> clazz) throws CommandLineParserException {
         if (lazyChildClasses == null)
@@ -876,7 +889,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                         return;
                     }
                 }
-                RequiredOptionException re = checkForMissingRequiredOptions(processedCommand);
+                // Help requested here or on an ancestor group excuses required
+                // options, so `group -h sub` behaves like `group sub -h` (#762).
+                RequiredOptionException re = isHelpRequested() ? null
+                        : checkForMissingRequiredOptions(processedCommand);
                 if (re != null)
                     processedCommand.addParserException(re);
             }

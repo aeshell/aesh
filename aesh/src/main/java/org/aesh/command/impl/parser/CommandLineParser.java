@@ -169,6 +169,17 @@ public interface CommandLineParser<CI extends CommandInvocation> {
         return true;
     }
 
+    /**
+     * Whether help was requested for this command, either directly with its
+     * own {@code --help} flag or via an ancestor group command
+     * (e.g. {@code group -h sub} behaves like {@code group sub -h}, #762).
+     * Parsers with parents override this to include the ancestor chain.
+     */
+    default boolean isHelpRequested() {
+        ProcessedCommand<Command<CI>, CI> command = getProcessedCommand();
+        return command != null && command.generateHelp() && command.isGenerateHelpOptionSet();
+    }
+
     enum Mode {
         COMPLETION,
         STRICT,
