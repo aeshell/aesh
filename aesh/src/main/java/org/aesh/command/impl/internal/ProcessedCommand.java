@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,6 +54,8 @@ import org.aesh.command.populator.CommandPopulator;
 import org.aesh.command.result.ResultHandler;
 import org.aesh.command.validator.CommandValidator;
 import org.aesh.selector.SelectorType;
+import org.aesh.terminal.detect.TerminalCapabilities;
+import org.aesh.terminal.detect.TerminalSize;
 import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.utils.ANSI;
 import org.aesh.terminal.utils.Config;
@@ -64,9 +67,64 @@ import org.aesh.terminal.utils.Parser;
 public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocation> {
 
     /**
-     * The width the help is written for: longer descriptions are wrapped.
+     * The default width the help is written for when nothing else resolves it:
+     * longer descriptions are wrapped. See {@link #helpWidth()}.
      */
     public static final int HELP_WIDTH = 80;
+
+    /** Lower bound for a resolved help width, so a tiny value never garbles wrapping. */
+    private static final int MIN_HELP_WIDTH = 40;
+
+    /**
+     * The width this command's help wraps to, resolved at render time:
+     * an explicit {@code aesh.help.width} system property or {@code COLUMNS}
+     * environment variable wins; otherwise the live terminal width when a
+     * controlling terminal answers; otherwise {@link #HELP_WIDTH}.
+     * Any resolved value is clamped to at least {@link #MIN_HELP_WIDTH}.
+     * Safe to call where there is no terminal — an absent terminal simply
+     * falls through to the default.
+     *
+     * @return the help width in columns
+     */
+    public int helpWidth() {
+        int override = overrideWidth();
+        if (override > 0)
+            return override;
+        Optional<TerminalSize> size = TerminalCapabilities.queryTerminalSize();
+        if (size.isPresent())
+            return Math.max(size.get().width(), MIN_HELP_WIDTH);
+        return HELP_WIDTH;
+    }
+
+    /**
+     * The help width from an explicit override only ({@code aesh.help.width}
+     * system property, then {@code COLUMNS}), or {@link #HELP_WIDTH} when none
+     * is set. Does not consult any terminal, so it is safe where there is no
+     * render context.
+     *
+     * @return the help width in columns
+     */
+    public static int resolveHelpWidth() {
+        int override = overrideWidth();
+        return override > 0 ? override : HELP_WIDTH;
+    }
+
+    private static int overrideWidth() {
+        int width = parseWidth(System.getProperty("aesh.help.width"));
+        if (width <= 0)
+            width = parseWidth(System.getenv("COLUMNS"));
+        return width > 0 ? Math.max(width, MIN_HELP_WIDTH) : -1;
+    }
+
+    private static int parseWidth(String value) {
+        if (value == null)
+            return -1;
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
 
     private static final Pattern DESCRIPTION_VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
     private static final char DASH = '-';
@@ -1398,7 +1456,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll) {
         int maxLength = 0;
         int maxOptionColumnWidth = 24;
-        int width = HELP_WIDTH;
+        int width = helpWidth();
         DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
         List<ProcessedOption> opts = getDisplayOptions();
         List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
