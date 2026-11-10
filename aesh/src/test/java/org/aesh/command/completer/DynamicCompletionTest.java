@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.List;
 
 import org.aesh.AeshRuntimeRunner;
 import org.aesh.command.Command;
@@ -14,6 +16,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionList;
 import org.junit.Test;
 
 /**
@@ -249,6 +252,48 @@ public class DynamicCompletionTest {
         String output = completeViaFlag(ToolGroup.class, "install", "");
         assertTrue("Positional fallback must be kept, got: " + output,
                 output.contains("__aesh_file__"));
+    }
+
+    // ========== Comma-separated OptionList keeps the typed prefix (#760) ==========
+
+    @Test
+    public void testCommaSeparatedValueIsQualified() {
+        // Completing the second segment must re-attach the typed prefix so
+        // shell prefix filtering keeps the candidates
+        String output = completeViaFlag(ToolGroup.class, "install", "--jdk-providers", "jbang,ja");
+        List<String> lines = Arrays.asList(output.split("\\R"));
+        assertTrue("Qualified candidate should be offered, got: " + output,
+                lines.contains("jbang,current"));
+        assertTrue("Bare segment must not be offered, got: " + output,
+                lines.stream().noneMatch(l -> l.equals("current")));
+    }
+
+    @Test
+    public void testFirstSegmentStaysBare() {
+        // First segment has no prefix to re-attach
+        String output = completeViaFlag(ToolGroup.class, "install", "--jdk-providers", "ja");
+        List<String> lines = Arrays.asList(output.split("\\R"));
+        assertTrue("Bare candidate should be offered, got: " + output, lines.contains("current"));
+        assertTrue("Nothing to qualify without a separator, got: " + output,
+                lines.stream().noneMatch(l -> l.contains(",")));
+    }
+
+    @Test
+    public void testTrailingCommaQualifiesEmptySegment() {
+        String output = completeViaFlag(ToolGroup.class, "install", "--jdk-providers", "jbang,");
+        List<String> lines = Arrays.asList(output.split("\\R"));
+        assertTrue("Prefix must be re-attached for the empty segment, got: " + output,
+                lines.contains("jbang,current"));
+    }
+
+    @Test
+    public void testNoSeparatorOptionIsUntouched() {
+        // NO_SEPARATOR values are never split, so nothing is qualified
+        String output = completeViaFlag(ToolGroup.class, "install", "--mono", "a,b");
+        List<String> lines = Arrays.asList(output.split("\\R"));
+        assertTrue("Bare candidate should be offered, got: " + output, lines.contains("current"));
+        assertTrue("NO_SEPARATOR values are not qualified, got: " + output,
+                lines.stream().noneMatch(l -> l.contains(",")));
     }
 
     // ========== Description tests ==========
@@ -497,6 +542,12 @@ public class DynamicCompletionTest {
     public static class InstallCmd implements Command<CommandInvocation> {
         @Option(name = "providers", shortName = 'p', description = "Providers to install", completer = ProvidersCompleter.class)
         private String providers;
+
+        @OptionList(name = "jdk-providers", valueSeparator = ',', description = "JDK providers", completer = ProvidersCompleter.class)
+        private List<String> jdkProviders;
+
+        @OptionList(name = "mono", valueSeparator = OptionList.NO_SEPARATOR, description = "Monolithic values", completer = ProvidersCompleter.class)
+        private List<String> mono;
 
         @Option(hasValue = false, description = "Verbose output")
         private boolean verbose;

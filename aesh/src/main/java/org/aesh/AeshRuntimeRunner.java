@@ -21,8 +21,10 @@ package org.aesh;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.ArgumentsSection;
@@ -50,6 +52,7 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.CompletionFallback;
+import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.SubcommandNotFoundException;
 import org.aesh.command.registry.CommandRegistry;
@@ -59,6 +62,7 @@ import org.aesh.command.validator.CommandValidatorException;
 import org.aesh.command.validator.OptionValidatorException;
 import org.aesh.complete.AeshCompleteOperation;
 import org.aesh.terminal.Connection;
+import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.tty.TtyDetect;
 import org.aesh.terminal.utils.Config;
 import org.aesh.util.completer.ShellCompletionGenerator;
@@ -666,6 +670,10 @@ public class AeshRuntimeRunner {
             // No post-filtering needed (#539).
             java.util.List<org.aesh.terminal.formatting.TerminalString> candidates = completeOperation
                     .getCompletionCandidates();
+            // If completing a later segment of a separated option value, re-attach the
+            // typed prefix: shells filter the whole current word and replace it wholesale,
+            // while the completion engine only knows the last segment (#760).
+            candidates = qualifySegmentCandidates(commandRegistry, commandName, candidates);
 
             // Sort candidates alphabetically for consistent shell completion (#497)
             candidates.sort((a, b) -> a.getCharacters().trim().compareToIgnoreCase(b.getCharacters().trim()));
@@ -862,14 +870,10 @@ public class AeshRuntimeRunner {
 
     /**
      * If the cursor is on an option value (empty or bare word following a bare
-     * value-taking option token), return the fallback that option drives. An
-     * option with a user-supplied completer owns its value space, so file
-     * completion is never forced for it; otherwise the option's own fallback
-     * applies. Return null when the cursor is not on an option value, so the
-     * positional fallback applies instead (#759).
+     * value-taking option token), return that option. Otherwise return null.
      */
     @SuppressWarnings("unchecked")
-    private CompletionFallback resolveOptionValueFallback(CommandRegistry<CommandInvocation> commandRegistry,
+    private ProcessedOption findOptionValueTarget(CommandRegistry<CommandInvocation> commandRegistry,
             String commandName) {
         if (args == null || args.length < 2)
             return null;
@@ -888,19 +892,29 @@ public class AeshRuntimeRunner {
                     .getCommand(commandName, "");
             CommandLineParser<CommandInvocation> scopedParser = findScopedParser(container.getParser(), args);
             ProcessedCommand<?, ?> command = scopedParser.getProcessedCommand();
-            ProcessedOption option;
             if (longOption)
-                option = command.findLongOptionNoActivatorCheck(optToken);
-            else
-                option = command.findOptionNoActivatorCheck(optToken);
-            if (option == null || !option.hasValue())
-                return null;
-            if (hasCustomCompleter(option))
-                return CompletionFallback.NONE;
-            return option.getCompleteFallback();
+                return command.findLongOptionNoActivatorCheck(optToken);
+            return command.findOptionNoActivatorCheck(optToken);
         } catch (Exception ignored) {
             return null;
         }
+    }
+
+    /**
+     * If the cursor is on an option value, return the fallback that option drives. An
+     * option with a user-supplied completer owns its value space, so file
+     * completion is never forced for it; otherwise the option's own fallback
+     * applies. Return null when the cursor is not on an option value, so the
+     * positional fallback applies instead (#759).
+     */
+    private CompletionFallback resolveOptionValueFallback(CommandRegistry<CommandInvocation> commandRegistry,
+            String commandName) {
+        ProcessedOption option = findOptionValueTarget(commandRegistry, commandName);
+        if (option == null || !option.hasValue())
+            return null;
+        if (hasCustomCompleter(option))
+            return CompletionFallback.NONE;
+        return option.getCompleteFallback();
     }
 
     /**
@@ -913,6 +927,38 @@ public class AeshRuntimeRunner {
         return completer != null
                 && !(completer instanceof FileOptionCompleter)
                 && !(completer instanceof DefaultValueOptionCompleter);
+    }
+
+    /**
+     * If the cursor is on a later segment of a separated option value (e.g. the
+     * {@code ja} in {@code --opt jbang,ja}), re-attach the typed prefix to every
+     * candidate ({@code jbang,javahome}). Shells filter the whole current word
+     * and replace it wholesale, while the completion engine only knows the last
+     * segment, so bare segment values would be discarded (#760). The first
+     * segment, space-separated values and {@code NO_SEPARATOR} options are
+     * returned unchanged.
+     */
+    private List<TerminalString> qualifySegmentCandidates(CommandRegistry<CommandInvocation> commandRegistry,
+            String commandName, List<TerminalString> candidates) {
+        if (candidates.isEmpty())
+            return candidates;
+        String current = args != null && args.length > 0 ? args[args.length - 1] : "";
+        if (current.isEmpty())
+            return candidates;
+        ProcessedOption option = findOptionValueTarget(commandRegistry, commandName);
+        if (option == null || !option.hasValue())
+            return candidates;
+        char separator = option.getValueSeparator();
+        if (separator == ' ' || separator == OptionList.NO_SEPARATOR)
+            return candidates;
+        int split = current.lastIndexOf(separator);
+        if (split < 0)
+            return candidates;
+        String prefix = current.substring(0, split + 1);
+        List<TerminalString> qualified = new ArrayList<>(candidates.size());
+        for (TerminalString candidate : candidates)
+            qualified.add(candidate.cloneRenderingAttributes(prefix + candidate.getCharacters()));
+        return qualified;
     }
 
     /**
