@@ -500,6 +500,9 @@ final class CodeGenerator {
         sb.append("                .argumentsSection(")
                 .append(argumentsSectionValue(getAnnotationValue(commandElement, "argumentsSection", elementUtils)))
                 .append(")\n");
+        sb.append("                .headerBeforeSynopsis(")
+                .append(toggleValue(getAnnotationValue(commandElement, "headerBeforeSynopsis", elementUtils)))
+                .append(")\n");
         generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils, forHelp);
         sb.append("                .version(\"\")\n");
         String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);

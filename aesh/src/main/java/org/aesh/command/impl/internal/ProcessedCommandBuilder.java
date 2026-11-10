@@ -71,6 +71,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private Toggle showDefaultValues = Toggle.INHERIT;
     private Toggle failOnDuplicateOptions = Toggle.INHERIT;
     private ArgumentsSection argumentsSection = ArgumentsSection.INHERIT;
+    private Toggle headerBeforeSynopsis = Toggle.INHERIT;
     private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
     private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
     private int optionCapacity = -1;
@@ -168,6 +169,12 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
 
     public ProcessedCommandBuilder<C, CI> argumentsSection(ArgumentsSection argumentsSection) {
         this.argumentsSection = argumentsSection != null ? argumentsSection : ArgumentsSection.INHERIT;
+        return this;
+    }
+
+    public ProcessedCommandBuilder<C, CI> headerBeforeSynopsis(Toggle headerBeforeSynopsis) {
+        this.headerBeforeSynopsis = headerBeforeSynopsis != null ? headerBeforeSynopsis
+                : Toggle.INHERIT;
         return this;
     }
 
@@ -299,7 +306,8 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         ProcessedCommand<C, CI> pc = new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
                 helpUrl, stopAtFirstPositional, defaultValueProvider, sortOptions, collapseSynopsis,
-                defaultOptionsFirst, showDefaultValues, failOnDuplicateOptions, argumentsSection);
+                defaultOptionsFirst, showDefaultValues, failOnDuplicateOptions, argumentsSection,
+                headerBeforeSynopsis);
         // Resolve without a parent: direct programmatic use has none, and
         // attached children are re-resolved with the real parent on attach.
         pc.resolveHelpToggles(null, helpDefaults, argumentsSectionDefault);

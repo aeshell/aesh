@@ -43,7 +43,7 @@ import org.aesh.command.validator.CommandValidator;
  * The attributes that shape {@code --help} output are described together in the
  * <a href="/docs/aesh/customizing-help">Customizing help output</a> guide: layout
  * ({@link #collapseSynopsis()}, {@link #defaultOptionsFirst()},
- * {@link #argumentsSection()}, {@link #sortOptions()}), content
+ * {@link #argumentsSection()}, {@link #headerBeforeSynopsis()}, {@link #sortOptions()}), content
  * ({@link #header()}, {@link #footer()}, {@link #helpUrl()},
  * {@link #showDefaultValues()}, {@link #helpGroup()}) and dynamic sections
  * ({@link #helpSectionProvider()}).
@@ -269,6 +269,19 @@ public @interface CommandDefinition {
      * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
     ArgumentsSection argumentsSection() default ArgumentsSection.INHERIT;
+
+    /**
+     * Print the help header (from a {@link HelpSectionProvider} or the
+     * {@code header} attribute) before the usage line, right after the
+     * one-line description, instead of between the usage line and the
+     * options sections. Useful when the header is descriptive prose and
+     * examples that read better ahead of the synopsis.
+     * {@code INHERIT} (the default) takes the value from the parent command,
+     * else the fleet default (see {@code HelpFeature}).
+     * <p>
+     * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
+     */
+    Toggle headerBeforeSynopsis() default Toggle.INHERIT;
 
     /**
      * Default completion fallback for all options and arguments in this command.

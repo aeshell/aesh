@@ -35,5 +35,7 @@ public enum HelpFeature {
     /** Mirror of {@code showDefaultValues}. */
     SHOW_DEFAULT_VALUES,
     /** Mirror of {@code failOnDuplicateOptions}. */
-    FAIL_ON_DUPLICATE_OPTIONS
+    FAIL_ON_DUPLICATE_OPTIONS,
+    /** Mirror of {@code headerBeforeSynopsis}. */
+    HEADER_BEFORE_SYNOPSIS
 }

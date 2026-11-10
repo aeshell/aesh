@@ -2153,6 +2153,56 @@ public class ProcessorTest {
                 help.indexOf("Arguments:") > help.indexOf("Options:"));
     }
 
+    private static final String HEADER_BEFORE_SYNOPSIS_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.Toggle;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"header-first\", description = \"List threads first\", generateHelp = true,\n" +
+            "        headerBeforeSynopsis = Toggle.ON, header = \"Shows the threads of the command.\")\n" +
+            "public class HeaderFirstCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Include the stack trace\", hasValue = false)\n" +
+            "    private boolean trace;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testHeaderBeforeSynopsisMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.HeaderFirstCommand", HEADER_BEFORE_SYNOPSIS_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.HeaderFirstCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.HeaderFirstCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+
+        // The generated toggle must render the header before the usage line
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        int description = help.indexOf("List threads first");
+        int header = help.indexOf("Shows the threads of the command.");
+        int usage = help.indexOf("Usage: header-first");
+        assertTrue("Generated help should order description, header, usage: " + help,
+                description >= 0 && description < header && header < usage);
+    }
+
     private static final String GROUPED_POSITIONAL_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +
@@ -4264,6 +4314,8 @@ public class ProcessorTest {
         assertEquals("defaultOptionsFirst", reflectionPC.defaultOptionsFirst(), generatedPC.defaultOptionsFirst());
         assertEquals("argumentsSection", reflectionPC.argumentsSection(),
                 generatedPC.argumentsSection());
+        assertEquals("headerBeforeSynopsis", reflectionPC.headerBeforeSynopsis(),
+                generatedPC.headerBeforeSynopsis());
         assertEquals("helpHeader", reflectionPC.getHelpHeader(), generatedPC.getHelpHeader());
         assertEquals("helpFooter", reflectionPC.getHelpFooter(), generatedPC.getHelpFooter());
         assertEquals("completeFallback", reflectionPC.getCompleteFallback(), generatedPC.getCompleteFallback());
