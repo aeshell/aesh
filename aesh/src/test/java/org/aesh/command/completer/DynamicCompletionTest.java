@@ -206,6 +206,51 @@ public class DynamicCompletionTest {
                 apiOutput.contains("build"), flagOutput.contains("build"));
     }
 
+    // ========== Option value targets must not force file completion (#759) ==========
+
+    @Test
+    public void testOptionValueCompleterSuppressesFileSentinel() {
+        // "--providers <TAB>" completes an option value with its own completer
+        // (fallback NONE); the positional's FILES fallback must not leak in
+        String output = completeViaFlag(ToolGroup.class, "install", "--providers", "");
+        assertTrue("Option value candidates should be offered, got: " + output, output.contains("current"));
+        assertFalse("File sentinel must not be forced for option values, got: " + output,
+                output.contains("__aesh_file__"));
+    }
+
+    @Test
+    public void testShortOptionValueCompleterSuppressesFileSentinel() {
+        String output = completeViaFlag(ToolGroup.class, "install", "-p", "");
+        assertTrue("Option value candidates should be offered, got: " + output, output.contains("current"));
+        assertFalse("File sentinel must not be forced for option values, got: " + output,
+                output.contains("__aesh_file__"));
+    }
+
+    @Test
+    public void testBooleanOptionFallsBackToPositional() {
+        // --verbose takes no value, so the cursor is not on an option value
+        String output = completeViaFlag(ToolGroup.class, "install", "--verbose", "");
+        assertFalse("No option value candidates here, got: " + output, output.contains("current"));
+        assertTrue("Positional fallback still applies, got: " + output,
+                output.contains("__aesh_file__"));
+    }
+
+    @Test
+    public void testCompletedOptionValueFallsBackToPositional() {
+        // After a complete value the cursor starts a new positional
+        String output = completeViaFlag(ToolGroup.class, "install", "--providers", "all", "");
+        assertTrue("Positional fallback still applies, got: " + output,
+                output.contains("__aesh_file__"));
+    }
+
+    @Test
+    public void testPositionalStillEmitsFileSentinel() {
+        // Control: completing a bare positional keeps the file fallback
+        String output = completeViaFlag(ToolGroup.class, "install", "");
+        assertTrue("Positional fallback must be kept, got: " + output,
+                output.contains("__aesh_file__"));
+    }
+
     // ========== Description tests ==========
 
     @Test
@@ -432,6 +477,41 @@ public class DynamicCompletionTest {
         @Option(name = "env", description = "Environment")
         private String env;
 
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    // ========== Option-value completion must not force file fallback (#759) ==========
+
+    public static class ProvidersCompleter implements OptionCompleter<CompleterInvocation> {
+        @Override
+        public void complete(CompleterInvocation invocation) {
+            invocation.addCompleterValue("all");
+            invocation.addCompleterValue("current");
+        }
+    }
+
+    @CommandDefinition(name = "install", description = "Install thing", generateHelp = true)
+    public static class InstallCmd implements Command<CommandInvocation> {
+        @Option(name = "providers", shortName = 'p', description = "Providers to install", completer = ProvidersCompleter.class)
+        private String providers;
+
+        @Option(hasValue = false, description = "Verbose output")
+        private boolean verbose;
+
+        @Argument(description = "Thing to install")
+        private String target;
+
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "tool", description = "Tool", generateHelp = true, groupCommands = { InstallCmd.class })
+    public static class ToolGroup implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation ci) {
             return CommandResult.SUCCESS;

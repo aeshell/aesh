@@ -36,14 +36,20 @@ import org.aesh.command.CommandRuntime;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.HelpFeature;
 import org.aesh.command.Toggle;
+import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
 import org.aesh.command.impl.LazyHelp;
 import org.aesh.command.impl.LazyRouteResolver;
+import org.aesh.command.impl.completer.DefaultValueOptionCompleter;
+import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ProcessedCommand;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.CompletionFallback;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.SubcommandNotFoundException;
 import org.aesh.command.registry.CommandRegistry;
@@ -682,11 +688,12 @@ public class AeshRuntimeRunner {
                     || (partialLine.length() > 0 && !partialLine.endsWith(" ")
                             && partialLine.substring(partialLine.lastIndexOf(' ') + 1).startsWith("-"));
             if (!typingOption) {
-                org.aesh.command.option.CompletionFallback fallback = resolvePositionalFallback(
-                        commandRegistry, commandName);
-                if (fallback == org.aesh.command.option.CompletionFallback.FILES) {
+                CompletionFallback fallback = resolveOptionValueFallback(commandRegistry, commandName);
+                if (fallback == null)
+                    fallback = resolvePositionalFallback(commandRegistry, commandName);
+                if (fallback == CompletionFallback.FILES) {
                     System.out.println("__aesh_file__");
-                } else if (fallback == org.aesh.command.option.CompletionFallback.DIRECTORIES) {
+                } else if (fallback == CompletionFallback.DIRECTORIES) {
                     System.out.println("__aesh_dir__");
                 }
             }
@@ -851,6 +858,61 @@ public class AeshRuntimeRunner {
                 descriptions.put("-" + opt.shortName(), desc);
             }
         }
+    }
+
+    /**
+     * If the cursor is on an option value (empty or bare word following a bare
+     * value-taking option token), return the fallback that option drives. An
+     * option with a user-supplied completer owns its value space, so file
+     * completion is never forced for it; otherwise the option's own fallback
+     * applies. Return null when the cursor is not on an option value, so the
+     * positional fallback applies instead (#759).
+     */
+    @SuppressWarnings("unchecked")
+    private CompletionFallback resolveOptionValueFallback(CommandRegistry<CommandInvocation> commandRegistry,
+            String commandName) {
+        if (args == null || args.length < 2)
+            return null;
+        String current = args[args.length - 1];
+        if (!current.isEmpty() && current.charAt(0) == '-')
+            return null;
+        String previous = args[args.length - 2];
+        if (previous.length() < 2 || previous.charAt(0) != '-' || previous.indexOf('=') >= 0)
+            return null;
+        boolean longOption = previous.charAt(1) == '-';
+        String optToken = previous.substring(longOption ? 2 : 1);
+        if (optToken.isEmpty() || (!longOption && optToken.length() != 1))
+            return null;
+        try {
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) commandRegistry
+                    .getCommand(commandName, "");
+            CommandLineParser<CommandInvocation> scopedParser = findScopedParser(container.getParser(), args);
+            ProcessedCommand<?, ?> command = scopedParser.getProcessedCommand();
+            ProcessedOption option;
+            if (longOption)
+                option = command.findLongOptionNoActivatorCheck(optToken);
+            else
+                option = command.findOptionNoActivatorCheck(optToken);
+            if (option == null || !option.hasValue())
+                return null;
+            if (hasCustomCompleter(option))
+                return CompletionFallback.NONE;
+            return option.getCompleteFallback();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * Whether the option has a user-supplied completer. Framework-attached
+     * completers (file completion for File/Resource/Path types, allowed-values
+     * completion) do not count: file forcing stays driven by the fallback.
+     */
+    private static boolean hasCustomCompleter(ProcessedOption option) {
+        OptionCompleter<?> completer = option.completer();
+        return completer != null
+                && !(completer instanceof FileOptionCompleter)
+                && !(completer instanceof DefaultValueOptionCompleter);
     }
 
     /**
