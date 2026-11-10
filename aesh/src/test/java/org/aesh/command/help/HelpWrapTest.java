@@ -102,11 +102,19 @@ public class HelpWrapTest {
         assertEquals(Arrays.asList("one two three"), ProcessedOption.wrapText("one two three", 5));
     }
 
+    // Wrap-assumption tests below pin the width: help now follows the live
+    // terminal width, so an ambient COLUMNS or wide terminal would otherwise
+    // change the expected 80-column layout.
     private static String help(Command<CommandInvocation> command) throws Exception {
-        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>().create(command)
-                .getParser();
-        parser.updateAnsiMode(false);
-        return parser.printHelp();
+        System.setProperty("aesh.help.width", "80");
+        try {
+            CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>().create(command)
+                    .getParser();
+            parser.updateAnsiMode(false);
+            return parser.printHelp();
+        } finally {
+            System.clearProperty("aesh.help.width");
+        }
     }
 
     private static List<String> lines(String text) {

@@ -108,6 +108,13 @@
             <configuration>
                <redirectTestOutputToFile>true</redirectTestOutputToFile>
                <trimStackTrace>false</trimStackTrace>
+               <!-- Pin help width: help follows the live terminal width, so an
+                    ambient COLUMNS or terminal size would otherwise change
+                    expected 80-column layouts. Tests that need other widths
+                    set aesh.help.width explicitly (see HelpWidthTest). -->
+               <systemPropertyVariables>
+                  <aesh.help.width>80</aesh.help.width>
+               </systemPropertyVariables>
                <includes>
                   <include>**/*TestCase.java</include>
                   <include>**/*Test.java</include>

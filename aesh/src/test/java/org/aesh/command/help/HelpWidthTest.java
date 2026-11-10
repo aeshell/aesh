@@ -61,11 +61,16 @@ public class HelpWidthTest {
 
     @Test
     public void testWidthFloorWithoutOverrides() throws Exception {
-        // COLUMNS may or may not be set here; either way the floor holds
-        // and no terminal means no throw.
-        String sysprop = System.getProperty("aesh.help.width");
-        if (sysprop == null)
+        // Exercise the true no-override path even when the test JVM pins a
+        // default width (see surefire systemPropertyVariables).
+        String pinned = System.getProperty("aesh.help.width");
+        System.clearProperty("aesh.help.width");
+        try {
             assertTrue(helpWidth() >= 40);
+        } finally {
+            if (pinned != null)
+                System.setProperty("aesh.help.width", pinned);
+        }
     }
 
     @Test

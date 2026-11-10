@@ -1847,39 +1847,47 @@ public class CommandLineFormatterTest {
 
     @Test
     public void testSynopsis_WrapsAtWidth() throws CommandLineParserException {
-        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
-                .name("longcmd").description("A command with many options");
-        // Add enough options to exceed 80 columns
-        for (String name : new String[] { "alpha", "bravo", "charlie", "delta", "echo",
-                "foxtrot", "golf", "hotel", "india", "juliet" }) {
-            pb.addOption(ProcessedOptionBuilder.builder()
-                    .name(name).type(String.class).description("Option " + name).build());
-        }
-
-        CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
-        clp.updateAnsiMode(false);
-        String help = clp.printHelp();
-
-        // Find the synopsis block (may span multiple lines starting from "Usage:")
-        String[] lines = help.split("\\r?\\n");
-        boolean foundUsage = false;
-        int synopsisLineCount = 0;
-        for (String line : lines) {
-            if (line.startsWith("Usage:")) {
-                foundUsage = true;
-                synopsisLineCount++;
-                assertTrue("Synopsis line should not exceed 80 chars: '" + line + "'",
-                        line.length() <= 82); // small margin for edge cases
-            } else if (foundUsage && line.startsWith("        ")) {
-                // Continuation line (indented)
-                synopsisLineCount++;
-                assertTrue("Continuation line should not exceed 80 chars: '" + line + "'",
-                        line.length() <= 82);
-            } else if (foundUsage) {
-                break;
+        // Pin the width: help now follows the live terminal width, so an
+        // ambient COLUMNS or wide terminal would otherwise change the
+        // expected 80-column layout.
+        System.setProperty("aesh.help.width", "80");
+        try {
+            ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                    .name("longcmd").description("A command with many options");
+            // Add enough options to exceed 80 columns
+            for (String name : new String[] { "alpha", "bravo", "charlie", "delta", "echo",
+                    "foxtrot", "golf", "hotel", "india", "juliet" }) {
+                pb.addOption(ProcessedOptionBuilder.builder()
+                        .name(name).type(String.class).description("Option " + name).build());
             }
+
+            CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+            clp.updateAnsiMode(false);
+            String help = clp.printHelp();
+
+            // Find the synopsis block (may span multiple lines starting from "Usage:")
+            String[] lines = help.split("\\r?\\n");
+            boolean foundUsage = false;
+            int synopsisLineCount = 0;
+            for (String line : lines) {
+                if (line.startsWith("Usage:")) {
+                    foundUsage = true;
+                    synopsisLineCount++;
+                    assertTrue("Synopsis line should not exceed 80 chars: '" + line + "'",
+                            line.length() <= 82); // small margin for edge cases
+                } else if (foundUsage && line.startsWith("        ")) {
+                    // Continuation line (indented)
+                    synopsisLineCount++;
+                    assertTrue("Continuation line should not exceed 80 chars: '" + line + "'",
+                            line.length() <= 82);
+                } else if (foundUsage) {
+                    break;
+                }
+            }
+            assertTrue("Synopsis should wrap to multiple lines", synopsisLineCount > 1);
+        } finally {
+            System.clearProperty("aesh.help.width");
         }
-        assertTrue("Synopsis should wrap to multiple lines", synopsisLineCount > 1);
     }
 
     // --- Issue #458: Option column width capping ---
