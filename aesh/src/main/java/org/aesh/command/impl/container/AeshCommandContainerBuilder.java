@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
@@ -81,6 +82,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
     private boolean lazyChildResolution;
     private DefaultValueProvider defaultValueProvider;
     private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
+    private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
 
     public void setLazyChildResolution(boolean lazyChildResolution) {
         this.lazyChildResolution = lazyChildResolution;
@@ -96,6 +98,16 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
      */
     public void setHelpDefaults(EnumSet<HelpFeature> helpDefaults) {
         this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
+    }
+
+    /**
+     * Fleet-wide arguments-section placement applied when the annotated value
+     * is {@code INHERIT}. Set by the registry; direct use may set it
+     * explicitly (off by default).
+     */
+    public void setArgumentsSectionDefault(ArgumentsSection argumentsSectionDefault) {
+        this.argumentsSectionDefault = argumentsSectionDefault != null ? argumentsSectionDefault
+                : ArgumentsSection.OFF;
     }
 
     @Override
@@ -254,6 +266,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 .description(command.description())
                 .command(adapter)
                 .helpDefaults(helpDefaults)
+                .argumentsSectionDefault(argumentsSectionDefault)
                 .create();
         processMethod(processedCommand, slots, method);
         validatePositionalIndexes(processedCommand);
@@ -302,7 +315,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 .buildProcessedCommand(owner);
         // Generated builders have no parent context; resolve with the fleet
         // defaults now, and re-resolve on attach for subcommands.
-        processedCommand.resolveHelpToggles(null, helpDefaults);
+        processedCommand.resolveHelpToggles(null, helpDefaults, argumentsSectionDefault);
         AeshCommandContainer<CI> container = new AeshCommandContainer<>(new AeshCommandLineParser<>(processedCommand));
         applyDefaultValueProvider(container);
         return container;
@@ -363,8 +376,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 .failOnDuplicateOptions(command.failOnDuplicateOptions())
                 .showDefaultValues(command.showDefaultValues())
                 .defaultOptionsFirst(command.defaultOptionsFirst())
-                .separateArgumentsSection(command.separateArgumentsSection())
+                .argumentsSection(command.argumentsSection())
                 .helpDefaults(helpDefaults)
+                .argumentsSectionDefault(argumentsSectionDefault)
                 .version(command.version())
                 .helpUrl(command.helpUrl())
                 .create();
@@ -398,7 +412,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         ProcessedCommand<Command<CI>, CI> processedCommand = provider.buildProcessedCommand(command);
         // Generated builders have no parent context; resolve with the fleet
         // defaults now, and re-resolve on attach for subcommands.
-        processedCommand.resolveHelpToggles(null, helpDefaults);
+        processedCommand.resolveHelpToggles(null, helpDefaults, argumentsSectionDefault);
 
         AeshCommandLineParser<CI> parser = new AeshCommandLineParser<>(processedCommand);
         AeshCommandContainer<CI> container = new AeshCommandContainer<>(parser);
@@ -478,8 +492,9 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     .failOnDuplicateOptions(command.failOnDuplicateOptions())
                     .showDefaultValues(command.showDefaultValues())
                     .defaultOptionsFirst(command.defaultOptionsFirst())
-                    .separateArgumentsSection(command.separateArgumentsSection())
+                    .argumentsSection(command.argumentsSection())
                     .helpDefaults(helpDefaults)
+                    .argumentsSectionDefault(argumentsSectionDefault)
                     .defaultValueProvider(command.defaultValueProvider())
                     .version(command.version())
                     .helpUrl(command.helpUrl())

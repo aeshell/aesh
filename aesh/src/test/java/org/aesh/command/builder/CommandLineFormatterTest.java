@@ -49,6 +49,7 @@ import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
+import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.terminal.utils.ANSI;
@@ -1422,6 +1423,38 @@ public class CommandLineFormatterTest {
                 synopsis.contains("[OPTIONS]") && synopsis.contains("<script>"));
         assertTrue("Options table still documents the flag",
                 help.contains("--config"));
+    }
+
+    @Test
+    public void shortOnlyOptionSharesDescriptionColumn() throws Exception {
+        // A short-only option (empty long name) must not shift the
+        // description column: measuring and rendering agree on "" (#752)
+        CommandLineParser<CommandInvocation> clp = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new ShortOnlyCommand()).getParser();
+        clp.updateAnsiMode(false);
+        String help = stripAnsi(clp.printHelp());
+
+        assertEquals(descriptionColumn(help, "Activate interactive mode"),
+                descriptionColumn(help, "set a system property"));
+        assertEquals(descriptionColumn(help, "Activate interactive mode"),
+                descriptionColumn(help, "JDK version to use"));
+    }
+
+    @CommandDefinition(name = "jbang", description = "Run scripts", generateHelp = true)
+    public static class ShortOnlyCommand implements Command<CommandInvocation> {
+        @Option(shortName = 'i', name = "interactive", hasValue = false, description = "Activate interactive mode")
+        boolean interactive;
+
+        @OptionGroup(shortName = 'D', description = "set a system property")
+        Map<String, String> sysprops;
+
+        @Option(shortName = 'j', name = "java", description = "JDK version to use for running the script.")
+        String java;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
     }
 
     @CommandDefinition(name = "collapsed", description = "Collapsed synopsis", collapseSynopsis = Toggle.ON)

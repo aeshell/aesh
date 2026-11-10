@@ -43,7 +43,7 @@ import org.aesh.command.validator.CommandValidator;
  * The attributes that shape {@code --help} output are described together in the
  * <a href="/docs/aesh/customizing-help">Customizing help output</a> guide: layout
  * ({@link #collapseSynopsis()}, {@link #defaultOptionsFirst()},
- * {@link #separateArgumentsSection()}, {@link #sortOptions()}), content
+ * {@link #argumentsSection()}, {@link #sortOptions()}), content
  * ({@link #header()}, {@link #footer()}, {@link #helpUrl()},
  * {@link #showDefaultValues()}, {@link #helpGroup()}) and dynamic sections
  * ({@link #helpSectionProvider()}).
@@ -259,17 +259,16 @@ public @interface CommandDefinition {
     Toggle defaultOptionsFirst() default Toggle.INHERIT;
 
     /**
-     * Print positional arguments under their own {@code Arguments:} heading
-     * right after the usage line instead of trailing the last option
-     * section, so they no longer look like part of whichever option group
-     * happens to be last. Their descriptions share the option description
-     * column.
+     * Where positional arguments render in help output: their own
+     * {@code Arguments:} heading first (right after the usage line), last
+     * (after all option groups), or not at all (trailing the last option
+     * section as plain positionals).
      * {@code INHERIT} (the default) takes the value from the parent command,
-     * else the fleet default (see {@code HelpFeature}).
+     * else the fleet default.
      * <p>
      * See the <a href="/docs/aesh/customizing-help">Customizing help output</a> guide.
      */
-    Toggle separateArgumentsSection() default Toggle.INHERIT;
+    ArgumentsSection argumentsSection() default ArgumentsSection.INHERIT;
 
     /**
      * Default completion fallback for all options and arguments in this command.

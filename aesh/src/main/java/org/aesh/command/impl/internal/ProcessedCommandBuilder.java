@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.HelpFeature;
@@ -69,8 +70,9 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private Toggle defaultOptionsFirst = Toggle.INHERIT;
     private Toggle showDefaultValues = Toggle.INHERIT;
     private Toggle failOnDuplicateOptions = Toggle.INHERIT;
-    private Toggle separateArgumentsSection = Toggle.INHERIT;
+    private ArgumentsSection argumentsSection = ArgumentsSection.INHERIT;
     private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
+    private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
     private int optionCapacity = -1;
 
     private ProcessedCommandBuilder() {
@@ -164,9 +166,8 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         return this;
     }
 
-    public ProcessedCommandBuilder<C, CI> separateArgumentsSection(Toggle separateArgumentsSection) {
-        this.separateArgumentsSection = separateArgumentsSection != null ? separateArgumentsSection
-                : Toggle.INHERIT;
+    public ProcessedCommandBuilder<C, CI> argumentsSection(ArgumentsSection argumentsSection) {
+        this.argumentsSection = argumentsSection != null ? argumentsSection : ArgumentsSection.INHERIT;
         return this;
     }
 
@@ -177,6 +178,17 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
      */
     public ProcessedCommandBuilder<C, CI> helpDefaults(EnumSet<HelpFeature> helpDefaults) {
         this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
+        return this;
+    }
+
+    /**
+     * Fleet-wide arguments-section placement applied when the annotated value
+     * is inherited. The container builder sets this from the registry;
+     * direct programmatic use may set it explicitly (off by default).
+     */
+    public ProcessedCommandBuilder<C, CI> argumentsSectionDefault(ArgumentsSection argumentsSectionDefault) {
+        this.argumentsSectionDefault = argumentsSectionDefault != null ? argumentsSectionDefault
+                : ArgumentsSection.OFF;
         return this;
     }
 
@@ -287,10 +299,10 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
         ProcessedCommand<C, CI> pc = new ProcessedCommand<>(name, aliases, command, description, validator,
                 resultHandler, generateHelp, disableParsing, version, arguments, options, arg, populator, activator,
                 helpUrl, stopAtFirstPositional, defaultValueProvider, sortOptions, collapseSynopsis,
-                defaultOptionsFirst, showDefaultValues, failOnDuplicateOptions, separateArgumentsSection);
+                defaultOptionsFirst, showDefaultValues, failOnDuplicateOptions, argumentsSection);
         // Resolve without a parent: direct programmatic use has none, and
         // attached children are re-resolved with the real parent on attach.
-        pc.resolveHelpToggles(null, helpDefaults);
+        pc.resolveHelpToggles(null, helpDefaults, argumentsSectionDefault);
         if (optionCapacity > 0)
             pc.ensureOptionCapacity(optionCapacity);
         return pc;

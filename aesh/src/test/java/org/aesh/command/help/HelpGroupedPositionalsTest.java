@@ -10,10 +10,10 @@ package org.aesh.command.help;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
-import org.aesh.command.Toggle;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -92,7 +92,7 @@ public class HelpGroupedPositionalsTest {
     @Test
     public void testGroupedOutOfInlineTailByDefault() throws Exception {
         String help = help(new DeployCommand());
-        // no separateArgumentsSection: grouped positional still leaves the inline tail
+        // no argumentsSection: grouped positional still leaves the inline tail
         assertFalse(help, help.contains("Arguments:"));
         int options = help.indexOf("Options:");
         assertTrue("no trailing positional after Options", help.indexOf("<artifact>", options) < 0);
@@ -139,7 +139,7 @@ public class HelpGroupedPositionalsTest {
         }
     }
 
-    @CommandDefinition(name = "mixed", description = "Mixed positionals", generateHelp = true, separateArgumentsSection = Toggle.ON)
+    @CommandDefinition(name = "mixed", description = "Mixed positionals", generateHelp = true, argumentsSection = ArgumentsSection.FIRST)
     public static class MixedCommand implements Command<CommandInvocation> {
         @Option(description = "Target environment", helpGroup = "Environments")
         String target;
@@ -156,7 +156,7 @@ public class HelpGroupedPositionalsTest {
         }
     }
 
-    @CommandDefinition(name = "ordered", description = "Ordered plain positionals", generateHelp = true, separateArgumentsSection = Toggle.ON)
+    @CommandDefinition(name = "ordered", description = "Ordered plain positionals", generateHelp = true, argumentsSection = ArgumentsSection.FIRST)
     public static class OrderedPlainCommand implements Command<CommandInvocation> {
         @Argument(description = "First filled", index = "0", order = 2)
         String first;

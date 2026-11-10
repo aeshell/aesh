@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandDefinitionException;
@@ -77,6 +78,11 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
      * already-built commands (top-down, so children see resolved parents).
      */
     private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
+    /**
+     * Fleet-wide arguments-section placement applied when a command leaves it
+     * {@code INHERIT}. Propagated and re-applied together with the toggles.
+     */
+    private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
 
     private final List<CommandRegistrationListener> listeners = new ArrayList<>();
     /**
@@ -157,6 +163,17 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
         applyHelpToggles();
     }
 
+    /**
+     * Set the fleet-wide arguments-section placement applied when a command
+     * leaves it {@code INHERIT}. Already-built commands are re-resolved
+     * top-down so a late call still takes effect before any help is rendered.
+     */
+    public void setArgumentsSectionDefault(ArgumentsSection argumentsSectionDefault) {
+        this.argumentsSectionDefault = argumentsSectionDefault != null ? argumentsSectionDefault
+                : ArgumentsSection.OFF;
+        applyHelpToggles();
+    }
+
     private void applyHelpToggles() {
         for (CommandContainer<CI> container : registry.values())
             applyHelpToggles(container.getParser(), null);
@@ -165,7 +182,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     private void applyHelpToggles(CommandLineParser<CI> parser, ProcessedCommand<?, ?> parent) {
         ProcessedCommand<?, ?> command = parser.getProcessedCommand();
         if (command != null) {
-            command.resolveHelpToggles(parent, helpDefaults);
+            command.resolveHelpToggles(parent, helpDefaults, argumentsSectionDefault);
             if (parser.getChildParsers() != null) {
                 for (CommandLineParser<CI> child : parser.getChildParsers())
                     applyHelpToggles(child, command);
@@ -701,8 +718,11 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
     private CommandContainerBuilder<CI> getBuilder() {
         if (containerBuilder == null)
             containerBuilder = new AeshCommandContainerBuilder<>();
-        if (containerBuilder instanceof AeshCommandContainerBuilder)
+        if (containerBuilder instanceof AeshCommandContainerBuilder) {
             ((AeshCommandContainerBuilder<CI>) containerBuilder).setHelpDefaults(helpDefaults);
+            ((AeshCommandContainerBuilder<CI>) containerBuilder)
+                    .setArgumentsSectionDefault(argumentsSectionDefault);
+        }
         return containerBuilder;
     }
 

@@ -497,8 +497,8 @@ final class CodeGenerator {
         sb.append("                .failOnDuplicateOptions(")
                 .append(toggleValue(getAnnotationValue(commandElement, "failOnDuplicateOptions", elementUtils)))
                 .append(")\n");
-        sb.append("                .separateArgumentsSection(")
-                .append(toggleValue(getAnnotationValue(commandElement, "separateArgumentsSection", elementUtils)))
+        sb.append("                .argumentsSection(")
+                .append(argumentsSectionValue(getAnnotationValue(commandElement, "argumentsSection", elementUtils)))
                 .append(")\n");
         generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils, forHelp);
         sb.append("                .version(\"\")\n");
@@ -1819,6 +1819,21 @@ final class CodeGenerator {
                     + org.aesh.command.Toggle.valueOf(annotated).name();
         } catch (IllegalArgumentException | NullPointerException e) {
             return "org.aesh.command.Toggle.INHERIT";
+        }
+    }
+
+    /**
+     * Resolve an annotated {@code ArgumentsSection} to generated source.
+     * Defaults to {@code INHERIT} when the annotation is absent or
+     * unreadable, so the arguments section behaves the same with and
+     * without the processor.
+     */
+    private static String argumentsSectionValue(String annotated) {
+        try {
+            return "org.aesh.command.ArgumentsSection."
+                    + org.aesh.command.ArgumentsSection.valueOf(annotated).name();
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return "org.aesh.command.ArgumentsSection.INHERIT";
         }
     }
 

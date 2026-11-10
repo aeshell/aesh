@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommand;
@@ -50,20 +51,20 @@ public final class LazyHelp {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String render(Class<? extends Command> rootClass, String[] args) {
-        return render(rootClass, args, true, EnumSet.noneOf(HelpFeature.class));
+        return render(rootClass, args, true, EnumSet.noneOf(HelpFeature.class), ArgumentsSection.OFF);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String render(Class<? extends Command> rootClass, String[] args, boolean ansi) {
-        return render(rootClass, args, ansi, EnumSet.noneOf(HelpFeature.class));
+        return render(rootClass, args, ansi, EnumSet.noneOf(HelpFeature.class), ArgumentsSection.OFF);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String render(Class<? extends Command> rootClass, String[] args, boolean ansi,
-            EnumSet<HelpFeature> helpDefaults) {
+            EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
         if (rootClass == null || !mayRequestHelp(args))
             return null;
-        Walk walk = walk(rootClass, args, helpDefaults);
+        Walk walk = walk(rootClass, args, helpDefaults, argumentsSection);
         if (walk == null || !walk.fullyMatched)
             return null;
         parse(walk.root, walk.root.getProcessedCommand().name(), args);
@@ -90,14 +91,15 @@ public final class LazyHelp {
     }
 
     public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args, boolean ansi) {
-        return renderUnknownSubcommandHelp(rootClass, args, ansi, EnumSet.noneOf(HelpFeature.class));
+        return renderUnknownSubcommandHelp(rootClass, args, ansi, EnumSet.noneOf(HelpFeature.class),
+                ArgumentsSection.OFF);
     }
 
     public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args, boolean ansi,
-            EnumSet<HelpFeature> helpDefaults) {
+            EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
         if (rootClass == null)
             return null;
-        Walk walk = walk(rootClass, args, helpDefaults);
+        Walk walk = walk(rootClass, args, helpDefaults, argumentsSection);
         if (walk == null)
             return null;
         if (!ansi)
@@ -119,8 +121,8 @@ public final class LazyHelp {
     }
 
     private static Walk walk(Class<? extends Command> rootClass, String[] args,
-            EnumSet<HelpFeature> helpDefaults) {
-        AeshCommandLineParser<CommandInvocation> root = newParser(rootClass, helpDefaults);
+            EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
+        AeshCommandLineParser<CommandInvocation> root = newParser(rootClass, helpDefaults, argumentsSection);
         if (root == null)
             return null;
         Walk walk = new Walk();
@@ -153,7 +155,7 @@ public final class LazyHelp {
                 Class<? extends Command> childClass = children.get(i);
                 AeshCommandLineParser<CommandInvocation> child;
                 if (childClass == matched)
-                    child = newParser(childClass, helpDefaults);
+                    child = newParser(childClass, helpDefaults, argumentsSection);
                 else
                     child = ghostParser(childClass,
                             helpEntries == null ? null : helpEntries[i]);
@@ -161,7 +163,7 @@ public final class LazyHelp {
                     // Ghost unusable: fall back to the full parser (status quo)
                     if (childClass == matched)
                         return null;
-                    child = newParser(childClass, helpDefaults);
+                    child = newParser(childClass, helpDefaults, argumentsSection);
                     if (child == null)
                         return null;
                 }
@@ -268,7 +270,7 @@ public final class LazyHelp {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static AeshCommandLineParser<CommandInvocation> newParser(Class<? extends Command> commandClass,
-            EnumSet<HelpFeature> helpDefaults) {
+            EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
         try {
             ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processed;
             CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(commandClass);
@@ -278,14 +280,16 @@ public final class LazyHelp {
                 } catch (UnsupportedOperationException e) {
                     AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
                     builder.setHelpDefaults(helpDefaults);
+                    builder.setArgumentsSectionDefault(argumentsSection);
                     processed = builder.buildHelpProcessedCommand(commandClass);
                 }
             } else {
                 AeshCommandContainerBuilder<CommandInvocation> builder = new AeshCommandContainerBuilder<>();
                 builder.setHelpDefaults(helpDefaults);
+                builder.setArgumentsSectionDefault(argumentsSection);
                 processed = builder.buildHelpProcessedCommand(commandClass);
             }
-            processed.resolveHelpToggles(null, helpDefaults);
+            processed.resolveHelpToggles(null, helpDefaults, argumentsSection);
             return new AeshCommandLineParser<>(processed);
         } catch (CommandLineParserException e) {
             return null;

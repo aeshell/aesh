@@ -68,7 +68,7 @@ public class HelpToggleTest {
                 Toggle.ON, null);
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> child = build(Toggle.OFF, Toggle.OFF, Toggle.OFF,
                 Toggle.OFF, null);
-        child.resolveHelpToggles(parent, EnumSet.allOf(HelpFeature.class));
+        child.resolveHelpToggles(parent, EnumSet.allOf(HelpFeature.class), null);
         assertFalse(child.collapseSynopsis());
         assertFalse(child.defaultOptionsFirst());
         assertFalse(child.showDefaultValues());
@@ -76,7 +76,7 @@ public class HelpToggleTest {
 
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> on = build(Toggle.ON, Toggle.ON, Toggle.ON, Toggle.ON,
                 null);
-        on.resolveHelpToggles(null, null);
+        on.resolveHelpToggles(null, null, null);
         assertTrue(on.collapseSynopsis());
     }
 
@@ -86,22 +86,22 @@ public class HelpToggleTest {
                 EnumSet.of(HelpFeature.COLLAPSE_SYNOPSIS));
         assertFalse(parentOff.collapseSynopsis());
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> child = build(null, null, null, null, null);
-        child.resolveHelpToggles(parentOff, EnumSet.of(HelpFeature.COLLAPSE_SYNOPSIS));
+        child.resolveHelpToggles(parentOff, EnumSet.of(HelpFeature.COLLAPSE_SYNOPSIS), null);
         assertFalse("parent OFF beats fleet ON", child.collapseSynopsis());
 
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> parentOn = build(Toggle.ON, null, null, null, null);
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> child2 = build(null, null, null, null, null);
-        child2.resolveHelpToggles(parentOn, null);
+        child2.resolveHelpToggles(parentOn, null, null);
         assertTrue("INHERIT takes parent value with no fleet", child2.collapseSynopsis());
     }
 
     @Test
     public void testNullFleetMeansOff() throws Exception {
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = build(Toggle.ON, null, null, null, null);
-        pc.resolveHelpToggles(null, null);
+        pc.resolveHelpToggles(null, null, null);
         assertTrue(pc.collapseSynopsis());
         ProcessedCommand<Command<CommandInvocation>, CommandInvocation> inherit = build(null, null, null, null, null);
-        inherit.resolveHelpToggles(null, null);
+        inherit.resolveHelpToggles(null, null, null);
         assertFalse(inherit.collapseSynopsis());
     }
 

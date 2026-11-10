@@ -2056,12 +2056,12 @@ public class ProcessorTest {
             "import org.aesh.command.Command;\n" +
             "import org.aesh.command.CommandDefinition;\n" +
             "import org.aesh.command.CommandResult;\n" +
-            "import org.aesh.command.Toggle;\n" +
+            "import org.aesh.command.ArgumentsSection;\n" +
             "import org.aesh.command.invocation.CommandInvocation;\n" +
             "import org.aesh.command.option.Argument;\n" +
             "import org.aesh.command.option.Option;\n" +
             "\n" +
-            "@CommandDefinition(name = \"deploy\", description = \"Deploy app\", separateArgumentsSection = Toggle.ON)\n" +
+            "@CommandDefinition(name = \"deploy\", description = \"Deploy app\", argumentsSection = ArgumentsSection.FIRST)\n" +
             "public class SeparateArgumentsCommand implements Command<CommandInvocation> {\n" +
             "    @Option(description = \"Target environment\")\n" +
             "    private String target;\n" +
@@ -2100,6 +2100,57 @@ public class ProcessorTest {
         assertTrue("Generated help should contain Arguments section: " + help,
                 help.indexOf("Arguments:") > help.indexOf("Usage:")
                         && help.indexOf("Arguments:") < help.indexOf("Options:"));
+    }
+
+    private static final String LAST_ARGUMENTS_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.ArgumentsSection;\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"deploy\", description = \"Deploy app\", argumentsSection = ArgumentsSection.LAST)\n" +
+            "public class LastArgumentsCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Target environment\")\n" +
+            "    private String target;\n" +
+            "\n" +
+            "    @Argument(description = \"The artifact to deploy\")\n" +
+            "    private String artifact;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testLastArgumentsSectionMetadata() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.LastArgumentsCommand", LAST_ARGUMENTS_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.LastArgumentsCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.LastArgumentsCommand_AeshMetadata");
+
+        assertEquivalence(commandClass, metadataClass);
+
+        // The generated placement must render the Arguments section after
+        // the option groups (#756)
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        org.aesh.command.impl.parser.AeshCommandLineParser parser = new org.aesh.command.impl.parser.AeshCommandLineParser<>(
+                generatedPC);
+        parser.updateAnsiMode(false);
+        String help = parser.printHelp();
+
+        assertTrue("Generated help should contain trailing Arguments section: " + help,
+                help.indexOf("Arguments:") > help.indexOf("Options:"));
     }
 
     private static final String GROUPED_POSITIONAL_SOURCE = "package test;\n" +
@@ -4211,8 +4262,8 @@ public class ProcessorTest {
                 generatedPC.failOnDuplicateOptions());
         assertEquals("showDefaultValues", reflectionPC.showDefaultValues(), generatedPC.showDefaultValues());
         assertEquals("defaultOptionsFirst", reflectionPC.defaultOptionsFirst(), generatedPC.defaultOptionsFirst());
-        assertEquals("separateArgumentsSection", reflectionPC.separateArgumentsSection(),
-                generatedPC.separateArgumentsSection());
+        assertEquals("argumentsSection", reflectionPC.argumentsSection(),
+                generatedPC.argumentsSection());
         assertEquals("helpHeader", reflectionPC.getHelpHeader(), generatedPC.getHelpHeader());
         assertEquals("helpFooter", reflectionPC.getHelpFooter(), generatedPC.getHelpFooter());
         assertEquals("completeFallback", reflectionPC.getCompleteFallback(), generatedPC.getCompleteFallback());

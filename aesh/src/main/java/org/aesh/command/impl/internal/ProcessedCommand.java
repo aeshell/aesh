@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.DocFormat;
@@ -112,10 +113,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private Toggle defaultOptionsFirstSource = Toggle.INHERIT;
     private Toggle showDefaultValuesSource = Toggle.INHERIT;
     private Toggle failOnDuplicateOptionsSource = Toggle.INHERIT;
-    private Toggle separateArgumentsSectionSource = Toggle.INHERIT;
+    private ArgumentsSection argumentsSectionSource = ArgumentsSection.INHERIT;
     private boolean collapseSynopsis;
     private boolean failOnDuplicateOptions;
-    private boolean separateArgumentsSection;
+    private ArgumentsSection argumentsSection = ArgumentsSection.OFF;
     private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private DefaultValueProvider defaultValueProvider;
     private CommandActivator activator;
@@ -218,7 +219,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this(name, aliases, command, description, validator, resultHandler, generateHelp, disableParsing,
                 version, arguments, options, argument, populator, activator, helpUrl, stopAtFirstPositional,
                 defaultValueProvider, sortOptions, Toggle.INHERIT, Toggle.INHERIT, Toggle.INHERIT,
-                Toggle.INHERIT, Toggle.INHERIT);
+                Toggle.INHERIT, ArgumentsSection.INHERIT);
     }
 
     public ProcessedCommand(String name, List<String> aliases, C command,
@@ -233,7 +234,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             DefaultValueProvider defaultValueProvider,
             boolean sortOptions, Toggle collapseSynopsis, Toggle defaultOptionsFirst,
             Toggle showDefaultValues, Toggle failOnDuplicateOptions,
-            Toggle separateArgumentsSection) throws OptionParserException {
+            ArgumentsSection argumentsSection) throws OptionParserException {
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
@@ -247,8 +248,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.showDefaultValuesSource = showDefaultValues != null ? showDefaultValues : Toggle.INHERIT;
         this.failOnDuplicateOptionsSource = failOnDuplicateOptions != null ? failOnDuplicateOptions
                 : Toggle.INHERIT;
-        this.separateArgumentsSectionSource = separateArgumentsSection != null ? separateArgumentsSection
-                : Toggle.INHERIT;
+        this.argumentsSectionSource = argumentsSection != null ? argumentsSection : ArgumentsSection.INHERIT;
         this.defaultValueProvider = defaultValueProvider;
         this.helpUrl = helpUrl;
         this.resultHandler = resultHandler;
@@ -623,17 +623,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * Whether positional arguments are printed under their own
      * {@code Arguments:} heading right after the usage line.
      */
-    public boolean separateArgumentsSection() {
-        return separateArgumentsSection;
+    /**
+     * Where positional arguments render in help output.
+     */
+    public ArgumentsSection argumentsSection() {
+        return argumentsSection;
     }
 
-    public Toggle separateArgumentsSectionSource() {
-        return separateArgumentsSectionSource;
+    public ArgumentsSection argumentsSectionSource() {
+        return argumentsSectionSource;
     }
 
-    public void setSeparateArgumentsSectionSource(Toggle separateArgumentsSectionSource) {
-        this.separateArgumentsSectionSource = separateArgumentsSectionSource == null ? Toggle.INHERIT
-                : separateArgumentsSectionSource;
+    public void setArgumentsSectionSource(ArgumentsSection argumentsSectionSource) {
+        this.argumentsSectionSource = argumentsSectionSource == null ? ArgumentsSection.INHERIT
+                : argumentsSectionSource;
     }
 
     /**
@@ -642,11 +645,16 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * resolved value wins; otherwise the fleet default wins; otherwise the
      * behavior stays off. Idempotent: re-resolving with more context only
      * upgrades {@code INHERIT} sources, never explicit choices.
+     * The arguments-section placement resolves the same way, with its own
+     * fleet value, defaulting to {@code OFF}.
      *
      * @param parent the parent command, or null for top-level commands
      * @param fleetDefaults the fleet-wide enabled toggles, or null for none
+     * @param argumentsSectionFleet the fleet-wide arguments-section placement,
+     *        or null for off
      */
-    public void resolveHelpToggles(ProcessedCommand<?, ?> parent, EnumSet<HelpFeature> fleetDefaults) {
+    public void resolveHelpToggles(ProcessedCommand<?, ?> parent, EnumSet<HelpFeature> fleetDefaults,
+            ArgumentsSection argumentsSectionFleet) {
         collapseSynopsis = resolveToggle(collapseSynopsisSource,
                 parent != null ? parent.collapseSynopsis() : null, fleetDefaults, HelpFeature.COLLAPSE_SYNOPSIS);
         defaultOptionsFirst = resolveToggle(defaultOptionsFirstSource,
@@ -657,9 +665,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         failOnDuplicateOptions = resolveToggle(failOnDuplicateOptionsSource,
                 parent != null ? parent.failOnDuplicateOptions() : null, fleetDefaults,
                 HelpFeature.FAIL_ON_DUPLICATE_OPTIONS);
-        separateArgumentsSection = resolveToggle(separateArgumentsSectionSource,
-                parent != null ? parent.separateArgumentsSection() : null, fleetDefaults,
-                HelpFeature.SEPARATE_ARGUMENTS_SECTION);
+        argumentsSection = resolveArgumentsSection(argumentsSectionSource,
+                parent != null ? parent.argumentsSection() : null, argumentsSectionFleet);
     }
 
     private static boolean resolveToggle(Toggle source, Boolean parent, EnumSet<HelpFeature> fleetDefaults,
@@ -671,6 +678,17 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (parent != null)
             return parent;
         return fleetDefaults != null && fleetDefaults.contains(feature);
+    }
+
+    private static ArgumentsSection resolveArgumentsSection(ArgumentsSection source, ArgumentsSection parent,
+            ArgumentsSection fleet) {
+        if (source != null && source != ArgumentsSection.INHERIT)
+            return source;
+        if (parent != null && parent != ArgumentsSection.INHERIT)
+            return parent;
+        if (fleet != null && fleet != ArgumentsSection.INHERIT)
+            return fleet;
+        return ArgumentsSection.OFF;
     }
 
     /**
@@ -1437,10 +1455,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 plainPositionals.add(positional);
         }
         plainPositionals.sort(BY_ORDER);
-        // Positional arguments get their own section right after the usage
-        // line when asked for, sharing the option description column so
-        // they no longer trail the last option group.
-        if (separateArgumentsSection && !plainPositionals.isEmpty()) {
+        // Positional arguments get their own section when asked for,
+        // sharing the option description column so they no longer trail
+        // the last option group.
+        if (argumentsSection == ArgumentsSection.FIRST && !plainPositionals.isEmpty()) {
             for (ProcessedOption positional : plainPositionals) {
                 if (positional.getFormattedLength() > maxLength)
                     maxLength = positional.getFormattedLength();
@@ -1476,9 +1494,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 appendOptionGroup(sb, groups.get(""), "Options:", maxLength + 4, width, supportsHyperlinks,
                         descriptionResolver);
         }
+        // The LAST placement renders the section after all option groups.
+        if (argumentsSection == ArgumentsSection.LAST && !plainPositionals.isEmpty()) {
+            for (ProcessedOption positional : plainPositionals) {
+                if (positional.getFormattedLength() > maxLength)
+                    maxLength = positional.getFormattedLength();
+            }
+            if (maxLength > maxOptionColumnWidth)
+                maxLength = maxOptionColumnWidth;
+            appendOptionGroup(sb, plainPositionals, "Arguments:", maxLength + 4, width, supportsHyperlinks,
+                    descriptionResolver);
+        }
         // Render positional arguments inline after the options section,
-        // unless they already have their own section above.
-        if (!separateArgumentsSection && !plainPositionals.isEmpty()) {
+        // unless they already have their own section.
+        if (argumentsSection == ArgumentsSection.OFF && !plainPositionals.isEmpty()) {
             // If no options were rendered, start the Options section for positionals
             if (visibleOpts.isEmpty()) {
                 sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());

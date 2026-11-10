@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.HelpFeature;
@@ -85,6 +86,17 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
      */
     public AeshCommandRegistryBuilder<CI> helpDefaults(EnumSet<HelpFeature> helpDefaults) {
         commandRegistry.setHelpDefaults(helpDefaults);
+        return this;
+    }
+
+    /**
+     * Fleet-wide arguments-section placement applied when a command leaves it
+     * {@code INHERIT} (see {@link org.aesh.command.ArgumentsSection}).
+     * Useful for large CLIs instead of repeating the attribute on every
+     * command; an explicit value always wins.
+     */
+    public AeshCommandRegistryBuilder<CI> argumentsSectionDefault(ArgumentsSection argumentsSectionDefault) {
+        commandRegistry.setArgumentsSectionDefault(argumentsSectionDefault);
         return this;
     }
 

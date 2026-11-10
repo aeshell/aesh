@@ -119,7 +119,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             child.setParent(this);
             // Inherit help toggles from the real parent. The parent's values
             // already fold in fleet defaults, so no globals are needed here.
-            child.getProcessedCommand().resolveHelpToggles(processedCommand, null);
+            child.getProcessedCommand().resolveHelpToggles(processedCommand, null, null);
             // Lazily resolved children are attached after the parent's mode
             // was set, so they never saw it: inherit no-color mode (#753).
             if (!ansiMode)

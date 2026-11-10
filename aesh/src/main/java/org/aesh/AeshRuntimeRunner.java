@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandException;
@@ -88,6 +89,7 @@ public class AeshRuntimeRunner {
     private Command pendingCommandInstance;
     private AnsiMode ansiMode = AnsiMode.AUTO;
     private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
+    private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
 
     private AeshRuntimeRunner() {
     }
@@ -133,6 +135,19 @@ public class AeshRuntimeRunner {
     public AeshRuntimeRunner helpDefaults(EnumSet<HelpFeature> helpDefaults) {
         this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
         this.registryBuilder.helpDefaults(helpDefaults);
+        return this;
+    }
+
+    /**
+     * Fleet-wide arguments-section placement applied when a command leaves it
+     * {@code INHERIT} (see {@link ArgumentsSection}). Useful for large CLIs
+     * instead of repeating the attribute on every command; an explicit value
+     * always wins.
+     */
+    public AeshRuntimeRunner argumentsSectionDefault(ArgumentsSection argumentsSectionDefault) {
+        this.argumentsSectionDefault = argumentsSectionDefault != null ? argumentsSectionDefault
+                : ArgumentsSection.OFF;
+        this.registryBuilder.argumentsSectionDefault(argumentsSectionDefault);
         return this;
     }
 
@@ -407,7 +422,8 @@ public class AeshRuntimeRunner {
                         e.getUnknownSubcommand(), e.getAvailableSubcommands());
             }
             System.err.println(e.getMessage());
-            String help = LazyHelp.renderUnknownSubcommandHelp(pendingCommandClass, args, colors, helpDefaults);
+            String help = LazyHelp.renderUnknownSubcommandHelp(pendingCommandClass, args, colors, helpDefaults,
+                    argumentsSectionDefault);
             if (help != null)
                 System.err.println(help);
             return CommandResult.USAGE_ERROR;
@@ -471,7 +487,7 @@ public class AeshRuntimeRunner {
             return fastFailure;
         if (lazyStartup && pendingCommandClass != null
                 && completionShellType == null && dynamicCompletionShellType == null && !dynamicComplete) {
-            String help = LazyHelp.render(pendingCommandClass, args, colors, helpDefaults);
+            String help = LazyHelp.render(pendingCommandClass, args, colors, helpDefaults, argumentsSectionDefault);
             if (help != null) {
                 System.out.println(help);
                 return CommandResult.SUCCESS;

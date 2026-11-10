@@ -1198,7 +1198,7 @@ public class ProcessedOption {
             // Reserve the short-flag gutter ("-x, ") so long-only options
             // align with options that have a short form (#718).
             sb.append("    ");
-        if (name != null) {
+        if (name != null && !name.isEmpty()) {
             if (sb.toString().trim().length() > 0)
                 sb.append(", ");
             String dashPrefix = acceptNameWithoutDashes ? "" : "--";
