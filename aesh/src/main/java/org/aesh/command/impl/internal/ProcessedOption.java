@@ -1282,10 +1282,12 @@ public class ProcessedOption {
             sb.append(ANSI.BOLD_OFF);
         if (resolvedDescription != null && resolvedDescription.length() > 0) {
             int descOffset = descriptionStart - getFormattedLength() - offset;
-            if (descOffset > 0) {
+            if (descOffset > 1) {
                 sb.append(String.format("%" + descOffset + "s", ""));
             } else {
-                // Option name exceeds column width — wrap description to next line
+                // Option name fills or exceeds the column: a single space is
+                // not enough of a gap, so wrap the description to the next
+                // line like any other overflow.
                 sb.append(System.lineSeparator());
                 sb.append(String.format("%" + descriptionStart + "s", ""));
             }

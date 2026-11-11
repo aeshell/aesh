@@ -1890,6 +1890,40 @@ public class CommandLineFormatterTest {
         }
     }
 
+    @Test
+    public void testFullColumnOptionWrapsDescription() throws CommandLineParserException {
+        // A label exactly one wider than the option column must not sit a
+        // single space from its description (#766): it wraps like any
+        // other overflow instead.
+        System.setProperty("aesh.help.width", "80");
+        try {
+            ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                    .name("watch").description("Watch things");
+            pb.addOption(ProcessedOptionBuilder.builder()
+                    .name("duration").type(String.class).description("How long to watch").build());
+
+            CommandLineParser<CommandInvocation> clp = new AeshCommandLineParser<>(pb.create());
+            clp.updateAnsiMode(false);
+            String help = clp.printHelp();
+
+            String[] lines = help.split("\\r?\\n");
+            int label = -1;
+            for (int i = 0; i < lines.length; i++) {
+                if (lines[i].trim().startsWith("--duration=<duration>")) {
+                    label = i;
+                    break;
+                }
+            }
+            assertTrue("Option line present, got:\n" + help, label >= 0);
+            assertFalse("description must not share the label line, got: " + lines[label],
+                    lines[label].contains("How long"));
+            assertTrue("description wraps to the next line, indented",
+                    label + 1 < lines.length && lines[label + 1].trim().equals("How long to watch"));
+        } finally {
+            System.clearProperty("aesh.help.width");
+        }
+    }
+
     // --- Issue #458: Option column width capping ---
 
     @Test
