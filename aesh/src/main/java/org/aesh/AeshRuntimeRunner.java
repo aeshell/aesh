@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -93,6 +94,7 @@ public class AeshRuntimeRunner {
     private org.aesh.command.converter.ConverterInvocationProvider converterInvocationProvider;
     private org.aesh.command.validator.ValidatorInvocationProvider validatorInvocationProvider;
     private org.aesh.console.AeshContext aeshContext;
+    private Consumer<String> commandOutputHandler;
     private boolean lazyStartup = true;
     private boolean rootRegistered;
     private CommandContainerBuilder<?> customContainerBuilder;
@@ -471,6 +473,22 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    /**
+     * Capture what aesh itself writes through the invocation shell (command
+     * output and the generated {@code --help}) in addition to the shell
+     * receiving it. Useful for applications with their own output: printers
+     * tests capture, embedded shells, or tools returning command output to an
+     * AI agent — without implementing {@code Shell} for the four write
+     * methods.
+     *
+     * @param commandOutputHandler receives every written string, or null to disable
+     * @return this runner
+     */
+    public AeshRuntimeRunner commandOutputHandler(Consumer<String> commandOutputHandler) {
+        this.commandOutputHandler = commandOutputHandler;
+        return this;
+    }
+
     private void materializePendingRoot() {
         if (pendingCommandClass == null && pendingCommandInstance == null)
             return;
@@ -587,6 +605,8 @@ public class AeshRuntimeRunner {
                 && completionShellType == null && dynamicCompletionShellType == null && !dynamicComplete) {
             String help = LazyHelp.render(pendingCommandClass, args, colors, helpDefaults, argumentsSectionDefault);
             if (help != null) {
+                if (commandOutputHandler != null)
+                    commandOutputHandler.accept(help + Config.getLineSeparator());
                 System.out.println(help);
                 return CommandResult.SUCCESS;
             }
@@ -648,6 +668,8 @@ public class AeshRuntimeRunner {
             runtimeBuilder.validatorInvocationProvider(validatorInvocationProvider);
         if (aeshContext != null)
             runtimeBuilder.aeshContext(aeshContext);
+        if (commandOutputHandler != null)
+            runtimeBuilder.commandOutputHandler(commandOutputHandler);
         CommandRuntime runtime = runtimeBuilder.build();
 
         String commandName = (String) commandRegistry.getAllCommandNames().iterator().next();

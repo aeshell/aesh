@@ -254,6 +254,23 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
     }
 
     /**
+     * Capture what aesh itself writes through the invocation shell (command
+     * output and the generated {@code --help}) in addition to the shell
+     * receiving it. Useful for applications with their own output: printers
+     * tests capture, embedded shells, or tools returning command output to an
+     * AI agent — without implementing {@code Shell} for the four write
+     * methods. Without a shell on the runtime the output still goes to
+     * {@code System.out} and is additionally passed to the handler.
+     *
+     * @param commandOutputHandler receives every written string, or null to disable
+     * @return this builder
+     */
+    public AeshCommandRuntimeBuilder<CI> commandOutputHandler(Consumer<String> commandOutputHandler) {
+        this.commandOutputHandler = commandOutputHandler;
+        return this;
+    }
+
+    /**
      * Set a registry-level DefaultValueProvider that applies to all commands
      * that don't declare their own per-command provider via the annotation.
      */

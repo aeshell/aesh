@@ -7,6 +7,7 @@ import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.operator.OutputDelegate;
 import org.aesh.command.impl.shell.ShellOutputDelegate;
 import org.aesh.command.impl.shell.ShellOutputTee;
+import org.aesh.command.impl.shell.StdoutShell;
 import org.aesh.command.invocation.CommandInvocationBuilder;
 import org.aesh.command.invocation.CommandInvocationConfiguration;
 import org.aesh.command.shell.Shell;
@@ -31,8 +32,13 @@ public class DefaultCommandInvocationBuilder implements CommandInvocationBuilder
             CommandInvocationConfiguration configuration,
             CommandContainer<DefaultCommandInvocation> commandContainer) {
         Shell effectiveShell = shell;
-        if (outputHandler != null && effectiveShell != null)
-            effectiveShell = new ShellOutputTee(effectiveShell, outputHandler);
+        if (outputHandler != null) {
+            // Tee even without a shell: fall back to System.out so the
+            // handler receives what aesh prints itself (like --help)
+            // instead of silently getting nothing (#769).
+            Shell base = effectiveShell != null ? effectiveShell : new StdoutShell();
+            effectiveShell = new ShellOutputTee(base, outputHandler);
+        }
         OutputDelegate redirection = configuration == null ? null : configuration.getOutputRedirection();
         if (redirection != null)
             effectiveShell = new ShellOutputDelegate(effectiveShell, redirection);
