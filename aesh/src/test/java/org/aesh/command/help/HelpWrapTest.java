@@ -12,11 +12,16 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpSectionProvider;
+import org.aesh.command.Toggle;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -88,6 +93,49 @@ public class HelpWrapTest {
     }
 
     @Test
+    public void testLongProviderHeaderIsWrapped() throws Exception {
+        List<String> lines = lines(help(new ProseCommand()));
+
+        assertTrue("long provider header wraps onto more than one line, got: " + lines,
+                lines.size() > 4);
+        for (String line : lines)
+            assertTrue("no line exceeds the help width, got: " + line, line.length() <= 80);
+    }
+
+    @Test
+    public void testHardBreaksPreservedInHeader() throws Exception {
+        List<String> lines = lines(help(new BrokenProseCommand()));
+
+        int intro = indexOf(lines, "Short intro line.");
+        assertTrue("explicit break kept, got: " + lines, intro >= 0 && lines.get(intro).equals("Short intro line."));
+        assertTrue("long part after the break still wraps, got: " + lines, lines.size() > intro + 2);
+        for (String line : lines)
+            assertTrue("no line exceeds the help width, got: " + line, line.length() <= 80);
+    }
+
+    @Test
+    public void testLongFooterIsWrapped() throws Exception {
+        List<String> lines = lines(help(new FooterProseCommand()));
+
+        int footer = indexOf(lines, "For support, contact");
+        assertTrue("footer present, got: " + lines, footer >= 0);
+        assertTrue("long footer wraps, got: " + lines, lines.size() > footer + 1);
+        for (String line : lines)
+            assertTrue("no line exceeds the help width, got: " + line, line.length() <= 80);
+    }
+
+    @Test
+    public void testWrappedHeaderBeforeSynopsis() throws Exception {
+        List<String> lines = lines(help(new HeaderFirstProseCommand()));
+
+        int usage = indexOf(lines, "Usage:");
+        int header = indexOf(lines, "Creates a new script");
+        assertTrue("header before usage, got: " + lines, header >= 0 && usage >= 0 && header < usage);
+        for (String line : lines)
+            assertTrue("wrapped header fits, got: " + line, line.length() <= 80);
+    }
+
+    @Test
     public void testWrapText() {
         assertEquals(Arrays.asList("one two three four", "five six"),
                 ProcessedOption.wrapText("one two three four five six", 20));
@@ -150,6 +198,65 @@ public class HelpWrapTest {
 
     @CommandDefinition(name = "tool", description = "A tool", groupCommands = { WaitCommand.class }, generateHelp = true)
     public static class ToolCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class ProseProvider implements HelpSectionProvider {
+        @Override
+        public Map<String, List<HelpEntry>> getAdditionalSections() {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public String getHeader() {
+            return PROSE_HEADER;
+        }
+
+        @Override
+        public String getFooter() {
+            return PROSE_FOOTER;
+        }
+    }
+
+    private static final String PROSE_HEADER = "Creates a new script from a template, ready to run with jbang. "
+            + "The template is picked from the file extension unless you choose one explicitly with --template, "
+            + "in which case that template wins over all the defaults.";
+    private static final String PROSE_FOOTER = "For support, contact ops@example.com or file an issue with a full "
+            + "description of what went wrong and what you expected to happen instead of what actually happened.";
+
+    @CommandDefinition(name = "prose", description = "Prose command", generateHelp = true, helpSectionProvider = ProseProvider.class)
+    public static class ProseCommand implements Command<CommandInvocation> {
+        @Option(description = "Config file")
+        String config;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "broken", description = "Broken prose", generateHelp = true, header = { "Short intro line.",
+            "Creates a new script from a template, ready to run with jbang and chosen explicitly with --template, winning over all the defaults." })
+    public static class BrokenProseCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "footed", description = "Footed prose", generateHelp = true, footer = "For support, contact ops@example.com or file an issue with a full description of what went wrong and what you expected instead.")
+    public static class FooterProseCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "header-first-prose", description = "Prose first", generateHelp = true, headerBeforeSynopsis = Toggle.ON, helpSectionProvider = ProseProvider.class)
+    public static class HeaderFirstProseCommand implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation invocation) {
             return CommandResult.SUCCESS;

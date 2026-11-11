@@ -626,11 +626,21 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         String footer = helpFooter(provider);
         if (footer != null) {
             sb.append(Config.getLineSeparator())
-                    .append(resolveDescriptionVariables(footer, null))
+                    .append(wrapBlock(resolveDescriptionVariables(footer, null)))
                     .append(Config.getLineSeparator());
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Wrap a header/footer block at the resolved help width, reusing the same
+     * wrapping as descriptions. Hard line breaks already in the text are kept
+     * as explicit breaks; only the soft wrapping is added (#763).
+     */
+    private String wrapBlock(String text) {
+        return String.join(Config.getLineSeparator(),
+                ProcessedOption.wrapText(text, processedCommand.helpWidth()));
     }
 
     /**
@@ -643,6 +653,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private String injectHeader(String helpText, String headerContent) {
         if (headerContent == null)
             return helpText;
+        headerContent = wrapBlock(headerContent);
         String sep = Config.getLineSeparator();
         if (processedCommand.headerBeforeSynopsis()) {
             int usageIdx = helpText.indexOf("Usage:");
