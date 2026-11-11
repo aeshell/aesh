@@ -2507,6 +2507,25 @@ public class CommandLineParserTest {
     }
 
     @Test
+    public void testMissingValueNamesOptionAsTyped() throws Exception {
+        CommandLineParser<CommandInvocation> longParser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new MissingValueCommand()).getParser();
+        longParser.parse("missing --sort");
+        assertFalse("long form should record a missing-value error",
+                longParser.getProcessedCommand().parserExceptions().isEmpty());
+        assertTrue(longParser.getProcessedCommand().parserExceptions().get(0).getMessage(),
+                longParser.getProcessedCommand().parserExceptions().get(0).getMessage().contains("--sort"));
+
+        CommandLineParser<CommandInvocation> shortParser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new MissingValueCommand()).getParser();
+        shortParser.parse("missing -s");
+        assertFalse("short form should record a missing-value error",
+                shortParser.getProcessedCommand().parserExceptions().isEmpty());
+        assertTrue(shortParser.getProcessedCommand().parserExceptions().get(0).getMessage(),
+                shortParser.getProcessedCommand().parserExceptions().get(0).getMessage().contains("-s"));
+    }
+
+    @Test
     public void testOverlapErrorNamesFieldsAcrossHierarchy() throws Exception {
         try {
             new AeshCommandContainerBuilder<CommandInvocation>().create(new OverlapChildCommand());
@@ -2670,6 +2689,17 @@ public class CommandLineParserTest {
         public void overlap(@Argument(description = "the file", paramLabel = "file") String file,
                 @Argument(description = "the name", paramLabel = "name") String name,
                 CommandInvocation invocation) {
+        }
+    }
+
+    @CommandDefinition(name = "missing", description = "Missing value test", generateHelp = true)
+    public static class MissingValueCommand implements Command<CommandInvocation> {
+        @Option(shortName = 's', name = "sort", description = "Sort order")
+        String sort;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
         }
     }
 

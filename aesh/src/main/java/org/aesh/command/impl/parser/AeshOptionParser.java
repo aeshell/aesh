@@ -78,16 +78,28 @@ public class AeshOptionParser implements OptionParser {
                 //we have something like: --foo --bar eg, two options after another
                 else {
                     if (option.hasValue() && option.getValue() == null && !option.isOptionalValue()) {
-                        throw new OptionParserException("Option " + option.name() + " was specified, but no value was given.");
+                        throw new OptionParserException(
+                                "Option " + displayName(option) + " was specified, but no value was given.");
                     }
                     applyOptionalFallback(option);
                     return;
                 }
             }
             if (option.hasValue() && option.getValue() == null && !option.isOptionalValue())
-                throw new OptionParserException("Option " + option.name() + " was specified, but no value was given.");
+                throw new OptionParserException(
+                        "Option " + displayName(option) + " was specified, but no value was given.");
             applyOptionalFallback(option);
         }
+    }
+
+    /**
+     * Name the option as it was typed ({@code --sort} or {@code -s}) so the
+     * missing-value error reads like the unknown-option error. Falls back to
+     * the bare name for options without either form.
+     */
+    private static String displayName(ProcessedOption option) {
+        String displayName = option.getDisplayName();
+        return displayName != null ? displayName : option.name();
     }
 
     private void doParse(ParsedLineIterator iterator, ProcessedOption option) throws OptionParserException {
