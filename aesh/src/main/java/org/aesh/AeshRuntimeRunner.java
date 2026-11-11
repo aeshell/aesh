@@ -51,6 +51,7 @@ import org.aesh.command.impl.completer.FileOptionCompleter;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
+import org.aesh.command.impl.parser.ArgfileExpander;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
@@ -103,6 +104,7 @@ public class AeshRuntimeRunner {
     private Command pendingCommandInstance;
     private AnsiMode ansiMode = AnsiMode.AUTO;
     private UsageErrorMode usageErrorMode = UsageErrorMode.FULL_HELP;
+    private boolean argumentFiles;
     private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
     private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
 
@@ -489,6 +491,21 @@ public class AeshRuntimeRunner {
         return this;
     }
 
+    /**
+     * Replace {@code @file} arguments with the arguments listed in that file
+     * (one per line or whitespace separated, quotes group words, {@code #}
+     * starts a comment line, {@code @@} escapes a literal {@code @}). Off by
+     * default so nothing changes for existing CLIs; only whole arguments are
+     * expanded ({@code --body=@x} stays as it is).
+     *
+     * @param argumentFiles true to expand {@code @file} arguments
+     * @return this runner
+     */
+    public AeshRuntimeRunner argumentFiles(boolean argumentFiles) {
+        this.argumentFiles = argumentFiles;
+        return this;
+    }
+
     private void materializePendingRoot() {
         if (pendingCommandClass == null && pendingCommandInstance == null)
             return;
@@ -595,6 +612,14 @@ public class AeshRuntimeRunner {
 
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
+        if (argumentFiles) {
+            try {
+                args = ArgfileExpander.expand(args);
+            } catch (CommandLineParserException e) {
+                System.err.println(e.getMessage());
+                return CommandResult.USAGE_ERROR;
+            }
+        }
         boolean colors = resolveAnsiColors(ansiMode, TtyDetect::isStdoutTty, System::getenv);
         // Errors and usage go to stderr, which may be redirected on its own
         boolean stderrColors = resolveAnsiColors(ansiMode, TtyDetect::isStderrTty, System::getenv);

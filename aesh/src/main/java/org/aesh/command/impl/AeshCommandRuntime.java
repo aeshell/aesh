@@ -56,6 +56,7 @@ import org.aesh.command.impl.invocation.AeshInvocationProviders;
 import org.aesh.command.impl.operator.PipeOperator;
 import org.aesh.command.impl.parser.AeshCommandLineCompletionParser;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
+import org.aesh.command.impl.parser.ArgfileExpander;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
@@ -107,6 +108,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private String programStatusAppName;
     private Connection programStatusConnection;
     private boolean ansiWhenRedirected;
+    private boolean argumentFiles;
 
     public AeshCommandRuntime(AeshContext ctx,
             CommandRegistry<CI> registry,
@@ -205,6 +207,15 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         this.ansiWhenRedirected = ansiWhenRedirected;
     }
 
+    /**
+     * Whether {@code @file} arguments are replaced by the arguments listed
+     * in that file. Off by default; opt in on builders that accept whole
+     * pre-tokenized arguments.
+     */
+    public void setArgumentFiles(boolean argumentFiles) {
+        this.argumentFiles = argumentFiles;
+    }
+
     boolean ansiWhenRedirected() {
         return ansiWhenRedirected;
     }
@@ -265,6 +276,8 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     private Executor<CI> buildExecutorFromArgs(String commandName, String[] args)
             throws CommandNotFoundException, CommandLineParserException, IOException {
+        if (argumentFiles)
+            args = ArgfileExpander.expand(args);
         // Create ParsedLine directly from pre-tokenized args, bypassing LineParser.
         // Words and offsets are computed arithmetically exactly as before
         // (empty args keep their ParsedWord, see #651); only the display

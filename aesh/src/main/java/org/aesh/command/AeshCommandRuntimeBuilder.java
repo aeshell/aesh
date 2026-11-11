@@ -87,6 +87,11 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      * already-built containers and to later builds.
      */
     private Boolean ansiColors;
+    /**
+     * Whether {@code @file} arguments are replaced by the arguments listed
+     * in that file. Off by default.
+     */
+    private boolean argumentFiles;
 
     private AeshCommandRuntimeBuilder() {
     }
@@ -177,6 +182,20 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      */
     public AeshCommandRuntimeBuilder<CI> ansiColors(boolean ansiColors) {
         this.ansiColors = ansiColors;
+        return this;
+    }
+
+    /**
+     * Replace {@code @file} arguments with the arguments listed in that file
+     * (one per line or whitespace separated, quotes group words, {@code #}
+     * starts a comment line, {@code @@} escapes a literal {@code @}). Off by
+     * default; only whole pre-tokenized arguments are expanded.
+     *
+     * @param argumentFiles true to expand {@code @file} arguments
+     * @return this builder
+     */
+    public AeshCommandRuntimeBuilder<CI> argumentFiles(boolean argumentFiles) {
+        this.argumentFiles = argumentFiles;
         return this;
     }
 
@@ -366,6 +385,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
             runtime.setPipelineConfig(pipelineConfig);
         runtime.setProgramStatus(programStatusEnabled, programStatusAppName, programStatusConnection);
         runtime.setAnsiWhenRedirected(ansiWhenRedirected);
+        runtime.setArgumentFiles(argumentFiles);
         return runtime;
     }
 }
