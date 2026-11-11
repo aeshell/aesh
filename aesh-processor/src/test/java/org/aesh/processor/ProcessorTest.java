@@ -2621,6 +2621,53 @@ public class ProcessorTest {
         assertEquals("after set(true), version value should be true", true, versionOpt.getFieldAccessor().get(instance));
     }
 
+    // --- Test: explicit -v yields a long-only generated --version ---
+
+    private static final String VERBOSE_VERSION_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"tool\", description = \"Tool\",\n" +
+            "        generateHelp = true, version = \"1.0\")\n" +
+            "public class VerboseVersionCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(shortName = 'v', name = \"verbose\", description = \"Verbose output\", hasValue = false)\n" +
+            "    private boolean verbose;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testExplicitShortVYieldsLongOnlyVersion() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.VerboseVersionCommand", VERBOSE_VERSION_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.VerboseVersionCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.VerboseVersionCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        ProcessedOption versionOpt = generatedPC.findLongOptionNoActivatorCheck("version");
+        assertNotNull("--version survives long-only", versionOpt);
+        assertNull("generated -v yields to the explicit one", versionOpt.shortName());
+
+        ProcessedOption verboseOpt = generatedPC.findLongOptionNoActivatorCheck("verbose");
+        assertNotNull(verboseOpt);
+        assertEquals("v", verboseOpt.shortName());
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     private static final String NO_HELP_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +

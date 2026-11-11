@@ -294,6 +294,14 @@ public class ProcessedOption {
         this.required = required;
     }
 
+    /**
+     * Change the short name, or drop it with null. Used when a generated
+     * option yields its short name to an explicit user option (#770).
+     */
+    public void setShortName(String shortName) {
+        this.shortName = shortName;
+    }
+
     public void setValueSeparator(char valueSeparator) {
         this.valueSeparator = valueSeparator;
     }

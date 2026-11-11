@@ -401,6 +401,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public void addOption(ProcessedOption opt) throws OptionParserException {
+        yieldGeneratedTo(opt);
         verifyThatNamesAreUnique(opt.shortName(), opt.name());
         opt.setDeclarationOrder(optionDeclarationCounter++);
         this.options.add(opt);
@@ -411,6 +412,73 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             invalidateLookupMaps();
         if (command != null)
             opt.captureInitialValue(command);
+    }
+
+    /**
+     * Yield generated {@code --help}/{@code --version} to an explicit user
+     * option that claims the same name (#770). A long-name clash drops the
+     * generated option outright; a short-name clash with the generated
+     * {@code --version} strips only its short name so {@code --version} keeps
+     * working long-only, while the generated {@code --help} is dropped whole
+     * to preserve its skip-when-taken behavior. Anything else is a genuine
+     * user duplicate and still fails in {@code verifyThatNamesAreUnique}.
+     */
+    private void yieldGeneratedTo(ProcessedOption opt) {
+        if (isGeneratedOption(opt))
+            return;
+        boolean changed = false;
+        for (ProcessedOption existing : new ArrayList<>(options)) {
+            if (!isGeneratedOption(existing) || !existing.isActivated(parsedCommand()))
+                continue;
+            String longName = opt.name();
+            if (longName != null && !longName.isEmpty()
+                    && (longName.equals(existing.name()) || existing.hasAlias(longName))) {
+                options.remove(existing);
+                changed = true;
+                continue;
+            }
+            String shortName = opt.shortName();
+            if (shortName != null && shortName.equals(existing.shortName())) {
+                if ("generatedVersion".equals(existing.getFieldName())) {
+                    existing.setShortName(null);
+                } else {
+                    options.remove(existing);
+                }
+                changed = true;
+            }
+        }
+        if (changed && longNameMap != null)
+            invalidateLookupMaps();
+    }
+
+    /**
+     * Apply {@link #yieldGeneratedTo(ProcessedOption)} to every option.
+     * Called once by generated (annotation-processor) code, which adds all
+     * options via {@code addOptionDirect} and therefore bypasses the per-add
+     * check. The reflection path needs no call: {@code addOption} yields
+     * incrementally and the constructor generates after the user options.
+     */
+    public void resolveGeneratedConflicts() {
+        for (ProcessedOption opt : new ArrayList<>(options)) {
+            yieldGeneratedTo(opt);
+        }
+    }
+
+    private static boolean isGeneratedOption(ProcessedOption opt) {
+        String fieldName = opt.getFieldName();
+        return "generatedHelp".equals(fieldName) || "generatedVersion".equals(fieldName);
+    }
+
+    /**
+     * Name an option for clash errors: the long name when present, else the
+     * short name, else the backing field.
+     */
+    private static String describeOption(ProcessedOption opt) {
+        if (opt.name() != null && !opt.name().isEmpty())
+            return opt.name();
+        if (opt.shortName() != null && !opt.shortName().isEmpty())
+            return opt.shortName();
+        return opt.getFieldName();
     }
 
     /**
@@ -862,12 +930,16 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         // Use direct linear scan to avoid building lookup maps during construction.
         // This method is only called from addOption() (reflection path);
         // the generated path uses addOptionDirect() which skips verification.
+        // Clashes with generated --help/--version never reach here: they yield
+        // in yieldGeneratedTo() first. What remains are genuine user duplicates.
+        String newDisplay = longName != null && longName.length() > 0 ? longName : String.valueOf(name);
         if (longName != null && longName.length() > 0) {
             for (ProcessedOption opt : getOptions()) {
                 if (opt.name() != null &&
                         (opt.name().equals(longName) || opt.hasAlias(longName)) &&
                         opt.isActivated(parsedCommand())) {
-                    throw new OptionParserException("Option --" + longName + " is already added to Param: " + this.toString());
+                    throw new OptionParserException("Option --" + longName + " of '" + newDisplay
+                            + "' clashes with --" + longName + " of '" + describeOption(opt) + "'");
                 }
             }
         }
@@ -876,7 +948,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             for (ProcessedOption opt : getOptions()) {
                 if (opt.shortName() != null && opt.shortName().equals(nameStr) &&
                         opt.isActivated(parsedCommand())) {
-                    throw new OptionParserException("Option -" + name + " is already added to Param: " + this.toString());
+                    throw new OptionParserException("Option -" + name + " of '" + newDisplay
+                            + "' clashes with -" + name + " of '" + describeOption(opt) + "'");
                 }
             }
         }
@@ -1208,7 +1281,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         // buildLookupMaps() during construction (#573)
         boolean hasHelp = false;
         for (ProcessedOption opt : options) {
-            if ("h".equals(opt.shortName())) {
+            if ("h".equals(opt.shortName()) || "help".equals(opt.name())) {
                 hasHelp = true;
                 break;
             }
@@ -1274,15 +1347,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         // Use direct scan instead of findOption("version") to avoid triggering
         // buildLookupMaps() during construction (#573)
         boolean hasVersion = false;
+        boolean shortTaken = false;
         for (ProcessedOption opt : options) {
-            if ("v".equals(opt.shortName())) {
+            if ("version".equals(opt.name())) {
                 hasVersion = true;
                 break;
             }
+            if ("v".equals(opt.shortName()))
+                shortTaken = true;
         }
         if (!hasVersion) {
+            // An explicit -v (e.g. --verbose) wins: --version stays long-only
+            // instead of failing the build (#770).
             ProcessedOption versionOption = ProcessedOption.createDirect(
-                    "v", "version", "Displays version information of the command",
+                    shortTaken ? null : "v", "version", "Displays version information of the command",
                     Boolean.class, "generatedVersion", OptionType.BOOLEAN,
                     org.aesh.converter.CLConverterManager.getInstance().getConverter(Boolean.class), null);
             versionOption.setOverrideRequired(true);

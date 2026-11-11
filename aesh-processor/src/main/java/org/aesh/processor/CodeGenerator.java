@@ -622,6 +622,11 @@ final class CodeGenerator {
 
         generateParentCommandInjector(sb, simpleName, fields);
 
+        // Generated options bypass addOption()'s per-add check, so yield them
+        // to explicit user options in one pass with the same rule as the
+        // reflection path (#770).
+        sb.append("        processedCommand.resolveGeneratedConflicts();\n\n");
+
         sb.append("        return processedCommand;\n");
     }
 
