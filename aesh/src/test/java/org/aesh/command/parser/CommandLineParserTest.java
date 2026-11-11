@@ -36,6 +36,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandException;
 import org.aesh.command.CommandResult;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.MethodCommand;
 import org.aesh.command.completer.CompleterInvocation;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
@@ -2506,6 +2507,44 @@ public class CommandLineParserTest {
     }
 
     @Test
+    public void testOverlapErrorNamesFieldsAcrossHierarchy() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(new OverlapChildCommand());
+            fail("Expected overlap validation to fail");
+        } catch (CommandLineParserException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("overlap"));
+            assertTrue(e.getMessage(), e.getMessage().contains("file"));
+            assertTrue(e.getMessage(), e.getMessage().contains("name"));
+            assertTrue(e.getMessage(), e.getMessage().contains("OverlapChildCommand"));
+            assertTrue(e.getMessage(), e.getMessage().contains("OverlapBaseCommand"));
+        }
+    }
+
+    @Test
+    public void testOverlapErrorNamesMixinPath() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(new OverlapMixinCommand());
+            fail("Expected overlap validation to fail");
+        } catch (CommandLineParserException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("overlap"));
+            assertTrue(e.getMessage(), e.getMessage().contains("mixin.file"));
+            assertTrue(e.getMessage(), e.getMessage().contains("name"));
+        }
+    }
+
+    @Test
+    public void testOverlapErrorNamesMethodParameters() throws Exception {
+        try {
+            new AeshCommandContainerBuilder<CommandInvocation>().create(new OverlapMethods(), "overlap");
+            fail("Expected overlap validation to fail");
+        } catch (CommandLineParserException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("overlap"));
+            assertTrue(e.getMessage(), e.getMessage().contains("file"));
+            assertTrue(e.getMessage(), e.getMessage().contains("name"));
+        }
+    }
+
+    @Test
     public void testIndexedPositionalsSynopsisOrderByIndex() throws Exception {
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
                 .create(new IndexedPositionalsCommand<>()).getParser();
@@ -2588,6 +2627,49 @@ public class CommandLineParserTest {
         @Override
         public CommandResult execute(CI commandInvocation) throws CommandException, InterruptedException {
             return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class OverlapBaseCommand {
+        @Argument(description = "base name")
+        String name;
+    }
+
+    @CommandDefinition(name = "overlap-child", description = "overlapping child")
+    public static class OverlapChildCommand extends OverlapBaseCommand implements Command<CommandInvocation> {
+        @Argument(description = "child file")
+        String file;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class OverlapMixin {
+        @Argument(description = "mixin file")
+        String file;
+    }
+
+    @CommandDefinition(name = "overlap-mixin", description = "overlapping mixin")
+    public static class OverlapMixinCommand implements Command<CommandInvocation> {
+        @Mixin
+        OverlapMixin mixin;
+
+        @Argument(description = "own name")
+        String name;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    public static class OverlapMethods {
+        @MethodCommand(name = "overlap", description = "overlapping method")
+        public void overlap(@Argument(description = "the file", paramLabel = "file") String file,
+                @Argument(description = "the name", paramLabel = "name") String name,
+                CommandInvocation invocation) {
         }
     }
 

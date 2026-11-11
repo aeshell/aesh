@@ -633,12 +633,89 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                     continue;
                 if (left.getIndexRange().overlaps(right.getIndexRange())) {
                     throw new CommandLineParserException(
-                            "Positional index ranges overlap: "
-                                    + rangeText(left) + " and " + rangeText(right)
+                            "Positional index ranges overlap: " + describeOverlap(processedCommand, left, right)
                                     + ". Adjust index values to use distinct positional slots.");
                 }
             }
         }
+    }
+
+    /**
+     * Identify two overlapping positionals the way the annotation processor
+     * does ({@code field 'name' (range)}), prefixed with the simple
+     * declaring-class name when both sides resolve to different classes, or
+     * with the mixin path for mixin fields (#764). Declaring classes resolve
+     * best-effort and are omitted when they cannot be determined
+     * (programmatic builders, {@code @MethodCommand} parameters), in which
+     * case the bare field names still identify the collision.
+     */
+    private static String describeOverlap(ProcessedCommand processedCommand,
+            org.aesh.command.impl.internal.ProcessedOption left,
+            org.aesh.command.impl.internal.ProcessedOption right) {
+        String leftClass = isMixinSourced(left) ? null : declaringClassName(processedCommand, left);
+        String rightClass = isMixinSourced(right) ? null : declaringClassName(processedCommand, right);
+        boolean qualify = leftClass != null && rightClass != null && !leftClass.equals(rightClass);
+        return "field '" + displayName(left, qualify ? leftClass : null) + "' ("
+                + rangeText(left) + ") and field '" + displayName(right, qualify ? rightClass : null) + "' ("
+                + rangeText(right) + ")";
+    }
+
+    private static boolean isMixinSourced(org.aesh.command.impl.internal.ProcessedOption option) {
+        return option.getMixinFieldName() != null && !option.getMixinFieldName().isEmpty();
+    }
+
+    private static String displayName(org.aesh.command.impl.internal.ProcessedOption option, String className) {
+        StringBuilder name = new StringBuilder();
+        if (className != null)
+            name.append(className).append('.');
+        if (isMixinSourced(option))
+            name.append(option.getMixinFieldName()).append('.');
+        String field = option.getFieldName();
+        if ((field == null || field.isEmpty() || isSyntheticParameterName(field))
+                && option.getParamLabel() != null && !option.getParamLabel().isEmpty())
+            field = option.getParamLabel();
+        name.append(field == null || field.isEmpty() ? "?" : field);
+        return name.toString();
+    }
+
+    /**
+     * Whether a name is a javac synthetic parameter name ({@code arg0},
+     * {@code arg1}, ...) from compilation without {@code -parameters}. Those
+     * carry no meaning, so the explicit {@code paramLabel} is shown instead.
+     */
+    private static boolean isSyntheticParameterName(String name) {
+        if (name.length() <= 3 || !name.startsWith("arg"))
+            return false;
+        for (int i = 3; i < name.length(); i++) {
+            if (!Character.isDigit(name.charAt(i)))
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * Best-effort declaring class of a positional's field, for overlap errors.
+     * Returns null when it cannot be determined; the error then names the
+     * field without a class.
+     */
+    private static String declaringClassName(ProcessedCommand processedCommand,
+            org.aesh.command.impl.internal.ProcessedOption option) {
+        String field = option.getFieldName();
+        if (field == null || field.isEmpty() || processedCommand == null || processedCommand.getCommand() == null)
+            return null;
+        try {
+            Class<?> owner = processedCommand.getCommand().getClass();
+            while (owner != null) {
+                try {
+                    return owner.getDeclaredField(field).getDeclaringClass().getSimpleName();
+                } catch (NoSuchFieldException e) {
+                    owner = owner.getSuperclass();
+                }
+            }
+        } catch (Exception ignored) {
+            // best effort only; fall back to the bare field name
+        }
+        return null;
     }
 
     private static String rangeText(org.aesh.command.impl.internal.ProcessedOption option) {

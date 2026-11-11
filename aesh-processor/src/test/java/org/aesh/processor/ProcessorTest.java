@@ -3674,8 +3674,10 @@ public class ProcessorTest {
     public void testOverlappingPositionalIndexesError() throws Exception {
         CompilationResult result = compileWithProcessor(
                 new InMemorySource("test.OverlapCommand", OVERLAPPING_INDEX_SOURCE));
-        assertTrue("Should report overlapping index error",
-                result.diagnostics.toString().contains("overlap"));
+        String diagnostics = result.diagnostics.toString();
+        assertTrue("Should report overlapping index error, got: " + diagnostics, diagnostics.contains("overlap"));
+        assertTrue("Error should name the fields, got: " + diagnostics,
+                diagnostics.contains("first") && diagnostics.contains("extras"));
     }
 
     // --- Test: commandAliases() on processor path ---
