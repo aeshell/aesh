@@ -122,6 +122,75 @@ public class AeshRuntimeRunnerAnsiTest {
     }
 
     @Test
+    public void testAnsiModeResolveInstanceMethods() {
+        // Instance methods are the public entry point for direct
+        // CommandRuntime users; they must match the static decision table.
+        assertFalse(AeshRuntimeRunner.AnsiMode.OFF.resolve(TTY, env(Collections.emptyMap())));
+        assertFalse(AeshRuntimeRunner.AnsiMode.OFF.resolve(PIPED, env(envOf("FORCE_COLOR", "1"))));
+        assertTrue(AeshRuntimeRunner.AnsiMode.ON.resolve(PIPED, env(Collections.emptyMap())));
+        assertFalse(
+                AeshRuntimeRunner.AnsiMode.ON.resolve(TTY, env(envOf("NO_COLOR", ""))));
+        assertTrue(AeshRuntimeRunner.AnsiMode.AUTO.resolve(TTY, env(Collections.emptyMap())));
+        assertFalse(AeshRuntimeRunner.AnsiMode.AUTO.resolve(PIPED, env(Collections.emptyMap())));
+        assertTrue(AeshRuntimeRunner.AnsiMode.AUTO.resolve(PIPED, env(envOf("FORCE_COLOR", "1"))));
+        assertFalse(AeshRuntimeRunner.AnsiMode.AUTO.resolve(TTY, env(envOf("NO_COLOR", "", "FORCE_COLOR", "1"))));
+
+        assertTrue(AeshRuntimeRunner.AnsiMode.ON.resolveWhenRedirected(env(Collections.emptyMap())));
+        assertTrue(AeshRuntimeRunner.AnsiMode.AUTO
+                .resolveWhenRedirected(env(envOf("FORCE_COLOR", "1"))));
+        assertFalse(AeshRuntimeRunner.AnsiMode.AUTO
+                .resolveWhenRedirected(env(Collections.emptyMap())));
+        assertFalse(AeshRuntimeRunner.AnsiMode.OFF
+                .resolveWhenRedirected(env(envOf("FORCE_COLOR", "1"))));
+    }
+
+    @Test
+    public void testRuntimeBuilderAnsiColorsAppliesToBuiltContainers() throws Exception {
+        // Direct CommandRuntime users get the same no-colors rule by resolving
+        // the mode once and passing the boolean -- no runner required (#767).
+        boolean colors = AeshRuntimeRunner.AnsiMode.AUTO.resolve(PIPED, env(Collections.emptyMap()));
+        assertFalse(colors);
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                        .<CommandInvocation> builder().command(PaintCommand.class).create())
+                .ansiColors(colors)
+                .build();
+
+        assertFalse(runtime.getCommandRegistry().getCommand("paint", "").getParser().isAnsiMode());
+        String help = runtime.getCommandRegistry().getCommand("paint", "").getParser().printHelp();
+        assertFalse("Help must be plain, got: " + help, help.contains(ESC));
+    }
+
+    @Test
+    public void testRuntimeBuilderAnsiColorsAppliesToLaterBuilds() throws Exception {
+        // Deferred class registrations materialize after build(); the stored
+        // flag must reach them too.
+        org.aesh.command.impl.registry.AeshCommandRegistryBuilder<CommandInvocation> registryBuilder = org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                .<CommandInvocation> builder().command(PaintCommand.class);
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(registryBuilder.create())
+                .ansiColors(false)
+                .build();
+
+        assertFalse(runtime.getCommandRegistry().getCommand("paint", "").getParser().isAnsiMode());
+    }
+
+    @Test
+    public void testRuntimeBuilderDefaultsToRegistryMode() throws Exception {
+        // Unset leaves the registry alone (colors on, modulo NO_COLOR).
+        org.aesh.command.CommandRuntime<CommandInvocation> runtime = org.aesh.command.AeshCommandRuntimeBuilder
+                .<CommandInvocation> builder()
+                .commandRegistry(org.aesh.command.impl.registry.AeshCommandRegistryBuilder
+                        .<CommandInvocation> builder().command(PaintCommand.class).create())
+                .build();
+
+        assumeTrue(System.getenv("NO_COLOR") == null);
+        assertTrue(runtime.getCommandRegistry().getCommand("paint", "").getParser().isAnsiMode());
+    }
+
+    @Test
     public void testAutoWhenPipedHasNoAnsi() {
         // Surefire pipes stdout, so AUTO resolves to plain text here
         assumeCleanEnv();

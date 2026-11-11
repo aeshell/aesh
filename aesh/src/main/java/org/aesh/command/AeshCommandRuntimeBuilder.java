@@ -80,6 +80,13 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      * Off by default: redirected output is plain unless explicitly forced.
      */
     private boolean ansiWhenRedirected;
+    /**
+     * Whether parsers built by this runtime's registry render help with ANSI
+     * colors. Null (default) leaves the registry alone; set false to drop
+     * colors (for example when stdout is redirected). Applied to
+     * already-built containers and to later builds.
+     */
+    private Boolean ansiColors;
 
     private AeshCommandRuntimeBuilder() {
     }
@@ -153,6 +160,23 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      */
     public AeshCommandRuntimeBuilder<CI> ansiWhenRedirected(boolean ansiWhenRedirected) {
         this.ansiWhenRedirected = ansiWhenRedirected;
+        return this;
+    }
+
+    /**
+     * Set whether parsers built by this runtime's registry render help with
+     * ANSI colors. Set false to drop colors (for example when stdout is
+     * redirected); applied to already-built containers in {@link #build()}
+     * and to later builds, without forcing an early materialization.
+     * Direct {@code CommandRuntime} users can compute the value with
+     * {@code AeshRuntimeRunner.AnsiMode.AUTO.resolve()} so
+     * {@code mycli --help > help.txt} stays plain text without the runner.
+     *
+     * @param ansiColors false to drop ANSI colors, true to keep them
+     * @return this builder
+     */
+    public AeshCommandRuntimeBuilder<CI> ansiColors(boolean ansiColors) {
+        this.ansiColors = ansiColors;
         return this;
     }
 
@@ -266,6 +290,12 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
             MutableCommandRegistryImpl<CI> mutableRegistry = (MutableCommandRegistryImpl<CI>) registry;
             mutableRegistry.setDefaultValueProvider(defaultValueProvider);
             mutableRegistry.applyDefaultValueProvider();
+        }
+
+        if (ansiColors != null && registry instanceof MutableCommandRegistryImpl) {
+            MutableCommandRegistryImpl<CI> mutableRegistry = (MutableCommandRegistryImpl<CI>) registry;
+            mutableRegistry.setAnsiColors(ansiColors);
+            mutableRegistry.applyAnsiColors();
         }
 
         if (commandInvocationProvider == null) {

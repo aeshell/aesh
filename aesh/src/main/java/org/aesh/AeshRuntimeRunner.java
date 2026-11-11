@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.aesh.command.AeshCommandRuntimeBuilder;
 import org.aesh.command.ArgumentsSection;
@@ -121,7 +123,56 @@ public class AeshRuntimeRunner {
         /** Always use ANSI colors, unless {@code NO_COLOR} is set. */
         ON,
         /** Never use ANSI colors. */
-        OFF
+        OFF;
+
+        /**
+         * Resolve this mode against the real environment (stdout terminal
+         * probe plus {@code System.getenv}). Direct
+         * {@code CommandRuntime} users can pass the result to
+         * {@code AeshCommandRuntimeBuilder.ansiColors(...)} so
+         * {@code mycli --help > help.txt} stays plain text without the
+         * runner.
+         *
+         * @return true when help and other output should use ANSI colors
+         */
+        public boolean resolve() {
+            return resolveAnsiColors(this, TtyDetect::isStdoutTty, System::getenv);
+        }
+
+        /**
+         * Resolve this mode with injectable terminal and environment probes,
+         * so tests can pass a fixed map instead of touching the environment.
+         *
+         * @param stdoutTty whether stdout is a terminal, consulted lazily
+         * @param getenv environment lookup
+         * @return true when help and other output should use ANSI colors
+         */
+        public boolean resolve(Supplier<Boolean> stdoutTty, Function<String, String> getenv) {
+            return resolveAnsiColors(this, stdoutTty, getenv);
+        }
+
+        /**
+         * Whether ANSI colors survive an output redirect, against the real
+         * environment. Only explicit {@code ON} or
+         * {@code FORCE_COLOR}/{@code CLICOLOR_FORCE} force them;
+         * {@code NO_COLOR} always wins.
+         *
+         * @return true when redirected output should keep ANSI colors
+         */
+        public boolean resolveWhenRedirected() {
+            return resolveForceWhenRedirected(this, System::getenv);
+        }
+
+        /**
+         * Whether ANSI colors survive an output redirect, with an injectable
+         * environment lookup for tests.
+         *
+         * @param getenv environment lookup
+         * @return true when redirected output should keep ANSI colors
+         */
+        public boolean resolveWhenRedirected(Function<String, String> getenv) {
+            return resolveForceWhenRedirected(this, getenv);
+        }
     }
 
     /**
@@ -446,14 +497,17 @@ public class AeshRuntimeRunner {
      * the environment otherwise. In {@link AnsiMode#AUTO},
      * {@code FORCE_COLOR} (or {@code CLICOLOR_FORCE}) forces colors on;
      * otherwise colors follow stdout: on for a terminal, off when redirected.
+     * Public so applications that run commands through
+     * {@code CommandRuntime} directly can apply the same rule without the
+     * runner.
      *
      * @param mode the configured mode
      * @param stdoutTty whether stdout is a terminal, consulted lazily
      * @param getenv environment lookup, so tests can pass a fixed map
      */
-    static boolean resolveAnsiColors(AnsiMode mode,
-            java.util.function.Supplier<Boolean> stdoutTty,
-            java.util.function.Function<String, String> getenv) {
+    public static boolean resolveAnsiColors(AnsiMode mode,
+            Supplier<Boolean> stdoutTty,
+            Function<String, String> getenv) {
         if (getenv.apply("NO_COLOR") != null)
             return false;
         if (mode == AnsiMode.OFF)
@@ -471,10 +525,11 @@ public class AeshRuntimeRunner {
     /**
      * Whether ANSI colors survive an output redirect to a file or pipe.
      * Only explicit {@code ON} or {@code FORCE_COLOR}/{@code CLICOLOR_FORCE}
-     * force them; {@code NO_COLOR} always wins.
+     * force them; {@code NO_COLOR} always wins. Public alongside
+     * {@link #resolveAnsiColors} for direct {@code CommandRuntime} users.
      */
-    static boolean resolveForceWhenRedirected(AnsiMode mode,
-            java.util.function.Function<String, String> getenv) {
+    public static boolean resolveForceWhenRedirected(AnsiMode mode,
+            Function<String, String> getenv) {
         if (getenv.apply("NO_COLOR") != null)
             return false;
         if (mode == AnsiMode.OFF)
