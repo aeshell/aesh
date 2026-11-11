@@ -981,11 +981,16 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 positional.addValue(word);
             }
         } else {
-            int missingIndex = processedCommand.getPositionalValueCount();
-            processedCommand.addParserException(
-                    new OptionParserException(
-                            "Unexpected positional value '" + word + "' at index " + missingIndex
-                                    + ". Declared positional indexes: " + processedCommand.positionalRangeSummary() + "."));
+            List<ProcessedOption> declared = processedCommand.getPositionalOptionsInDisplayOrder();
+            String message;
+            if (declared.isEmpty()) {
+                message = "Unknown argument '" + word + "': " + helpNames() + " takes no arguments";
+            } else {
+                int count = declared.size();
+                message = "Unexpected argument '" + word + "': " + helpNames() + " takes "
+                        + (count == 1 ? "one argument" : count + " arguments");
+            }
+            processedCommand.addParserException(new OptionParserException(message));
         }
     }
 

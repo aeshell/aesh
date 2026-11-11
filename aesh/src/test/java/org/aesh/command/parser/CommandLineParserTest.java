@@ -2601,9 +2601,59 @@ public class CommandLineParserTest {
                     CommandLineParser.Mode.VALIDATE);
             fail("Expected missing positional index to be rejected");
         } catch (OptionParserException e) {
-            assertTrue(e.getMessage().contains("Unexpected positional value"));
-            assertTrue(e.getMessage().contains("index 1"));
-            assertTrue(e.getMessage().contains("Declared positional indexes"));
+            assertEquals("Unexpected argument 'one': idxgap takes 2 arguments", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExtraWordWithNoPositionalsNamesTheArgument() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new NoPositionalsCommand<>()).getParser();
+
+        try {
+            parser.populateObject("tool help", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Expected extra word to be rejected");
+        } catch (OptionParserException e) {
+            assertEquals("Unknown argument 'help': tool takes no arguments", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testExtraWordWhenPositionalsTaken() throws Exception {
+        AeshContext aeshContext = SettingsBuilder.builder().build().aeshContext();
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<>()
+                .create(new SinglePositionalCommand<>()).getParser();
+
+        try {
+            parser.populateObject("single foo bar", invocationProviders, aeshContext,
+                    CommandLineParser.Mode.VALIDATE);
+            fail("Expected second word to be rejected");
+        } catch (OptionParserException e) {
+            assertEquals("Unexpected argument 'bar': single takes one argument", e.getMessage());
+        }
+    }
+
+    @CommandDefinition(name = "tool", description = "takes no positionals")
+    public class NoPositionalsCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Option(description = "a flag", hasValue = false)
+        private boolean flag;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "single", description = "takes one positional")
+    public class SinglePositionalCommand<CI extends CommandInvocation> implements Command<CI> {
+        @Argument(description = "the target")
+        private String target;
+
+        @Override
+        public CommandResult execute(CI commandInvocation) {
+            return CommandResult.SUCCESS;
         }
     }
 
