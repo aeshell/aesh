@@ -517,6 +517,34 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     /**
+     * Returns only the {@code Usage:} block for this command, without the
+     * description, the option list, or (for groups) the subcommand listing.
+     * Prints the collapsed form when {@code collapsed} is true, regardless of
+     * the stored {@code collapseSynopsis} toggle.
+     *
+     * @param collapsed when true, collapse optional options to {@code [OPTIONS]}
+     * @return the wrapped usage block, ending with a line separator
+     */
+    @Override
+    public String printSynopsis(boolean collapsed) {
+        resolveAllLazyChildren();
+        // Propagate ansiMode to any newly resolved lazy children
+        if (!ansiMode && childParsers != null) {
+            for (CommandLineParser<CI> child : childParsers) {
+                child.updateAnsiMode(false);
+            }
+        }
+        String synopsis = processedCommand.printSynopsis(helpNames(), collapsed);
+        if (isGroupCommand()) {
+            // Mark the subcommand slot at the end of the synopsis block, the
+            // same splice printHelp uses so wrapped lines stay aligned.
+            String sep = Config.getLineSeparator();
+            synopsis = synopsis.substring(0, synopsis.length() - sep.length()) + " [COMMAND]" + sep;
+        }
+        return synopsis;
+    }
+
+    /**
      * Returns a usage String based on the defined command and options.
      * Useful when printing "help" info etc.
      */

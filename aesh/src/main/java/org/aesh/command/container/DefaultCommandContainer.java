@@ -193,4 +193,27 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
         } else
             return getParser().printHelp();
     }
+
+    @Override
+    public String printSynopsis(String childCommandName, boolean collapsed) {
+        if (getParser().isGroupCommand() && childCommandName.contains(" ")) {
+            String[] names = childCommandName.split(" ");
+            if (names.length > 1 && names[1].length() > 0) {
+                CommandLineParser current = getParser();
+                for (int i = 1; i < names.length; i++) {
+                    CommandLineParser child = current.getChildParser(names[i]);
+                    if (child != null) {
+                        if (child.isGroupCommand()) {
+                            current = child;
+                        } else
+                            return child.printSynopsis(collapsed);
+                    }
+                }
+                if (current != getParser())
+                    return current.printSynopsis(collapsed);
+            }
+            return "Child command " + names[1] + " not found.";
+        } else
+            return getParser().printSynopsis(collapsed);
+    }
 }

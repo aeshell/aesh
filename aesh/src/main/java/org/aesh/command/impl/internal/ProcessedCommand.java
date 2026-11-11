@@ -1483,15 +1483,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         int maxOptionColumnWidth = 24;
         int width = helpWidth();
         DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
-        List<ProcessedOption> opts = getDisplayOptions();
-        List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
-        for (ProcessedOption o : opts) {
-            if (o.getVisibility() == OptionVisibility.HIDDEN)
-                continue;
-            if (!showAll && o.getVisibility() == OptionVisibility.FULL)
-                continue;
-            visibleOpts.add(o);
-        }
+        List<ProcessedOption> visibleOpts = visibleOptions(showAll);
         for (ProcessedOption o : visibleOpts) {
             if (o.getFormattedLength() > maxLength)
                 maxLength = o.getFormattedLength();
@@ -1506,19 +1498,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         for (String line : ProcessedOption.wrapText(commandDescription != null ? commandDescription : "", width))
             sb.append(line).append(Config.getLineSeparator());
         //second line — detailed synopsis with wrapping
-        boolean ansi = !visibleOpts.isEmpty() && visibleOpts.get(0).isAnsiMode();
         String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;
-        String prefix = ansi
-                ? "Usage: " + ANSI.BOLD + cmdDisplay + ANSI.BOLD_OFF
-                : "Usage: " + cmdDisplay;
-        String synopsisOpts = buildDetailedSynopsis(visibleOpts);
         List<ProcessedOption> positionalOptions = getPositionalOptionsInDisplayOrder();
-        StringBuilder positionalSuffix = new StringBuilder();
-        for (ProcessedOption positional : positionalOptions) {
-            positionalSuffix.append(formatArgumentSynopsis(positional));
-        }
-        sb.append(wrapSynopsis(prefix, synopsisOpts + positionalSuffix, width));
-        sb.append(Config.getLineSeparator());
+        sb.append(renderSynopsisBlock(cmdDisplay, visibleOpts, positionalOptions, width, null));
 
         //options and arguments — group by helpGroup
         // Grouped positionals leave the positional flow and join their
@@ -1613,6 +1595,65 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             sb.append(Config.getLineSeparator());
         }
         return sb.toString();
+    }
+
+    /**
+     * Returns only the {@code Usage:} block for this command, without the
+     * description or the option list. Prints the collapsed form when
+     * {@code collapsed} is true, regardless of the stored
+     * {@code collapseSynopsis} toggle, so a usage error can show
+     * {@code Usage: cmd [OPTIONS]} while {@code --help} keeps the full list.
+     * Honors ANSI mode like {@link #printHelp(String)}.
+     *
+     * @param commandName the command name to display
+     * @param collapsed when true, collapse optional options to {@code [OPTIONS]}
+     * @return the wrapped usage block, ending with a line separator
+     */
+    public String printSynopsis(String commandName, boolean collapsed) {
+        int width = helpWidth();
+        String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;
+        return renderSynopsisBlock(cmdDisplay, visibleOptions(false),
+                getPositionalOptionsInDisplayOrder(), width, collapsed);
+    }
+
+    /**
+     * Options rendered in help, honoring visibility. Hidden options never
+     * render; {@code FULL} options render only when {@code showAll} is set.
+     */
+    private List<ProcessedOption> visibleOptions(boolean showAll) {
+        List<ProcessedOption> opts = getDisplayOptions();
+        List<ProcessedOption> visibleOpts = new ArrayList<>(opts.size());
+        for (ProcessedOption o : opts) {
+            if (o.getVisibility() == OptionVisibility.HIDDEN)
+                continue;
+            if (!showAll && o.getVisibility() == OptionVisibility.FULL)
+                continue;
+            visibleOpts.add(o);
+        }
+        return visibleOpts;
+    }
+
+    /**
+     * Render the wrapped {@code Usage:} block shared by {@code --help} and
+     * {@link #printSynopsis}. A null override keeps the stored
+     * {@code collapseSynopsis} toggle; otherwise the override wins.
+     */
+    private String renderSynopsisBlock(String cmdDisplay, List<ProcessedOption> visibleOpts,
+            List<ProcessedOption> positionalOptions, int width, Boolean collapsedOverride) {
+        boolean ansi = !visibleOpts.isEmpty() && visibleOpts.get(0).isAnsiMode();
+        String prefix = ansi
+                ? "Usage: " + ANSI.BOLD + cmdDisplay + ANSI.BOLD_OFF
+                : "Usage: " + cmdDisplay;
+        String synopsisOpts = collapsedOverride == null
+                ? buildDetailedSynopsis(visibleOpts)
+                : buildOptionsSynopsis(visibleOpts, ansi,
+                        collapsedOverride.booleanValue());
+        StringBuilder positionalSuffix = new StringBuilder();
+        for (ProcessedOption positional : positionalOptions) {
+            positionalSuffix.append(formatArgumentSynopsis(positional));
+        }
+        return wrapSynopsis(prefix, synopsisOpts + positionalSuffix, width)
+                + Config.getLineSeparator();
     }
 
     @Override
@@ -1754,9 +1795,17 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * explicitly and all optional flags collapse to {@code [OPTIONS]}.
      */
     private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
+        return buildOptionsSynopsis(visibleOpts, ansi, collapseSynopsis);
+    }
+
+    /**
+     * Core synopsis builder with an explicit collapse override, so the usage
+     * error path can collapse while {@code --help} stays expanded.
+     */
+    private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi, boolean collapsed) {
         if (visibleOpts.isEmpty())
             return "";
-        if (collapseSynopsis)
+        if (collapsed)
             return buildCollapsedOptionsSynopsis(visibleOpts, ansi);
         return buildExpandedOptionsSynopsis(visibleOpts, ansi);
     }

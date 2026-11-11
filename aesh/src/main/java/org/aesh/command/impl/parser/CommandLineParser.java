@@ -104,6 +104,20 @@ public interface CommandLineParser<CI extends CommandInvocation> {
     String printHelp();
 
     /**
+     * Returns only the {@code Usage:} block for this command, without the
+     * description or the option list. Prints the collapsed form
+     * ({@code Usage: cmd [OPTIONS]}) when {@code collapsed} is true,
+     * regardless of the stored collapse toggle. Defaults to the full help
+     * for backward compatibility with out-of-tree implementations.
+     *
+     * @param collapsed when true, collapse optional options to {@code [OPTIONS]}
+     * @return the wrapped usage block
+     */
+    default String printSynopsis(boolean collapsed) {
+        return printHelp();
+    }
+
+    /**
      * Parse a command line with the defined command as base of the rules.
      * If any options are found, but not defined in the command object an
      * CommandLineParserException will be thrown.

@@ -59,6 +59,15 @@ public interface CommandContainer<CI extends CommandInvocation> extends AutoClos
     String printHelp(String childCommandName);
 
     /**
+     * @param childCommandName (for group commands)
+     * @param collapsed when true, collapse optional options to {@code [OPTIONS]}
+     * @return usage info, without the description or the option list
+     */
+    default String printSynopsis(String childCommandName, boolean collapsed) {
+        return printHelp(childCommandName);
+    }
+
+    /**
      * @return error message
      */
     String getBuildErrorMessage();

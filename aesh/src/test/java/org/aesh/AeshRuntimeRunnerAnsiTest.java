@@ -37,6 +37,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
 import org.junit.Test;
 
@@ -369,6 +370,152 @@ public class AeshRuntimeRunnerAnsiTest {
                 SinkDrainCommand.lines.stream().noneMatch(l -> l.contains(ESC)));
     }
 
+    @Test
+    public void testPrintSynopsisMatchesHelpUsageBlock() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new MultiCommand()).getParser();
+        parser.updateAnsiMode(false);
+
+        String synopsis = parser.printSynopsis(false);
+        assertTrue("Synopsis starts with the Usage line, got: " + synopsis,
+                synopsis.startsWith("Usage: multi"));
+        assertFalse("Synopsis has no option list, got: " + synopsis,
+                synopsis.contains("Options:"));
+        assertFalse("Synopsis has no description, got: " + synopsis,
+                synopsis.contains("Multi things"));
+        assertTrue("Synopsis lists the options, got: " + synopsis,
+                synopsis.contains("-a=") && synopsis.contains("--beta"));
+
+        // The standalone block is byte-identical to the Usage block of --help
+        assertTrue("Help contains the synopsis block verbatim",
+                parser.printHelp().contains(synopsis));
+    }
+
+    @Test
+    public void testPrintSynopsisCollapsed() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new MultiCommand()).getParser();
+        parser.updateAnsiMode(false);
+
+        String collapsed = parser.printSynopsis(true);
+        assertTrue("Collapsed synopsis keeps the Usage line, got: " + collapsed,
+                collapsed.startsWith("Usage: multi"));
+        assertTrue("Collapsed synopsis folds options, got: " + collapsed,
+                collapsed.contains("[OPTIONS]"));
+        assertFalse("Collapsed synopsis drops the option list, got: " + collapsed,
+                collapsed.contains("--beta") || collapsed.contains("-a="));
+        // --help itself keeps the full list: the toggle is untouched
+        assertTrue(parser.printHelp().contains("--alpha"));
+    }
+
+    @Test
+    public void testPrintSynopsisAnsiMode() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new MultiCommand()).getParser();
+
+        parser.updateAnsiMode(true);
+        assertTrue("Colors on must color the synopsis",
+                parser.printSynopsis(false).contains(ESC));
+        parser.updateAnsiMode(false);
+        assertFalse("Colors off must leave the synopsis plain, got: "
+                + parser.printSynopsis(false),
+                parser.printSynopsis(false).contains(ESC));
+    }
+
+    @Test
+    public void testPrintSynopsisGroupMarker() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new GrpCommand()).getParser();
+        parser.updateAnsiMode(false);
+
+        assertTrue("Group synopsis marks the subcommand slot, got: " + parser.printSynopsis(false),
+                parser.printSynopsis(false).contains("[COMMAND]"));
+    }
+
+    @Test
+    public void testUsageErrorModeDefaultIsFullHelp() {
+        assumeCleanEnv();
+        CommandResult[] result = new CommandResult[1];
+        String stderr = captureStderr(() -> result[0] = AeshRuntimeRunner.builder()
+                .command(PaintCommand.class)
+                .args("--bogus", "x")
+                .execute());
+
+        assertEquals(CommandResult.USAGE_ERROR, result[0]);
+        assertTrue("Default keeps the full help, got: " + stderr, stderr.contains("Options:"));
+        assertFalse("Default adds no hint, got: " + stderr, stderr.contains("Try '"));
+    }
+
+    @Test
+    public void testUsageErrorModeUsage() {
+        assumeCleanEnv();
+        CommandResult[] result = new CommandResult[1];
+        String stderr = captureStderr(() -> result[0] = AeshRuntimeRunner.builder()
+                .command(PaintCommand.class)
+                .usageErrorMode(AeshRuntimeRunner.UsageErrorMode.USAGE)
+                .args("--bogus", "x")
+                .execute());
+
+        assertEquals(CommandResult.USAGE_ERROR, result[0]);
+        assertTrue("Usage mode prints the Usage block, got: " + stderr, stderr.contains("Usage:"));
+        assertFalse("Usage mode drops the option list, got: " + stderr, stderr.contains("Options:"));
+        assertTrue("Usage mode hints at --help, got: " + stderr,
+                stderr.contains("Try 'paint --help' for more information."));
+    }
+
+    @Test
+    public void testUsageErrorModeCollapsed() {
+        assumeCleanEnv();
+        CommandResult[] result = new CommandResult[1];
+        String stderr = captureStderr(() -> result[0] = AeshRuntimeRunner.builder()
+                .command(MultiCommand.class)
+                .usageErrorMode(AeshRuntimeRunner.UsageErrorMode.COLLAPSED_USAGE)
+                .args("--bogus", "x")
+                .execute());
+
+        assertEquals(CommandResult.USAGE_ERROR, result[0]);
+        assertTrue("Collapsed mode folds the options, got: " + stderr, stderr.contains("[OPTIONS]"));
+        assertFalse("Collapsed mode drops the option list, got: " + stderr, stderr.contains("--beta"));
+        assertTrue("Collapsed mode hints at --help, got: " + stderr,
+                stderr.contains("Try 'multi --help' for more information."));
+    }
+
+    @Test
+    public void testUsageErrorModeHintOnly() {
+        assumeCleanEnv();
+        CommandResult[] result = new CommandResult[1];
+        String stderr = captureStderr(() -> result[0] = AeshRuntimeRunner.builder()
+                .command(PaintCommand.class)
+                .usageErrorMode(AeshRuntimeRunner.UsageErrorMode.HINT_ONLY)
+                .args("--bogus", "x")
+                .execute());
+
+        assertEquals(CommandResult.USAGE_ERROR, result[0]);
+        assertFalse("Hint-only mode prints no usage, got: " + stderr, stderr.contains("Usage:"));
+        assertFalse("Hint-only mode prints no options, got: " + stderr, stderr.contains("Options:"));
+        assertTrue("Hint-only mode hints at --help, got: " + stderr,
+                stderr.contains("Try 'paint --help' for more information."));
+    }
+
+    @Test
+    public void testUsageErrorModeUsageResolvesSubcommand() {
+        assumeCleanEnv();
+        CommandResult[] result = new CommandResult[1];
+        String stderr = captureStderr(() -> result[0] = AeshRuntimeRunner.builder()
+                .command(GrpCommand.class)
+                .usageErrorMode(AeshRuntimeRunner.UsageErrorMode.USAGE)
+                .args("paint", "--bogus", "x")
+                .execute());
+
+        assertEquals(CommandResult.USAGE_ERROR, result[0]);
+        assertTrue("Group error prints the subcommand usage, got: " + stderr,
+                stderr.contains("Usage: grp paint"));
+        assertFalse("Group error drops the subcommand listing, got: " + stderr,
+                stderr.contains("commands:"));
+        assertTrue("Group error hints at the subcommand help, got: " + stderr,
+                stderr.contains("Try 'grp paint --help' for more information."));
+    }
+
     @CommandDefinition(name = "sinkdrain", description = "Drain stdin")
     public static class SinkDrainCommand implements Command<CommandInvocation> {
         static final java.util.List<String> lines = new java.util.ArrayList<>();
@@ -448,6 +595,23 @@ public class AeshRuntimeRunnerAnsiTest {
             System.setErr(original);
         }
         return baos.toString();
+    }
+
+    @CommandDefinition(name = "multi", description = "Multi things", generateHelp = true)
+    public static class MultiCommand implements Command<CommandInvocation> {
+        @Option(shortName = 'a', description = "Alpha value")
+        String alpha;
+        @Option(description = "Beta value")
+        String beta;
+        @Option(description = "Gamma value")
+        String gamma;
+        @Argument(description = "The target")
+        String target;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
     }
 
     @CommandDefinition(name = "paint", description = "Paint things", generateHelp = true)

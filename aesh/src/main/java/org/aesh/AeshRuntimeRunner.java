@@ -100,6 +100,7 @@ public class AeshRuntimeRunner {
     private Class<? extends Command> pendingCommandClass;
     private Command pendingCommandInstance;
     private AnsiMode ansiMode = AnsiMode.AUTO;
+    private UsageErrorMode usageErrorMode = UsageErrorMode.FULL_HELP;
     private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
     private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
 
@@ -184,6 +185,38 @@ public class AeshRuntimeRunner {
      */
     public AeshRuntimeRunner ansiMode(AnsiMode ansiMode) {
         this.ansiMode = ansiMode != null ? ansiMode : AnsiMode.AUTO;
+        return this;
+    }
+
+    /**
+     * What follows a usage error (or a command failure that prints help).
+     */
+    public enum UsageErrorMode {
+        /** Today's behavior: the error plus the full help of the command. */
+        FULL_HELP,
+        /** The error, the {@code Usage:} block, and a {@code --help} hint. */
+        USAGE,
+        /** Like {@code USAGE} but collapsed to {@code Usage: cmd [OPTIONS]}. */
+        COLLAPSED_USAGE,
+        /** Only the error and the {@code --help} hint, no usage. */
+        HINT_ONLY
+    }
+
+    /**
+     * Control what the runner prints after a usage error (unknown option,
+     * missing value) or a command failure that prints help. The default
+     * {@link UsageErrorMode#FULL_HELP} prints the error plus the full help,
+     * exactly as before. The other modes print a {@code Try '<command>
+     * --help' for more information.} hint instead of (or after) the
+     * {@code Usage:} block alone, so a typo on a 70-option command no longer
+     * scrolls the error away. {@code --help} itself always keeps the full
+     * list.
+     *
+     * @param usageErrorMode the error-output mode, or null for
+     *        {@link UsageErrorMode#FULL_HELP}
+     */
+    public AeshRuntimeRunner usageErrorMode(UsageErrorMode usageErrorMode) {
+        this.usageErrorMode = usageErrorMode != null ? usageErrorMode : UsageErrorMode.FULL_HELP;
         return this;
     }
 
@@ -1469,21 +1502,38 @@ public class AeshRuntimeRunner {
         }
     }
 
-    private static void showHelp(CommandRuntime runtime, String commandName, String[] args, Exception e,
+    @SuppressWarnings("unchecked")
+    private void showHelp(CommandRuntime runtime, String commandName, String[] args, Exception e,
             boolean colors) {
         System.err.println(e.getMessage());
         String helpLine = resolveHelpCommand(runtime, commandName, args);
-        if (!colors) {
-            // Usage errors go to stderr, which may be redirected on its own.
-            // Already resolved above, so this never builds.
-            try {
-                CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) runtime
-                        .getCommandRegistry().getCommand(commandName, "");
-                container.getParser().updateAnsiMode(false);
-            } catch (CommandNotFoundException ignored) {
+        if (usageErrorMode == UsageErrorMode.FULL_HELP) {
+            if (!colors) {
+                // Usage errors go to stderr, which may be redirected on its own.
+                // Already resolved above, so this never builds.
+                try {
+                    CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) runtime
+                            .getCommandRegistry().getCommand(commandName, "");
+                    container.getParser().updateAnsiMode(false);
+                } catch (CommandNotFoundException ignored) {
+                }
             }
+            System.err.println(runtime.commandInfo(helpLine));
+            return;
         }
-        System.err.println(runtime.commandInfo(helpLine));
+        try {
+            CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) runtime
+                    .getCommandRegistry().getCommand(commandName, "");
+            if (!colors) {
+                container.getParser().updateAnsiMode(false);
+            }
+            if (usageErrorMode != UsageErrorMode.HINT_ONLY) {
+                System.err.print(container.printSynopsis(helpLine,
+                        usageErrorMode == UsageErrorMode.COLLAPSED_USAGE));
+            }
+        } catch (CommandNotFoundException ignored) {
+        }
+        System.err.println("Try '" + helpLine + " --help' for more information.");
     }
 
     @SuppressWarnings("unchecked")
