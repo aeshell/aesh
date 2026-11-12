@@ -1721,8 +1721,29 @@ public class ProcessedOption {
      * 20 the text is not wrapped.
      */
     public static List<String> wrapText(String text, int width) {
+        return wrapText(text, width, false);
+    }
+
+    /**
+     * Wrap text at the given width, keeping explicit line breaks. When
+     * {@code preserveIndented} is set, lines starting with whitespace are
+     * emitted verbatim (the usual convention for examples and code blocks),
+     * so only prose lines are reflowed. Descriptions always wrap every line;
+     * headers and footers preserve indented ones.
+     *
+     * @param text the text to wrap
+     * @param width the maximum line width
+     * @param preserveIndented when true, leave indented lines untouched
+     * @return the wrapped lines
+     */
+    public static List<String> wrapText(String text, int width, boolean preserveIndented) {
         List<String> lines = new ArrayList<>();
         for (String line : text.split("\n", -1)) {
+            if (preserveIndented && line.length() > 0
+                    && (line.charAt(0) == ' ' || line.charAt(0) == '\t')) {
+                lines.add(line);
+                continue;
+            }
             if (width < MIN_WRAP_WIDTH || line.length() <= width) {
                 lines.add(line);
                 continue;

@@ -26,6 +26,7 @@ import org.aesh.command.HelpFeature;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.Toggle;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Option;
@@ -80,6 +81,58 @@ public class HelpHeaderFooterTest {
         int usage = help.indexOf("Usage: minimal");
         int header = help.indexOf("Minimal header");
         assertTrue(help, usage >= 0 && header > usage);
+    }
+
+    @Test
+    public void testIndentedFooterLineSurvivesVerbatim() throws Exception {
+        String help = help(new WrappedFooterCommand());
+
+        String example = "  camel transform message --body='Hello World' --language=simple --template='Bye ${body}'";
+        assertTrue("indented example must survive verbatim, got:\n" + help, help.contains(example));
+
+        String prose = "An experiment is part of an exploration (camel cmd chaos-explore-start) with rules that decide it all here";
+        assertFalse("non-indented prose must still wrap, got:\n" + help, help.contains(prose));
+        assertTrue("wrapped prose keeps its words, got:\n" + help,
+                help.contains("An experiment is part of an exploration"));
+    }
+
+    @Test
+    public void testIndentedHeaderLineSurvivesVerbatim() throws Exception {
+        String help = help(new WrappedHeaderCommand());
+
+        String example = "  camel eval expression --language=simple --template='${body}' --body='Hello World here'";
+        assertTrue("indented header example must survive verbatim, got:\n" + help, help.contains(example));
+    }
+
+    @Test
+    public void testWrapTextIndentedOnlyWhenAsked() {
+        String indented = "  camel transform message --body='Hello World' --language=simple --template='Bye there'";
+        assertTrue("needs an over-width line", indented.length() > 80);
+        assertEquals(Collections.singletonList(indented),
+                ProcessedOption.wrapText(indented, 80, true));
+        assertTrue("two-arg form still wraps indented lines",
+                ProcessedOption.wrapText(indented, 80).size() > 1);
+    }
+
+    @CommandDefinition(name = "wrapped-footer", description = "Wrap test", generateHelp = true, footer = {
+            "An experiment is part of an exploration (camel cmd chaos-explore-start) with rules that decide it all here",
+            "  camel transform message --body='Hello World' --language=simple --template='Bye ${body}'" })
+    public static class WrappedFooterCommand implements Command<CommandInvocation> {
+        @Option(hasValue = false, description = "Include the stack trace")
+        boolean trace;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "wrapped-header", description = "Wrap test", generateHelp = true, header = "  camel eval expression --language=simple --template='${body}' --body='Hello World here'")
+    public static class WrappedHeaderCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
     }
 
     @Test

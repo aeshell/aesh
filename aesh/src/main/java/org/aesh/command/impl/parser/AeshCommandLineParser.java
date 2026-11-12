@@ -664,11 +664,13 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     /**
      * Wrap a header/footer block at the resolved help width, reusing the same
      * wrapping as descriptions. Hard line breaks already in the text are kept
-     * as explicit breaks; only the soft wrapping is added (#763).
+     * as explicit breaks; only the soft wrapping is added (#763). Lines
+     * starting with whitespace are left untouched, so indented examples and
+     * code blocks survive verbatim.
      */
     private String wrapBlock(String text) {
         return String.join(Config.getLineSeparator(),
-                ProcessedOption.wrapText(text, processedCommand.helpWidth()));
+                ProcessedOption.wrapText(text, processedCommand.helpWidth(), true));
     }
 
     /**
