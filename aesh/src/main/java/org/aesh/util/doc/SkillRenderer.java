@@ -198,9 +198,10 @@ class SkillRenderer implements DocRenderer {
         // Required
         sb.append(opt.isRequired() ? "yes" : "no").append(" | ");
 
-        // Default
-        if (!opt.getDefaultValues().isEmpty()) {
-            sb.append(mdTableCode(join(opt.getDefaultValues(), ", ")));
+        // Default (raw declared expression, never env-resolved secrets)
+        List<String> defaults = DocDefaults.displayDefaultValues(cmd, opt);
+        if (!defaults.isEmpty()) {
+            sb.append(mdTableCode(join(defaults, ", ")));
         } else {
             sb.append("-");
         }
@@ -293,9 +294,10 @@ class SkillRenderer implements DocRenderer {
         sb.append(cliTypeName(pos)).append(" | ");
         sb.append(pos.isRequired() ? "yes" : "no").append(" | ");
 
-        // Default
-        if (!pos.getDefaultValues().isEmpty()) {
-            sb.append(mdTableCode(join(pos.getDefaultValues(), ", ")));
+        // Default (raw declared expression, never env-resolved secrets)
+        List<String> posDefaults = DocDefaults.displayDefaultValues(cmd, pos);
+        if (!posDefaults.isEmpty()) {
+            sb.append(mdTableCode(join(posDefaults, ", ")));
         } else {
             sb.append("-");
         }

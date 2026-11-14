@@ -377,6 +377,20 @@ public class ProcessedOption {
         return fallbackValue;
     }
 
+    /**
+     * The declared {@code defaultValue} entries before any {@code ${...}}
+     * variable resolution. Non-null only when the declaration contains a
+     * variable reference; plain defaults live in {@link #getDefaultValues}.
+     * Generated reference docs prefer these so they show the expression
+     * (e.g. {@code ${env:API_KEY:-}}) instead of whatever the environment
+     * happened to resolve at doc-generation time.
+     *
+     * @return the raw declared defaults, or null when no variable is involved
+     */
+    public List<String> getRawDefaultValues() {
+        return rawDefaultValues;
+    }
+
     public boolean hasFallbackValue() {
         return fallbackValue != null;
     }

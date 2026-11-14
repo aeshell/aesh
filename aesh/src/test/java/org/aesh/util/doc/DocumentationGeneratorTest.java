@@ -36,6 +36,7 @@ import org.aesh.command.CommandResult;
 import org.aesh.command.DocFormat;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
+import org.aesh.command.Toggle;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
@@ -48,7 +49,7 @@ import org.junit.Test;
 
 public class DocumentationGeneratorTest {
 
-    @CommandDefinition(name = "deploy", description = "Deploy an application")
+    @CommandDefinition(name = "deploy", description = "Deploy an application", showDefaultValues = Toggle.ON)
     public static class DeployCommand implements Command<CommandInvocation> {
         @Option(shortName = 'e', name = "environment", defaultValue = "dev", description = "Target environment")
         String environment;
@@ -122,7 +123,92 @@ public class DocumentationGeneratorTest {
         }
     }
 
-    // --- AsciiDoc tests ---
+    // --- Secret defaults must never leak into generated docs (#774) ---
+
+    @CommandDefinition(name = "secretcmd", description = "Secret defaults", generateHelp = true, showDefaultValues = Toggle.ON)
+    public static class SecretDefaultCommand implements Command<CommandInvocation> {
+        @Option(name = "token", defaultValue = "${sys:aesh.doc.test.secret:-}", description = "API token")
+        String token;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "nodefaults", description = "Defaults hidden", showDefaultValues = Toggle.OFF)
+    public static class HiddenDefaultsCommand implements Command<CommandInvocation> {
+        @Option(name = "level", defaultValue = "info", description = "Log level")
+        String level;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testGeneratedDocsNeverLeakResolvedSecrets() throws Exception {
+        System.setProperty("aesh.doc.test.secret", "hunter2");
+        try {
+            for (DocFormat format : new DocFormat[] { DocFormat.ASCIIDOC, DocFormat.MARKDOWN, DocFormat.SKILL }) {
+                String doc = DocumentationGenerator.builder()
+                        .commandClass(SecretDefaultCommand.class)
+                        .format(format)
+                        .generateSingle();
+                assertFalse("must not leak the resolved secret in " + format, doc.contains("hunter2"));
+                assertTrue("must show the raw expression in " + format + ", got:\n" + doc,
+                        doc.contains("${sys:aesh.doc.test.secret:-}"));
+            }
+        } finally {
+            System.clearProperty("aesh.doc.test.secret");
+        }
+    }
+
+    @Test
+    public void testGeneratedDocsShowRawExpressionWhenUnset() throws Exception {
+        System.clearProperty("aesh.doc.test.secret");
+        String doc = DocumentationGenerator.builder()
+                .commandClass(SecretDefaultCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        assertTrue("must show the raw expression, got:\n" + doc,
+                doc.contains("${sys:aesh.doc.test.secret:-}"));
+    }
+
+    @Test
+    public void testGeneratedDocsHideDefaultsWhenToggledOff() throws Exception {
+        for (DocFormat format : new DocFormat[] { DocFormat.ASCIIDOC, DocFormat.MARKDOWN, DocFormat.SKILL }) {
+            String doc = DocumentationGenerator.builder()
+                    .commandClass(HiddenDefaultsCommand.class)
+                    .format(format)
+                    .generateSingle();
+            assertFalse("toggle OFF must hide the default value in " + format + ", got:\n" + doc,
+                    doc.contains("`info`"));
+        }
+    }
+
+    @Test
+    public void testGeneratedDocsHideDefaultsByDefault() throws Exception {
+        // DeployCommand leaves showDefaultValues INHERIT with no fleet default.
+        String doc = DocumentationGenerator.builder()
+                .commandClass(PlainDefaultsCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        assertFalse("INHERIT with no fleet default hides defaults, got:\n" + doc,
+                doc.contains("Default: `dev`"));
+    }
+
+    @CommandDefinition(name = "plaincmd", description = "Plain defaults")
+    public static class PlainDefaultsCommand implements Command<CommandInvocation> {
+        @Option(name = "environment", defaultValue = "dev", description = "Target environment")
+        String environment;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
 
     @Test
     public void testAsciidocSimpleCommand() throws CommandLineParserException {
@@ -980,7 +1066,7 @@ public class DocumentationGeneratorTest {
         assertEquals("2024-01-15", frontMatter.get("when"));
     }
 
-    @CommandDefinition(name = "piped", description = "Piped defaults")
+    @CommandDefinition(name = "piped", description = "Piped defaults", showDefaultValues = Toggle.ON)
     public static class PipedDefaultsCommand implements Command<CommandInvocation> {
         @Option(name = "choice", defaultValue = "a|b", description = "Pick one")
         String choice;

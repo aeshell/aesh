@@ -2668,6 +2668,56 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    private static final String RAW_DEFAULT_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"rawdef\", description = \"Raw defaults\",\n" +
+            "        generateHelp = true)\n" +
+            "public class RawDefaultCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"token\", defaultValue = \"${sys:aesh.processor.test.secret:-}\",\n" +
+            "            description = \"API token\")\n" +
+            "    private String token;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testRawDefaultValuesParity() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.RawDefaultCommand", RAW_DEFAULT_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.RawDefaultCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.RawDefaultCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        ProcessedOption generatedOpt = generatedPC.findLongOptionNoActivatorCheck("token");
+        assertNotNull("token option should exist", generatedOpt);
+        assertEquals("generated path keeps the raw expression",
+                Collections.singletonList("${sys:aesh.processor.test.secret:-}"),
+                generatedOpt.getRawDefaultValues());
+
+        // Reflection path agrees
+        AeshCommandContainerBuilder reflectionBuilder = new AeshCommandContainerBuilder();
+        ProcessedCommand reflectionPC = reflectionBuilder.create(
+                (Command) commandClass.newInstance()).getParser().getProcessedCommand();
+        ProcessedOption reflectionOpt = reflectionPC.findLongOptionNoActivatorCheck("token");
+        assertNotNull(reflectionOpt);
+        assertEquals("reflection path keeps the same raw expression",
+                generatedOpt.getRawDefaultValues(), reflectionOpt.getRawDefaultValues());
+    }
+
     private static final String NO_HELP_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +

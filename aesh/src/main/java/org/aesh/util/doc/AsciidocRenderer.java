@@ -216,9 +216,10 @@ class AsciidocRenderer implements DocRenderer {
             sb.append("\n");
         }
 
-        // Default value
-        if (!opt.getDefaultValues().isEmpty()) {
-            sb.append("+\nDefault: `").append(String.join(", ", opt.getDefaultValues())).append("`\n");
+        // Default value (raw declared expression, never env-resolved secrets)
+        List<String> defaults = DocDefaults.displayDefaultValues(cmd, opt);
+        if (!defaults.isEmpty()) {
+            sb.append("+\nDefault: `").append(String.join(", ", defaults)).append("`\n");
         }
 
         sb.append("\n");

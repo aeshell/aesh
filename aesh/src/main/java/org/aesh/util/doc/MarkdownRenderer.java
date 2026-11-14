@@ -203,8 +203,9 @@ class MarkdownRenderer implements DocRenderer {
             sb.append("\n\n");
         }
 
-        if (!opt.getDefaultValues().isEmpty()) {
-            sb.append("Default: `").append(String.join(", ", opt.getDefaultValues())).append("`\n\n");
+        List<String> defaults = DocDefaults.displayDefaultValues(cmd, opt);
+        if (!defaults.isEmpty()) {
+            sb.append("Default: `").append(String.join(", ", defaults)).append("`\n\n");
         }
     }
 
