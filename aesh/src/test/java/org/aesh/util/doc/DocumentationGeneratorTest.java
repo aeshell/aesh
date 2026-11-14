@@ -26,17 +26,21 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.DocFormat;
 import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpFeature;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.Toggle;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Arguments;
@@ -45,6 +49,7 @@ import org.aesh.command.option.OptionGroup;
 import org.aesh.command.option.OptionList;
 import org.aesh.command.option.OptionVisibility;
 import org.aesh.command.parser.CommandLineParserException;
+import org.aesh.command.registry.CommandRegistry;
 import org.junit.Test;
 
 public class DocumentationGeneratorTest {
@@ -208,6 +213,44 @@ public class DocumentationGeneratorTest {
         public CommandResult execute(CommandInvocation invocation) {
             return CommandResult.SUCCESS;
         }
+    }
+
+    @Test
+    public void testFleetCollapseSynopsisInGeneratedDocs() throws Exception {
+        // Flags must precede commandClass(), which builds immediately.
+        String doc = DocumentationGenerator.builder()
+                .helpDefaults(EnumSet.of(HelpFeature.COLLAPSE_SYNOPSIS))
+                .commandClass(DeployCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        assertTrue("fleet collapse must fold the synopsis, got:\n" + doc,
+                doc.contains("[OPTIONS]"));
+        String synopsisBlock = doc.substring(0, doc.indexOf("== OPTIONS"));
+        assertFalse("expanded options must be gone from the synopsis, got:\n" + synopsisBlock,
+                synopsisBlock.contains("--timeout"));
+    }
+
+    @Test
+    public void testCommandClassFlagsMatchRegistryWorkaround() throws Exception {
+        EnumSet<HelpFeature> fleet = EnumSet.of(HelpFeature.COLLAPSE_SYNOPSIS);
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder
+                .<CommandInvocation> builder()
+                .helpDefaults(fleet)
+                .argumentsSectionDefault(ArgumentsSection.FIRST)
+                .command(DeployCommand.class)
+                .create();
+        String root = (String) registry.getAllCommandNames().iterator().next();
+        String viaRegistry = DocumentationGenerator.builder()
+                .parser(registry.getCommand(root, root).getParser())
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        String viaBuilder = DocumentationGenerator.builder()
+                .helpDefaults(fleet)
+                .argumentsSectionDefault(ArgumentsSection.FIRST)
+                .commandClass(DeployCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        assertEquals(viaRegistry, viaBuilder);
     }
 
     @Test

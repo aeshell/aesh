@@ -26,13 +26,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.DocFormat;
 import org.aesh.command.HelpContext;
 import org.aesh.command.HelpEntry;
+import org.aesh.command.HelpFeature;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
@@ -349,6 +352,8 @@ public class DocumentationGenerator {
         private String crossRefPrefix;
         private File outputDir;
         private File navFile;
+        private EnumSet<HelpFeature> helpDefaults;
+        private ArgumentsSection argumentsSectionDefault;
 
         private Builder() {
         }
@@ -368,8 +373,43 @@ public class DocumentationGenerator {
         @SuppressWarnings({ "unchecked", "rawtypes" })
         public Builder commandClass(Class<? extends Command> commandClass) throws CommandLineParserException {
             AeshCommandContainerBuilder containerBuilder = new AeshCommandContainerBuilder();
+            if (helpDefaults != null)
+                containerBuilder.setHelpDefaults(helpDefaults);
+            if (argumentsSectionDefault != null)
+                containerBuilder.setArgumentsSectionDefault(argumentsSectionDefault);
             CommandContainer container = containerBuilder.create(commandClass);
             this.parser = container.getParser();
+            return this;
+        }
+
+        /**
+         * Fleet-wide help toggles applied when a command leaves them
+         * {@code INHERIT}, so generated docs match the terminal help (e.g. a
+         * collapsed synopsis). Same semantics as
+         * {@code AeshCommandRegistryBuilder.helpDefaults(...)}. Set before
+         * {@link #commandClass(Class)}, which builds the parser immediately;
+         * a parser handed to {@link #parser(CommandLineParser)} keeps its own
+         * resolution.
+         *
+         * @param helpDefaults the fleet help defaults, or null to leave unset
+         * @return this builder
+         */
+        public Builder helpDefaults(EnumSet<HelpFeature> helpDefaults) {
+            this.helpDefaults = helpDefaults;
+            return this;
+        }
+
+        /**
+         * Fleet-wide arguments-section placement applied when a command leaves
+         * it {@code INHERIT}. Resolved on the built parser like the registry
+         * builder does; doc layout keeps its own ARGUMENTS section regardless.
+         * Set before {@link #commandClass(Class)}, which builds immediately.
+         *
+         * @param argumentsSectionDefault the fleet placement, or null to leave unset
+         * @return this builder
+         */
+        public Builder argumentsSectionDefault(ArgumentsSection argumentsSectionDefault) {
+            this.argumentsSectionDefault = argumentsSectionDefault;
             return this;
         }
 
