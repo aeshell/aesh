@@ -1308,6 +1308,43 @@ public class CommandLineFormatterTest {
     }
 
     @Test
+    public void testSynopsis_ExclusivePairKeepsValuePlaceholder() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("demo").description("demo");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("netrc").type(String.class)
+                .exclusiveWith("no-netrc").description("Path to a .netrc file").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("no-netrc").type(boolean.class).hasValue(false)
+                .exclusiveWith("netrc").description("Disable .netrc lookup").build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+        String synopsis = extractSynopsisLine(help);
+
+        assertTrue("Valued exclusive option keeps its placeholder, got: " + synopsis,
+                synopsis.contains("--netrc=<netrc> | --no-netrc")
+                        || synopsis.contains("--no-netrc | --netrc=<netrc>"));
+    }
+
+    @Test
+    public void testSynopsis_ExclusiveValuedPair() throws CommandLineParserException {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
+                .name("auth").description("Authenticate");
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("token").type(String.class)
+                .exclusiveWith("token-file").description("Raw token").build());
+        pb.addOption(ProcessedOptionBuilder.builder()
+                .name("token-file").type(String.class)
+                .exclusiveWith("token").description("File holding the token").build());
+
+        String help = new AeshCommandLineParser<>(pb.create()).printHelp();
+        String synopsis = extractSynopsisLine(help);
+
+        assertTrue("Both valued options keep placeholders, got: " + synopsis,
+                synopsis.contains("--token=<token>") && synopsis.contains("--token-file=<token-file>"));
+    }
+
+    @Test
     public void testSynopsis_RequiredWithoutBrackets() throws CommandLineParserException {
         ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
                 .name("deploy").description("Deploy app");

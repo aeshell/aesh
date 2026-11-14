@@ -1945,33 +1945,19 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             }
 
             // For negatable options, use --[no-]name format
-            // For bare options (acceptNameWithoutDashes), omit -- prefix
-            String optName;
-            String dashPrefix = o.acceptNameWithoutDashes() ? "" : "--";
-            if (o.isNegatable()) {
-                optName = "--[" + o.getNegationPrefix() + "]" + o.name();
-            } else {
-                optName = o.shortName() != null ? "-" + o.shortName() : dashPrefix + o.name();
-            }
-            // Apply yellow styling to option name
-            String styledOptName = ansi ? ANSI.YELLOW_TEXT + optName + ANSI.RESET : optName;
+            // For bare options (acceptNameWithoutDashes), omit -- prefix.
+            // Valued options keep their =<value> placeholder, including
+            // inside exclusive pairs (#775).
+            String rendered = renderSynopsisOption(o, ansi);
 
             // Handle mutually exclusive options
             if (!o.getExclusiveWith().isEmpty() && !exclusiveHandled.contains(o.name())) {
                 StringBuilder exclusive = new StringBuilder();
-                exclusive.append(styledOptName);
+                exclusive.append(rendered);
                 for (String exName : o.getExclusiveWith()) {
                     ProcessedOption exOpt = findLongOptionNoActivatorCheck(exName);
                     if (exOpt != null) {
-                        String exOptName;
-                        String exDashPrefix = exOpt.acceptNameWithoutDashes() ? "" : "--";
-                        if (exOpt.isNegatable()) {
-                            exOptName = "--[" + exOpt.getNegationPrefix() + "]" + exOpt.name();
-                        } else {
-                            exOptName = exOpt.shortName() != null ? "-" + exOpt.shortName() : exDashPrefix + exOpt.name();
-                        }
-                        String styledEx = ansi ? ANSI.YELLOW_TEXT + exOptName + ANSI.RESET : exOptName;
-                        exclusive.append(" | ").append(styledEx);
+                        exclusive.append(" | ").append(renderSynopsisOption(exOpt, ansi));
                         exclusiveHandled.add(exOpt.name());
                     }
                 }
@@ -1986,23 +1972,6 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (exclusiveHandled.contains(o.name()))
                 continue;
 
-            // Regular option
-            String rendered = styledOptName;
-            if (o.getOptionType() == OptionType.GROUP) {
-                String placeholder = ansi ? ANSI.CYAN_TEXT + "<key>=<value>" + ANSI.RESET : "<key>=<value>";
-                rendered = styledOptName + placeholder;
-            } else if (o.hasValue() && o.getOptionType() != OptionType.BOOLEAN
-                    && (o.type() != Boolean.class && o.type() != boolean.class)
-                    && !o.isOptionalValue() && !o.hasFallbackValue()) {
-                String placeholder = o.getArgument() != null && !o.getArgument().isEmpty()
-                        ? o.getArgument()
-                        : o.name();
-                String styledPlaceholder = ansi
-                        ? ANSI.CYAN_TEXT + "=<" + placeholder + ">" + ANSI.RESET
-                        : "=<" + placeholder + ">";
-                rendered = styledOptName + styledPlaceholder;
-            }
-
             if (o.isRequired()) {
                 synopsis.append(" ").append(rendered);
             } else {
@@ -2011,6 +1980,40 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
 
         return synopsis.toString();
+    }
+
+    /**
+     * Render one option for the synopsis: the name in its dashed form with
+     * ANSI highlighting, plus the {@code =<value>} placeholder for options
+     * that take a value (or {@code <key>=<value>} for groups). Shared by
+     * standalone and mutually exclusive rendering so pairs like
+     * {@code [--netrc=<netrc> | --no-netrc]} keep the placeholder (#775).
+     */
+    private static String renderSynopsisOption(ProcessedOption o, boolean ansi) {
+        String optName;
+        String dashPrefix = o.acceptNameWithoutDashes() ? "" : "--";
+        if (o.isNegatable()) {
+            optName = "--[" + o.getNegationPrefix() + "]" + o.name();
+        } else {
+            optName = o.shortName() != null ? "-" + o.shortName() : dashPrefix + o.name();
+        }
+        String styledOptName = ansi ? ANSI.YELLOW_TEXT + optName + ANSI.RESET : optName;
+        if (o.getOptionType() == OptionType.GROUP) {
+            String placeholder = ansi ? ANSI.CYAN_TEXT + "<key>=<value>" + ANSI.RESET : "<key>=<value>";
+            return styledOptName + placeholder;
+        }
+        if (o.hasValue() && o.getOptionType() != OptionType.BOOLEAN
+                && (o.type() != Boolean.class && o.type() != boolean.class)
+                && !o.isOptionalValue() && !o.hasFallbackValue()) {
+            String placeholder = o.getArgument() != null && !o.getArgument().isEmpty()
+                    ? o.getArgument()
+                    : o.name();
+            String styledPlaceholder = ansi
+                    ? ANSI.CYAN_TEXT + "=<" + placeholder + ">" + ANSI.RESET
+                    : "=<" + placeholder + ">";
+            return styledOptName + styledPlaceholder;
+        }
+        return styledOptName;
     }
 
     /**
