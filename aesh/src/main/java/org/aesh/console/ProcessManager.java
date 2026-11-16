@@ -60,7 +60,13 @@ import org.aesh.terminal.utils.ProgramStatus;
  */
 public class ProcessManager {
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(ProcessManager.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(ProcessManager.class.getName());
+    }
 
     private Connection conn;
     private final Console console;
@@ -252,7 +258,7 @@ public class ProcessManager {
         try {
             recorder.accept(result.getResultValue());
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Exit code recorder threw exception", e);
+            Log.LOGGER.log(Level.FINE, "Exit code recorder threw exception", e);
         }
     }
 
@@ -284,16 +290,16 @@ public class ProcessManager {
                 try {
                     listener.onStageComplete(stage);
                 } catch (Exception e) {
-                    LOGGER.log(Level.FINE, "PipelineExecutionListener.onStageComplete threw exception", e);
+                    Log.LOGGER.log(Level.FINE, "PipelineExecutionListener.onStageComplete threw exception", e);
                 }
             }
             try {
                 listener.onPipelineComplete(result);
             } catch (Exception e) {
-                LOGGER.log(Level.FINE, "PipelineExecutionListener.onPipelineComplete threw exception", e);
+                Log.LOGGER.log(Level.FINE, "PipelineExecutionListener.onPipelineComplete threw exception", e);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Pipeline event dispatch failed", e);
+            Log.LOGGER.log(Level.FINE, "Pipeline event dispatch failed", e);
         }
     }
 
@@ -520,7 +526,7 @@ public class ProcessManager {
                         else
                             supervisor.completeStage(stageIndex, stage,
                                     CommandResult.FAILURE, e);
-                        LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
+                        Log.LOGGER.log(Level.FINE, "Upstream pipe stage exception", e);
                     }
                 } finally {
                     if (jobScope != null)

@@ -50,7 +50,13 @@ public final class NativeExecution implements Execution<CommandInvocation> {
     private final String command;
     private volatile CommandResult result;
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(NativeExecution.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(NativeExecution.class.getName());
+    }
 
     public NativeExecution(Connection connection, String command) {
         this.connection = connection;
@@ -98,7 +104,7 @@ public final class NativeExecution implements Execution<CommandInvocation> {
                 } catch (Throwable e) {
                     // A dead pump delivers nothing further; the join below
                     // still returns promptly, preserving bounded cleanup.
-                    LOGGER.log(Level.FINE, "Native output pump failed", e);
+                    Log.LOGGER.log(Level.FINE, "Native output pump failed", e);
                 }
             }, "aesh-native-pump");
             pump.setDaemon(true);
@@ -185,7 +191,7 @@ public final class NativeExecution implements Execution<CommandInvocation> {
                 }
                 stdin.flush();
             } catch (IOException e) {
-                LOGGER.log(Level.FINE, "Native stdin forward ended", e);
+                Log.LOGGER.log(Level.FINE, "Native stdin forward ended", e);
                 closeStdin();
             }
         }
@@ -229,7 +235,7 @@ public final class NativeExecution implements Execution<CommandInvocation> {
             in.flip();
             decodeBuffer(decoder, in, true, out);
         } catch (IOException e) {
-            LOGGER.log(Level.FINE, "Native output pump ended", e);
+            Log.LOGGER.log(Level.FINE, "Native output pump ended", e);
         }
     }
 

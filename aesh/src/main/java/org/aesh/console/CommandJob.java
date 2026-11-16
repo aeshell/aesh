@@ -53,7 +53,14 @@ public final class CommandJob implements Consumer<Signal> {
     private final JobId id = JobId.next();
     private final CountDownLatch completed = new CountDownLatch(1);
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(CommandJob.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(CommandJob.class.getName());
+    }
+
     private volatile JobState state = JobState.CREATED;
     private volatile Thread worker;
     private volatile Throwable error;
@@ -206,7 +213,7 @@ public final class CommandJob implements Consumer<Signal> {
         switch (signal) {
             case INT:
                 if (state == JobState.RUNNING) {
-                    LOGGER.fine("got interrupted in Task");
+                    Log.LOGGER.fine("got interrupted in Task");
                     requestInterrupt();
                 } else if (state == JobState.CANCELLATION_REQUESTED) {
                     escalate();
@@ -250,7 +257,7 @@ public final class CommandJob implements Consumer<Signal> {
             state = JobState.KILLED;
             execution.setResult(CommandResult.KILLED);
         }
-        LOGGER.warning("Command '" + commandLine + "' ignored repeated interrupts; abandoning worker thread "
+        Log.LOGGER.warning("Command '" + commandLine + "' ignored repeated interrupts; abandoning worker thread "
                 + (currentWorker == null ? "<unknown>" : currentWorker.getName())
                 + " and reclaiming the prompt");
         finish();
@@ -339,7 +346,7 @@ public final class CommandJob implements Consumer<Signal> {
             }
         }
         if (stragglers) {
-            LOGGER.warning("Pipeline upstream stages ignored interrupt, re-interrupting");
+            Log.LOGGER.warning("Pipeline upstream stages ignored interrupt, re-interrupting");
             joinUpstream(threads, timeoutMs);
         }
         // Claim only stages that never finished: joined threads recorded
@@ -374,7 +381,7 @@ public final class CommandJob implements Consumer<Signal> {
                 error = e;
                 execution.setResult(CommandResult.FAILURE);
                 conn.write(e.getMessage() + Config.getLineSeparator());
-                LOGGER.log(Level.WARNING,
+                Log.LOGGER.log(Level.WARNING,
                         "Uncaught exception when executing the command: " + execution.getCommand().toString(), e);
             } finally {
                 awaitUpstreamPipeThreads();
@@ -423,7 +430,7 @@ public final class CommandJob implements Consumer<Signal> {
                 executionListener.onCommandComplete(commandLine, snapshotResult,
                         endTime - startTime, snapshotError);
             } catch (Exception e) {
-                LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", e);
+                Log.LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", e);
             }
         }
         completed.countDown();

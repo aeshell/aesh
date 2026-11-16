@@ -92,7 +92,14 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private final CommandInvocationProvider<CI> commandInvocationProvider;
     private final InvocationProviders invocationProviders;
 
-    private static final Logger LOGGER = Logger.getLogger(AeshCommandRuntime.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = Logger.getLogger(AeshCommandRuntime.class.getName());
+    }
+
     private final CommandNotFoundHandler commandNotFoundHandler;
 
     private final AeshCommandResolver<CI> commandResolver;
@@ -470,7 +477,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 else
                     future.get();
             } catch (java.util.concurrent.ExecutionException e) {
-                LOGGER.log(Level.FINE, "Upstream pipe stage failed", e.getCause());
+                Log.LOGGER.log(Level.FINE, "Upstream pipe stage failed", e.getCause());
                 // The task died without recording (never normally): capture
                 // the cause as its terminal outcome. No-op when the task
                 // already completed first.
@@ -478,7 +485,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             } catch (java.util.concurrent.TimeoutException | InterruptedException e) {
                 if (e instanceof InterruptedException)
                     Thread.currentThread().interrupt();
-                LOGGER.log(Level.FINE, "Upstream pipe stage join timed out", e);
+                Log.LOGGER.log(Level.FINE, "Upstream pipe stage join timed out", e);
                 future.cancel(true);
                 // Explicit unwind join: a cancelled Future completes
                 // immediately, so a second get() could never wait for the
@@ -581,7 +588,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                 updateCommand(commandName);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.FINER, "Exception while iterating commands.", e);
+            Log.LOGGER.log(Level.FINER, "Exception while iterating commands.", e);
         }
     }
 
@@ -621,7 +628,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     @Override
     public Executor<CI> buildExecutor(String line) throws CommandNotFoundException,
             CommandLineParserException, IOException {
-        LOGGER.fine("Command: " + line);
+        // Guarded by a plain flag (not the logger itself): touching JUL here
+        // would initialize it on every command. Enable with
+        // -Daesh.debug.commands=true.
+        if (Boolean.getBoolean("aesh.debug.commands"))
+            Log.LOGGER.fine("Command: " + line);
         List<ParsedLine> lines = new LineParser().parseLine(line, -1, parseBrackets, operators);
         List<Execution<CI>> executions = Executions.buildExecution(lines, this);
         return new Executor<>(executions);
@@ -662,7 +673,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         try {
             option.injectValueIntoField(option.parent().getCommand(), invocationProviders, getAeshContext(), false);
         } catch (OptionValidatorException e) {
-            LOGGER.log(Level.WARNING,
+            Log.LOGGER.log(Level.WARNING,
                     "Trying to inject value: " + option.getValue() + ", into option: " + option.name() + " failed", e);
         }
     }
@@ -673,7 +684,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
             try {
                 updateCommand(commandName);
             } catch (Exception e) {
-                LOGGER.log(Level.FINER, "Exception while iterating commands.", e);
+                Log.LOGGER.log(Level.FINER, "Exception while iterating commands.", e);
             }
         }
     }
@@ -754,7 +765,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
                         .complete(completeOperation, parsedLine, invocationProviders);
             } catch (CommandNotFoundException ignored) {
             } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, "Runtime exception when completing: "
+                Log.LOGGER.log(Level.SEVERE, "Runtime exception when completing: "
                         + completeOperation, ex);
             }
         }

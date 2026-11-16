@@ -12,6 +12,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
@@ -426,6 +430,49 @@ public class AeshCommandRuntimeTest {
         public CommandResult execute(CommandInvocation commandInvocation) throws CommandException, InterruptedException {
             builder.append(arg);
             return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testCommandLineLoggedOnlyWhenEnabled() throws Exception {
+        CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder.builder()
+                .command(TestCommand.class).create();
+        CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder.builder()
+                .commandRegistry(registry).build();
+
+        Logger logger = Logger.getLogger("org.aesh.command.impl.AeshCommandRuntime");
+        List<LogRecord> records = new ArrayList<>();
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                records.add(record);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        handler.setLevel(Level.ALL);
+        Level oldLevel = logger.getLevel();
+        logger.setLevel(Level.ALL);
+        logger.addHandler(handler);
+        try {
+            System.clearProperty("aesh.debug.commands");
+            runtime.executeCommand("test logged-off");
+            assertTrue("no command line logged by default, got: " + records, records.isEmpty());
+
+            System.setProperty("aesh.debug.commands", "true");
+            runtime.executeCommand("test logged-on");
+            assertTrue("command line logged when enabled, got: " + records,
+                    records.stream().anyMatch(r -> r.getMessage().startsWith("Command: ")));
+        } finally {
+            System.clearProperty("aesh.debug.commands");
+            logger.removeHandler(handler);
+            logger.setLevel(oldLevel);
         }
     }
 

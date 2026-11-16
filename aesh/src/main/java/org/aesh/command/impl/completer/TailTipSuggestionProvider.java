@@ -45,7 +45,13 @@ import org.aesh.terminal.utils.LoggerUtil;
  */
 public class TailTipSuggestionProvider<CI extends CommandInvocation> implements SuggestionProvider {
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(TailTipSuggestionProvider.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(TailTipSuggestionProvider.class.getName());
+    }
 
     private final CommandRegistry<CI> registry;
 
@@ -117,7 +123,7 @@ public class TailTipSuggestionProvider<CI extends CommandInvocation> implements 
                 }
             } catch (Exception e) {
                 // Parse errors are expected for partial/invalid input
-                LOGGER.log(Level.FINEST, "Tail tip parse error", e);
+                Log.LOGGER.log(Level.FINEST, "Tail tip parse error", e);
                 try {
                     parser.clear();
                 } catch (Exception ignored) {
@@ -126,7 +132,7 @@ public class TailTipSuggestionProvider<CI extends CommandInvocation> implements 
         } catch (CommandNotFoundException e) {
             // Command not recognized yet — no tail tip
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Error generating tail tip", e);
+            Log.LOGGER.log(Level.FINE, "Error generating tail tip", e);
         }
 
         lastBuffer = buffer;

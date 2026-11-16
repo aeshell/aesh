@@ -49,7 +49,15 @@ public abstract class AeshFileDisplayer implements Command {
     private TerminalPage.Search search = TerminalPage.Search.NO_SEARCH;
     private StringBuilder searchBuilder;
     private List<Integer> searchLines;
-    private static final Logger LOGGER = LoggerUtil.getLogger(AeshFileDisplayer.class.getName());
+
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(AeshFileDisplayer.class.getName());
+    }
+
     private CommandInvocation commandInvocation;
     private boolean stop;
 
@@ -367,9 +375,9 @@ public abstract class AeshFileDisplayer implements Command {
     }
 
     private void findSearchWord(boolean forward) throws IOException {
-        LOGGER.info("searching for: " + searchBuilder.toString());
+        Log.LOGGER.info("searching for: " + searchBuilder.toString());
         searchLines = page.findWord(searchBuilder.toString());
-        LOGGER.info("found: " + searchLines);
+        Log.LOGGER.info("found: " + searchLines);
         if (searchLines.size() > 0) {
             for (Integer i : searchLines)
                 if (i > topVisibleRow) {

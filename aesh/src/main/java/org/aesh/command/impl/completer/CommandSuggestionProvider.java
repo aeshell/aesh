@@ -22,7 +22,13 @@ import org.aesh.terminal.utils.LoggerUtil;
  */
 public class CommandSuggestionProvider<CI extends CommandInvocation> implements SuggestionProvider {
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(CommandSuggestionProvider.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(CommandSuggestionProvider.class.getName());
+    }
 
     private final CommandRegistry<CI> registry;
 
@@ -114,7 +120,7 @@ public class CommandSuggestionProvider<CI extends CommandInvocation> implements 
         } catch (CommandNotFoundException e) {
             // Command not found, no suggestion
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Error suggesting subcommand", e);
+            Log.LOGGER.log(Level.FINE, "Error suggesting subcommand", e);
         }
         return null;
     }
@@ -160,7 +166,7 @@ public class CommandSuggestionProvider<CI extends CommandInvocation> implements 
         } catch (CommandNotFoundException e) {
             // Command not found, no suggestion
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Error suggesting option", e);
+            Log.LOGGER.log(Level.FINE, "Error suggesting option", e);
         }
         return null;
     }

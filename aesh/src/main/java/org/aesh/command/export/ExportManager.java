@@ -67,7 +67,13 @@ public class ExportManager {
         return -1;
     }
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(ExportManager.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(ExportManager.class.getName());
+    }
 
     private static final String EXPORT = "export";
 
@@ -104,7 +110,7 @@ public class ExportManager {
                     addVariable(line);
             }
         } catch (IOException e) {
-            LOGGER.warning("Failed to read variables from file " + exportFile + ", error: " + e);
+            Log.LOGGER.warning("Failed to read variables from file " + exportFile + ", error: " + e);
         }
     }
 
@@ -347,7 +353,7 @@ public class ExportManager {
                 }
             }
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to persist variables to file " + exportFile, e);
+            Log.LOGGER.log(Level.WARNING, "Failed to persist variables to file " + exportFile, e);
         }
     }
 

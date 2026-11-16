@@ -40,7 +40,13 @@ public class FileLister {
     private final String token;
     private final Resource cwd;
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(FileLister.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(FileLister.class.getName());
+    }
 
     public FileLister(String token, Resource cwd) {
         if (token == null)

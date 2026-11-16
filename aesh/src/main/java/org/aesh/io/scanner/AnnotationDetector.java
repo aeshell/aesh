@@ -191,7 +191,13 @@ public final class AnnotationDetector {
     private static final int ANNOTATION = '@';
     private static final int ARRAY = '[';
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(AnnotationDetector.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(AnnotationDetector.class.getName());
+    }
 
     // The buffer is reused during the life cycle of this AnnotationDetector instance
     private final ClassFileBuffer cpBuffer = new ClassFileBuffer();
@@ -274,7 +280,7 @@ public final class AnnotationDetector {
                 } else if ("jrt".equals(url.getProtocol())) {
                     // Java 9+ module path (e.g. scanning java.* packages):
                     // no jar to open, and app commands never live there.
-                    LOGGER.fine("Skipping module-path URL during scan: " + url);
+                    Log.LOGGER.fine("Skipping module-path URL during scan: " + url);
                 } else {
                     final File jarFile = toFile(openJarURLConnection(url).getJarFileURL());
                     if (jarFile.isFile()) {
@@ -376,7 +382,7 @@ public final class AnnotationDetector {
                 } // else ignore
             } catch (IOException | RuntimeException | ClassFormatError e) {
                 // corrupt classes are skipped, not fatal to the scan
-                LOGGER.log(Level.FINE, "Skipping unreadable class file", e);
+                Log.LOGGER.log(Level.FINE, "Skipping unreadable class file", e);
             } finally {
                 stream.close();
             }

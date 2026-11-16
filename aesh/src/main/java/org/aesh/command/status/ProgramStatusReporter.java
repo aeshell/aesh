@@ -46,7 +46,13 @@ import org.aesh.terminal.utils.ProgramStatus;
  */
 public final class ProgramStatusReporter {
 
-    private static final Logger LOGGER = Logger.getLogger(ProgramStatusReporter.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = Logger.getLogger(ProgramStatusReporter.class.getName());
+    }
 
     private static final ProgramStatusReporter DISABLED = new ProgramStatusReporter(false, null, null);
 
@@ -111,7 +117,7 @@ public final class ProgramStatusReporter {
             current.writeProgramStatus(withAppName(status));
             return true;
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Program-status report failed", e);
+            Log.LOGGER.log(Level.FINE, "Program-status report failed", e);
             return false;
         }
     }
@@ -136,7 +142,7 @@ public final class ProgramStatusReporter {
             current.clearProgramStatus(taskId);
             return true;
         } catch (Exception e) {
-            LOGGER.log(Level.FINE, "Program-status clear failed", e);
+            Log.LOGGER.log(Level.FINE, "Program-status clear failed", e);
             return false;
         }
     }

@@ -74,7 +74,13 @@ public class ProcessedOption {
      */
     static final int MIN_WRAP_WIDTH = 20;
 
-    private static final Logger LOGGER = Logger.getLogger(ProcessedOption.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = Logger.getLogger(ProcessedOption.class.getName());
+    }
 
     private String shortName;
     private String name;
@@ -1694,7 +1700,7 @@ public class ProcessedOption {
                     return;
                 }
             } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "DefaultValueProvider.fallbackValue() failed for --" + name(), e);
+                Log.LOGGER.log(Level.WARNING, "DefaultValueProvider.fallbackValue() failed for --" + name(), e);
             }
         }
 

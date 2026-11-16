@@ -113,7 +113,13 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
     private ExportManager exportManager;
     private final List<Function<String, Optional<String>>> preProcessors = new ArrayList<>();
 
-    private static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
+    /**
+     * Lazily initialized logger: creating it eagerly would make the JDK scan
+     * the class path for a logging backend on every start (#782).
+     */
+    private static final class Log {
+        static final Logger LOGGER = LoggerUtil.getLogger(ReadlineConsole.class.getName());
+    }
 
     private volatile boolean running = false;
     // Deferred close: set when the connection closes (EOF on pipe) while a
@@ -155,7 +161,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 try {
                     ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new ExportCommand(exportManager));
                 } catch (CommandRegistryException e) {
-                    LOGGER.log(Level.WARNING, "Failed to register ExportCommand", e);
+                    Log.LOGGER.log(Level.WARNING, "Failed to register ExportCommand", e);
                 }
             }
         }
@@ -174,11 +180,11 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                         ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new AliasCommand(aliasManager));
                         ((MutableCommandRegistry) commandResolver.getRegistry()).addCommand(new UnAliasCommand(aliasManager));
                     } catch (CommandRegistryException e) {
-                        LOGGER.log(Level.WARNING, "Failed to register alias commands", e);
+                        Log.LOGGER.log(Level.WARNING, "Failed to register alias commands", e);
                     }
                 }
             } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Failed to initialize alias manager", e);
+                Log.LOGGER.log(Level.WARNING, "Failed to initialize alias manager", e);
             }
         }
 
@@ -280,7 +286,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             try {
                 current.close();
             } catch (Exception e) {
-                LOGGER.log(Level.FINE, "Runtime close failed", e);
+                Log.LOGGER.log(Level.FINE, "Runtime close failed", e);
             }
         }
     }
@@ -457,7 +463,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
         // Just call readline and get a callback when line is startBlockingReader
         else {
             if (settings.logging())
-                LOGGER.info("not running, returning");
+                Log.LOGGER.info("not running, returning");
             conn.close();
             if (settings.quitHandler() != null)
                 settings.quitHandler().quit();
@@ -580,7 +586,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             fireExecutionListener(conn, line, errorResult, e);
             read(conn, readline);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
+            Log.LOGGER.log(Level.SEVERE, "Got exception while starting new process", e);
             fireExecutionListener(conn, line, CommandResult.FAILURE, e);
             read(conn, readline);
         }
@@ -605,7 +611,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
             try {
                 listener.onCommandComplete(line, result, 0, error);
             } catch (Exception ignored) {
-                LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", ignored);
+                Log.LOGGER.log(Level.FINE, "CommandExecutionListener threw exception", ignored);
             }
         }
     }
@@ -696,9 +702,9 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 registry.addCommand(clazz);
             }
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "AnnotationDetector failed to scan for CommandDefinition annotations", e);
+            Log.LOGGER.log(Level.WARNING, "AnnotationDetector failed to scan for CommandDefinition annotations", e);
         } catch (ClassNotFoundException | CommandRegistryException e) {
-            LOGGER.log(Level.WARNING, "Failed to load CommandDefinition class.", e);
+            Log.LOGGER.log(Level.WARNING, "Failed to load CommandDefinition class.", e);
         }
 
         return new AeshCommandResolver<>(registry);
