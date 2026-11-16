@@ -68,6 +68,36 @@ public class ArgfileExpansionTest {
     }
 
     @Test
+    public void testWhitespaceRunsAreOneSeparator() throws Exception {
+        Path doubled = writeTempFile("run  a.yaml\n");
+        Path trailing = writeTempFile("run a.yaml  \n");
+        Path tabs = writeTempFile("run\ta.yaml \t--dev\n");
+        try {
+            assertArrayEquals(new String[] { "run", "a.yaml" },
+                    ArgfileExpander.expand(new String[] { "@" + doubled }));
+            assertArrayEquals(new String[] { "run", "a.yaml" },
+                    ArgfileExpander.expand(new String[] { "@" + trailing }));
+            assertArrayEquals(new String[] { "run", "a.yaml", "--dev" },
+                    ArgfileExpander.expand(new String[] { "@" + tabs }));
+        } finally {
+            Files.deleteIfExists(doubled);
+            Files.deleteIfExists(trailing);
+            Files.deleteIfExists(tabs);
+        }
+    }
+
+    @Test
+    public void testQuotedEmptyStaysAnEmptyArgument() throws Exception {
+        Path file = writeTempFile("run \"\" a.yaml\n");
+        try {
+            assertArrayEquals(new String[] { "run", "", "a.yaml" },
+                    ArgfileExpander.expand(new String[] { "@" + file }));
+        } finally {
+            Files.deleteIfExists(file);
+        }
+    }
+
+    @Test
     public void testQuotesGroupWords() throws Exception {
         Path file = writeTempFile("--msg \"hello world\" 'a  b'\nC:\\temp\\x.txt\n");
         try {

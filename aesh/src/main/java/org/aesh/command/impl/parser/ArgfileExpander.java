@@ -160,9 +160,14 @@ public final class ArgfileExpander {
                 inToken = true;
                 i++;
             } else if (c == ' ' || c == '\t') {
-                tokens.add(current.toString());
-                current.setLength(0);
-                inToken = false;
+                // Runs of whitespace count as one separator: only close out
+                // a token that was actually started (#773). A quoted empty
+                // string ("") still yields an intentional empty argument.
+                if (inToken) {
+                    tokens.add(current.toString());
+                    current.setLength(0);
+                    inToken = false;
+                }
                 i++;
             } else {
                 current.append(c);
