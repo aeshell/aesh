@@ -505,6 +505,30 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         return display;
     }
 
+    /**
+     * Display options grouped by their help section, in the same shape and
+     * order terminal {@code --help} renders them: first-seen group order,
+     * each group sorted as terminal help sorts it. The default (ungrouped)
+     * bucket is keyed by {@code ""}. Doc renderers use this so generated
+     * reference pages keep the author's grouping (#778).
+     *
+     * @param includeHidden whether HIDDEN options are included (the skill
+     *        renderer shows them, tagged; terminal-style renderers skip them)
+     * @return groups in first-seen order, never null
+     */
+    public Map<String, List<ProcessedOption>> groupedDisplayOptions(boolean includeHidden) {
+        LinkedHashMap<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
+        for (ProcessedOption o : getDisplayOptions()) {
+            if (!includeHidden && o.getVisibility() == OptionVisibility.HIDDEN)
+                continue;
+            String group = o.getHelpGroup().isEmpty() ? "" : o.getHelpGroup();
+            groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
+        }
+        for (List<ProcessedOption> group : groups.values())
+            group.sort(BY_ORDER);
+        return groups;
+    }
+
     private void setOptions(List<ProcessedOption> options) throws OptionParserException {
         for (ProcessedOption opt : options) {
             addOption(opt);

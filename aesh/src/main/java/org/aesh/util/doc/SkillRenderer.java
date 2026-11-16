@@ -67,7 +67,7 @@ class SkillRenderer implements DocRenderer {
         // Resolve description: prefer format-specific override, then annotation description
         String description = helpContent.descriptionOverride != null
                 ? helpContent.descriptionOverride
-                : resolveDescription(cmd, cmd.description(), nameCtx);
+                : DocDescriptions.resolveDescription(cmd, cmd.description(), nameCtx);
 
         // YAML front matter (agentskills.io spec)
         sb.append("---\n");
@@ -113,16 +113,29 @@ class SkillRenderer implements DocRenderer {
             sb.append(helpContent.header).append("\n\n");
         }
 
-        // Options table (all options including HIDDEN)
-        List<ProcessedOption> options = cmd.getDisplayOptions();
-        if (!options.isEmpty()) {
-            sb.append("## Options\n\n");
-            sb.append("| Forms | Type | Required | Default | Description |\n");
-            sb.append("|-------|------|----------|---------|-------------|\n");
-            for (ProcessedOption opt : options) {
-                renderOptionRow(sb, opt, cmd, nameCtx);
+        // Options tables, grouped by help section like terminal --help (#778).
+        // Options without a helpGroup render directly under the heading,
+        // exactly as before; named groups get their own subsections.
+        Map<String, List<ProcessedOption>> groups = cmd.groupedDisplayOptions(true);
+        boolean hasOptions = false;
+        for (List<ProcessedOption> group : groups.values()) {
+            if (!group.isEmpty()) {
+                hasOptions = true;
+                break;
             }
-            sb.append("\n");
+        }
+        if (hasOptions) {
+            sb.append("## Options\n\n");
+            if (cmd.defaultOptionsFirst())
+                renderOptionsTable(sb, groups.get(""), cmd, nameCtx);
+            for (Map.Entry<String, List<ProcessedOption>> entry : groups.entrySet()) {
+                if (entry.getKey().isEmpty() || entry.getValue().isEmpty())
+                    continue;
+                sb.append("### ").append(entry.getKey()).append("\n\n");
+                renderOptionsTable(sb, entry.getValue(), cmd, nameCtx);
+            }
+            if (!cmd.defaultOptionsFirst())
+                renderOptionsTable(sb, groups.get(""), cmd, nameCtx);
         }
 
         // Arguments table
@@ -150,7 +163,7 @@ class SkillRenderer implements DocRenderer {
                     String childName = child.getProcessedCommand().name();
                     String childPath = commandPath + " " + childName;
                     String childFullName = fullName + " " + childName;
-                    String childDesc = resolveDescription(child.getProcessedCommand(),
+                    String childDesc = DocDescriptions.resolveDescription(child.getProcessedCommand(),
                             child.getProcessedCommand().description(),
                             new DocumentationGenerator.NameContext(childName, childFullName,
                                     nameCtx.rootName, fullName));
@@ -184,6 +197,18 @@ class SkillRenderer implements DocRenderer {
         return sb.toString();
     }
 
+    private void renderOptionsTable(StringBuilder sb, List<ProcessedOption> group,
+            ProcessedCommand<?, ?> cmd, DocumentationGenerator.NameContext nameCtx) {
+        if (group == null || group.isEmpty())
+            return;
+        sb.append("| Forms | Type | Required | Default | Description |\n");
+        sb.append("|-------|------|----------|---------|-------------|\n");
+        for (ProcessedOption opt : group) {
+            renderOptionRow(sb, opt, cmd, nameCtx);
+        }
+        sb.append("\n");
+    }
+
     private void renderOptionRow(StringBuilder sb, ProcessedOption opt,
             ProcessedCommand<?, ?> cmd, DocumentationGenerator.NameContext nameCtx) {
 
@@ -212,12 +237,7 @@ class SkillRenderer implements DocRenderer {
         if (opt.getVisibility() == OptionVisibility.HIDDEN) {
             desc.append("**hidden** ");
         }
-        String resolved = cmd.resolveOptionDescription(opt,
-                nameCtx.commandName,
-                nameCtx.fullName != null ? nameCtx.fullName : nameCtx.commandName,
-                nameCtx.rootName,
-                nameCtx.parentName,
-                nameCtx.parentName);
+        String resolved = DocDescriptions.resolveOptionDescription(cmd, opt, nameCtx);
         if (resolved != null) {
             desc.append(escapeMdTable(resolved));
         }
@@ -309,7 +329,7 @@ class SkillRenderer implements DocRenderer {
         }
         sb.append(" | ");
 
-        String desc = resolveDescription(cmd, pos.description(), nameCtx);
+        String desc = DocDescriptions.resolveDescription(cmd, pos.description(), nameCtx);
         sb.append(desc != null ? escapeMdTable(desc) : "").append(" |\n");
     }
 
@@ -345,18 +365,6 @@ class SkillRenderer implements DocRenderer {
         sb.append(fullName);
         sb.append(parser.getProcessedCommand().buildSynopsisString(true, parser.isGroupCommand()));
         return sb.toString();
-    }
-
-    private String resolveDescription(ProcessedCommand<?, ?> cmd, String raw,
-            DocumentationGenerator.NameContext ctx) {
-        if (raw == null || raw.isEmpty() || ctx == null)
-            return raw;
-        return cmd.resolveCommandDescription(raw,
-                ctx.commandName,
-                ctx.fullName != null ? ctx.fullName : ctx.commandName,
-                ctx.rootName,
-                ctx.parentName,
-                ctx.parentName);
     }
 
     /** Escape pipe characters and newlines in table cells. */

@@ -31,7 +31,6 @@ import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.option.OptionVisibility;
 
 /**
  * Renders command documentation in Markdown format.
@@ -52,7 +51,7 @@ class MarkdownRenderer implements DocRenderer {
         StringBuilder sb = new StringBuilder();
 
         // Resolve command description
-        String description = resolveDescription(cmd, cmd.description(), nameCtx);
+        String description = DocDescriptions.resolveDescription(cmd, cmd.description(), nameCtx);
 
         // Title
         sb.append("# ").append(fullName.toUpperCase()).append("\n\n");
@@ -79,22 +78,29 @@ class MarkdownRenderer implements DocRenderer {
             sb.append(helpContent.header).append("\n\n");
         }
 
-        // Options
-        List<ProcessedOption> options = cmd.getDisplayOptions();
+        // Options, grouped by help section like terminal --help (#778).
+        // Options without a helpGroup render directly under the heading,
+        // exactly as before; named groups get their own subsections.
+        Map<String, List<ProcessedOption>> groups = cmd.groupedDisplayOptions(false);
         boolean hasVisibleOptions = false;
-        for (ProcessedOption opt : options) {
-            if (opt.getVisibility() != OptionVisibility.HIDDEN) {
+        for (List<ProcessedOption> group : groups.values()) {
+            if (!group.isEmpty()) {
                 hasVisibleOptions = true;
                 break;
             }
         }
         if (hasVisibleOptions) {
             sb.append("## OPTIONS\n\n");
-            for (ProcessedOption opt : options) {
-                if (opt.getVisibility() == OptionVisibility.HIDDEN)
+            if (cmd.defaultOptionsFirst())
+                renderOptionGroup(sb, groups.get(""), cmd, nameCtx);
+            for (Map.Entry<String, List<ProcessedOption>> entry : groups.entrySet()) {
+                if (entry.getKey().isEmpty() || entry.getValue().isEmpty())
                     continue;
-                renderOption(sb, opt, cmd, nameCtx);
+                sb.append("### ").append(entry.getKey()).append("\n\n");
+                renderOptionGroup(sb, entry.getValue(), cmd, nameCtx);
             }
+            if (!cmd.defaultOptionsFirst())
+                renderOptionGroup(sb, groups.get(""), cmd, nameCtx);
         }
 
         // Arguments
@@ -116,7 +122,7 @@ class MarkdownRenderer implements DocRenderer {
                 for (CommandLineParser<?> child : children) {
                     String childName = child.getProcessedCommand().name();
                     String childFullName = fullName + " " + childName;
-                    String childDesc = resolveDescription(child.getProcessedCommand(),
+                    String childDesc = DocDescriptions.resolveDescription(child.getProcessedCommand(),
                             child.getProcessedCommand().description(),
                             new DocumentationGenerator.NameContext(childName, childFullName,
                                     nameCtx.rootName, fullName));
@@ -154,6 +160,14 @@ class MarkdownRenderer implements DocRenderer {
         return sb.toString();
     }
 
+    private void renderOptionGroup(StringBuilder sb, List<ProcessedOption> group,
+            ProcessedCommand<?, ?> cmd, DocumentationGenerator.NameContext nameCtx) {
+        if (group == null || group.isEmpty())
+            return;
+        for (ProcessedOption opt : group)
+            renderOption(sb, opt, cmd, nameCtx);
+    }
+
     private void renderOption(StringBuilder sb, ProcessedOption opt,
             ProcessedCommand<?, ?> cmd, DocumentationGenerator.NameContext nameCtx) {
         sb.append("### `");
@@ -188,12 +202,7 @@ class MarkdownRenderer implements DocRenderer {
 
         sb.append("`\n\n");
 
-        String optDesc = cmd.resolveOptionDescription(opt,
-                nameCtx.commandName,
-                nameCtx.fullName != null ? nameCtx.fullName : nameCtx.commandName,
-                nameCtx.rootName,
-                nameCtx.parentName,
-                nameCtx.parentName);
+        String optDesc = DocDescriptions.resolveOptionDescription(cmd, opt, nameCtx);
         if (optDesc != null && !optDesc.isEmpty()) {
             sb.append(optDesc).append("\n\n");
         }
@@ -220,18 +229,6 @@ class MarkdownRenderer implements DocRenderer {
         if (pos.description() != null && !pos.description().isEmpty()) {
             sb.append(pos.description()).append("\n\n");
         }
-    }
-
-    private String resolveDescription(ProcessedCommand<?, ?> cmd, String raw,
-            DocumentationGenerator.NameContext ctx) {
-        if (raw == null || raw.isEmpty() || ctx == null)
-            return raw;
-        return cmd.resolveCommandDescription(raw,
-                ctx.commandName,
-                ctx.fullName != null ? ctx.fullName : ctx.commandName,
-                ctx.rootName,
-                ctx.parentName,
-                ctx.parentName);
     }
 
     private String buildSynopsis(CommandLineParser<?> parser, String fullName) {

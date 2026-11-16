@@ -279,6 +279,101 @@ public class DocumentationGeneratorTest {
         assertFalse("must not double-list, got:\n" + doc, doc.contains("Valid values:"));
     }
 
+    @CommandDefinition(name = "groupedtool", description = "Grouped tool")
+    public static class GroupedDocCommand implements Command<CommandInvocation> {
+        @Option(name = "deps", helpGroup = "Dependency options", description = "Dependency coordinates")
+        String deps;
+
+        @Option(name = "repos", helpGroup = "Dependency options", description = "Remote repositories")
+        String repos;
+
+        @Option(name = "verbose", hasValue = false, helpGroup = "Global options", description = "Verbose output")
+        boolean verbose;
+
+        @Option(name = "plain", description = "No group")
+        String plain;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "posgroup", description = "Grouped positional")
+    public static class GroupedPositionalDocCommand implements Command<CommandInvocation> {
+        @Option(name = "verbose", hasValue = false, helpGroup = "Inputs", description = "Verbose output")
+        boolean verbose;
+
+        @Argument(description = "The file", helpGroup = "Inputs")
+        String file;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testGeneratedDocsGroupOptionsByHelpGroup() throws Exception {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(GroupedDocCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        assertTrue("named groups become subsections, got:\n" + doc,
+                doc.contains("=== Dependency options"));
+        assertTrue(doc.contains("=== Global options"));
+        int deps = doc.indexOf("=== Dependency options");
+        int global = doc.indexOf("=== Global options");
+        int plain = doc.indexOf("*--plain*");
+        assertTrue("groups first, ungrouped last by default, got:\n" + doc,
+                deps >= 0 && global > deps && plain > global);
+    }
+
+    @Test
+    public void testGeneratedDocsDefaultOptionsFirstPutsUngroupedFirst() throws Exception {
+        String doc = DocumentationGenerator.builder()
+                .helpDefaults(EnumSet.of(HelpFeature.DEFAULT_OPTIONS_FIRST))
+                .commandClass(GroupedDocCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        int plain = doc.indexOf("*--plain*");
+        int deps = doc.indexOf("=== Dependency options");
+        assertTrue("ungrouped block first with the fleet toggle, got:\n" + doc,
+                plain >= 0 && deps >= 0 && plain < deps);
+    }
+
+    @Test
+    public void testGeneratedDocsGroupOptionsMarkdownAndSkill() throws Exception {
+        String markdown = DocumentationGenerator.builder()
+                .commandClass(GroupedDocCommand.class)
+                .format(DocFormat.MARKDOWN)
+                .generateSingle();
+        assertTrue("markdown groups options, got:\n" + markdown,
+                markdown.contains("### Dependency options"));
+
+        String skill = DocumentationGenerator.builder()
+                .commandClass(GroupedDocCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+        assertTrue("skill groups options, got:\n" + skill, skill.contains("### Dependency options"));
+        int groupedTable = skill.indexOf("### Dependency options");
+        int firstTable = skill.indexOf("| Forms |");
+        assertTrue("grouped table follows its heading, got:\n" + skill,
+                groupedTable >= 0 && firstTable > groupedTable);
+    }
+
+    @Test
+    public void testGeneratedDocsGroupedPositionalStaysInArguments() throws Exception {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(GroupedPositionalDocCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        assertTrue("grouped option renders in its subsection, got:\n" + doc,
+                doc.contains("=== Inputs"));
+        assertTrue("grouped positional stays in ARGUMENTS, got:\n" + doc,
+                doc.contains("== ARGUMENTS") && doc.contains("*<file>*"));
+    }
+
     @Test
     public void testFleetCollapseSynopsisInGeneratedDocs() throws Exception {
         // Flags must precede commandClass(), which builds immediately.
