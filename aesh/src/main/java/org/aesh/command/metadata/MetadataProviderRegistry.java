@@ -169,6 +169,45 @@ public final class MetadataProviderRegistry {
     }
 
     /**
+     * Use exactly these registries and skip class path scanning.
+     * <p>
+     * Discovering registries opens every JAR on the class path, which costs
+     * tens of milliseconds per start on large class paths. An application
+     * that knows its registries can skip the scan entirely by naming them
+     * here, including aesh's own internal one when alias/export commands
+     * are used:
+     *
+     * <pre>
+     * MetadataProviderRegistry.useOnly(new InternalCommandMetadataRegistry(), myRegistry);
+     * </pre>
+     * <p>
+     * No scan happens while this set stands: lookups consult the given
+     * registries in order, first hit wins. A later {@link #register} call
+     * prepends to the set (explicit registrations take precedence);
+     * {@link #reset} clears the set and re-enables discovery. If the context
+     * classloader changes afterwards, the existing reload applies, so call
+     * this once the classloader is stable (a single call at startup suffices
+     * for single-classloader CLIs).
+     *
+     * @param registries the only registries to consult, in precedence order;
+     *        null is ignored, null elements are skipped
+     */
+    public static void useOnly(MetadataRegistry... registries) {
+        if (registries == null)
+            return;
+        synchronized (MetadataProviderRegistry.class) {
+            List<MetadataRegistry> fixed = new ArrayList<>(registries.length);
+            for (MetadataRegistry registry : registries) {
+                if (registry != null && !fixed.contains(registry))
+                    fixed.add(registry);
+            }
+            MetadataProviderRegistry.registries = fixed;
+            registriesClassLoader = Thread.currentThread().getContextClassLoader();
+            cacheGeneration++;
+        }
+    }
+
+    /**
      * Look up a provider for the given command class.
      * <p>
      * On first call for a given class, queries all discovered

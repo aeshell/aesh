@@ -38,6 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.alias.AliasCommand;
+import org.aesh.command.internal.InternalCommandMetadataRegistry;
 import org.aesh.command.invocation.CommandInvocation;
 import org.junit.After;
 import org.junit.Test;
@@ -207,6 +209,98 @@ public class MetadataProviderRegistryTest {
         CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(PrecedenceProbeCommand.class);
         assertNotNull(provider);
         assertEquals("probe-b", provider.commandName());
+    }
+
+    // --- useOnly() skips the class path scan (#779) ---
+
+    @Test
+    public void testUseOnlyEmptySetSkipsScan() {
+        MetadataProviderRegistry.reset();
+        // The internal registry is on the class path and would be found by a
+        // scan; an empty useOnly set must hide it, proving no scan ran.
+        MetadataProviderRegistry.useOnly();
+        assertNull(MetadataProviderRegistry.getProvider(AliasCommand.class));
+        MetadataProviderRegistry.reset();
+    }
+
+    @Test
+    public void testUseOnlyFindsNamedRegistries() {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.useOnly(
+                new InternalCommandMetadataRegistry(),
+                commandClassName -> {
+                    if (commandClassName.equals(UseOnlyProbeCommand.class.getName()))
+                        return new UseOnlyProbeProvider();
+                    return null;
+                });
+
+        CommandMetadataProvider<?> internal = MetadataProviderRegistry.getProvider(AliasCommand.class);
+        assertNotNull("named internal registry must be consulted", internal);
+        CommandMetadataProvider<?> own = MetadataProviderRegistry.getProvider(UseOnlyProbeCommand.class);
+        assertNotNull("named own registry must be consulted", own);
+        assertEquals("use-only-probe", own.commandName());
+        MetadataProviderRegistry.reset();
+    }
+
+    @Test
+    public void testUseOnlyFirstHitWins() {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.useOnly(
+                commandClassName -> {
+                    if (commandClassName.equals(PrecedenceProbeCommand.class.getName()))
+                        return new PrecedenceProviderA();
+                    return null;
+                },
+                commandClassName -> {
+                    if (commandClassName.equals(PrecedenceProbeCommand.class.getName()))
+                        return new PrecedenceProviderB();
+                    return null;
+                });
+
+        CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(PrecedenceProbeCommand.class);
+        assertNotNull(provider);
+        assertEquals("first useOnly registry wins", "probe-a", provider.commandName());
+        MetadataProviderRegistry.reset();
+    }
+
+    @Test
+    public void testRegisterPrependsAfterUseOnly() {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.useOnly(commandClassName -> {
+            if (commandClassName.equals(PrecedenceProbeCommand.class.getName()))
+                return new PrecedenceProviderA();
+            return null;
+        });
+        MetadataProviderRegistry.register(commandClassName -> {
+            if (commandClassName.equals(PrecedenceProbeCommand.class.getName()))
+                return new PrecedenceProviderB();
+            return null;
+        });
+
+        CommandMetadataProvider<?> provider = MetadataProviderRegistry.getProvider(PrecedenceProbeCommand.class);
+        assertNotNull(provider);
+        assertEquals("explicit register wins over the useOnly set", "probe-b", provider.commandName());
+        MetadataProviderRegistry.reset();
+    }
+
+    @Test
+    public void testResetReenablesDiscoveryAfterUseOnly() {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.useOnly();
+        assertNull(MetadataProviderRegistry.getProvider(AliasCommand.class));
+
+        MetadataProviderRegistry.reset();
+        assertNotNull("reset must resume discovery",
+                MetadataProviderRegistry.getProvider(AliasCommand.class));
+    }
+
+    @Test
+    public void testUseOnlyNullIgnored() {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.useOnly((MetadataRegistry[]) null);
+        assertNotNull("null must leave discovery alone",
+                MetadataProviderRegistry.getProvider(AliasCommand.class));
+        MetadataProviderRegistry.reset();
     }
 
     @Test(timeout = 30000)
@@ -422,6 +516,13 @@ public class MetadataProviderRegistryTest {
         }
     }
 
+    public static class UseOnlyProbeCommand implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation ci) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
     /**
      * Self-contained on purpose: reloaded through an isolated child loader,
      * so it must not reference the enclosing test class.
@@ -493,6 +594,12 @@ public class MetadataProviderRegistryTest {
     private static class PrecedenceProviderB extends NamedProvider<PrecedenceProbeCommand> {
         PrecedenceProviderB() {
             super(PrecedenceProbeCommand.class, "probe-b");
+        }
+    }
+
+    private static class UseOnlyProbeProvider extends NamedProvider<UseOnlyProbeCommand> {
+        UseOnlyProbeProvider() {
+            super(UseOnlyProbeCommand.class, "use-only-probe");
         }
     }
 
