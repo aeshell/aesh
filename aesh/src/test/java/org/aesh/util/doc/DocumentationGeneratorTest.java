@@ -215,6 +215,70 @@ public class DocumentationGeneratorTest {
         }
     }
 
+    public enum SourceType {
+        java,
+        jshell,
+        groovy,
+        markdown
+    }
+
+    @CommandDefinition(name = "democmd", description = "demo")
+    public static class EnumDocCommand implements Command<CommandInvocation> {
+        @Option(name = "source-type", description = "Force input to be interpreted as the given type")
+        SourceType sourceType;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "listedcmd", description = "demo")
+    public static class ListedEnumDocCommand implements Command<CommandInvocation> {
+        @Option(name = "format", description = "Output format (${COMPLETION-CANDIDATES})")
+        SourceType format;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @Test
+    public void testGeneratedDocsShowEnumValidValues() throws Exception {
+        for (DocFormat format : new DocFormat[] { DocFormat.ASCIIDOC, DocFormat.MARKDOWN, DocFormat.SKILL }) {
+            String doc = DocumentationGenerator.builder()
+                    .commandClass(EnumDocCommand.class)
+                    .format(format)
+                    .generateSingle();
+            assertTrue("must list valid values in " + format + ", got:\n" + doc,
+                    doc.contains("Valid values:"));
+            assertTrue("must list java in " + format, doc.contains("java"));
+            assertTrue("must list markdown in " + format, doc.contains("markdown"));
+        }
+    }
+
+    @Test
+    public void testGeneratedDocsNoDuplicateAllowedInSkill() throws Exception {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(EnumDocCommand.class)
+                .format(DocFormat.SKILL)
+                .generateSingle();
+        assertTrue("skill must show valid values, got:\n" + doc, doc.contains("Valid values:"));
+        assertFalse("skill must not duplicate the list as Allowed, got:\n" + doc,
+                doc.contains("Allowed:"));
+    }
+
+    @Test
+    public void testGeneratedDocsNoDoubleListWhenAlreadyDocumented() throws Exception {
+        String doc = DocumentationGenerator.builder()
+                .commandClass(ListedEnumDocCommand.class)
+                .format(DocFormat.ASCIIDOC)
+                .generateSingle();
+        assertTrue("token must resolve to candidates, got:\n" + doc, doc.contains("java"));
+        assertFalse("must not double-list, got:\n" + doc, doc.contains("Valid values:"));
+    }
+
     @Test
     public void testFleetCollapseSynopsisInGeneratedDocs() throws Exception {
         // Flags must precede commandClass(), which builds immediately.

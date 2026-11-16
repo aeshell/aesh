@@ -212,11 +212,17 @@ class SkillRenderer implements DocRenderer {
         if (opt.getVisibility() == OptionVisibility.HIDDEN) {
             desc.append("**hidden** ");
         }
-        String resolved = resolveDescription(cmd, opt.description(), nameCtx);
+        String resolved = cmd.resolveOptionDescription(opt,
+                nameCtx.commandName,
+                nameCtx.fullName != null ? nameCtx.fullName : nameCtx.commandName,
+                nameCtx.rootName,
+                nameCtx.parentName,
+                nameCtx.parentName);
         if (resolved != null) {
             desc.append(escapeMdTable(resolved));
         }
-        if (opt.hasAllowedValues()) {
+        if (opt.hasAllowedValues()
+                && (resolved == null || !resolved.contains("Valid values:"))) {
             desc.append(" Allowed: ");
             desc.append(mdCodeList(opt.getAllowedValues()));
         }

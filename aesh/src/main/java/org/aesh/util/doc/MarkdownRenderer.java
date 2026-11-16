@@ -188,7 +188,12 @@ class MarkdownRenderer implements DocRenderer {
 
         sb.append("`\n\n");
 
-        String optDesc = resolveDescription(cmd, opt.description(), nameCtx);
+        String optDesc = cmd.resolveOptionDescription(opt,
+                nameCtx.commandName,
+                nameCtx.fullName != null ? nameCtx.fullName : nameCtx.commandName,
+                nameCtx.rootName,
+                nameCtx.parentName,
+                nameCtx.parentName);
         if (optDesc != null && !optDesc.isEmpty()) {
             sb.append(optDesc).append("\n\n");
         }
