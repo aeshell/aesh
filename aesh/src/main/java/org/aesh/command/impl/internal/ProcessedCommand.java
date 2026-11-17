@@ -488,6 +488,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * incrementally and the constructor generates after the user options.
      */
     public void resolveGeneratedConflicts() {
+        // Most commands have no generated options; don't even copy the list.
+        if (generatedHelpOption == null && generatedVersionOption == null)
+            return;
         for (ProcessedOption opt : new ArrayList<>(options)) {
             yieldGeneratedTo(opt);
         }

@@ -26,10 +26,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Collections;
+
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
+import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOption;
@@ -151,6 +154,36 @@ public class GeneratedOptionClashTest {
         assertNotNull("--version survives long-only", version);
         assertNull("generated -v yields to the explicit one", version.shortName());
         assertEquals("v", parser.getProcessedCommand().findLongOptionNoActivatorCheck("verbose").shortName());
+    }
+
+    @Test
+    public void testNoGeneratedOptionsSkipsConflictResolution() throws Exception {
+        ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder
+                .builder();
+        pb.name("plain").description("Plain").generateHelp(false).version("");
+        FieldNameCountingOption option = new FieldNameCountingOption();
+        pb.addOption(option);
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> pc = pb.create();
+
+        option.reads = 0;
+        pc.resolveGeneratedConflicts();
+        assertEquals("no options should be inspected without generated help/version", 0, option.reads);
+    }
+
+    private static final class FieldNameCountingOption extends ProcessedOption {
+        private int reads;
+
+        FieldNameCountingOption() throws Exception {
+            super('o', "option", "desc", null, false, ' ', false, false, null,
+                    Collections.emptyList(), String.class, "field", OptionType.NORMAL,
+                    null, null, null, null, null, null, false, false, null, false, null, false, false);
+        }
+
+        @Override
+        public String getFieldName() {
+            reads++;
+            return "field";
+        }
     }
 
     @Test
