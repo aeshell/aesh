@@ -538,7 +538,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 child.updateAnsiMode(false);
             }
         }
-        String synopsis = processedCommand.printSynopsis(helpNames(), collapsed);
+        String synopsis = processedCommand.printSynopsis(helpNames(), collapsed,
+                processedCommand.helpWidth());
         if (isGroupCommand()) {
             // Mark the subcommand slot at the end of the synopsis block, the
             // same splice printHelp uses so wrapped lines stay aligned.
@@ -561,6 +562,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 child.updateAnsiMode(false);
             }
         }
+        // Resolve the terminal width once per render: every entry below used
+        // to query it separately, one failed probe per group child.
+        int width = processedCommand.helpWidth();
         boolean showAll = processedCommand.isFullHelpRequested();
         List<CommandLineParser<CI>> parsers = getChildParsers();
         HelpSectionProvider provider = resolveHelpSectionProvider();
@@ -573,7 +577,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         StringBuilder sb = new StringBuilder();
 
         if (hasChildren || hasAdditional) {
-            String helpText = processedCommand.printHelp(helpNames(), false, showAll);
+            String helpText = processedCommand.printHelp(helpNames(), false, showAll, width);
             // Append [COMMAND] at the end of the synopsis block for group commands.
             // The synopsis may wrap across multiple lines; the block ends at
             // the first blank line (double line separator) after "Usage:".
@@ -590,7 +594,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             // Inject header (before or after the synopsis, per the toggle)
             String header = helpHeader(provider);
             String headerContent = header != null ? resolveDescriptionVariables(header, null) : null;
-            sb.append(injectHeader(helpText, headerContent));
+            sb.append(injectHeader(helpText, headerContent, width));
 
             int maxLength = 0;
             if (hasChildren) {
@@ -612,7 +616,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 for (CommandLineParser<CI> child : parsers) {
                     String group = child.getProcessedCommand().helpGroup();
                     outputGroups.computeIfAbsent(group.isEmpty() ? "" : group, k -> new ArrayList<>())
-                            .add(child.getFormattedCommand(4, maxLength + 2));
+                            .add(child.getFormattedCommand(4, maxLength + 2, width));
                 }
             }
             for (Map.Entry<String, List<HelpEntry>> section : additionalSections.entrySet()) {
@@ -648,17 +652,17 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     sb.append(line).append(Config.getLineSeparator());
             }
         } else {
-            String helpText = processedCommand.printHelp(helpNames(), false, showAll);
+            String helpText = processedCommand.printHelp(helpNames(), false, showAll, width);
             String header = helpHeader(provider);
             String headerContent = header != null ? resolveDescriptionVariables(header, null) : null;
-            sb.append(injectHeader(helpText, headerContent));
+            sb.append(injectHeader(helpText, headerContent, width));
         }
 
         // Footer from HelpSectionProvider or @CommandDefinition — shown after everything
         String footer = helpFooter(provider);
         if (footer != null) {
             sb.append(Config.getLineSeparator())
-                    .append(wrapBlock(resolveDescriptionVariables(footer, null)))
+                    .append(wrapBlock(resolveDescriptionVariables(footer, null), width))
                     .append(Config.getLineSeparator());
         }
 
@@ -672,9 +676,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      * starting with whitespace are left untouched, so indented examples and
      * code blocks survive verbatim.
      */
-    private String wrapBlock(String text) {
+    private String wrapBlock(String text, int width) {
         return String.join(Config.getLineSeparator(),
-                ProcessedOption.wrapText(text, processedCommand.helpWidth(), true));
+                ProcessedOption.wrapText(text, width, true));
     }
 
     /**
@@ -684,10 +688,10 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
      * description and before the {@code Usage:} line, so descriptive prose and
      * examples read ahead of the synopsis.
      */
-    private String injectHeader(String helpText, String headerContent) {
+    private String injectHeader(String helpText, String headerContent, int width) {
         if (headerContent == null)
             return helpText;
-        headerContent = wrapBlock(headerContent);
+        headerContent = wrapBlock(headerContent, width);
         String sep = Config.getLineSeparator();
         if (processedCommand.headerBeforeSynopsis()) {
             int usageIdx = helpText.indexOf("Usage:");
@@ -1282,6 +1286,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @Override
     public String getFormattedCommand(int offset, int descriptionStart) {
+        return getFormattedCommand(offset, descriptionStart, getProcessedCommand().helpWidth());
+    }
+
+    @Override
+    public String getFormattedCommand(int offset, int descriptionStart, int width) {
 
         ANSIBuilder ansiBuilder = ANSIBuilder.builder(ansiMode);
 
@@ -1302,7 +1311,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 "");
         List<String> lines = ProcessedOption.wrapText(
                 resolveDescriptionVariables(getProcessedCommand().description(), null),
-                getProcessedCommand().helpWidth() - pad.length());
+                width - pad.length());
         for (int i = 0; i < lines.size(); i++) {
             if (i > 0)
                 ansiBuilder.append(Config.getLineSeparator()).append(pad);

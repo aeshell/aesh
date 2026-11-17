@@ -173,6 +173,21 @@ public interface CommandLineParser<CI extends CommandInvocation> {
 
     String getFormattedCommand(int offset, int descriptionStart);
 
+    /**
+     * Format one child entry for a group listing, wrapping its description at
+     * the given width. Defaults to resolving the width itself, so out-of-tree
+     * implementations keep working; the parser passes its render width to
+     * resolve it once per {@code --help}.
+     *
+     * @param offset indentation in columns
+     * @param descriptionStart description column
+     * @param width help width in columns
+     * @return the formatted child entry
+     */
+    default String getFormattedCommand(int offset, int descriptionStart, int width) {
+        return getFormattedCommand(offset, descriptionStart);
+    }
+
     void updateAnsiMode(boolean mode);
 
     /**

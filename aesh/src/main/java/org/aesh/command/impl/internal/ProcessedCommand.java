@@ -1670,9 +1670,22 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @param showAll when true, includes FULL visibility options in output
      */
     public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll) {
+        return printHelp(commandName, supportsHyperlinks, showAll, helpWidth());
+    }
+
+    /**
+     * Returns a description String based on the defined command and options.
+     * The width is resolved once by the caller, so a single render never
+     * queries the terminal repeatedly.
+     *
+     * @param commandName the command name to display
+     * @param supportsHyperlinks whether the terminal supports OSC 8 hyperlinks
+     * @param showAll when true, includes FULL visibility options in output
+     * @param width the help width in columns
+     */
+    public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll, int width) {
         int maxLength = 0;
         int maxOptionColumnWidth = 24;
-        int width = helpWidth();
         DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
         List<ProcessedOption> visibleOpts = visibleOptions(showAll);
         for (ProcessedOption o : visibleOpts) {
@@ -1801,7 +1814,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return the wrapped usage block, ending with a line separator
      */
     public String printSynopsis(String commandName, boolean collapsed) {
-        int width = helpWidth();
+        return printSynopsis(commandName, collapsed, helpWidth());
+    }
+
+    /**
+     * Returns only the {@code Usage:} block for this command, wrapping at the
+     * given width. The width is resolved once by the caller, so a single
+     * render never queries the terminal repeatedly.
+     *
+     * @param commandName the command name to display
+     * @param collapsed when true, collapse optional options to {@code [OPTIONS]}
+     * @param width the help width in columns
+     * @return the wrapped usage block, ending with a line separator
+     */
+    public String printSynopsis(String commandName, boolean collapsed, int width) {
         String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;
         return renderSynopsisBlock(cmdDisplay, visibleOptions(false),
                 getPositionalOptionsInDisplayOrder(), width, collapsed);

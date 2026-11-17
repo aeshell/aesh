@@ -93,10 +93,55 @@ public class HelpWidthTest {
                 narrowLines > wideLines);
     }
 
+    @Test
+    public void testThreadedWidthHonored() throws Exception {
+        CommandLineParser<CommandInvocation> parser = parser(new WideCommand());
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> command = processed(parser);
+        int resolved = command.helpWidth();
+        assertEquals("threaded width must match resolving width",
+                command.printHelp("wide", false, false), command.printHelp("wide", false, false, resolved));
+        int narrowLines = command.printHelp("wide", false, false, 50).split("\\R").length;
+        int wideLines = command.printHelp("wide", false, false, 120).split("\\R").length;
+        assertTrue("threaded width must drive wrapping: narrow=" + narrowLines + " wide=" + wideLines,
+                narrowLines > wideLines);
+
+        CommandLineParser<CommandInvocation> synopsisParser = parser(new SynopsisCommand());
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> synopsis = processed(synopsisParser);
+        int synopsisResolved = synopsis.helpWidth();
+        assertEquals("threaded width must match resolving width",
+                synopsis.printSynopsis("syn", false),
+                synopsis.printSynopsis("syn", false, synopsisResolved));
+        String narrowSynopsis = synopsis.printSynopsis("syn", false, 40);
+        String wideSynopsis = synopsis.printSynopsis("syn", false, 120);
+        assertTrue("threaded width must drive synopsis wrapping, narrow: " + narrowSynopsis
+                + " wide: " + wideSynopsis, !narrowSynopsis.equals(wideSynopsis));
+    }
+
+    @Test
+    public void testThreadedFormattedCommandWidthHonored() throws Exception {
+        CommandLineParser<CommandInvocation> parser = parser(new WideGroup());
+        CommandLineParser<CommandInvocation> child = parser.getChildParsers().get(0);
+        String narrow = child.getFormattedCommand(4, 20, 60);
+        String wide = child.getFormattedCommand(4, 20, 140);
+        assertTrue("threaded width must drive child wrapping, got: " + narrow,
+                !narrow.equals(wide));
+    }
+
     private static int helpWidth() throws Exception {
         CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
                 .create(new WideCommand()).getParser();
         return parser.getProcessedCommand().helpWidth();
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processed(
+            CommandLineParser<CommandInvocation> parser) {
+        return (ProcessedCommand<Command<CommandInvocation>, CommandInvocation>) (ProcessedCommand) parser
+                .getProcessedCommand();
+    }
+
+    private static CommandLineParser<CommandInvocation> parser(Command<CommandInvocation> command) throws Exception {
+        return new AeshCommandContainerBuilder<CommandInvocation>().create(command).getParser();
     }
 
     private static String help(Command<CommandInvocation> command) throws Exception {
@@ -119,6 +164,37 @@ public class HelpWidthTest {
         @Option(description = "Target environment for the deployment run")
         String target;
 
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "syn", description = "Synopsis", generateHelp = true)
+    public static class SynopsisCommand implements Command<CommandInvocation> {
+        @Option(description = "First long option")
+        String firstLongOption;
+        @Option(description = "Second long option")
+        String secondLongOption;
+        @Option(description = "Third long option")
+        String thirdLongOption;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "widechild", description = "A deliberately long child description that wraps onto several lines at narrow widths", generateHelp = true)
+    public static class WideChild implements Command<CommandInvocation> {
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "widegrp", description = "Group", generateHelp = true, groupCommands = { WideChild.class })
+    public static class WideGroup implements Command<CommandInvocation> {
         @Override
         public CommandResult execute(CommandInvocation invocation) {
             return CommandResult.SUCCESS;
