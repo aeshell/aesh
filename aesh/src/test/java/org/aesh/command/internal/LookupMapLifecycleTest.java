@@ -73,7 +73,7 @@ public class LookupMapLifecycleTest {
         assertMaps(command, true);
     }
 
-    private static ProcessedCommand<Command<CommandInvocation>, CommandInvocation> newCommand() throws Exception {
+    static ProcessedCommand<Command<CommandInvocation>, CommandInvocation> newCommand() throws Exception {
         return ProcessedCommandBuilder.<Command<CommandInvocation>, CommandInvocation> builder()
                 .name("test")
                 .description("test")
@@ -82,12 +82,12 @@ public class LookupMapLifecycleTest {
                 .create();
     }
 
-    private static ProcessedOption option(String name, char shortName) {
+    static ProcessedOption option(String name, char shortName) {
         return ProcessedOption.createDirect(Character.toString(shortName), name, name, Boolean.class, name,
                 OptionType.BOOLEAN, null, null);
     }
 
-    private static void assertMaps(ProcessedCommand<?, ?> command, boolean built) throws Exception {
+    static void assertMaps(ProcessedCommand<?, ?> command, boolean built) throws Exception {
         for (String name : MAP_FIELDS) {
             Object value = mapField(command, name);
             if (built)
@@ -97,7 +97,7 @@ public class LookupMapLifecycleTest {
         }
     }
 
-    private static Object mapField(ProcessedCommand<?, ?> command, String name) throws Exception {
+    static Object mapField(ProcessedCommand<?, ?> command, String name) throws Exception {
         Field field = ProcessedCommand.class.getDeclaredField(name);
         field.setAccessible(true);
         return field.get(command);

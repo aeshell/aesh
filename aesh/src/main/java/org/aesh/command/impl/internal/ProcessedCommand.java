@@ -215,6 +215,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private Map<String, ProcessedOption> shortNameMap;
     private Map<String, ProcessedOption> negatedNameMap;
     private Map<String, ProcessedOption> bareNameMap;
+    private GeneratedOptionLookup generatedOptionLookup;
 
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator<C, CI> validator,
@@ -411,7 +412,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         trackGeneratedOption(opt);
         if (opt.isInherited())
             this.hasInheritedOptions = true;
-        if (longNameMap != null)
+        if (longNameMap != null || generatedOptionLookup != null)
             invalidateLookupMaps();
         if (command != null)
             opt.captureInitialValue(command);
@@ -432,7 +433,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         boolean changed = yieldGeneratedOption(opt, generatedHelpOption);
         if (yieldGeneratedOption(opt, generatedVersionOption))
             changed = true;
-        if (changed && longNameMap != null)
+        if (changed && (longNameMap != null || generatedOptionLookup != null))
             invalidateLookupMaps();
     }
 
@@ -525,7 +526,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         trackGeneratedOption(opt);
         if (opt.isInherited())
             this.hasInheritedOptions = true;
-        if (longNameMap != null)
+        if (longNameMap != null || generatedOptionLookup != null)
             invalidateLookupMaps();
         if (command != null)
             opt.captureInitialValue(command);
@@ -718,6 +719,16 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         shortNameMap = null;
         negatedNameMap = null;
         bareNameMap = null;
+        generatedOptionLookup = null;
+    }
+
+    /** Install immutable generated name lookup, or null to use runtime maps. */
+    public void setGeneratedOptionLookup(GeneratedOptionLookup lookup) {
+        this.generatedOptionLookup = lookup;
+    }
+
+    private ProcessedOption generatedOption(int index) {
+        return index < 0 ? null : options.get(index);
     }
 
     public DefaultValueProvider getDefaultValueProvider() {
@@ -1018,6 +1029,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public ProcessedOption findOption(String name) {
+        if (generatedOptionLookup != null) {
+            ProcessedOption opt = generatedOption(generatedOptionLookup.shortOptionIndex(name));
+            return opt != null && opt.isActivated(parsedCommand()) ? opt : null;
+        }
         if (shortNameMap == null)
             buildLookupMaps();
         ProcessedOption opt = shortNameMap.get(name);
@@ -1027,6 +1042,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public ProcessedOption findOptionNoActivatorCheck(String name) {
+        if (generatedOptionLookup != null)
+            return generatedOption(generatedOptionLookup.shortOptionIndex(name));
         if (shortNameMap == null)
             buildLookupMaps();
         return shortNameMap.get(name);
@@ -1094,6 +1111,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public ProcessedOption findLongOption(String name) {
+        if (generatedOptionLookup != null) {
+            ProcessedOption opt = generatedOption(generatedOptionLookup.longOptionIndex(name));
+            return opt != null && opt.isActivated(parsedCommand()) ? opt : null;
+        }
         if (longNameMap == null)
             buildLookupMaps();
         ProcessedOption opt = longNameMap.get(name);
@@ -1103,6 +1124,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public ProcessedOption findLongOptionNoActivatorCheck(String name) {
+        if (generatedOptionLookup != null)
+            return generatedOption(generatedOptionLookup.longOptionIndex(name));
         if (longNameMap == null)
             buildLookupMaps();
         return longNameMap.get(name);
@@ -1116,6 +1139,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return the matching option, or null if not found
      */
     public ProcessedOption findNegatedOption(String name) {
+        if (generatedOptionLookup != null) {
+            ProcessedOption opt = generatedOption(generatedOptionLookup.negatedOptionIndex(name));
+            if (opt != null && opt.isActivated(parsedCommand())) {
+                opt.setNegatedByUser(true);
+                return opt;
+            }
+            return null;
+        }
         if (negatedNameMap == null)
             buildLookupMaps();
         ProcessedOption opt = negatedNameMap.get(name);
@@ -1133,6 +1164,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return the matching option, or null if not found
      */
     public ProcessedOption findNegatedOptionNoActivatorCheck(String name) {
+        if (generatedOptionLookup != null) {
+            ProcessedOption opt = generatedOption(generatedOptionLookup.negatedOptionIndex(name));
+            if (opt != null) {
+                opt.setNegatedByUser(true);
+                return opt;
+            }
+            return null;
+        }
         if (negatedNameMap == null)
             buildLookupMaps();
         ProcessedOption opt = negatedNameMap.get(name);
@@ -1144,6 +1183,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public ProcessedOption findBareLongOption(String name) {
+        if (generatedOptionLookup != null)
+            return generatedOption(generatedOptionLookup.bareOptionIndex(name));
         if (bareNameMap == null)
             buildLookupMaps();
         return bareNameMap.get(name);

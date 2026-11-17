@@ -18,7 +18,9 @@
 package org.aesh.processor;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -164,6 +166,7 @@ final class CodeGenerator {
         sb.append("import org.aesh.command.impl.internal.ProcessedCommandBuilder;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedOption;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedOptionBuilder;\n");
+        sb.append("import org.aesh.command.impl.internal.GeneratedOptionLookup;\n");
         sb.append("import org.aesh.command.impl.internal.OptionType;\n");
         sb.append("import org.aesh.command.metadata.CommandMetadataProvider;\n");
         sb.append("import org.aesh.command.parser.CommandLineParserException;\n\n");
@@ -271,6 +274,7 @@ final class CodeGenerator {
 
         // Generate the single Accessor inner class
         generateAccessorClass(sb, simpleName, accessorInfos, parentInfos);
+        generateLookupClass(sb, accessorInfos);
 
         // End class
         sb.append("}\n");
@@ -424,6 +428,12 @@ final class CodeGenerator {
         final String commandSimpleName;
         /** True for synthetic fields (help/version) that store state in the Accessor itself. */
         final boolean synthetic;
+        boolean lookupOption;
+        String shortName;
+        String optionName;
+        String[] optionAliases;
+        String negatedName;
+        boolean acceptBareName;
 
         FieldAccessorInfo(int index, String fieldName, String fieldType, String mixinFieldName,
                 boolean isPrivate, String commandSimpleName) {
@@ -440,6 +450,16 @@ final class CodeGenerator {
             this.commandSimpleName = commandSimpleName;
             this.synthetic = synthetic;
         }
+    }
+
+    private static void setLookupOption(FieldAccessorInfo info, String shortName, String name,
+            String[] aliases, String negatedName, boolean acceptBareName) {
+        info.lookupOption = true;
+        info.shortName = shortName;
+        info.optionName = name;
+        info.optionAliases = aliases;
+        info.negatedName = negatedName;
+        info.acceptBareName = acceptBareName;
     }
 
     private static void generateBuildProcessedCommand(StringBuilder sb, String simpleName,
@@ -579,6 +599,7 @@ final class CodeGenerator {
             int helpIdx = accessorInfos.size();
             accessorInfos.add(new FieldAccessorInfo(helpIdx, "generatedHelp", "boolean",
                     null, false, simpleName, true));
+            setLookupOption(accessorInfos.get(helpIdx), "h", "help", null, null, false);
             sb.append("        {\n");
             sb.append("            ProcessedOption helpOpt = ProcessedOption.createDirect(\n");
             sb.append("                    \"h\", \"help\", \"Display this help and exit\",\n");
@@ -598,6 +619,7 @@ final class CodeGenerator {
             int versionIdx = accessorInfos.size();
             accessorInfos.add(new FieldAccessorInfo(versionIdx, "generatedVersion", "boolean",
                     null, false, simpleName, true));
+            setLookupOption(accessorInfos.get(versionIdx), "v", "version", null, null, false);
             sb.append("        {\n");
             sb.append("            ProcessedOption versionOpt = ProcessedOption.createDirect(\n");
             sb.append("                    \"v\", \"version\", \"Displays version information of the command\",\n");
@@ -621,6 +643,9 @@ final class CodeGenerator {
         }
 
         generateParentCommandInjector(sb, simpleName, fields);
+
+        if (!forHelp && !accessorInfos.isEmpty())
+            sb.append("        processedCommand.setGeneratedOptionLookup(Lookup.INSTANCE);\n\n");
 
         // Generated options bypass addOption()'s per-add check, so yield them
         // to explicit user options in one pass with the same rule as the
@@ -790,6 +815,10 @@ final class CodeGenerator {
                 accessorFieldName != null ? accessorFieldName : fieldName,
                 erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
+        setLookupOption(accessorInfos.get(accIdx),
+                o.shortName() != '\u0000' ? String.valueOf(o.shortName()) : null,
+                optionName, o.aliases(), o.negatable() ? o.negationPrefix() + optionName : null,
+                o.acceptNameWithoutDashes());
 
         // Emit: ProcessedOption opt_N = ProcessedOption.createDirect(...)
         String var = "opt_" + accIdx;
@@ -909,6 +938,9 @@ final class CodeGenerator {
                 accessorFieldName != null ? accessorFieldName : fieldName,
                 erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
+        setLookupOption(accessorInfos.get(accIdx),
+                ol.shortName() != '\u0000' ? String.valueOf(ol.shortName()) : null,
+                optionName, ol.aliases(), null, ol.acceptNameWithoutDashes());
 
         String var = "opt_" + accIdx;
         sb.append("        {\n");
@@ -1006,6 +1038,9 @@ final class CodeGenerator {
         int accIdx = accessorInfos.size();
         accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
                 mixinFieldName, isPrivateField(field), simpleName));
+        setLookupOption(accessorInfos.get(accIdx),
+                og.shortName() != '\u0000' ? String.valueOf(og.shortName()) : null,
+                optionName, og.aliases(), null, og.acceptNameWithoutDashes());
 
         String var = "opt_" + accIdx;
         sb.append("        {\n");
@@ -1220,6 +1255,66 @@ final class CodeGenerator {
                     .append(");\n");
         emitInitialValueSetter(sb, var, accessorInfos.get(accIdx), forHelp);
         sb.append("            processedCommand.addArgument(").append(var).append(");\n");
+        sb.append("        }\n\n");
+    }
+
+    private static void generateLookupClass(StringBuilder sb, List<FieldAccessorInfo> infos) {
+        if (infos.isEmpty())
+            return;
+        LinkedHashMap<String, Integer> longNames = new LinkedHashMap<>();
+        LinkedHashMap<String, Integer> shortNames = new LinkedHashMap<>();
+        LinkedHashMap<String, Integer> negatedNames = new LinkedHashMap<>();
+        LinkedHashMap<String, Integer> bareNames = new LinkedHashMap<>();
+        int optionIndex = 0;
+        for (FieldAccessorInfo info : infos) {
+            if (!info.lookupOption)
+                continue;
+            if (info.optionName != null && !info.optionName.isEmpty()) {
+                longNames.put(info.optionName, optionIndex);
+                if (info.optionAliases != null) {
+                    for (String alias : info.optionAliases)
+                        longNames.put(alias, optionIndex);
+                }
+            }
+            if (info.shortName != null && !info.shortName.isEmpty())
+                shortNames.put(info.shortName, optionIndex);
+            if (info.negatedName != null)
+                negatedNames.put(info.negatedName, optionIndex);
+            if (info.acceptBareName && info.optionName != null) {
+                bareNames.put(info.optionName, optionIndex);
+                if (info.optionAliases != null) {
+                    for (String alias : info.optionAliases)
+                        bareNames.put(alias, optionIndex);
+                }
+            }
+            optionIndex++;
+        }
+
+        sb.append("    private static final class Lookup implements GeneratedOptionLookup {\n");
+        sb.append("        private static final Lookup INSTANCE = new Lookup();\n\n");
+        sb.append("        private Lookup() {\n        }\n\n");
+        emitLookupMethod(sb, "longOptionIndex", longNames);
+        emitLookupMethod(sb, "shortOptionIndex", shortNames);
+        emitLookupMethod(sb, "negatedOptionIndex", negatedNames);
+        emitLookupMethod(sb, "bareOptionIndex", bareNames);
+        sb.append("    }\n\n");
+    }
+
+    private static void emitLookupMethod(StringBuilder sb, String methodName,
+            LinkedHashMap<String, Integer> names) {
+        if (names.isEmpty())
+            return;
+        sb.append("        @Override\n");
+        sb.append("        public int ").append(methodName).append("(String name) {\n");
+        sb.append("            if (name == null)\n");
+        sb.append("                return -1;\n");
+        sb.append("            switch (name) {\n");
+        for (Map.Entry<String, Integer> entry : names.entrySet()) {
+            sb.append("                case ").append(stringLiteral(entry.getKey())).append(": return ")
+                    .append(entry.getValue()).append(";\n");
+        }
+        sb.append("                default: return -1;\n");
+        sb.append("            }\n");
         sb.append("        }\n\n");
     }
 

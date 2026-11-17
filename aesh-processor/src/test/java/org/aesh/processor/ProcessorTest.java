@@ -20,6 +20,7 @@ package org.aesh.processor;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -49,6 +50,7 @@ import javax.tools.ToolProvider;
 import org.aesh.command.Command;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.GeneratedProcessedOption;
+import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.impl.invocation.AeshInvocationProviders;
@@ -2762,6 +2764,80 @@ public class ProcessorTest {
             "        return CommandResult.SUCCESS;\n" +
             "    }\n" +
             "}\n";
+
+    private static final String LOOKUP_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Argument;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"lookup\", description = \"Generated lookup\", generateHelp = false)\n" +
+            "public class LookupCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"verbose\", shortName = 'v', aliases = {\"loud\"},\n" +
+            "            negatable = true, negationPrefix = \"disable-\",\n" +
+            "            acceptNameWithoutDashes = true, hasValue = false)\n" +
+            "    public boolean verbose;\n" +
+            "\n" +
+            "    @Argument(index = \"0\")\n" +
+            "    public String input;\n" +
+            "\n" +
+            "    @Option(name = \"Aa\", aliases = {\"BB\"}, hasValue = false)\n" +
+            "    public boolean first;\n" +
+            "\n" +
+            "    @Option(name = \"BB\", hasValue = false)\n" +
+            "    public boolean second;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testGeneratedOptionLookup() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.LookupCommand", LOOKUP_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+        String source = new String(Files.readAllBytes(
+                result.outputDir.resolve("test/LookupCommand_AeshMetadata.java")), StandardCharsets.UTF_8);
+        assertTrue(source.contains("processedCommand.setGeneratedOptionLookup(Lookup.INSTANCE);"));
+        String helpBody = source.substring(source.indexOf("buildHelpProcessedCommand()"));
+        assertFalse("help-only builds keep runtime lookup maps", helpBody.contains("setGeneratedOptionLookup"));
+
+        Class<?> commandClass = result.classLoader.loadClass("test.LookupCommand");
+        CommandMetadataProvider provider = (CommandMetadataProvider) result.classLoader
+                .loadClass("test.LookupCommand_AeshMetadata").newInstance();
+        ProcessedCommand firstPC = provider.buildProcessedCommand((Command) commandClass.newInstance());
+        Object firstVerbose = firstPC.getOptions().get(0);
+
+        assertSame(firstVerbose, firstPC.findLongOptionNoActivatorCheck("verbose"));
+        assertSame(firstVerbose, firstPC.findLongOptionNoActivatorCheck("loud"));
+        assertSame(firstVerbose, firstPC.findOptionNoActivatorCheck("v"));
+        assertSame(firstVerbose, firstPC.findNegatedOptionNoActivatorCheck("disable-verbose"));
+        assertSame(firstVerbose, firstPC.findBareLongOption("loud"));
+        assertSame(firstPC.getOptions().get(1), firstPC.findLongOptionNoActivatorCheck("Aa"));
+        assertSame("duplicate names keep the last option, matching HashMap",
+                firstPC.getOptions().get(2), firstPC.findLongOptionNoActivatorCheck("BB"));
+        assertNull(firstPC.findLongOptionNoActivatorCheck("missing"));
+        assertNull(firstPC.findLongOptionNoActivatorCheck(null));
+
+        ProcessedCommand secondPC = provider.buildProcessedCommand((Command) commandClass.newInstance());
+        Object secondVerbose = secondPC.getOptions().get(0);
+        assertNotSame(firstVerbose, secondVerbose);
+        assertSame(secondVerbose, secondPC.findLongOptionNoActivatorCheck("verbose"));
+        assertTrue(((ProcessedOption) firstVerbose).isNegatedByUser());
+        assertFalse(((ProcessedOption) secondVerbose).isNegatedByUser());
+
+        ProcessedOption extra = ProcessedOption.createDirect(null, "extra", "extra", Boolean.class,
+                "extra", OptionType.BOOLEAN, null, null);
+        firstPC.addOptionDirect(extra);
+        assertSame(extra, firstPC.findLongOptionNoActivatorCheck("extra"));
+        assertSame(firstVerbose, firstPC.findLongOptionNoActivatorCheck("verbose"));
+        assertSame(secondVerbose, secondPC.findLongOptionNoActivatorCheck("verbose"));
+    }
 
     private static final String DIRECT_INITIAL_COMMAND_SOURCE = "package test;\n" +
             "\n" +
