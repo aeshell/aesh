@@ -494,8 +494,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     }
 
     /**
-     * Restores a deselected subtree to its initial field state, recursing
-     * through its children. Only field resets run — no value injection,
+     * Restores a deselected subtree to its initial field state once after it
+     * was selected, recursing through its children. Untouched and already
+     * restored subtrees are skipped. Only field resets run — no value injection,
      * converters, static or dynamic defaults, providers or validation — so
      * an unselected command can neither fail nor observe population. Uses
      * the non-resolving child accessor so lazy subtrees stay unresolved.
@@ -503,6 +504,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private void resetUnselectedSubtree(CommandLineParser<CI> parser)
             throws CommandLineParserException, OptionValidatorException {
         ProcessedCommand<Command<CI>, CI> processedCommand = parser.getProcessedCommand();
+        if (!processedCommand.isUnselectedResetPending())
+            return;
         Command<CI> command = parser.getCommand();
         for (ProcessedOption option : processedCommand.getOptions())
             option.resetField(command);
@@ -514,6 +517,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             for (CommandLineParser<CI> child : parser.getChildParsers())
                 resetUnselectedSubtree(child);
         }
+        processedCommand.clearUnselectedResetPending();
     }
 
     /**

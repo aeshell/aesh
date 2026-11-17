@@ -207,6 +207,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private List<ProcessedOption> cachedPositionalOrder;
     private boolean hasInheritedOptions;
     private boolean dirty;
+    private boolean unselectedResetPending;
     private ParsedCommand cachedParsedCommand;
 
     // Lazy-built lookup maps for O(1) option search (built on first lookup, invalidated on add)
@@ -1317,6 +1318,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      */
     public void markDirty() {
         dirty = true;
+        unselectedResetPending = true;
+    }
+
+    /**
+     * Returns whether this command must restore its fields if a later parse
+     * leaves it unselected. Unlike {@link #dirty}, this state survives clear().
+     */
+    public boolean isUnselectedResetPending() {
+        return unselectedResetPending;
+    }
+
+    /** Mark a successful unselected field reset for this command. */
+    public void clearUnselectedResetPending() {
+        unselectedResetPending = false;
     }
 
     /**

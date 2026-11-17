@@ -28,14 +28,19 @@ import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.internal.ProcessedOptionBuilder;
+import org.aesh.command.impl.invocation.AeshInvocationProviders;
+import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
+import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.metadata.CommandMetadataProvider;
 import org.aesh.command.metadata.MetadataProviderRegistry;
 import org.aesh.command.operator.OperatorType;
 import org.aesh.command.option.Option;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.registry.CommandRegistry;
+import org.aesh.command.settings.SettingsBuilder;
+import org.aesh.console.AeshContext;
 import org.junit.Test;
 
 /**
@@ -334,6 +339,52 @@ public class SelectedPathPopulationTest {
         }
     }
 
+    @CommandDefinition(name = "counting", description = "generated reset counter")
+    public static class ResetCountingGenCommand implements Command<CommandInvocation> {
+        static volatile int resets;
+        int number = 7;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static class ResetCountingGenProvider extends NamedGenProvider<ResetCountingGenCommand> {
+        ResetCountingGenProvider() {
+            super(ResetCountingGenCommand.class, "counting");
+        }
+
+        @Override
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public ProcessedCommand buildProcessedCommand(ResetCountingGenCommand instance)
+                throws CommandLineParserException {
+            try {
+                ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())
+                        .name("counting")
+                        .description("generated reset counter")
+                        .command(instance)
+                        .create();
+                processedCommand.addOption(
+                        ProcessedOptionBuilder.builder()
+                                .name("number")
+                                .type(int.class)
+                                .fieldName("number")
+                                .optionType(OptionType.NORMAL)
+                                .addDefaultValue("7")
+                                .fieldSetter((inst, val) -> {
+                                    ResetCountingGenCommand.resets++;
+                                    ((ResetCountingGenCommand) inst).number = (int) val;
+                                })
+                                .fieldResetter(inst -> ((ResetCountingGenCommand) inst).number = 0)
+                                .build());
+                return processedCommand;
+            } catch (Exception e) {
+                throw new CommandLineParserException(e.getMessage());
+            }
+        }
+    }
+
     private static class SiblingsGenProvider extends NamedGenProvider<SiblingsGenGroup> {
         SiblingsGenProvider() {
             super(SiblingsGenGroup.class, "siblingsgen");
@@ -362,12 +413,12 @@ public class SelectedPathPopulationTest {
         @Override
         @SuppressWarnings("unchecked")
         public Class<? extends Command>[] groupCommandClasses() {
-            return new Class[] { GoodGenCommand.class, BadGenCommand.class };
+            return new Class[] { GoodGenCommand.class, BadGenCommand.class, ResetCountingGenCommand.class };
         }
 
         @Override
         public String[][] groupCommandNamesAndAliases() {
-            return new String[][] { { "good" }, { "bad" } };
+            return new String[][] { { "good" }, { "bad" }, { "counting" } };
         }
     }
 
@@ -399,6 +450,46 @@ public class SelectedPathPopulationTest {
 
             assertEquals(CommandResult.SUCCESS, result);
             assertEquals(true, GoodGenCommand.executed);
+        } finally {
+            MetadataProviderRegistry.reset();
+        }
+    }
+
+    @Test
+    public void testUnselectedResetOnlyRunsAfterPreviousSelection() throws Exception {
+        MetadataProviderRegistry.reset();
+        MetadataProviderRegistry.register(className -> {
+            if (className.equals(SiblingsGenGroup.class.getName()))
+                return new SiblingsGenProvider();
+            if (className.equals(ResetCountingGenCommand.class.getName()))
+                return new ResetCountingGenProvider();
+            return null;
+        });
+        try {
+            ResetCountingGenCommand.resets = 0;
+            CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                    .create(new SiblingsGenGroup()).getParser();
+            InvocationProviders providers = new AeshInvocationProviders();
+            AeshContext context = SettingsBuilder.builder().build().aeshContext();
+
+            parser.populateObject("siblingsgen good", providers, context, CommandLineParser.Mode.VALIDATE);
+            assertEquals("untouched sibling must not reset on first invocation", 0, ResetCountingGenCommand.resets);
+
+            parser.populateObject("siblingsgen good", providers, context, CommandLineParser.Mode.VALIDATE);
+            assertEquals("an unselected sibling stays clean on repeated invocation", 0, ResetCountingGenCommand.resets);
+
+            parser.populateObject("siblingsgen counting", providers, context, CommandLineParser.Mode.VALIDATE);
+            assertEquals("selected command population writes its default once", 1, ResetCountingGenCommand.resets);
+
+            parser.populateObject("siblingsgen good", providers, context, CommandLineParser.Mode.VALIDATE);
+            assertEquals("switching away restores the previously selected sibling", 2, ResetCountingGenCommand.resets);
+
+            parser.populateObject("siblingsgen good", providers, context, CommandLineParser.Mode.VALIDATE);
+            assertEquals("an already-restored sibling is not restored again", 2, ResetCountingGenCommand.resets);
+
+            parser.populateObject("siblingsgen counting", providers, context, CommandLineParser.Mode.VALIDATE);
+            parser.populateObject("siblingsgen good", providers, context, CommandLineParser.Mode.VALIDATE);
+            assertEquals("a later selection requires one fresh restore", 4, ResetCountingGenCommand.resets);
         } finally {
             MetadataProviderRegistry.reset();
         }
