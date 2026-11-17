@@ -2763,6 +2763,67 @@ public class ProcessorTest {
             "    }\n" +
             "}\n";
 
+    private static final String DIRECT_INITIAL_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"direct\", description = \"Direct initial values\")\n" +
+            "public class DirectInitialCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(hasValue = false)\n" +
+            "    public boolean enabled = true;\n" +
+            "\n" +
+            "    @Option\n" +
+            "    int count = 42;\n" +
+            "\n" +
+            "    @Option\n" +
+            "    private String secret = \"x\";\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testDirectInitialValueCapture() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.DirectInitialCommand", DIRECT_INITIAL_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        String source = new String(java.nio.file.Files.readAllBytes(
+                result.outputDir.resolve("test/DirectInitialCommand_AeshMetadata.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue("public field must bypass the accessor switch",
+                source.contains("setInitialValue(instance.enabled);"));
+        assertTrue("package-private field must bypass the accessor switch",
+                source.contains("setInitialValue(instance.count);"));
+        assertFalse("private field keeps its accessor path",
+                source.contains("setInitialValue(instance.secret);"));
+        String helpBody = source.substring(source.indexOf("buildHelpProcessedCommand()"));
+        assertFalse("help-only builds do not capture initial values", helpBody.contains(".setInitialValue("));
+
+        Class<?> commandClass = result.classLoader.loadClass("test.DirectInitialCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.DirectInitialCommand_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        Command instance = (Command) commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand(instance);
+
+        for (Object opt : generatedPC.getOptions())
+            ((ProcessedOption) opt).resetField(instance);
+        assertEquals("public initializer preserved", Boolean.TRUE,
+                generatedPC.findLongOptionNoActivatorCheck("enabled").getFieldValue(instance));
+        assertEquals("package-private primitive initializer preserved", 42,
+                generatedPC.findLongOptionNoActivatorCheck("count").getFieldValue(instance));
+        assertEquals("private initializer preserved", "x",
+                generatedPC.findLongOptionNoActivatorCheck("secret").getFieldValue(instance));
+
+        assertEquivalence(commandClass, metadataClass);
+    }
+
     private static final String NO_HELP_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +

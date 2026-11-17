@@ -873,8 +873,21 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
+        emitInitialValueSetter(sb, var, accessorInfos.get(accIdx), forHelp);
         sb.append("            processedCommand.addOptionDirect(").append(var).append(");\n");
         sb.append("        }\n\n");
+    }
+
+    private static void emitInitialValueSetter(StringBuilder sb, String var, FieldAccessorInfo info, boolean forHelp) {
+        // The accessor switch is unnecessary for fields the generated provider
+        // can read directly. Private fields and method-command slot arrays keep
+        // the existing capture path (method owners are not Adapter instances).
+        if (forHelp || info.isPrivate || info.synthetic || "Adapter".equals(info.commandSimpleName))
+            return;
+        sb.append("            ").append(var).append(".setInitialValue(instance.");
+        if (info.mixinFieldName != null)
+            sb.append(info.mixinFieldName).append(".");
+        sb.append(info.fieldName).append(");\n");
     }
 
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
@@ -971,6 +984,7 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
+        emitInitialValueSetter(sb, var, accessorInfos.get(accIdx), forHelp);
         sb.append("            processedCommand.addOptionDirect(").append(var).append(");\n");
         sb.append("        }\n\n");
     }
@@ -1053,6 +1067,7 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
+        emitInitialValueSetter(sb, var, accessorInfos.get(accIdx), forHelp);
         sb.append("            processedCommand.addOptionDirect(").append(var).append(");\n");
         sb.append("        }\n\n");
     }
@@ -1131,6 +1146,7 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
+        emitInitialValueSetter(sb, var, accessorInfos.get(accIdx), forHelp);
         sb.append("            processedCommand.setArguments(").append(var).append(");\n");
         sb.append("        }\n\n");
     }
@@ -1202,6 +1218,7 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
+        emitInitialValueSetter(sb, var, accessorInfos.get(accIdx), forHelp);
         sb.append("            processedCommand.addArgument(").append(var).append(");\n");
         sb.append("        }\n\n");
     }

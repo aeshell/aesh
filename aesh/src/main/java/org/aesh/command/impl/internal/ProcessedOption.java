@@ -168,6 +168,19 @@ public class ProcessedOption {
     protected Object initialValue;
     protected boolean initialValueCaptured;
     protected Supplier<Object> initialValueFactory;
+
+    /**
+     * Seed the initial field value directly, bypassing the accessor read in
+     * {@link #captureInitialValue(Object)}. Generated metadata uses this for
+     * public/package-private fields it can read without an accessor switch.
+     *
+     * @param initialValue the initial field value, possibly null
+     */
+    public void setInitialValue(Object initialValue) {
+        this.initialValue = initialValue;
+        this.initialValueCaptured = true;
+    }
+
     private String mixinFieldName;
     private AeshConverterInvocation cachedConverterInvocation;
 
