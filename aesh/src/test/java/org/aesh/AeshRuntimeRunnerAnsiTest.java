@@ -21,21 +21,34 @@ package org.aesh;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.aesh.command.AeshCommandRuntimeBuilder;
+import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
+import org.aesh.command.CommandRuntime;
+import org.aesh.command.HelpFeature;
+import org.aesh.command.impl.LazyHelp;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.parser.CommandLineParser;
+import org.aesh.command.impl.registry.AeshCommandRegistryBuilder;
 import org.aesh.command.invocation.CommandInvocation;
 import org.aesh.command.option.Argument;
 import org.aesh.command.option.Option;
@@ -292,6 +305,82 @@ public class AeshRuntimeRunnerAnsiTest {
         String colored = org.aesh.command.impl.LazyHelp.renderUnknownSubcommandHelp(
                 GrpCommand.class, new String[] { "bogus" }, true);
         assertTrue("Explicit on must color, got: " + colored, colored.contains(ESC));
+    }
+
+    @Test
+    public void testSuccessExecutionNeverForcesStdoutProbe() throws Exception {
+        AtomicInteger probes = new AtomicInteger();
+        CommandRuntime<CommandInvocation> runtime = runtimeWithCountingProbe(probes, false);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("paint"));
+        assertEquals("success path must not probe", 0, probes.get());
+    }
+
+    @Test
+    public void testRuntimeHelpForcesStdoutProbeOnce() throws Exception {
+        AtomicInteger probes = new AtomicInteger();
+        List<String> out = new ArrayList<>();
+        CommandRuntime<CommandInvocation> runtime = runtimeWithCountingProbe(probes, false, out);
+
+        assertEquals(CommandResult.SUCCESS, runtime.executeCommand("paint --help"));
+        assertEquals("help path must probe exactly once", 1, probes.get());
+        assertTrue("help must render, got: " + out, out.stream().anyMatch(l -> l.contains("Usage:")));
+        assertTrue("piped help must be plain, got: " + out, out.stream().noneMatch(l -> l.contains(ESC)));
+    }
+
+    private static CommandRuntime<CommandInvocation> runtimeWithCountingProbe(AtomicInteger probes, boolean answer)
+            throws Exception {
+        return runtimeWithCountingProbe(probes, answer, new ArrayList<>());
+    }
+
+    private static CommandRuntime<CommandInvocation> runtimeWithCountingProbe(AtomicInteger probes, boolean answer,
+            List<String> out) throws Exception {
+        return AeshCommandRuntimeBuilder.<CommandInvocation> builder()
+                .commandRegistry(AeshCommandRegistryBuilder.<CommandInvocation> builder()
+                        .command(PaintCommand.class).create())
+                .commandOutputHandler(out::add)
+                .stdoutColors(counting(probes, answer))
+                .build();
+    }
+
+    @Test
+    public void testLazyHelpRenderSkipsProbeWithoutHelp() {
+        AtomicInteger probes = new AtomicInteger();
+        assertNull(LazyHelp.render(PaintCommand.class, new String[] { "blue" },
+                counting(probes, false), EnumSet.noneOf(HelpFeature.class), ArgumentsSection.OFF));
+        assertEquals("non-help args must not probe", 0, probes.get());
+    }
+
+    @Test
+    public void testLazyHelpRenderForcesProbeOnceForHelp() {
+        String help = renderWithCountingProbe(true,
+                probe -> LazyHelp.render(PaintCommand.class, new String[] { "--help" },
+                        probe, EnumSet.noneOf(HelpFeature.class), ArgumentsSection.OFF));
+        assertTrue("forced colors must show, got: " + help, help.contains(ESC));
+    }
+
+    @Test
+    public void testUnknownSubcommandHelpForcesProbeOnce() {
+        String help = renderWithCountingProbe(false,
+                probe -> LazyHelp.renderUnknownSubcommandHelp(GrpCommand.class, new String[] { "bogus" },
+                        probe, EnumSet.noneOf(HelpFeature.class), ArgumentsSection.OFF));
+        assertFalse("piped help must be plain, got: " + help, help.contains(ESC));
+    }
+
+    private static String renderWithCountingProbe(boolean answer,
+            Function<Supplier<Boolean>, String> render) {
+        AtomicInteger probes = new AtomicInteger();
+        String help = render.apply(counting(probes, answer));
+        assertNotNull(help);
+        assertEquals("help path must probe exactly once", 1, probes.get());
+        return help;
+    }
+
+    private static Supplier<Boolean> counting(AtomicInteger probes, boolean answer) {
+        return () -> {
+            probes.incrementAndGet();
+            return answer;
+        };
     }
 
     @Test

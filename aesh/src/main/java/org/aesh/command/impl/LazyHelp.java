@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
@@ -62,6 +63,12 @@ public final class LazyHelp {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String render(Class<? extends Command> rootClass, String[] args, boolean ansi,
             EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
+        return render(rootClass, args, () -> ansi, helpDefaults, argumentsSection);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static String render(Class<? extends Command> rootClass, String[] args, Supplier<Boolean> ansi,
+            EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
         if (rootClass == null || !mayRequestHelp(args))
             return null;
         Walk walk = walk(rootClass, args, helpDefaults, argumentsSection);
@@ -78,7 +85,9 @@ public final class LazyHelp {
             return null;
         // A group-level -h counts too: `group -h sub` behaves like `group sub -h` (#762).
         if (parsed.isHelpRequested()) {
-            if (!ansi)
+            // The probe runs only when help is actually printed; version
+            // output below never touches it.
+            if (!ansi.get())
                 parsed.updateAnsiMode(false);
             return parsed.printHelp();
         }
@@ -98,12 +107,17 @@ public final class LazyHelp {
 
     public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args, boolean ansi,
             EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
+        return renderUnknownSubcommandHelp(rootClass, args, () -> ansi, helpDefaults, argumentsSection);
+    }
+
+    public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args,
+            Supplier<Boolean> ansi, EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
         if (rootClass == null)
             return null;
         Walk walk = walk(rootClass, args, helpDefaults, argumentsSection);
         if (walk == null)
             return null;
-        if (!ansi)
+        if (!ansi.get())
             walk.deepest.updateAnsiMode(false);
         return walk.deepest.printHelp();
     }

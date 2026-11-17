@@ -533,7 +533,7 @@ public class AeshRuntimeRunner {
         pendingCommandInstance = null;
     }
 
-    private CommandResult failFastOnUnknownSubcommand(boolean colors) {
+    private CommandResult failFastOnUnknownSubcommand(Supplier<Boolean> colors) {
         if (!lazyStartup || completionShellType != null || dynamicCompletionShellType != null || dynamicComplete)
             return null;
         if (pendingCommandClass == null)
@@ -610,6 +610,28 @@ public class AeshRuntimeRunner {
         return force != null && !force.isEmpty() && !"0".equals(force);
     }
 
+    /**
+     * Resolve a value once and cache it. Used for the ANSI tty probes so
+     * every render site shares a single resolution per execution without
+     * probing on paths that never render colored output (#783).
+     */
+    private static Supplier<Boolean> memoize(Supplier<Boolean> probe) {
+        return new Supplier<Boolean>() {
+            private Boolean value;
+
+            @Override
+            public Boolean get() {
+                if (value == null)
+                    value = probe.get();
+                return value;
+            }
+        };
+    }
+
+    private Supplier<Boolean> memoizeAnsiProbe(Supplier<Boolean> ttyProbe) {
+        return memoize(() -> resolveAnsiColors(ansiMode, ttyProbe, System::getenv));
+    }
+
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
         if (argumentFiles) {
@@ -620,9 +642,12 @@ public class AeshRuntimeRunner {
                 return CommandResult.USAGE_ERROR;
             }
         }
-        boolean colors = resolveAnsiColors(ansiMode, TtyDetect::isStdoutTty, System::getenv);
+        // ANSI tty probes stay lazy: each memoized supplier resolves at most
+        // once per execution, and only when colored output is actually
+        // rendered. Successful executions never probe (#783).
+        Supplier<Boolean> colors = memoizeAnsiProbe(TtyDetect::isStdoutTty);
         // Errors and usage go to stderr, which may be redirected on its own
-        boolean stderrColors = resolveAnsiColors(ansiMode, TtyDetect::isStderrTty, System::getenv);
+        Supplier<Boolean> stderrColors = memoizeAnsiProbe(TtyDetect::isStderrTty);
         CommandResult fastFailure = failFastOnUnknownSubcommand(stderrColors);
         if (fastFailure != null)
             return fastFailure;
@@ -639,10 +664,6 @@ public class AeshRuntimeRunner {
         materializePendingRoot();
         if (!lazyStartup && pendingDefaultValueProvider != null)
             registryBuilder.defaultValueProvider(pendingDefaultValueProvider);
-        // Render help without ANSI when stdout is redirected: parsers built
-        // from now on get the mode at build time, already-built ones in
-        // create(), so lazy startup never pays for an early materialization.
-        registryBuilder.ansiColors(colors);
         CommandRegistry commandRegistry = registryBuilder.create();
 
         if (commandRegistry.getAllCommandNames().isEmpty())
@@ -677,6 +698,7 @@ public class AeshRuntimeRunner {
         AeshCommandRuntimeBuilder runtimeBuilder = AeshCommandRuntimeBuilder.builder()
                 .commandRegistry(commandRegistry)
                 .shell(effectiveShell)
+                .stdoutColors(colors)
                 .ansiWhenRedirected(resolveForceWhenRedirected(ansiMode, System::getenv))
                 .enableProgramStatus(programStatusEnabled)
                 .programStatusAppName(programStatusAppName)
@@ -1551,11 +1573,12 @@ public class AeshRuntimeRunner {
 
     @SuppressWarnings("unchecked")
     private void showHelp(CommandRuntime runtime, String commandName, String[] args, Exception e,
-            boolean colors) {
+            Supplier<Boolean> colors) {
+        boolean useColors = colors.get();
         System.err.println(e.getMessage());
         String helpLine = resolveHelpCommand(runtime, commandName, args);
         if (usageErrorMode == UsageErrorMode.FULL_HELP) {
-            if (!colors) {
+            if (!useColors) {
                 // Usage errors go to stderr, which may be redirected on its own.
                 // Already resolved above, so this never builds.
                 try {
@@ -1571,7 +1594,7 @@ public class AeshRuntimeRunner {
         try {
             CommandContainer<CommandInvocation> container = (CommandContainer<CommandInvocation>) runtime
                     .getCommandRegistry().getCommand(commandName, "");
-            if (!colors) {
+            if (!useColors) {
                 container.getParser().updateAnsiMode(false);
             }
             if (usageErrorMode != UsageErrorMode.HINT_ONLY) {

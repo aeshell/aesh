@@ -22,6 +22,7 @@ package org.aesh.command;
 
 import java.util.EnumSet;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.aesh.command.activator.CommandActivatorProvider;
 import org.aesh.command.activator.OptionActivatorProvider;
@@ -87,6 +88,12 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      * already-built containers and to later builds.
      */
     private Boolean ansiColors;
+    /**
+     * Lazily resolved stdout colors for {@code --help} rendering, see
+     * {@link #stdoutColors(Supplier)}. Null (default) keeps the previous
+     * behavior.
+     */
+    private Supplier<Boolean> stdoutColors;
     /**
      * Whether {@code @file} arguments are replaced by the arguments listed
      * in that file. Off by default.
@@ -170,8 +177,9 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
 
     /**
      * Set whether parsers built by this runtime's registry render help with
-     * ANSI colors. Set false to drop colors (for example when stdout is
-     * redirected); applied to already-built containers in {@link #build()}
+     * ANSI colors. Null (default) leaves the registry alone; set false to drop
+     * colors (for example when stdout is redirected). Applied to
+     * already-built containers in {@link #build()}
      * and to later builds, without forcing an early materialization.
      * Direct {@code CommandRuntime} users can compute the value with
      * {@code AeshRuntimeRunner.AnsiMode.AUTO.resolve()} so
@@ -182,6 +190,24 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      */
     public AeshCommandRuntimeBuilder<CI> ansiColors(boolean ansiColors) {
         this.ansiColors = ansiColors;
+        return this;
+    }
+
+    /**
+     * Lazily decide whether {@code --help} output uses ANSI colors when it is
+     * rendered. Unlike {@link #ansiColors(boolean)}, the supplier is forced
+     * only if help is actually printed without an output redirection, so
+     * successful executions never pay for a terminal probe. Null (default)
+     * keeps the previous behavior: the parser's built-time mode decides.
+     * Used by {@code AeshRuntimeRunner} to defer its stdout probe (#783);
+     * direct {@code CommandRuntime} users can pass
+     * {@code AeshRuntimeRunner.AnsiMode.AUTO.resolve(...)} suppliers too.
+     *
+     * @param stdoutColors whether stdout help uses ANSI colors, consulted lazily
+     * @return this builder
+     */
+    public AeshCommandRuntimeBuilder<CI> stdoutColors(Supplier<Boolean> stdoutColors) {
+        this.stdoutColors = stdoutColors;
         return this;
     }
 
@@ -385,6 +411,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
             runtime.setPipelineConfig(pipelineConfig);
         runtime.setProgramStatus(programStatusEnabled, programStatusAppName, programStatusConnection);
         runtime.setAnsiWhenRedirected(ansiWhenRedirected);
+        runtime.setStdoutColors(stdoutColors);
         runtime.setArgumentFiles(argumentFiles);
         return runtime;
     }

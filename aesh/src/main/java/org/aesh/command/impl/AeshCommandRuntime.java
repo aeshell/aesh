@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -115,6 +116,7 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private String programStatusAppName;
     private Connection programStatusConnection;
     private boolean ansiWhenRedirected;
+    private Supplier<Boolean> stdoutColors;
     private boolean argumentFiles;
 
     public AeshCommandRuntime(AeshContext ctx,
@@ -215,6 +217,15 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     }
 
     /**
+     * Lazily resolved stdout colors for {@code --help} rendering, forced only
+     * when help prints without an output redirection. Null (default) keeps
+     * the parser's built-time mode.
+     */
+    public void setStdoutColors(Supplier<Boolean> stdoutColors) {
+        this.stdoutColors = stdoutColors;
+    }
+
+    /**
      * Whether {@code @file} arguments are replaced by the arguments listed
      * in that file. Off by default; opt in on builders that accept whole
      * pre-tokenized arguments.
@@ -225,6 +236,10 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     boolean ansiWhenRedirected() {
         return ansiWhenRedirected;
+    }
+
+    Supplier<Boolean> stdoutColors() {
+        return stdoutColors;
     }
 
     @Override

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.aesh.command.Command;
@@ -215,14 +216,26 @@ class Executions {
 
         /**
          * Print the help, without ANSI colors when the command redirects its
-         * output to a file or pipe and colors were not explicitly forced.
-         * The mode is restored afterwards, so shared parsers reused by later
-         * executions keep their mode.
+         * output to a file or pipe and colors were not explicitly forced, or
+         * when the lazily resolved stdout colors say plain. The mode is
+         * restored afterwards, so shared parsers reused by later executions
+         * keep their mode.
          */
         private void printHelpRespectingRedirection(T invocation) {
             CommandLineParser<T> parsed = commandContainer.getParser().parsedCommand();
-            if (parsed == null || !invocationConfiguration.hasOutputRedirection()
-                    || runtime.ansiWhenRedirected()) {
+            if (parsed == null) {
+                invocation.println(invocation.getHelpInfo());
+                return;
+            }
+            boolean strip = false;
+            if (invocationConfiguration.hasOutputRedirection()) {
+                strip = !runtime.ansiWhenRedirected();
+            } else {
+                Supplier<Boolean> stdoutColors = runtime.stdoutColors();
+                if (stdoutColors != null)
+                    strip = !stdoutColors.get();
+            }
+            if (!strip) {
                 invocation.println(invocation.getHelpInfo());
                 return;
             }
