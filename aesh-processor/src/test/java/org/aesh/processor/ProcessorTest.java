@@ -2718,6 +2718,51 @@ public class ProcessorTest {
                 generatedOpt.getRawDefaultValues(), reflectionOpt.getRawDefaultValues());
     }
 
+    @Test
+    public void testHelpAndVersionYieldTogetherOnGeneratedPath() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.BothConflictsCommand", BOTH_CONFLICTS_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> commandClass = result.classLoader.loadClass("test.BothConflictsCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.BothConflictsCommand_AeshMetadata");
+
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand((Command) commandClass.newInstance());
+
+        assertEquals("user --help replaces generated help", "customHelp",
+                generatedPC.findLongOptionNoActivatorCheck("help").getFieldName());
+        ProcessedOption versionOpt = generatedPC.findLongOptionNoActivatorCheck("version");
+        assertNotNull("--version survives long-only", versionOpt);
+        assertNull("generated -v yields to the explicit one", versionOpt.shortName());
+
+        // Verify parity with reflection path
+        assertEquivalence(commandClass, metadataClass);
+    }
+
+    private static final String BOTH_CONFLICTS_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"tool\", description = \"Tool\",\n" +
+            "        generateHelp = true, version = \"1.0\")\n" +
+            "public class BothConflictsCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(name = \"help\", description = \"Custom help\")\n" +
+            "    private String customHelp;\n" +
+            "\n" +
+            "    @Option(shortName = 'v', name = \"verbose\", description = \"Verbose output\", hasValue = false)\n" +
+            "    private boolean verbose;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
     private static final String NO_HELP_COMMAND_SOURCE = "package test;\n" +
             "\n" +
             "import org.aesh.command.Command;\n" +

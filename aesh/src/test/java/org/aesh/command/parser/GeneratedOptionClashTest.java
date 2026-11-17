@@ -140,6 +140,21 @@ public class GeneratedOptionClashTest {
 
     @Test
     @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testHelpAndVersionYieldInSameCommand() throws Exception {
+        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>()
+                .create(new BothConflictsTool()).getParser();
+        parser.updateAnsiMode(false);
+
+        assertEquals("user --help replaces generated help", "customHelp",
+                parser.getProcessedCommand().findLongOptionNoActivatorCheck("help").getFieldName());
+        ProcessedOption version = parser.getProcessedCommand().findLongOptionNoActivatorCheck("version");
+        assertNotNull("--version survives long-only", version);
+        assertNull("generated -v yields to the explicit one", version.shortName());
+        assertEquals("v", parser.getProcessedCommand().findLongOptionNoActivatorCheck("verbose").shortName());
+    }
+
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void testUserDuplicateNamesBothSides() {
         try {
             new AeshCommandContainerBuilder<CommandInvocation>().create(new DuplicateShortTool());
@@ -180,6 +195,20 @@ public class GeneratedOptionClashTest {
     public static class HostTool implements Command<CommandInvocation> {
         @Option(shortName = 'h', name = "host", description = "Remote host")
         String host;
+
+        @Override
+        public CommandResult execute(CommandInvocation invocation) {
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    @CommandDefinition(name = "tool", description = "Tool", generateHelp = true, version = "1.0")
+    public static class BothConflictsTool implements Command<CommandInvocation> {
+        @Option(name = "help", description = "Custom help")
+        String customHelp;
+
+        @Option(shortName = 'v', name = "verbose", description = "Verbose output", hasValue = false)
+        boolean verbose;
 
         @Override
         public CommandResult execute(CommandInvocation invocation) {

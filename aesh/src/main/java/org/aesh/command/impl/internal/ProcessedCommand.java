@@ -192,6 +192,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private HelpSectionProvider helpSectionProvider;
 
     private List<ProcessedOption> options;
+    /** Direct references to generated options, avoiding a full scan per add (#770). */
+    private ProcessedOption generatedHelpOption;
+    private ProcessedOption generatedVersionOption;
     private ProcessedOption arguments;
     private ProcessedOption argument;
     private final List<ProcessedOption> argumentOptions;
@@ -406,6 +409,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         opt.setDeclarationOrder(optionDeclarationCounter++);
         this.options.add(opt);
         opt.setParent(this);
+        trackGeneratedOption(opt);
         if (opt.isInherited())
             this.hasInheritedOptions = true;
         if (longNameMap != null)
@@ -426,29 +430,54 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private void yieldGeneratedTo(ProcessedOption opt) {
         if (isGeneratedOption(opt))
             return;
-        boolean changed = false;
-        for (ProcessedOption existing : new ArrayList<>(options)) {
-            if (!isGeneratedOption(existing) || !existing.isActivated(parsedCommand()))
-                continue;
-            String longName = opt.name();
-            if (longName != null && !longName.isEmpty()
-                    && (longName.equals(existing.name()) || existing.hasAlias(longName))) {
-                options.remove(existing);
-                changed = true;
-                continue;
-            }
-            String shortName = opt.shortName();
-            if (shortName != null && shortName.equals(existing.shortName())) {
-                if ("generatedVersion".equals(existing.getFieldName())) {
-                    existing.setShortName(null);
-                } else {
-                    options.remove(existing);
-                }
-                changed = true;
-            }
-        }
+        boolean changed = yieldGeneratedOption(opt, generatedHelpOption);
+        if (yieldGeneratedOption(opt, generatedVersionOption))
+            changed = true;
         if (changed && longNameMap != null)
             invalidateLookupMaps();
+    }
+
+    /**
+     * Apply the #770 yield rule against one cached generated option, or do
+     * nothing when it is absent/inactive. Returns whether anything changed.
+     */
+    private boolean yieldGeneratedOption(ProcessedOption opt, ProcessedOption existing) {
+        if (existing == null || !existing.isActivated(parsedCommand()))
+            return false;
+        String longName = opt.name();
+        if (longName != null && !longName.isEmpty()
+                && (longName.equals(existing.name()) || existing.hasAlias(longName))) {
+            removeGeneratedOption(existing);
+            return true;
+        }
+        String shortName = opt.shortName();
+        if (shortName != null && shortName.equals(existing.shortName())) {
+            if ("generatedVersion".equals(existing.getFieldName())) {
+                existing.setShortName(null);
+            } else {
+                removeGeneratedOption(existing);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /** Remove a generated option and drop its cached reference by identity. */
+    private void removeGeneratedOption(ProcessedOption existing) {
+        options.remove(existing);
+        if (existing == generatedHelpOption)
+            generatedHelpOption = null;
+        else if (existing == generatedVersionOption)
+            generatedVersionOption = null;
+    }
+
+    /** Keep the cached generated references current on every insertion path. */
+    private void trackGeneratedOption(ProcessedOption opt) {
+        String fieldName = opt.getFieldName();
+        if ("generatedHelp".equals(fieldName))
+            generatedHelpOption = opt;
+        else if ("generatedVersion".equals(fieldName))
+            generatedVersionOption = opt;
     }
 
     /**
@@ -491,6 +520,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         opt.setDeclarationOrder(optionDeclarationCounter++);
         this.options.add(opt);
         opt.setParent(this);
+        trackGeneratedOption(opt);
         if (opt.isInherited())
             this.hasInheritedOptions = true;
         if (longNameMap != null)
@@ -1319,6 +1349,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             helpOption.setDeclarationOrder(optionDeclarationCounter++);
             options.add(helpOption);
             helpOption.setParent(this);
+            trackGeneratedOption(helpOption);
         }
     }
 
@@ -1391,6 +1422,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             versionOption.setDeclarationOrder(optionDeclarationCounter++);
             options.add(versionOption);
             versionOption.setParent(this);
+            trackGeneratedOption(versionOption);
         }
     }
 
