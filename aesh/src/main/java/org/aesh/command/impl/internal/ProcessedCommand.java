@@ -352,10 +352,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 argOpt.captureInitialValue(command);
         }
 
-        // Eagerly build lookup maps now that all options (including help/version)
-        // are added. This eliminates the lazy-init null check on every
-        // findOption/findLongOption call during parsing (#573).
-        buildLookupMaps();
+        // Build lookup maps on first lookup. Generated metadata adds its options
+        // after this constructor, so eager maps would be discarded on the first add.
     }
 
     /**
