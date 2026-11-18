@@ -1895,7 +1895,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             return full;
 
         int indent = visualPrefixLen + 1;
-        String pad = String.format("%" + indent + "s", "");
+        String pad = ProcessedOption.spaces(indent);
         StringBuilder result = new StringBuilder();
         result.append(prefix);
 
@@ -2181,8 +2181,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private void appendDefaultValue(StringBuilder sb, ProcessedOption option, int descriptionStart) {
         if (!showDefaultValues || option.getDefaultValues() == null || option.getDefaultValues().isEmpty())
             return;
-        sb.append(String.format("%" + descriptionStart + "s", ""))
-                .append("Default: ").append(String.join(", ", option.getDefaultValues()))
+        ProcessedOption.appendSpaces(sb, descriptionStart);
+        sb.append("Default: ").append(String.join(", ", option.getDefaultValues()))
                 .append(Config.getLineSeparator());
     }
 
@@ -2525,7 +2525,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
 
         private String resolve(String raw, ProcessedOption option) {
-            if (raw == null || raw.isEmpty())
+            if (raw == null || raw.isEmpty() || raw.indexOf('$') < 0)
                 return raw;
 
             Matcher matcher = DESCRIPTION_VARIABLE_PATTERN.matcher(raw);

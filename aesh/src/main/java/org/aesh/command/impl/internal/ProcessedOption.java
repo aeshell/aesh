@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +62,7 @@ import org.aesh.io.Resource;
 import org.aesh.selector.SelectorType;
 import org.aesh.terminal.formatting.TerminalString;
 import org.aesh.terminal.utils.ANSI;
+import org.aesh.terminal.utils.ANSIBuilder;
 import org.aesh.util.PropertiesLookup;
 import org.aesh.util.ReflectionUtil;
 
@@ -183,6 +185,21 @@ public class ProcessedOption {
 
     private String mixinFieldName;
     private AeshConverterInvocation cachedConverterInvocation;
+
+    /**
+     * Precomputed static help label parts. {@code displayNamePart} holds the
+     * option text as rendered before the description (e.g. {@code "-f, --file"},
+     * {@code "    --verbose"}, {@code "--[no-]quiet"} or {@code "<input>"}),
+     * {@code displayPlaceholderPart} the value suffix including delimiters
+     * (e.g. {@code "=<path>"}) or null when the option takes no placeholder.
+     * Generated metadata seeds both at compile time; the reflection path and
+     * runtime-mutated options compute them once on first use. Any setter that
+     * changes label inputs invalidates them via
+     * {@link #invalidateDisplayLabelParts()}.
+     */
+    private String displayNamePart;
+    private String displayPlaceholderPart;
+    private boolean displayPartsComputed;
 
     public ProcessedOption(char shortName, String name, String description,
             String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -319,6 +336,7 @@ public class ProcessedOption {
      */
     public void setShortName(String shortName) {
         this.shortName = shortName;
+        invalidateDisplayLabelParts();
     }
 
     public void setValueSeparator(char valueSeparator) {
@@ -331,6 +349,7 @@ public class ProcessedOption {
 
     public void setAcceptNameWithoutDashes(boolean acceptNameWithoutDashes) {
         this.acceptNameWithoutDashes = acceptNameWithoutDashes;
+        invalidateDisplayLabelParts();
     }
 
     public void setOverrideRequired(boolean overrideRequired) {
@@ -339,10 +358,12 @@ public class ProcessedOption {
 
     public void setNegatable(boolean negatable) {
         this.negatable = negatable;
+        invalidateDisplayLabelParts();
     }
 
     public void setNegationPrefix(String negationPrefix) {
         this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
+        invalidateDisplayLabelParts();
     }
 
     public void setInherited(boolean inherited) {
@@ -359,6 +380,7 @@ public class ProcessedOption {
 
     public void setOptionalValue(boolean optionalValue) {
         this.optionalValue = optionalValue;
+        invalidateDisplayLabelParts();
     }
 
     public void setInitialValueFactory(Supplier<Object> factory) {
@@ -390,6 +412,7 @@ public class ProcessedOption {
             this.variableFallbackResolved = false;
             this.fallbackValue = fallbackValue;
         }
+        invalidateDisplayLabelParts();
     }
 
     public String getFallbackValue() {
@@ -480,6 +503,7 @@ public class ProcessedOption {
 
     public void setAliases(List<String> aliases) {
         this.aliases = aliases != null ? aliases : Collections.emptyList();
+        invalidateDisplayLabelParts();
     }
 
     public List<String> getAliases() {
@@ -890,6 +914,7 @@ public class ProcessedOption {
 
     public void setArgument(String argument) {
         this.argument = argument;
+        invalidateDisplayLabelParts();
     }
 
     public List<String> getDefaultValues() {
@@ -924,6 +949,7 @@ public class ProcessedOption {
 
     public void setParamLabel(String paramLabel) {
         this.paramLabel = paramLabel;
+        invalidateDisplayLabelParts();
     }
 
     public String getParamLabel() {
@@ -1201,38 +1227,35 @@ public class ProcessedOption {
             return new TerminalString("--" + negationPrefix + name, renderer.getColor(), renderer.getTextType());
     }
 
-    /**
-     * Returns the value placeholder for this option. If an explicit argument
-     * label is set, uses that. Otherwise, for options that accept values
-     * (not booleans, not optionalValue, not fallbackValue), derives a
-     * placeholder from the option name.
-     */
-    private String getValuePlaceholder() {
-        if (argument != null && argument.length() > 0)
-            return argument;
-        if (optionType == OptionType.BOOLEAN)
-            return null;
-        if (optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
-            return null;
-        if (optionType == OptionType.GROUP)
-            return "key=value";
-        if (type == Boolean.class || type == boolean.class)
-            return null;
-        if (hasValue() && !isOptionalValue() && !hasFallbackValue()) {
-            String label = name != null && !name.isEmpty() ? name : fieldName;
-            return label != null && !label.isEmpty() ? label : null;
-        }
-        return null;
+    private void invalidateDisplayLabelParts() {
+        displayPartsComputed = false;
     }
 
-    public int getFormattedLength() {
-        StringBuilder sb = new StringBuilder();
+    /**
+     * Assemble the static help label parts from the current field values.
+     * Single source of truth for label text, still byte-identical to
+     * building the label inline per render.
+     */
+    private void ensureDisplayLabelParts() {
+        if (displayPartsComputed)
+            return;
+        displayNamePart = buildDisplayNamePart(shortName, name, aliases, negatable, negationPrefix,
+                acceptNameWithoutDashes, optionType, getDisplayLabel());
+        String placeholder = resolveValuePlaceholder(argument, optionType,
+                type == Boolean.class || type == boolean.class, isOptionalValue(), hasFallbackValue(),
+                name, fieldName);
+        displayPlaceholderPart = placeholder != null ? "=<" + placeholder + ">" : null;
+        displayPartsComputed = true;
+    }
+
+    private static String buildDisplayNamePart(String shortName, String name, List<String> aliases,
+            boolean negatable, String negationPrefix, boolean acceptBare, OptionType optionType,
+            String displayLabel) {
         if ((optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
-                && (name == null || name.isEmpty())) {
-            String label = getDisplayLabel();
-            if (label != null && !label.isEmpty())
-                sb.append("<").append(label).append(">");
-        } else if (shortName != null)
+                && (name == null || name.isEmpty()))
+            return displayLabel != null && !displayLabel.isEmpty() ? "<" + displayLabel + ">" : "";
+        StringBuilder sb = new StringBuilder();
+        if (shortName != null)
             sb.append("-").append(shortName);
         else if (name != null && !name.isEmpty()
                 && optionType != OptionType.ARGUMENT && optionType != OptionType.ARGUMENTS)
@@ -1240,24 +1263,50 @@ public class ProcessedOption {
             // align with options that have a short form (#718).
             sb.append("    ");
         if (name != null && !name.isEmpty()) {
-            if (sb.toString().trim().length() > 0)
+            if (shortName != null)
                 sb.append(", ");
-            String dashPrefix = acceptNameWithoutDashes ? "" : "--";
-            if (negatable) {
-                sb.append("--[").append(negationPrefix).append("]").append(name);
-            } else {
+            String dashPrefix = acceptBare ? "" : "--";
+            if (negatable)
+                sb.append("--[").append(negationPrefix != null ? negationPrefix : "no-").append("]").append(name);
+            else
                 sb.append(dashPrefix).append(name);
-            }
-            for (String alias : aliases) {
-                sb.append(", ").append(dashPrefix).append(alias);
+            if (aliases != null) {
+                for (String alias : aliases)
+                    sb.append(", ").append(dashPrefix).append(alias);
             }
         }
-        String placeholder = getValuePlaceholder();
-        if (placeholder != null) {
-            sb.append("=<").append(placeholder).append(">");
-        }
+        return sb.toString();
+    }
 
-        return sb.length();
+    /**
+     * Returns the value placeholder for this option. If an explicit argument
+     * label is set, uses that. Otherwise, for options that accept values
+     * (not booleans, not optionalValue, not fallbackValue), derives a
+     * placeholder from the option name.
+     */
+    private static String resolveValuePlaceholder(String argument, OptionType optionType, boolean typeIsBoolean,
+            boolean optionalValue, boolean hasFallbackValue, String name, String fieldName) {
+        if (argument != null && !argument.isEmpty())
+            return argument;
+        if (optionType == OptionType.BOOLEAN)
+            return null;
+        if (optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
+            return null;
+        if (optionType == OptionType.GROUP)
+            return "key=value";
+        if (typeIsBoolean)
+            return null;
+        if (optionType != OptionType.BOOLEAN && !optionalValue && !hasFallbackValue) {
+            String label = name != null && !name.isEmpty() ? name : fieldName;
+            return label != null && !label.isEmpty() ? label : null;
+        }
+        return null;
+    }
+
+    public int getFormattedLength() {
+        ensureDisplayLabelParts();
+        return displayNamePart.length()
+                + (displayPlaceholderPart != null ? displayPlaceholderPart.length() : 0);
     }
 
     //TODO: add offset, offset for descriptionstart and break on width
@@ -1271,51 +1320,29 @@ public class ProcessedOption {
 
     public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks,
             String resolvedDescription) {
+        ensureDisplayLabelParts();
         StringBuilder sb = new StringBuilder();
         if (ansiMode && required)
             sb.append(ANSI.BOLD);
         if (offset > 0)
-            sb.append(String.format("%" + offset + "s", ""));
+            appendSpaces(sb, offset);
         // Start option name styling
         if (ansiMode)
             sb.append(ANSI.YELLOW_TEXT);
         // For positional arguments (ARGUMENT/ARGUMENTS), show <label> instead of --name
-        if ((optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
-                && (name == null || name.isEmpty())) {
-            String label = getDisplayLabel();
-            if (label != null && !label.isEmpty()) {
-                if (ansiMode)
-                    sb.append(ANSI.CYAN_TEXT);
-                sb.append("<").append(label).append(">");
-            }
-        } else if (shortName != null)
-            sb.append("-").append(shortName);
-        else if (name != null && name.length() > 0
-                && optionType != OptionType.ARGUMENT && optionType != OptionType.ARGUMENTS)
-            // Reserve the short-flag gutter ("-x, ") so long-only options
-            // align with options that have a short form (#718).
-            sb.append("    ");
-        if (name != null && name.length() > 0) {
-            if (shortName != null)
-                sb.append(", ");
-            String dashPrefix = acceptNameWithoutDashes ? "" : "--";
-            if (negatable) {
-                sb.append("--[").append(negationPrefix).append("]").append(name);
-            } else {
-                sb.append(dashPrefix).append(name);
-            }
-            for (String alias : aliases) {
-                sb.append(", ").append(dashPrefix).append(alias);
-            }
-        }
+        if (isBareDisplayLabel()) {
+            if (ansiMode)
+                sb.append(ANSI.CYAN_TEXT);
+            sb.append(displayNamePart);
+        } else
+            sb.append(displayNamePart);
         // End option name styling
         if (ansiMode)
             sb.append(ANSI.RESET);
-        String placeholder = getValuePlaceholder();
-        if (placeholder != null) {
+        if (displayPlaceholderPart != null) {
             if (ansiMode)
                 sb.append(ANSI.CYAN_TEXT);
-            sb.append("=<").append(placeholder).append(">");
+            sb.append(displayPlaceholderPart);
             if (ansiMode)
                 sb.append(ANSI.RESET);
         }
@@ -1324,13 +1351,13 @@ public class ProcessedOption {
         if (resolvedDescription != null && resolvedDescription.length() > 0) {
             int descOffset = descriptionStart - getFormattedLength() - offset;
             if (descOffset > 1) {
-                sb.append(String.format("%" + descOffset + "s", ""));
+                appendSpaces(sb, descOffset);
             } else {
                 // Option name fills or exceeds the column: a single space is
                 // not enough of a gap, so wrap the description to the next
                 // line like any other overflow.
                 sb.append(System.lineSeparator());
-                sb.append(String.format("%" + descriptionStart + "s", ""));
+                appendSpaces(sb, descriptionStart);
             }
 
             if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
@@ -1342,7 +1369,7 @@ public class ProcessedOption {
                 String text = resolvedDescription.indexOf('\n') >= 0
                         ? stripIndent(resolvedDescription)
                         : resolvedDescription;
-                String pad = String.format("%" + descriptionStart + "s", "");
+                String pad = spaces(descriptionStart);
                 List<String> lines = wrapText(text, width - descriptionStart);
                 for (int i = 0; i < lines.size(); i++) {
                     if (i > 0) {
@@ -1354,6 +1381,51 @@ public class ProcessedOption {
         }
 
         return sb.toString();
+    }
+
+    private boolean isBareDisplayLabel() {
+        return (optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
+                && (name == null || name.isEmpty()) && !displayNamePart.isEmpty();
+    }
+
+    /**
+     * Append {@code count} spaces. Replaces {@code String.format} padding in
+     * help rendering, which parses a format string per call.
+     *
+     * @param sb the builder to append to
+     * @param count the number of spaces, nothing appended when not positive
+     */
+    public static void appendSpaces(StringBuilder sb, int count) {
+        for (int i = 0; i < count; i++)
+            sb.append(' ');
+    }
+
+    /**
+     * Append {@code count} spaces to a terminal builder. Replaces
+     * {@code String.format} padding in help rendering, which parses a format
+     * string per call.
+     *
+     * @param builder the builder to append to
+     * @param count the number of spaces, nothing appended when not positive
+     */
+    public static void appendSpaces(ANSIBuilder builder, int count) {
+        for (int i = 0; i < count; i++)
+            builder.append(' ');
+    }
+
+    /**
+     * A string of {@code count} spaces. Replaces {@code String.format}
+     * padding in help rendering, which parses a format string per call.
+     *
+     * @param count the number of spaces, empty string when not positive
+     * @return the space string
+     */
+    public static String spaces(int count) {
+        if (count <= 0)
+            return "";
+        char[] spaces = new char[count];
+        Arrays.fill(spaces, ' ');
+        return new String(spaces);
     }
 
     @SuppressWarnings("unchecked")

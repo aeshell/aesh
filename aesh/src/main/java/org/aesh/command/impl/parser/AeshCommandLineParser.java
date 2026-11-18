@@ -745,11 +745,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private String formatHelpEntry(HelpEntry entry, int offset, int descriptionStart) {
         ANSIBuilder ansiBuilder = ANSIBuilder.builder(ansiMode);
         if (offset > 0)
-            ansiBuilder.append(String.format("%" + offset + "s", ""));
+            ProcessedOption.appendSpaces(ansiBuilder, offset);
         ansiBuilder.blueText(entry.name());
         int descOffset = descriptionStart - entry.name().length();
         if (descOffset > 0)
-            ansiBuilder.append(String.format("%" + descOffset + "s", ""));
+            ProcessedOption.appendSpaces(ansiBuilder, descOffset);
         else
             ansiBuilder.append(" ");
         if (entry.description() != null)
@@ -1295,20 +1295,19 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         ANSIBuilder ansiBuilder = ANSIBuilder.builder(ansiMode);
 
         if (offset > 0)
-            ansiBuilder.append(String.format("%" + offset + "s", ""));
+            ProcessedOption.appendSpaces(ansiBuilder, offset);
 
         ansiBuilder.blueText(getProcessedCommand().name());
 
         int descOffset = descriptionStart - getProcessedCommand().name().length();
 
         if (descOffset > 0)
-            ansiBuilder.append(String.format("%" + descOffset + "s", ""));
+            ProcessedOption.appendSpaces(ansiBuilder, descOffset);
         else
             ansiBuilder.append(" ");
 
         // a description longer than the help is wide is wrapped, aligned with the description column
-        String pad = String.format("%" + (offset + Math.max(descriptionStart, getProcessedCommand().name().length() + 1)) + "s",
-                "");
+        String pad = ProcessedOption.spaces(offset + Math.max(descriptionStart, getProcessedCommand().name().length() + 1));
         List<String> lines = ProcessedOption.wrapText(
                 resolveDescriptionVariables(getProcessedCommand().description(), null),
                 width - pad.length());
