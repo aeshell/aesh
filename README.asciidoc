@@ -57,6 +57,14 @@ Add the `aesh-processor` dependency to generate command metadata at compile time
 
 No code changes required -- if the generated metadata is on the classpath, Aesh uses it automatically. Otherwise it falls back to the existing reflection-based approach.
 
+Command types the generated top-level provider cannot name are skipped, never
+emitted as uncompilable sources. A private nested command (including one that
+only inherits `@CommandDefinition`) produces no provider: inherited annotations
+are reported as a note, explicitly annotated ones as a warning. A group that
+lists an inaccessible child fails compilation with an error at the offending
+`groupCommands` entry. Package-private and protected nested commands in the
+provider's package remain supported.
+
 == Quick Start
 
 [source,java]

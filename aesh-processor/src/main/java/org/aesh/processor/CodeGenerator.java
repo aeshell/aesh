@@ -418,16 +418,48 @@ final class CodeGenerator {
                 for (java.util.Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
                         .getElementValues().entrySet()) {
                     if (entry.getKey().getSimpleName().toString().equals("groupCommands")) {
-                        List<? extends AnnotationValue> values = (List<? extends AnnotationValue>) entry.getValue().getValue();
+                        List<? extends AnnotationValue> values = (List<? extends AnnotationValue>) entry.getValue()
+                                .getValue();
                         for (AnnotationValue av : values) {
-                            TypeMirror tm = (TypeMirror) av.getValue();
-                            classNames.add(tm.toString());
+                            String childName = groupChildName(av.getValue(), elementUtils);
+                            if (childName != null) {
+                                classNames.add(childName);
+                            }
                         }
                     }
                 }
             }
         }
         return classNames;
+    }
+
+    /**
+     * Qualified name for one {@code groupCommands} entry. Class literals
+     * normally arrive as {@link TypeMirror}; javac may hand back a qualified
+     * name string for not-yet-completed nested types, resolved when possible.
+     * Unresolvable markers ("&lt;error&gt;") are left for javac to report.
+     */
+    private static String groupChildName(Object value, Elements elementUtils) {
+        if (value instanceof TypeMirror) {
+            return value.toString();
+        }
+        if (!(value instanceof String)) {
+            return null;
+        }
+        String name = (String) value;
+        if (name.isEmpty() || name.startsWith("<")) {
+            return null;
+        }
+        TypeElement resolved = elementUtils.getTypeElement(name);
+        if (resolved == null) {
+            int lastDot = name.lastIndexOf('.');
+            if (lastDot > 0) {
+                // Binary-name fallback for nested classes ("a.Outer$Inner").
+                resolved = elementUtils.getTypeElement(
+                        name.substring(0, lastDot) + '$' + name.substring(lastDot + 1));
+            }
+        }
+        return resolved == null ? null : resolved.getQualifiedName().toString();
     }
 
     private static class FieldAccessorInfo {

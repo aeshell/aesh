@@ -42,8 +42,10 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -130,6 +132,9 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         }
 
         for (TypeElement commandElement : commandElements) {
+            if (skipInaccessibleCommand(commandElement)) {
+                continue;
+            }
             if (!validate(commandElement)) {
                 continue;
             }
@@ -183,6 +188,87 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         return false;
     }
 
+    /**
+     * Emits the skip diagnostic for a command the generated top-level
+     * provider cannot name. Returns true when the caller must skip
+     * validation and generation for the command.
+     */
+    private boolean skipInaccessibleCommand(TypeElement commandElement) {
+        String commandPackage = elementUtils.getPackageOf(commandElement).getQualifiedName().toString();
+        String blockedType = inaccessibleCommandType(commandElement, commandPackage);
+        if (blockedType == null) {
+            return false;
+        }
+        if (declaresCommandDefinition(commandElement)) {
+            messager.printMessage(Diagnostic.Kind.WARNING,
+                    "Skipping generated metadata for "
+                            + commandElement.getQualifiedName()
+                            + ": " + blockedType
+                            + " is inaccessible from a top-level provider; declare it accessible or remove the annotation",
+                    commandElement);
+        } else {
+            messager.printMessage(Diagnostic.Kind.NOTE,
+                    "Skipping generated metadata for "
+                            + commandElement.getQualifiedName()
+                            + ": " + blockedType
+                            + " is inaccessible from a top-level provider",
+                    commandElement);
+        }
+        return true;
+    }
+
+    /**
+     * Qualified name of the type that blocks generated-code access to the
+     * command, or null when a top-level provider in the command's package can
+     * name it. Walks the whole enclosing chain: a private type anywhere blocks
+     * access, and a non-public member type is only nameable from its own
+     * package. Local or anonymous endings have no top-level source name and
+     * cannot be referenced either.
+     */
+    private String inaccessibleCommandType(TypeElement commandElement, String packageName) {
+        Element current = commandElement;
+        while (current instanceof TypeElement) {
+            Set<Modifier> mods = current.getModifiers();
+            if (mods.contains(Modifier.PRIVATE)) {
+                return ((TypeElement) current).getQualifiedName().toString();
+            }
+            if (!mods.contains(Modifier.PUBLIC) && !packageNameOf(current).equals(packageName)) {
+                return ((TypeElement) current).getQualifiedName().toString();
+            }
+            Element enclosing = current.getEnclosingElement();
+            if (!(enclosing instanceof TypeElement) && !(enclosing instanceof PackageElement)) {
+                return commandElement.getQualifiedName().toString();
+            }
+            current = enclosing;
+        }
+        return null;
+    }
+
+    private static String packageNameOf(Element element) {
+        Element current = element;
+        while (current != null && !(current instanceof PackageElement)) {
+            current = current.getEnclosingElement();
+        }
+        return current == null ? "" : ((PackageElement) current).getQualifiedName().toString();
+    }
+
+    /**
+     * Whether {@code @CommandDefinition} is declared on the element itself
+     * rather than merely inherited. Annotation mirrors only report directly
+     * present annotations, unlike {@code getAnnotation} which follows
+     * {@code @Inherited}.
+     */
+    private static boolean declaresCommandDefinition(TypeElement element) {
+        for (AnnotationMirror mirror : element.getAnnotationMirrors()) {
+            if (mirror.getAnnotationType().asElement() instanceof TypeElement
+                    && ((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName()
+                            .contentEquals(CommandDefinition.class.getCanonicalName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean validate(TypeElement element) {
         boolean valid = true;
 
@@ -224,7 +310,87 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         // Validate positional index ranges don't overlap
         validatePositionalIndexes(element, fields);
 
+        // Reject group children the generated code cannot name, instead of
+        // emitting uncompilable providers (#785).
+        if (!validateGroupChildren(element)) {
+            valid = false;
+        }
+
         return valid;
+    }
+
+    /**
+     * Validates the {@code groupCommands} entries of a directly present
+     * {@code @CommandDefinition} against the package the generated provider
+     * lives in. Children the generated code cannot name are reported at the
+     * offending annotation value; the provider is then suppressed by the
+     * caller. Entries javac itself cannot resolve to a type are left alone:
+     * the compiler reports the underlying problem.
+     */
+    private boolean validateGroupChildren(TypeElement commandElement) {
+        boolean valid = true;
+        String packageName = elementUtils.getPackageOf(commandElement).getQualifiedName().toString();
+        for (AnnotationMirror mirror : commandElement.getAnnotationMirrors()) {
+            if (!((TypeElement) mirror.getAnnotationType().asElement()).getQualifiedName()
+                    .contentEquals(CommandDefinition.class.getCanonicalName())) {
+                continue;
+            }
+            for (Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry : mirror
+                    .getElementValues().entrySet()) {
+                if (!entry.getKey().getSimpleName().contentEquals("groupCommands")) {
+                    continue;
+                }
+                Object raw = entry.getValue().getValue();
+                if (!(raw instanceof List)) {
+                    continue;
+                }
+                for (AnnotationValue childValue : (List<AnnotationValue>) raw) {
+                    TypeElement child = asCommandType(childValue.getValue());
+                    if (child == null) {
+                        continue;
+                    }
+                    String blocked = inaccessibleCommandType(child, packageName);
+                    if (blocked != null) {
+                        messager.printMessage(Diagnostic.Kind.ERROR,
+                                "Group " + commandElement.getQualifiedName() + " references inaccessible command "
+                                        + child.getQualifiedName() + ": " + blocked
+                                        + " cannot be named by generated code. Make it accessible, remove it from groupCommands, or register the group programmatically.",
+                                commandElement, mirror, childValue);
+                        valid = false;
+                    }
+                }
+            }
+        }
+        return valid;
+    }
+
+    /**
+     * Resolves an annotation value to a command type when possible. Class
+     * literals normally arrive as {@link DeclaredType}; javac may hand back
+     * the qualified name as a string for nested classes it has not completed.
+     * Anything else (including error markers) is left for javac to report.
+     */
+    private TypeElement asCommandType(Object value) {
+        if (value instanceof DeclaredType) {
+            Element element = ((DeclaredType) value).asElement();
+            return element instanceof TypeElement ? (TypeElement) element : null;
+        }
+        if (value instanceof String) {
+            String name = (String) value;
+            if (!name.isEmpty()) {
+                TypeElement direct = elementUtils.getTypeElement(name);
+                if (direct != null) {
+                    return direct;
+                }
+                int lastDot = name.lastIndexOf('.');
+                if (lastDot > 0) {
+                    // Binary-name fallback for nested classes ("a.Outer$Inner").
+                    return elementUtils.getTypeElement(
+                            name.substring(0, lastDot) + '$' + name.substring(lastDot + 1));
+                }
+            }
+        }
+        return null;
     }
 
     /**

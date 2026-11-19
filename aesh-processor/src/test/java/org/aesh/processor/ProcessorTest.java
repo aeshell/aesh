@@ -1111,12 +1111,390 @@ public class ProcessorTest {
         assertEquals("xyz", token.getFieldValue(instance));
     }
 
+    // --- Test: inaccessible command types (#785 point 3) ---
+
+    private static final String INHERITED_HIDDEN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class HiddenFixtures {\n" +
+            "    @CommandDefinition(name = \"hiddenbase\", description = \"Base\")\n" +
+            "    public static class HiddenBase implements Command<CommandInvocation> {\n" +
+            "        @Option(description = \"Name\")\n" +
+            "        public String name;\n" +
+            "\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "    private static class HiddenCommand extends HiddenBase {\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testPrivateSubclassInheritedAnnotationSkipped() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.HiddenFixtures", INHERITED_HIDDEN_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+        assertTrue("Inherited skips must be notes, not warnings: " + result.diagnostics,
+                result.diagnostics.contains("Note: Skipping generated metadata"));
+        assertTrue("Should name the skipped command: " + result.diagnostics,
+                result.diagnostics.contains("HiddenCommand"));
+
+        java.nio.file.Path hiddenProvider = result.outputDir
+                .resolve("test/HiddenFixtures_HiddenCommand_AeshMetadata.java");
+        assertTrue("No provider must be generated for the private subclass",
+                java.nio.file.Files.notExists(hiddenProvider));
+        try {
+            result.classLoader.loadClass("test.HiddenFixtures_HiddenCommand_AeshMetadata");
+            assertTrue("No provider class must exist for the private subclass", false);
+        } catch (ClassNotFoundException expected) {
+        }
+
+        Class<?> baseClass = result.classLoader.loadClass("test.HiddenFixtures$HiddenBase");
+        CommandMetadataProvider provider = (CommandMetadataProvider) result.classLoader
+                .loadClass("test.HiddenFixtures_HiddenBase_AeshMetadata").newInstance();
+        assertNotNull(provider.buildProcessedCommand((Command) baseClass.newInstance()));
+    }
+
+    private static final String CHAIN_FIXTURES_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class ChainFixtures {\n" +
+            "    @CommandDefinition(name = \"chainbase\", description = \"Base\")\n" +
+            "    public static class ChainBase implements Command<CommandInvocation> {\n" +
+            "        @Option(description = \"Name\")\n" +
+            "        public String name;\n" +
+            "\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "    private static class Hidden {\n" +
+            "        public static class Mid {\n" +
+            "            public static class DeepCommand extends ChainBase {\n" +
+            "            }\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "    @CommandDefinition(name = \"packagevisible\", description = \"Package-visible\")\n" +
+            "    static class PackageVisible implements Command<CommandInvocation> {\n" +
+            "        @Option(description = \"Name\")\n" +
+            "        public String name;\n" +
+            "\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "    @CommandDefinition(name = \"protectedvisible\", description = \"Protected\")\n" +
+            "    protected static class ProtectedVisible implements Command<CommandInvocation> {\n" +
+            "        @Option(description = \"Name\")\n" +
+            "        public String name;\n" +
+            "\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testPrivateEnclosingChainSkipped() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ChainFixtures", CHAIN_FIXTURES_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+        assertTrue("Should name the blocking enclosing class: " + result.diagnostics,
+                result.diagnostics.contains("ChainFixtures.Hidden"));
+
+        try {
+            result.classLoader.loadClass("test.ChainFixtures_Hidden_Mid_DeepCommand_AeshMetadata");
+            assertTrue("No provider must exist for the hidden deep command", false);
+        } catch (ClassNotFoundException expected) {
+        }
+
+        assertFieldAccessorRoundTrip(result, "test.ChainFixtures$ChainBase",
+                "test.ChainFixtures_ChainBase_AeshMetadata", "name", "value");
+    }
+
+    @Test
+    public void testAccessibleNestedCommandsStillGenerated() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ChainFixtures", CHAIN_FIXTURES_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertFieldAccessorRoundTrip(result, "test.ChainFixtures$PackageVisible",
+                "test.ChainFixtures_PackageVisible_AeshMetadata", "name", "value", true);
+        assertFieldAccessorRoundTrip(result, "test.ChainFixtures$ProtectedVisible",
+                "test.ChainFixtures_ProtectedVisible_AeshMetadata", "name", "value", true);
+    }
+
+    private static final String EXPLICIT_HIDDEN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class ExplicitFixtures {\n" +
+            "    @CommandDefinition(name = \"explicit\", description = \"Explicit\")\n" +
+            "    private static class ExplicitHidden implements Command<CommandInvocation> {\n" +
+            "        @Option(description = \"Name\")\n" +
+            "        public String name;\n" +
+            "\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testExplicitPrivateCommandWarnsAndSkips() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.ExplicitFixtures", EXPLICIT_HIDDEN_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+        assertTrue("Explicitly annotated private commands must warn: " + result.diagnostics,
+                result.diagnostics.contains("warning: Skipping generated metadata"));
+        assertTrue("Warning must name the command: " + result.diagnostics,
+                result.diagnostics.contains("ExplicitHidden"));
+
+        try {
+            result.classLoader.loadClass("test.ExplicitFixtures_ExplicitHidden_AeshMetadata");
+            assertTrue("No provider must exist for the explicitly hidden command", false);
+        } catch (ClassNotFoundException expected) {
+        }
+    }
+
+    private static final String SKIPPED_BASE_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"skippedbase\", description = \"Base\")\n" +
+            "public class SkippedBase implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Name\")\n" +
+            "    public String name;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String ZZZ_SKIPPED_SOURCE = "package zzz;\n" +
+            "\n" +
+            "import test.SkippedBase;\n" +
+            "\n" +
+            "public class ZzzOuter {\n" +
+            "    private static class ZzzHidden extends SkippedBase {\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String OK_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"ok\", description = \"Accepted\")\n" +
+            "public class OkCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Name\")\n" +
+            "    public String name;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testSkippedCommandDoesNotChooseRegistryPackage() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.SkippedBase", SKIPPED_BASE_SOURCE),
+                new InMemorySource("zzz.ZzzOuter", ZZZ_SKIPPED_SOURCE),
+                new InMemorySource("test.OkCommand", OK_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+        assertTrue("Should note the skipped command: " + result.diagnostics,
+                result.diagnostics.contains("ZzzHidden"));
+
+        assertTrue("Registry must live in the accepted commands package",
+                java.nio.file.Files.exists(result.outputDir.resolve("test/_AeshMetadataRegistry.class")));
+        assertTrue("Skipped types must not choose the registry package",
+                java.nio.file.Files.notExists(result.outputDir.resolve("zzz/_AeshMetadataRegistry.class")));
+        assertTrue("No provider may be generated for the hidden command",
+                java.nio.file.Files.notExists(
+                        result.outputDir.resolve("zzz/ZzzOuter_ZzzHidden_AeshMetadata.java")));
+
+        Class<?> registryClass = result.classLoader.loadClass("test._AeshMetadataRegistry");
+        MetadataRegistry registry = (MetadataRegistry) registryClass.newInstance();
+        assertNotNull(registry.get("test.OkCommand"));
+        assertTrue("Skipped commands must not be registered",
+                registry.get("zzz.ZzzOuter$ZzzHidden") == null);
+        assertFieldAccessorRoundTrip(result, "test.OkCommand",
+                "test.OkCommand_AeshMetadata", "name", "value");
+    }
+
+    private static final String ONLY_SKIPPED_SOURCE = "package zzz;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class OnlySkipped {\n" +
+            "    @CommandDefinition(name = \"zbase\", description = \"Base\")\n" +
+            "    private static class ZzzBase implements Command<CommandInvocation> {\n" +
+            "        @Option(description = \"Name\")\n" +
+            "        public String name;\n" +
+            "\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "    private static class ZzzHidden extends ZzzBase {\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testOnlySkippedCommandsProduceNoRegistry() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("zzz.OnlySkipped", ONLY_SKIPPED_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        final boolean[] foundMetadata = { false };
+        final boolean[] foundMetaInf = { false };
+        java.nio.file.Files.walk(result.outputDir).forEach(path -> {
+            String fileName = path.getFileName().toString();
+            if (fileName.contains("_AeshMetadata"))
+                foundMetadata[0] = true;
+            if (path.toString().contains("META-INF"))
+                foundMetaInf[0] = true;
+        });
+        assertTrue("No generated metadata may exist", !foundMetadata[0]);
+        assertTrue("No service or native-image descriptors may exist", !foundMetaInf[0]);
+    }
+
+    private static final String GROUP_WITH_HIDDEN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class GroupHolder {\n" +
+            "    @CommandDefinition(name = \"hidden\", description = \"Hidden\")\n" +
+            "    private static class HiddenChild implements Command<CommandInvocation> {\n" +
+            "        @Option(description = \"Name\")\n" +
+            "        public String name;\n" +
+            "\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "\n" +
+            "    @CommandDefinition(name = \"grp\", description = \"Group\", groupCommands = {HiddenChild.class})\n" +
+            "    public static class GroupWithHidden implements Command<CommandInvocation> {\n" +
+            "        @Override\n" +
+            "        public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "            return CommandResult.SUCCESS;\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testGroupWithAccessibleNestedChild() throws Exception {
+        String src = "package test;\n"
+                + "import org.aesh.command.Command;\n"
+                + "import org.aesh.command.CommandDefinition;\n"
+                + "import org.aesh.command.CommandResult;\n"
+                + "import org.aesh.command.invocation.CommandInvocation;\n"
+                + "public class Holder {\n"
+                + "    @CommandDefinition(name = \"pub\", description = \"Pub\", aliases = {\"p\"})\n"
+                + "    public static class PubChild implements Command<CommandInvocation> {\n"
+                + "        public CommandResult execute(CommandInvocation commandInvocation) { return CommandResult.SUCCESS; }\n"
+                + "    }\n"
+                + "    @CommandDefinition(name = \"grp\", description = \"Group\","
+                + " groupCommands = {PubChild.class})\n"
+                + "    public static class GroupWithPubChild implements Command<CommandInvocation> {\n"
+                + "        public CommandResult execute(CommandInvocation commandInvocation) { return CommandResult.SUCCESS; }\n"
+                + "    }\n"
+                + "}\n";
+        CompilationResult result = compileWithProcessor(new InMemorySource("test.Holder", src));
+        assertTrue("should compile: " + result.diagnostics, result.success);
+
+        Class<?> metadataClass = result.classLoader.loadClass("test.Holder_GroupWithPubChild_AeshMetadata");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        assertTrue("Should be a group command", provider.isGroupCommand());
+        assertEquals("Should have 1 subcommand", 1, provider.groupCommandClasses().length);
+        assertEquals("test.Holder$PubChild", provider.groupCommandClasses()[0].getName());
+        String[][] namesAndAliases = provider.groupCommandNamesAndAliases();
+        assertEquals(1, namesAndAliases.length);
+        assertEquals("pub", namesAndAliases[0][0]);
+        assertEquals("p", namesAndAliases[0][1]);
+        String[][] helpEntries = provider.groupCommandHelpEntries();
+        assertEquals(1, helpEntries.length);
+        assertEquals("pub", helpEntries[0][0]);
+        assertEquals("Pub", helpEntries[0][1]);
+    }
+
+    @Test
+    public void testGroupWithInaccessibleChildIsRejected() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.GroupHolder", GROUP_WITH_HIDDEN_SOURCE));
+        assertTrue("Compilation must fail: " + result.diagnostics, !result.success);
+        assertTrue("Diagnostic must name the inaccessible child: " + result.diagnostics,
+                result.diagnostics.contains("HiddenChild"));
+        assertTrue("Diagnostic must explain the group reference problem: " + result.diagnostics,
+                result.diagnostics.contains("references inaccessible command"));
+        assertTrue("No provider may be generated for the invalid group",
+                java.nio.file.Files.notExists(
+                        result.outputDir.resolve("test/GroupHolder_GroupWithHidden_AeshMetadata.java")));
+    }
+
     private static void assertFieldAccessorRoundTrip(CompilationResult result, String commandClassName,
             String metadataClassName, String optionName, Object value) throws Exception {
+        assertFieldAccessorRoundTrip(result, commandClassName, metadataClassName, optionName, value, false);
+    }
+
+    private static void assertFieldAccessorRoundTrip(CompilationResult result, String commandClassName,
+            String metadataClassName, String optionName, Object value, boolean relaxAccess) throws Exception {
         Class<?> commandClass = result.classLoader.loadClass(commandClassName);
         CommandMetadataProvider provider = (CommandMetadataProvider) result.classLoader
                 .loadClass(metadataClassName).newInstance();
-        Object instance = commandClass.newInstance();
+        Object instance;
+        if (relaxAccess) {
+            java.lang.reflect.Constructor<?> ctor = commandClass.getDeclaredConstructor();
+            ctor.setAccessible(true);
+            instance = ctor.newInstance();
+        } else {
+            instance = commandClass.newInstance();
+        }
         ProcessedCommand generatedPC = provider.buildProcessedCommand((Command) instance);
         ProcessedOption option = generatedPC.findLongOptionNoActivatorCheck(optionName);
         assertNotNull("Generated should have option: " + optionName, option);
