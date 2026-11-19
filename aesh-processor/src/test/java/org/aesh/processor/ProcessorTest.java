@@ -925,6 +925,152 @@ public class ProcessorTest {
         assertEquivalence(commandClass, metadataClass);
     }
 
+    // --- Test: mixin fields the generated class cannot reach (#785) ---
+
+    private static final String CROSS_PACKAGE_MIXIN_SOURCE = "package other;\n" +
+            "\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class OuterMixin {\n" +
+            "    @Option(name = \"loud\", hasValue = false, description = \"Loud\")\n" +
+            "    boolean loud;\n" +
+            "}\n";
+
+    private static final String CROSS_PACKAGE_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Mixin;\n" +
+            "\n" +
+            "import other.OuterMixin;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"cross\", description = \"Cross-package mixin\")\n" +
+            "public class CrossPackageMixinCommand implements Command<CommandInvocation> {\n" +
+            "    @Mixin\n" +
+            "    public OuterMixin mixin;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testCrossPackageMixinOptionUsesReflection() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("other.OuterMixin", CROSS_PACKAGE_MIXIN_SOURCE),
+                new InMemorySource("test.CrossPackageMixinCommand", CROSS_PACKAGE_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        String source = new String(java.nio.file.Files.readAllBytes(
+                result.outputDir.resolve("test/CrossPackageMixinCommand_AeshMetadata.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue("unreachable mixin option must use the Fields constant",
+                source.contains("Fields.FIELD_mixin_loud"));
+
+        assertFieldAccessorRoundTrip(result, "test.CrossPackageMixinCommand",
+                "test.CrossPackageMixinCommand_AeshMetadata", "loud", Boolean.TRUE);
+    }
+
+    private static final String PRIVATE_MIXIN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class PublicMixin {\n" +
+            "    @Option(name = \"level\", description = \"Level\")\n" +
+            "    public String level;\n" +
+            "}\n";
+
+    private static final String PRIVATE_MIXIN_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Mixin;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"privatemix\", description = \"Private mixin field\")\n" +
+            "public class PrivateMixinCommand implements Command<CommandInvocation> {\n" +
+            "    @Mixin\n" +
+            "    private PublicMixin mixin;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testPrivateMixinFieldUsesReflection() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.PublicMixin", PRIVATE_MIXIN_SOURCE),
+                new InMemorySource("test.PrivateMixinCommand", PRIVATE_MIXIN_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        String source = new String(java.nio.file.Files.readAllBytes(
+                result.outputDir.resolve("test/PrivateMixinCommand_AeshMetadata.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue("private mixin field must be read through the Fields constant",
+                source.contains("Fields.FIELD_mixin.get(instance)"));
+
+        assertFieldAccessorRoundTrip(result, "test.PrivateMixinCommand",
+                "test.PrivateMixinCommand_AeshMetadata", "level", "INFO");
+    }
+
+    private static final String PRIVATE_OPTION_MIXIN_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class PrivateOptionMixin {\n" +
+            "    @Option(name = \"secret\", description = \"Secret\")\n" +
+            "    private String secret;\n" +
+            "}\n";
+
+    private static final String PRIVATE_OPTION_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Mixin;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"privateopt\", description = \"Private mixin option\")\n" +
+            "public class PrivateOptionMixinCommand implements Command<CommandInvocation> {\n" +
+            "    @Mixin\n" +
+            "    public PrivateOptionMixin mixin;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testPrivateMixinOptionUsesReflection() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.PrivateOptionMixin", PRIVATE_OPTION_MIXIN_SOURCE),
+                new InMemorySource("test.PrivateOptionMixinCommand", PRIVATE_OPTION_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertFieldAccessorRoundTrip(result, "test.PrivateOptionMixinCommand",
+                "test.PrivateOptionMixinCommand_AeshMetadata", "secret", "s3cr3t");
+    }
+
+    private static void assertFieldAccessorRoundTrip(CompilationResult result, String commandClassName,
+            String metadataClassName, String optionName, Object value) throws Exception {
+        Class<?> commandClass = result.classLoader.loadClass(commandClassName);
+        CommandMetadataProvider provider = (CommandMetadataProvider) result.classLoader
+                .loadClass(metadataClassName).newInstance();
+        Object instance = commandClass.newInstance();
+        ProcessedCommand generatedPC = provider.buildProcessedCommand((Command) instance);
+        ProcessedOption option = generatedPC.findLongOptionNoActivatorCheck(optionName);
+        assertNotNull("Generated should have option: " + optionName, option);
+        option.setFieldValue(instance, value);
+        assertEquals(value, option.getFieldValue(instance));
+    }
+
     // --- Test: @Option with aliases (#398) ---
 
     private static final String ALIAS_OPTION_SOURCE = "package test;\n" +

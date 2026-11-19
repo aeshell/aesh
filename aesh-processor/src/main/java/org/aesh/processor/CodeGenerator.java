@@ -21,11 +21,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -424,7 +427,15 @@ final class CodeGenerator {
         final String fieldName;
         final String fieldType;
         final String mixinFieldName;
-        final boolean isPrivate;
+        /**
+         * Whether the generated accessor must go through reflection: true for
+         * private fields, for fields the generated class cannot name directly
+         * (e.g. a package-visible mixin option in another package), and for
+         * options of a private {@code @Mixin} field (#785). The
+         * {@code Fields} constants and the try/catch wrapper are driven off
+         * this flag.
+         */
+        final boolean needsReflection;
         final String commandSimpleName;
         /** True for synthetic fields (help/version) that store state in the Accessor itself. */
         final boolean synthetic;
@@ -436,17 +447,17 @@ final class CodeGenerator {
         boolean acceptBareName;
 
         FieldAccessorInfo(int index, String fieldName, String fieldType, String mixinFieldName,
-                boolean isPrivate, String commandSimpleName) {
-            this(index, fieldName, fieldType, mixinFieldName, isPrivate, commandSimpleName, false);
+                boolean needsReflection, String commandSimpleName) {
+            this(index, fieldName, fieldType, mixinFieldName, needsReflection, commandSimpleName, false);
         }
 
         FieldAccessorInfo(int index, String fieldName, String fieldType, String mixinFieldName,
-                boolean isPrivate, String commandSimpleName, boolean synthetic) {
+                boolean needsReflection, String commandSimpleName, boolean synthetic) {
             this.index = index;
             this.fieldName = fieldName;
             this.fieldType = fieldType;
             this.mixinFieldName = mixinFieldName;
-            this.isPrivate = isPrivate;
+            this.needsReflection = needsReflection;
             this.commandSimpleName = commandSimpleName;
             this.synthetic = synthetic;
         }
@@ -636,10 +647,12 @@ final class CodeGenerator {
             sb.append("        processedCommand.setVersion(").append(stringLiteral(version)).append(");\n\n");
         }
 
+        String commandPackage = elementUtils.getPackageOf(commandElement).getQualifiedName().toString();
+
         // Process user fields
         for (VariableElement field : fields) {
             generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp);
+                    commandFallback, forHelp, commandPackage, false);
         }
 
         generateParentCommandInjector(sb, simpleName, fields);
@@ -705,14 +718,16 @@ final class CodeGenerator {
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
+            boolean mixinFieldPrivate) {
         generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils, accessorInfos, commandFallback,
-                forHelp);
+                forHelp, commandPackage, false);
     }
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
+            boolean mixinFieldPrivate) {
         Option o = field.getAnnotation(Option.class);
         OptionList ol = field.getAnnotation(OptionList.class);
         OptionGroup og = field.getAnnotation(OptionGroup.class);
@@ -721,32 +736,33 @@ final class CodeGenerator {
 
         if (o != null) {
             generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, null);
+                    commandFallback, forHelp, null, commandPackage, mixinFieldPrivate);
         } else if (ol != null) {
             generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, null);
+                    commandFallback, forHelp, null, commandPackage, mixinFieldPrivate);
         } else if (og != null) {
             generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp);
+                    commandFallback, forHelp, commandPackage, mixinFieldPrivate);
         } else if (args != null) {
             generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, null);
+                    commandFallback, forHelp, null, commandPackage, mixinFieldPrivate);
         } else if (arg != null) {
             generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, null);
+                    commandFallback, forHelp, null, commandPackage, mixinFieldPrivate);
         } else if (field.getAnnotation(Mixin.class) != null) {
             // Chain mixinFieldName for nested mixins: "outer" + "inner" -> "outer.inner"
             String nestedMixinName = mixinFieldName != null
                     ? mixinFieldName + "." + field.getSimpleName().toString()
                     : field.getSimpleName().toString();
             generateMixin(sb, simpleName, field, nestedMixinName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp);
+                    commandFallback, forHelp, commandPackage, isPrivateField(field));
         }
     }
 
     private static void generateMixin(StringBuilder sb, String simpleName, VariableElement mixinField,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
+            boolean mixinFieldPrivate) {
         TypeMirror mixinType = mixinField.asType();
         if (!(mixinType instanceof DeclaredType))
             return;
@@ -771,16 +787,18 @@ final class CodeGenerator {
         }
 
         generateMixinFields(sb, simpleName, mixinFieldName, mixinElement, elementUtils, typeUtils, accessorInfos,
-                commandFallback, forHelp);
+                commandFallback, forHelp, commandPackage, mixinFieldPrivate);
     }
 
     private static void generateMixinFields(StringBuilder sb, String simpleName, String mixinFieldName,
             TypeElement typeElement, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
+            boolean mixinFieldPrivate) {
         for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
             if (enclosed instanceof VariableElement) {
                 generateFieldProcessing(sb, simpleName, (VariableElement) enclosed, mixinFieldName,
-                        elementUtils, typeUtils, accessorInfos, commandFallback, forHelp);
+                        elementUtils, typeUtils, accessorInfos, commandFallback, forHelp, commandPackage,
+                        mixinFieldPrivate);
             }
         }
         // Recurse into superclass
@@ -789,7 +807,7 @@ final class CodeGenerator {
             if (superclass instanceof DeclaredType) {
                 TypeElement superElement = (TypeElement) ((DeclaredType) superclass).asElement();
                 generateMixinFields(sb, simpleName, mixinFieldName, superElement, elementUtils, typeUtils, accessorInfos,
-                        commandFallback, forHelp);
+                        commandFallback, forHelp, commandPackage, mixinFieldPrivate);
             }
         }
     }
@@ -797,7 +815,7 @@ final class CodeGenerator {
     private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
-            String accessorFieldName) {
+            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -814,7 +832,7 @@ final class CodeGenerator {
         accessorInfos.add(new FieldAccessorInfo(accIdx,
                 accessorFieldName != null ? accessorFieldName : fieldName,
                 erasedTypeName(field.asType(), typeUtils),
-                mixinFieldName, isPrivateField(field), simpleName));
+                mixinFieldName, needsReflectiveAccess(field, commandPackage, mixinFieldPrivate), simpleName));
         setLookupOption(accessorInfos.get(accIdx),
                 o.shortName() != '\u0000' ? String.valueOf(o.shortName()) : null,
                 optionName, o.aliases(), o.negatable() ? o.negationPrefix() + optionName : null,
@@ -911,7 +929,7 @@ final class CodeGenerator {
         // The accessor switch is unnecessary for fields the generated provider
         // can read directly. Private fields and method-command slot arrays keep
         // the existing capture path (method owners are not Adapter instances).
-        if (forHelp || info.isPrivate || info.synthetic || "Adapter".equals(info.commandSimpleName))
+        if (forHelp || info.needsReflection || info.synthetic || "Adapter".equals(info.commandSimpleName))
             return;
         sb.append("            ").append(var).append(".setInitialValue(instance.");
         if (info.mixinFieldName != null)
@@ -922,7 +940,7 @@ final class CodeGenerator {
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
-            String accessorFieldName) {
+            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -937,7 +955,7 @@ final class CodeGenerator {
         accessorInfos.add(new FieldAccessorInfo(accIdx,
                 accessorFieldName != null ? accessorFieldName : fieldName,
                 erasedTypeName(field.asType(), typeUtils),
-                mixinFieldName, isPrivateField(field), simpleName));
+                mixinFieldName, needsReflectiveAccess(field, commandPackage, mixinFieldPrivate), simpleName));
         setLookupOption(accessorInfos.get(accIdx),
                 ol.shortName() != '\u0000' ? String.valueOf(ol.shortName()) : null,
                 optionName, ol.aliases(), null, ol.acceptNameWithoutDashes());
@@ -1023,7 +1041,8 @@ final class CodeGenerator {
 
     private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp) {
+            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
+            boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1037,7 +1056,7 @@ final class CodeGenerator {
 
         int accIdx = accessorInfos.size();
         accessorInfos.add(new FieldAccessorInfo(accIdx, fieldName, erasedTypeName(field.asType(), typeUtils),
-                mixinFieldName, isPrivateField(field), simpleName));
+                mixinFieldName, needsReflectiveAccess(field, commandPackage, mixinFieldPrivate), simpleName));
         setLookupOption(accessorInfos.get(accIdx),
                 og.shortName() != '\u0000' ? String.valueOf(og.shortName()) : null,
                 optionName, og.aliases(), null, og.acceptNameWithoutDashes());
@@ -1110,7 +1129,7 @@ final class CodeGenerator {
     private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
-            String accessorFieldName) {
+            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1124,7 +1143,7 @@ final class CodeGenerator {
         accessorInfos.add(new FieldAccessorInfo(accIdx,
                 accessorFieldName != null ? accessorFieldName : fieldName,
                 erasedTypeName(field.asType(), typeUtils),
-                mixinFieldName, isPrivateField(field), simpleName));
+                mixinFieldName, needsReflectiveAccess(field, commandPackage, mixinFieldPrivate), simpleName));
 
         String var = "argsOpt_" + accIdx;
         sb.append("        {\n");
@@ -1189,7 +1208,7 @@ final class CodeGenerator {
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
             org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
-            String accessorFieldName) {
+            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1202,7 +1221,7 @@ final class CodeGenerator {
         accessorInfos.add(new FieldAccessorInfo(accIdx,
                 accessorFieldName != null ? accessorFieldName : fieldName,
                 erasedTypeName(field.asType(), typeUtils),
-                mixinFieldName, isPrivateField(field), simpleName));
+                mixinFieldName, needsReflectiveAccess(field, commandPackage, mixinFieldPrivate), simpleName));
 
         String var = "argOpt_" + accIdx;
         sb.append("        {\n");
@@ -1337,7 +1356,7 @@ final class CodeGenerator {
 
         // set method
         sb.append("        public void set(Object inst, Object val) {\n");
-        boolean setNeedsTry = hasPrivateFields(infos);
+        boolean setNeedsTry = hasReflectiveFields(infos);
         if (setNeedsTry) {
             sb.append("          try {\n");
         }
@@ -1348,7 +1367,7 @@ final class CodeGenerator {
                 sb.append("this.").append(info.fieldName)
                         .append(" = val != null && (Boolean) val;");
             } else if (info.mixinFieldName != null) {
-                if (info.isPrivate) {
+                if (info.needsReflection) {
                     sb.append("{ Object m = ").append(fieldConstantRef(fieldConstantName(info.mixinFieldName)))
                             .append(".get(inst); if (m != null) ")
                             .append(fieldConstantRef(fieldConstantName(info.mixinFieldName, info.fieldName)))
@@ -1361,7 +1380,7 @@ final class CodeGenerator {
                             .append(" = (").append(info.fieldType).append(") val;");
                 }
             } else {
-                if (info.isPrivate) {
+                if (info.needsReflection) {
                     sb.append(fieldConstantRef(fieldConstantName(info.fieldName))).append(".set(inst, val);");
                 } else {
                     sb.append("((").append(info.commandSimpleName).append(") inst).")
@@ -1378,7 +1397,7 @@ final class CodeGenerator {
 
         // get method
         sb.append("        public Object get(Object inst) {\n");
-        boolean getNeedsTry = hasPrivateFields(infos);
+        boolean getNeedsTry = hasReflectiveFields(infos);
         if (getNeedsTry) {
             sb.append("          try {\n");
         }
@@ -1388,7 +1407,7 @@ final class CodeGenerator {
             if (info.synthetic) {
                 sb.append("return this.").append(info.fieldName).append(";");
             } else if (info.mixinFieldName != null) {
-                if (info.isPrivate) {
+                if (info.needsReflection) {
                     sb.append("{ Object m = ").append(fieldConstantRef(fieldConstantName(info.mixinFieldName)))
                             .append(".get(inst); return m != null ? ")
                             .append(fieldConstantRef(fieldConstantName(info.mixinFieldName, info.fieldName)))
@@ -1400,7 +1419,7 @@ final class CodeGenerator {
                             .append(info.mixinFieldName).append(".").append(info.fieldName).append(" : null;");
                 }
             } else {
-                if (info.isPrivate) {
+                if (info.needsReflection) {
                     sb.append("return ").append(fieldConstantRef(fieldConstantName(info.fieldName))).append(".get(inst);");
                 } else {
                     sb.append("return ((").append(info.commandSimpleName).append(") inst).")
@@ -1428,7 +1447,7 @@ final class CodeGenerator {
                     .append(parentInfo.fieldType).append(") parentLookup.apply(")
                     .append(parentInfo.fieldType).append(".class);\n");
             sb.append("                if (parent != null) {");
-            if (parentInfo.isPrivate) {
+            if (parentInfo.needsReflection) {
                 sb.append(" try { ").append(fieldConstantRef(fieldConstantName(parentInfo.fieldName)))
                         .append(".set(cmd, parent); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
             } else {
@@ -1627,16 +1646,50 @@ final class CodeGenerator {
         sb.append("        processedCommand.setParentCommandInjector(Accessor.PARENT_INJECTOR);\n\n");
     }
 
-    private static boolean hasPrivateFields(List<FieldAccessorInfo> infos) {
+    private static boolean hasReflectiveFields(List<FieldAccessorInfo> infos) {
         for (FieldAccessorInfo info : infos) {
-            if (info.isPrivate && !info.synthetic)
+            if (info.needsReflection && !info.synthetic)
                 return true;
         }
         return false;
     }
 
     private static boolean isPrivateField(VariableElement field) {
-        return field.getModifiers().contains(javax.lang.model.element.Modifier.PRIVATE);
+        return field.getModifiers().contains(Modifier.PRIVATE);
+    }
+
+    /**
+     * Whether generated code in the given package can name this field
+     * directly: private fields never, otherwise only public fields or fields
+     * in the same package (protected grants package access, not access from
+     * the unrelated generated class, #785).
+     */
+    private static boolean isDirectlyReachable(VariableElement field, String commandPackage) {
+        Set<Modifier> mods = field.getModifiers();
+        if (mods.contains(Modifier.PRIVATE))
+            return false;
+        if (mods.contains(Modifier.PUBLIC))
+            return true;
+        return packageNameOf(field).equals(commandPackage);
+    }
+
+    private static String packageNameOf(Element element) {
+        while (element != null && !(element instanceof PackageElement))
+            element = element.getEnclosingElement();
+        return element == null ? "" : ((PackageElement) element).getQualifiedName().toString();
+    }
+
+    /**
+     * Whether the generated accessor must reach this option field through
+     * reflection: private fields always, options of a private
+     * {@code @Mixin} field (the mixin instance itself is unreadable), and
+     * fields the generated class cannot name directly (e.g. a
+     * package-visible mixin option in another package than the command,
+     * #785).
+     */
+    private static boolean needsReflectiveAccess(VariableElement field, String commandPackage,
+            boolean mixinFieldPrivate) {
+        return isPrivateField(field) || mixinFieldPrivate || !isDirectlyReachable(field, commandPackage);
     }
 
     private static String fieldConstantName(String fieldName) {
@@ -1667,6 +1720,8 @@ final class CodeGenerator {
     private static void generatePrivateFieldConstants(StringBuilder sb, String simpleName,
             String qualifiedCommandName, List<VariableElement> fields) {
         List<String[]> privateFields = new ArrayList<>();
+        int dot = qualifiedCommandName.lastIndexOf('.');
+        String commandPackage = dot < 0 ? "" : qualifiedCommandName.substring(0, dot);
 
         for (VariableElement field : fields) {
             if (isPrivateField(field) && (hasAnnotation(field) || field.getAnnotation(ParentCommand.class) != null)) {
@@ -1680,15 +1735,18 @@ final class CodeGenerator {
                 String mixinFieldName = field.getSimpleName().toString();
                 TypeMirror mixinType = field.asType();
                 if (mixinType instanceof DeclaredType) {
-                    if (isPrivateField(field)) {
-                        privateFields.add(new String[] {
-                                fieldConstantName(mixinFieldName),
-                                declaringClassName(field),
-                                mixinFieldName
-                        });
-                    }
                     TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
-                    collectMixinPrivateFields(privateFields, mixinFieldName, mixinElement);
+                    // The reflective accessor always reads the mixin instance
+                    // through this constant, so it is emitted whenever the
+                    // mixin exists — it only materializes if reflection
+                    // actually happens (#785).
+                    privateFields.add(new String[] {
+                            fieldConstantName(mixinFieldName),
+                            declaringClassName(field),
+                            mixinFieldName
+                    });
+                    collectMixinPrivateFields(privateFields, mixinFieldName, mixinElement, commandPackage,
+                            isPrivateField(field));
                 }
             }
         }
@@ -1821,12 +1879,12 @@ final class CodeGenerator {
     }
 
     private static void collectMixinPrivateFields(List<String[]> privateFields,
-            String mixinFieldName, TypeElement mixinElement) {
+            String mixinFieldName, TypeElement mixinElement, String commandPackage, boolean mixinFieldPrivate) {
         String mixinClassName = mixinElement.getQualifiedName().toString();
         for (javax.lang.model.element.Element enclosed : mixinElement.getEnclosedElements()) {
             if (enclosed instanceof VariableElement) {
                 VariableElement f = (VariableElement) enclosed;
-                if (isPrivateField(f) && hasAnnotation(f)) {
+                if (hasAnnotation(f) && needsReflectiveAccess(f, commandPackage, mixinFieldPrivate)) {
                     privateFields.add(new String[] {
                             fieldConstantName(mixinFieldName, f.getSimpleName().toString()),
                             mixinClassName,
@@ -1839,7 +1897,8 @@ final class CodeGenerator {
         if (superclass.getKind() != TypeKind.NONE && !superclass.toString().equals("java.lang.Object")) {
             if (superclass instanceof DeclaredType) {
                 collectMixinPrivateFields(privateFields, mixinFieldName,
-                        (TypeElement) ((DeclaredType) superclass).asElement());
+                        (TypeElement) ((DeclaredType) superclass).asElement(), commandPackage,
+                        mixinFieldPrivate);
             }
         }
     }
@@ -2539,7 +2598,8 @@ final class CodeGenerator {
         }
 
         for (int i = 0; i < params.size(); i++) {
-            generateMethodParameter(sb, params.get(i), i, elementUtils, typeUtils, accessorInfos, forHelp);
+            generateMethodParameter(sb, params.get(i), i, elementUtils, typeUtils, accessorInfos, forHelp,
+                    elementUtils.getPackageOf(method).getQualifiedName().toString(), false);
         }
 
         sb.append("        return processedCommand;\n");
@@ -2552,7 +2612,8 @@ final class CodeGenerator {
      * option and are passed through at execution time.
      */
     private static void generateMethodParameter(StringBuilder sb, VariableElement param, int paramIndex,
-            Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos, boolean forHelp) {
+            Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos, boolean forHelp,
+            String commandPackage, boolean mixinFieldPrivate) {
         if (isCommandInvocationParam(param, elementUtils, typeUtils))
             return;
         String target = "p" + paramIndex;
@@ -2563,16 +2624,16 @@ final class CodeGenerator {
         org.aesh.command.option.CompletionFallback commandFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
         if (o != null) {
             generateOption(sb, "Adapter", param, o, null, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, target);
+                    commandFallback, forHelp, target, commandPackage, false);
         } else if (arg != null) {
             generateArgument(sb, "Adapter", param, arg, null, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, target);
+                    commandFallback, forHelp, target, commandPackage, false);
         } else if (ol != null) {
             generateOptionList(sb, "Adapter", param, ol, null, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, target);
+                    commandFallback, forHelp, target, commandPackage, false);
         } else if (a != null) {
             generateArguments(sb, "Adapter", param, a, null, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, target);
+                    commandFallback, forHelp, target, commandPackage, false);
         }
     }
 
