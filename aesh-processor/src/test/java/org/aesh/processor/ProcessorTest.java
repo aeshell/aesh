@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -1056,6 +1057,58 @@ public class ProcessorTest {
 
         assertFieldAccessorRoundTrip(result, "test.PrivateOptionMixinCommand",
                 "test.PrivateOptionMixinCommand_AeshMetadata", "secret", "s3cr3t");
+    }
+
+    // --- Test: command without a no-arg constructor (#785) ---
+
+    private static final String NO_NOARG_COMMAND_SOURCE = "package test;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"nonoarg\", description = \"No no-arg constructor\")\n" +
+            "public class NoNoArgCommand implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Token\")\n" +
+            "    private String token;\n" +
+            "\n" +
+            "    public NoNoArgCommand(String token) {\n" +
+            "        this.token = token;\n" +
+            "    }\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testCommandWithoutNoArgConstructor() throws Exception {
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.NoNoArgCommand", NO_NOARG_COMMAND_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        String source = new String(java.nio.file.Files.readAllBytes(
+                result.outputDir.resolve("test/NoNoArgCommand_AeshMetadata.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue("newInstance without a no-arg constructor must throw",
+                source.contains("throw new UnsupportedOperationException"));
+
+        Class<?> commandClass = result.classLoader.loadClass("test.NoNoArgCommand");
+        CommandMetadataProvider provider = (CommandMetadataProvider) result.classLoader
+                .loadClass("test.NoNoArgCommand_AeshMetadata").newInstance();
+        assertThrows("newInstance must throw without an accessible no-arg constructor",
+                UnsupportedOperationException.class, provider::newInstance);
+
+        Object instance = commandClass.getConstructor(String.class).newInstance("abc");
+        ProcessedCommand generatedPC = provider.buildProcessedCommand((Command) instance);
+        ProcessedOption token = generatedPC.findLongOptionNoActivatorCheck("token");
+        assertNotNull(token);
+        assertEquals("abc", token.getFieldValue(instance));
+        token.setFieldValue(instance, "xyz");
+        assertEquals("xyz", token.getFieldValue(instance));
     }
 
     private static void assertFieldAccessorRoundTrip(CompilationResult result, String commandClassName,

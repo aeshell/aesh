@@ -26,6 +26,7 @@ import java.util.Set;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
@@ -195,7 +196,14 @@ final class CodeGenerator {
         // newInstance()
         sb.append("    @Override\n");
         sb.append("    public ").append(simpleName).append(" newInstance() {\n");
-        sb.append("        return new ").append(simpleName).append("();\n");
+        if (hasAccessibleNoArgConstructor(commandElement)) {
+            sb.append("        return new ").append(simpleName).append("();\n");
+        } else {
+            // No accessible no-arg constructor: applications pass their own
+            // instances to buildProcessedCommand (#785).
+            sb.append("        throw new UnsupportedOperationException(\"").append(simpleName)
+                    .append(" has no accessible no-arg constructor; pass a command instance to buildProcessedCommand\");\n");
+        }
         sb.append("    }\n\n");
 
         // isGroupCommand()
@@ -1671,6 +1679,24 @@ final class CodeGenerator {
         if (mods.contains(Modifier.PUBLIC))
             return true;
         return packageNameOf(field).equals(commandPackage);
+    }
+
+    /**
+     * Whether an accessible no-arg constructor exists (explicit or the
+     * default one). Commands without one cannot be instantiated by generated
+     * code; their providers still work when the application passes its own
+     * instances to {@code buildProcessedCommand} (#785).
+     */
+    static boolean hasAccessibleNoArgConstructor(TypeElement commandElement) {
+        for (Element enclosed : commandElement.getEnclosedElements()) {
+            if (enclosed.getKind() == ElementKind.CONSTRUCTOR) {
+                ExecutableElement constructor = (ExecutableElement) enclosed;
+                if (constructor.getParameters().isEmpty()
+                        && !constructor.getModifiers().contains(Modifier.PRIVATE))
+                    return true;
+            }
+        }
+        return false;
     }
 
     private static String packageNameOf(Element element) {

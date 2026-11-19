@@ -199,21 +199,11 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
             valid = false;
         }
 
-        boolean hasNoArgConstructor = false;
-        for (Element enclosed : element.getEnclosedElements()) {
-            if (enclosed.getKind() == ElementKind.CONSTRUCTOR) {
-                ExecutableElement constructor = (ExecutableElement) enclosed;
-                if (constructor.getParameters().isEmpty()
-                        && !constructor.getModifiers().contains(Modifier.PRIVATE)) {
-                    hasNoArgConstructor = true;
-                    break;
-                }
-            }
-        }
-        if (!hasNoArgConstructor) {
-            messager.printMessage(Diagnostic.Kind.ERROR,
-                    "Command class must have an accessible no-arg constructor", element);
-            valid = false;
+        if (!CodeGenerator.hasAccessibleNoArgConstructor(element)) {
+            messager.printMessage(Diagnostic.Kind.NOTE,
+                    "Command class has no accessible no-arg constructor; the generated"
+                            + " newInstance() will throw and command instances must be passed explicitly",
+                    element);
         }
 
         // Validate field types
