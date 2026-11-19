@@ -100,6 +100,14 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Registers a command class. Executions of a class-registered command
+     * run on per-execution forks with a fresh command instance, so
+     * concurrent pipeline stages cannot share mutable fields; execution
+     * results must not be read back through the registry. Register a
+     * supplied instance or a prebuilt container instead when the executed
+     * instance must stay observable afterwards.
+     */
     public AeshCommandRegistryBuilder<CI> command(Class<? extends Command> command) throws CommandRegistryException {
         commandRegistry.addCommand((Class<Command>) command);
         return this;
@@ -124,6 +132,11 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Registers a prebuilt container. The container is shared: executions
+     * reuse it and its command instance, so post-execution registry
+     * lookups observe the executed instance.
+     */
     public AeshCommandRegistryBuilder<CI> command(CommandContainer commandContainer) {
         commandRegistry.addCommand(commandContainer);
         return this;
@@ -134,6 +147,12 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
         return this;
     }
 
+    /**
+     * Registers a supplied command instance. The instance is shared:
+     * executions reuse it (repopulated per execution, last-write-wins
+     * for concurrent pipeline stages), so post-execution registry
+     * lookups observe the executed instance.
+     */
     public AeshCommandRegistryBuilder<CI> command(Command command) throws CommandRegistryException {
         commandRegistry.addCommand(command);
         return this;

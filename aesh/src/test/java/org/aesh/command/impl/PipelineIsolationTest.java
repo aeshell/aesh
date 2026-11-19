@@ -20,6 +20,9 @@
 package org.aesh.command.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -36,6 +39,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.impl.Executions.PopulateProbe;
+import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.OptionType;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedCommandBuilder;
@@ -329,6 +333,96 @@ public class PipelineIsolationTest {
         } finally {
             PopulateProbe.installed = null;
             GSubCommand.probe = null;
+        }
+    }
+
+    @CommandDefinition(name = "identity", description = "captures its executed instance")
+    public static class IdentityCommand implements Command<CommandInvocation> {
+        static volatile IdentityCommand executed;
+        String result;
+
+        @Override
+        public CommandResult execute(CommandInvocation commandInvocation) {
+            executed = this;
+            result = "written";
+            return CommandResult.SUCCESS;
+        }
+    }
+
+    private static IdentityCommand lookupCommand(CommandRegistry<CommandInvocation> registry, String name)
+            throws Exception {
+        return (IdentityCommand) registry.getCommand(name, null).getParser().getProcessedCommand().getCommand();
+    }
+
+    @Test
+    public void testClassRegistrationExecutesOnPerExecutionFork() throws Exception {
+        // Class-registered commands run on per-execution forks, so a
+        // post-execution registry lookup is a different instance whose
+        // result fields were never written (#787).
+        IdentityCommand.executed = null;
+        try {
+            CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder
+                    .<CommandInvocation> builder()
+                    .command(IdentityCommand.class)
+                    .create();
+            CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder
+                    .<CommandInvocation> builder()
+                    .commandRegistry(registry)
+                    .build();
+
+            assertEquals(CommandResult.SUCCESS, runtime.executeCommand("identity"));
+            assertNotNull("command must have executed", IdentityCommand.executed);
+            assertEquals("written", IdentityCommand.executed.result);
+            assertNotSame("registry lookup must not return the executed fork",
+                    IdentityCommand.executed, lookupCommand(registry, "identity"));
+        } finally {
+            IdentityCommand.executed = null;
+        }
+    }
+
+    @Test
+    public void testSuppliedInstancePreservesIdentity() throws Exception {
+        IdentityCommand.executed = null;
+        try {
+            IdentityCommand supplied = new IdentityCommand();
+            CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder
+                    .<CommandInvocation> builder()
+                    .command(supplied)
+                    .create();
+            CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder
+                    .<CommandInvocation> builder()
+                    .commandRegistry(registry)
+                    .build();
+
+            assertEquals(CommandResult.SUCCESS, runtime.executeCommand("identity"));
+            assertSame("supplied instances execute in place", supplied, IdentityCommand.executed);
+            assertSame("registry lookup returns the supplied instance",
+                    supplied, lookupCommand(registry, "identity"));
+        } finally {
+            IdentityCommand.executed = null;
+        }
+    }
+
+    @Test
+    public void testPrebuiltContainerPreservesIdentity() throws Exception {
+        IdentityCommand.executed = null;
+        try {
+            CommandRegistry<CommandInvocation> registry = AeshCommandRegistryBuilder
+                    .<CommandInvocation> builder()
+                    .command(new AeshCommandContainerBuilder<CommandInvocation>()
+                            .create(IdentityCommand.class))
+                    .create();
+            CommandRuntime<CommandInvocation> runtime = AeshCommandRuntimeBuilder
+                    .<CommandInvocation> builder()
+                    .commandRegistry(registry)
+                    .build();
+
+            assertEquals(CommandResult.SUCCESS, runtime.executeCommand("identity"));
+            assertNotNull("command must have executed", IdentityCommand.executed);
+            assertSame("prebuilt containers execute in place",
+                    IdentityCommand.executed, lookupCommand(registry, "identity"));
+        } finally {
+            IdentityCommand.executed = null;
         }
     }
 }
