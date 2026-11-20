@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.aesh.terminal.utils.WcWidth;
 import org.junit.Test;
 
 /**
@@ -708,5 +709,128 @@ public class TableTest {
     // a double cell is formatted with the default locale: 95.50, or 95,50 on a locale with a decimal comma
     private static String decimal(double value) {
         return String.format("%.2f", value);
+    }
+
+    // --- Test: display-width measurement with ANSI escapes and wide characters (#786) ---
+
+    private static final String RED = "\u001B[31m";
+    private static final String RESET = "\u001B[0m";
+
+    private static int visibleWidth(String line) {
+        String stripped = line.replaceAll("\u001B\\[[0-9;]*m", "");
+        int width = 0;
+        for (int i = 0; i < stripped.length();) {
+            int codePoint = stripped.codePointAt(i);
+            int charWidth = WcWidth.width(codePoint);
+            if (charWidth > 0) {
+                width += charWidth;
+            }
+            i += Character.charCount(codePoint);
+        }
+        return width;
+    }
+
+    private static void assertAligned(String output) {
+        String[] lines = output.split(System.lineSeparator());
+        int expected = visibleWidth(lines[0]);
+        for (String line : lines) {
+            assertEquals("Every rendered line must have the same visible width, got [" + line + "]",
+                    expected, visibleWidth(line));
+        }
+    }
+
+    @Test
+    public void testAnsiStyledCellKeepsColumnAlignment() {
+        List<String> headers = Arrays.asList("Name", "N");
+        List<Function<String[], Object>> accessors = Arrays.<Function<String[], Object>> asList(
+                a -> a[0], a -> a[1]);
+
+        String plain = Table.render(80,
+                Collections.singletonList(new String[] { "A", "1" }), headers, accessors);
+        String styled = Table.render(80,
+                Collections.singletonList(new String[] { "A", RED + "1" + RESET }), headers, accessors);
+        String stripped = styled.replace(RED, "").replace(RESET, "");
+        assertEquals("Styling alone must not change column sizes or padding", plain, stripped);
+        assertAligned(styled);
+    }
+
+    @Test
+    public void testEmojiCellAlignment() {
+        List<String> rows = Arrays.asList("☕", "x");
+        String output = Table.<String> builder()
+                .maxWidth(80)
+                .style(TableStyle.DUCKDB)
+                .column("V", s -> s)
+                .build()
+                .render(rows);
+        assertAligned(output);
+    }
+
+    @Test
+    public void testCjkCellAlignment() {
+        List<String> rows = Arrays.asList("界", "x");
+        String output = Table.<String> builder()
+                .maxWidth(80)
+                .style(TableStyle.DUCKDB)
+                .column("V", s -> s)
+                .build()
+                .render(rows);
+        assertAligned(output);
+    }
+
+    @Test
+    public void testCombiningMarkAlignment() {
+        List<String> rows = Arrays.asList("é", "x");
+        String output = Table.<String> builder()
+                .maxWidth(80)
+                .style(TableStyle.DUCKDB)
+                .column("V", s -> s)
+                .build()
+                .render(rows);
+        assertAligned(output);
+    }
+
+    @Test
+    public void testAnsiSafeTruncation() {
+        String output = Table.<String> builder()
+                .maxWidth(6)
+                .style(TableStyle.DUCKDB)
+                .column("V", s -> s)
+                .build()
+                .render(Collections.singletonList(RED + "abcdef" + RESET));
+        assertTrue("Truncation must keep the style opening, got: " + output,
+                output.contains(RED + "ab" + RESET));
+        assertFalse("Truncation must not cut inside an escape sequence, got: " + output,
+                output.contains("\u001B[ "));
+        assertAligned(output);
+    }
+
+    @Test
+    public void testSurrogateSafeTruncation() {
+        String output = Table.<String> builder()
+                .maxWidth(6)
+                .style(TableStyle.DUCKDB)
+                .column("V", s -> s)
+                .build()
+                .render(Collections.singletonList("a😀"));
+        for (int codePoint : output.codePoints().toArray()) {
+            assertFalse("Truncation must not leave an unpaired surrogate",
+                    codePoint >= 0xD800 && codePoint <= 0xDFFF);
+        }
+        assertAligned(output);
+    }
+
+    @Test
+    public void testLongHeaderObeysMaxWidth() {
+        String output = Table.<String> builder()
+                .maxWidth(5)
+                .style(TableStyle.DUCKDB)
+                .column("VeryLongHeader", s -> s)
+                .build()
+                .render(Collections.singletonList("x"));
+        for (String line : output.split(System.lineSeparator())) {
+            assertTrue("Every line must fit maxWidth 5, got [" + line + "]",
+                    visibleWidth(line) <= 5);
+        }
     }
 }

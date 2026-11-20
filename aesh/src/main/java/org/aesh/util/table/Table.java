@@ -108,8 +108,9 @@ public class Table<T> {
             String[] parts = header.split(System.lineSeparator());
             int max = 0;
             for (String part : parts) {
-                if (part.length() > max) {
-                    max = part.length();
+                int partWidth = TableWidths.displayWidth(part);
+                if (partWidth > max) {
+                    max = partWidth;
                 }
             }
             columnWidths[i] = max;
@@ -140,7 +141,7 @@ public class Table<T> {
                 } else {
                     columnFormats[a] = "s";
                 }
-                int cellWidth = c.toString().length();
+                int cellWidth = TableWidths.displayWidth(c.toString());
                 if (cellWidth > columnWidths[a]) {
                     columnWidths[a] = cellWidth;
                 }
@@ -208,15 +209,17 @@ public class Table<T> {
                     totalContentWidth -= shrink;
                 }
 
-                // Truncate cell content to fit constrained column widths
+                // Truncate cell content to fit constrained column widths.
+                // Display-width aware: escape sequences and surrogate
+                // pairs are never split, and styling is closed (#786).
                 for (Object[] row : rows) {
                     for (int c = 0; c < row.length; c++) {
                         String cellStr = row[c].toString();
-                        if (cellStr.length() > columnWidths[c]) {
+                        if (TableWidths.displayWidth(cellStr) > columnWidths[c]) {
                             if (columnWidths[c] > 3) {
-                                row[c] = cellStr.substring(0, columnWidths[c] - 3) + "...";
+                                row[c] = TableWidths.truncate(cellStr, columnWidths[c] - 3) + "...";
                             } else {
-                                row[c] = cellStr.substring(0, columnWidths[c]);
+                                row[c] = TableWidths.truncate(cellStr, columnWidths[c]);
                             }
                         }
                     }
@@ -247,22 +250,14 @@ public class Table<T> {
             if (columnFormats[i] == null) {
                 columnFormats[i] = "s";
             }
-            String format = columnFormats[i];
 
             headerFormat.append("%" + width + "s");
             topBorderFormat.append("%" + width + "s");
             bottomBorderFormat.append("%" + width + "s");
-            switch (format) {
-                case "d":
-                case "f":
-                    // Numeric columns are pre-formatted to text; %s keeps
-                    // the right-alignment of %d without its type conversion,
-                    // which null and clipped cells cannot satisfy (#655).
-                    rowFormat.append("%" + width + "s");
-                    break;
-                default:
-                    rowFormat.append("%-" + width + "s");
-            }
+            // Cells are padded to their display width up front, so the
+            // row format needs no widths of its own: %-style padding
+            // would count escape bytes as printable (#786).
+            rowFormat.append("%s");
         }
 
         if (outsideBorder) {
@@ -298,8 +293,12 @@ public class Table<T> {
                 for (int c = 0; c < columnCount; c++) {
                     int width = columnWidths[c];
                     String header = headerRow.get(c);
-                    int leftPad = (width - header.length()) / 2;
-                    int remainder = width - header.length() - leftPad;
+                    if (TableWidths.displayWidth(header) > width) {
+                        header = TableWidths.truncate(header, width);
+                    }
+                    int headerWidth = TableWidths.displayWidth(header);
+                    int leftPad = (width - headerWidth) / 2;
+                    int remainder = width - headerWidth - leftPad;
                     if (c > 0) {
                         row.append(" ");
                         row.append(characters.get(HEADER_COLUMN_SEPARATOR));
@@ -341,10 +340,23 @@ public class Table<T> {
             }
         }
 
-        // Data rows
+        // Data rows. Cells are padded to their display width up front;
+        // the row format carries no widths, so escape sequences in one
+        // cell cannot shift the columns that follow (#786).
+        String rowFormatString = rowFormat.toString();
         for (int i = 0; i < rows.size(); i++) {
             Object[] row = rows.get(i);
-            rtrn.append(String.format(rowFormat.toString(), row));
+            Object[] padded = new Object[row.length];
+            for (int c = 0; c < row.length; c++) {
+                String cell = row[c].toString();
+                String format = columnFormats[c];
+                if ("d".equals(format) || "f".equals(format)) {
+                    padded[c] = TableWidths.padLeft(cell, columnWidths[c]);
+                } else {
+                    padded[c] = TableWidths.padRight(cell, columnWidths[c]);
+                }
+            }
+            rtrn.append(String.format(rowFormatString, padded));
             if (i < rows.size() - 1 && hasRowSeparator(characters)) {
                 rtrn.append(characters.get(ROW_SEPARATOR_LEFT));
                 rtrn.append(characters.get(ROW_SEPARATOR_HORIZONTAL));
