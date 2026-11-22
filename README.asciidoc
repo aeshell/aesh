@@ -65,6 +65,14 @@ lists an inaccessible child fails compilation with an error at the offending
 `groupCommands` entry. Package-private and protected nested commands in the
 provider's package remain supported.
 
+By default the generated registry is named `_AeshMetadataRegistry` and lands
+in the package of the first command the processor sees. Pass
+`-AaeshRegistryClass=org.example.MyMetadataRegistry` to the compiler for a
+stable name instead: the registry is generated under that name, and the service
+descriptors and native-image configuration point at it, so it can be
+instantiated directly with `new MyMetadataRegistry()`. An invalid name fails
+compilation with an error naming the option.
+
 == Quick Start
 
 [source,java]

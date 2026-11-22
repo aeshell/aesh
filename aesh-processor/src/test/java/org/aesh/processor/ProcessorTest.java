@@ -35,6 +35,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -5342,7 +5343,19 @@ public class ProcessorTest {
 
     // --- In-memory compilation infrastructure ---
 
+    private static List<String> processorOptions(List<String> extraOptions) {
+        List<String> options = new ArrayList<>(
+                Arrays.asList("-proc:only", "-processor", AeshAnnotationProcessor.class.getName()));
+        options.addAll(extraOptions);
+        return options;
+    }
+
     private CompilationResult compileWithProcessor(InMemorySource... sources) throws IOException {
+        return compileWithProcessorWithOptions(Collections.emptyList(), sources);
+    }
+
+    private CompilationResult compileWithProcessorWithOptions(List<String> extraOptions,
+            InMemorySource... sources) throws IOException {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
 
@@ -5363,7 +5376,7 @@ public class ProcessorTest {
 
             JavaCompiler.CompilationTask task = compiler.getTask(
                     null, fileManager, diagnostics,
-                    Arrays.asList("-proc:only", "-processor", AeshAnnotationProcessor.class.getName()),
+                    processorOptions(extraOptions),
                     null, Arrays.asList(sources));
 
             boolean procSuccess = task.call();
@@ -5874,6 +5887,143 @@ public class ProcessorTest {
         java.util.List<org.aesh.command.metadata.MethodCommandMetadataProvider> providers = registry
                 .methodProviders("test.DeployOwner");
         assertEquals("Registry should expose both method providers", 2, providers.size());
+    }
+
+    // --- Test: configurable generated registry class name ---
+
+    private static final String REG_A_SOURCE = "package test.a;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"cmda\", description = \"A\")\n" +
+            "public class CmdA implements Command<CommandInvocation> {\n" +
+            "    @Option(description = \"Name\")\n" +
+            "    public String name;\n" +
+            "\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String REG_B_SOURCE = "package test.b;\n" +
+            "\n" +
+            "import org.aesh.command.Command;\n" +
+            "import org.aesh.command.CommandDefinition;\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "\n" +
+            "@CommandDefinition(name = \"cmdb\", description = \"B\")\n" +
+            "public class CmdB implements Command<CommandInvocation> {\n" +
+            "    @Override\n" +
+            "    public CommandResult execute(CommandInvocation commandInvocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    private static final String REG_OWNER_SOURCE = "package test.m;\n" +
+            "\n" +
+            "import org.aesh.command.CommandResult;\n" +
+            "import org.aesh.command.MethodCommand;\n" +
+            "import org.aesh.command.invocation.CommandInvocation;\n" +
+            "import org.aesh.command.option.Option;\n" +
+            "\n" +
+            "public class RunOwner {\n" +
+            "    @MethodCommand(name = \"run\", description = \"run it\")\n" +
+            "    public CommandResult run(@Option(name = \"target\", description = \"t\") String target,\n" +
+            "            CommandInvocation invocation) {\n" +
+            "        return CommandResult.SUCCESS;\n" +
+            "    }\n" +
+            "}\n";
+
+    @Test
+    public void testCustomRegistryClassName() throws Exception {
+        CompilationResult result = compileWithProcessorWithOptions(
+                Collections.singletonList("-AaeshRegistryClass=test.reg.CustomRegistry"),
+                new InMemorySource("test.a.CmdA", REG_A_SOURCE),
+                new InMemorySource("test.b.CmdB", REG_B_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Path customSource = result.outputDir.resolve("test/reg/CustomRegistry.java");
+        assertTrue("Custom registry source must be generated", Files.exists(customSource));
+        String source = new String(Files.readAllBytes(customSource), StandardCharsets.UTF_8);
+        assertTrue("Registry must declare the configured name",
+                source.contains(
+                        "public final class CustomRegistry implements org.aesh.command.metadata.MetadataRegistry"));
+
+        final boolean[] foundDefault = { false };
+        Files.walk(result.outputDir).forEach(path -> {
+            if (path.getFileName().toString().contains("_AeshMetadataRegistry"))
+                foundDefault[0] = true;
+        });
+        assertTrue("Default registry must not be generated", !foundDefault[0]);
+
+        String service = new String(
+                Files.readAllBytes(result.outputDir.resolve(
+                        "META-INF/services/org.aesh.command.metadata.MetadataRegistry")),
+                StandardCharsets.UTF_8).trim();
+        assertEquals("test.reg.CustomRegistry", service);
+
+        String reflect = new String(
+                Files.readAllBytes(result.outputDir.resolve(
+                        "META-INF/native-image/org.aesh/aesh-generated/reflect-config.json")),
+                StandardCharsets.UTF_8);
+        assertTrue("Reflect config must name the custom registry",
+                reflect.contains("test.reg.CustomRegistry"));
+
+        Class<?> registryClass = result.classLoader.loadClass("test.reg.CustomRegistry");
+        org.aesh.command.metadata.MetadataRegistry registry = (org.aesh.command.metadata.MetadataRegistry) registryClass
+                .newInstance();
+        assertNotNull(registry.get("test.a.CmdA"));
+        assertNotNull(registry.get("test.b.CmdB"));
+    }
+
+    @Test
+    public void testCustomRegistryClassDefaultPackage() throws Exception {
+        CompilationResult result = compileWithProcessorWithOptions(
+                Collections.singletonList("-AaeshRegistryClass=CustomRegistry"),
+                new InMemorySource("test.a.CmdA", REG_A_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        assertTrue("Custom registry source must be generated in the default package",
+                Files.exists(result.outputDir.resolve("CustomRegistry.java")));
+
+        Class<?> registryClass = result.classLoader.loadClass("CustomRegistry");
+        org.aesh.command.metadata.MetadataRegistry registry = (org.aesh.command.metadata.MetadataRegistry) registryClass
+                .newInstance();
+        assertNotNull(registry.get("test.a.CmdA"));
+    }
+
+    @Test
+    public void testCustomRegistryClassWithMethodCommands() throws Exception {
+        CompilationResult result = compileWithProcessorWithOptions(
+                Collections.singletonList("-AaeshRegistryClass=test.reg.CustomRegistry"),
+                new InMemorySource("test.m.RunOwner", REG_OWNER_SOURCE));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        Class<?> registryClass = result.classLoader.loadClass("test.reg.CustomRegistry");
+        org.aesh.command.metadata.MetadataRegistry registry = (org.aesh.command.metadata.MetadataRegistry) registryClass
+                .newInstance();
+        java.util.List<org.aesh.command.metadata.MethodCommandMetadataProvider> providers = registry
+                .methodProviders("test.m.RunOwner");
+        assertEquals(1, providers.size());
+        assertEquals("run", providers.get(0).methodName());
+    }
+
+    @Test
+    public void testInvalidRegistryClassNameIsRejected() throws Exception {
+        for (String bad : new String[] { "org.example.", "1Bad", "org.exa mple.Reg" }) {
+            CompilationResult result = compileWithProcessorWithOptions(
+                    Collections.singletonList("-AaeshRegistryClass=" + bad),
+                    new InMemorySource("test.a.CmdA", REG_A_SOURCE));
+            assertTrue("Compilation must fail for '" + bad + "': " + result.diagnostics, !result.success);
+            assertTrue("Diagnostic must name the option for '" + bad + "': " + result.diagnostics,
+                    result.diagnostics.contains("aeshRegistryClass"));
+        }
     }
 
     @Test

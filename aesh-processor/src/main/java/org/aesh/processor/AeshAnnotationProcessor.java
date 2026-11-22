@@ -27,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -68,7 +69,8 @@ import org.aesh.command.CommandDefinition;
 })
 @SupportedOptions({
         AeshAnnotationProcessor.OPT_PROJECT,
-        AeshAnnotationProcessor.OPT_DISABLE_NATIVE_IMAGE
+        AeshAnnotationProcessor.OPT_DISABLE_NATIVE_IMAGE,
+        AeshAnnotationProcessor.OPT_REGISTRY_CLASS
 })
 public class AeshAnnotationProcessor extends AbstractProcessor {
 
@@ -76,6 +78,18 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     static final String OPT_PROJECT = "aeshNativeImageProject";
     /** Processor option: set to "true" to skip native-image config generation. */
     static final String OPT_DISABLE_NATIVE_IMAGE = "aeshNativeImageDisable";
+    /**
+     * Processor option: fully-qualified name for the generated metadata
+     * registry class (e.g. {@code -AaeshRegistryClass=org.example.MyMetadataRegistry}).
+     * When absent, the registry is named {@code _AeshMetadataRegistry} in the
+     * package of the first accepted command.
+     */
+    static final String OPT_REGISTRY_CLASS = "aeshRegistryClass";
+    /** Simple name of the generated registry when no explicit name is configured. */
+    private static final String DEFAULT_REGISTRY_SIMPLE_NAME = "_AeshMetadataRegistry";
+    /** Dotted Java identifiers, e.g. {@code org.example.MyRegistry} or {@code MyRegistry}. */
+    private static final Pattern REGISTRY_CLASS_PATTERN = Pattern
+            .compile("[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z_$][A-Za-z0-9_$]*)*");
 
     private Filer filer;
     private Messager messager;
@@ -90,6 +104,10 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     private final Map<String, List<String[]>> methodRegistryEntries = new LinkedHashMap<>();
     private String registryPackage;
     private boolean registryGenerated;
+    /** Explicit registry class name from {@code -AaeshRegistryClass}, or null for the default. */
+    private String configuredRegistryClass;
+    /** True when the explicit registry name failed validation; outputs are then skipped. */
+    private boolean registryOptionInvalid;
     /** Private fields needing reflection config, grouped by declaring class name. */
     private final Map<String, Set<String>> reflectConfigEntries = new LinkedHashMap<>();
 
@@ -110,6 +128,33 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
         this.messager = processingEnv.getMessager();
         this.elementUtils = processingEnv.getElementUtils();
         this.typeUtils = processingEnv.getTypeUtils();
+        String registryOption = processingEnv.getOptions().get(OPT_REGISTRY_CLASS);
+        if (registryOption != null && !registryOption.isEmpty()) {
+            if (REGISTRY_CLASS_PATTERN.matcher(registryOption).matches()) {
+                this.configuredRegistryClass = registryOption;
+            } else {
+                this.registryOptionInvalid = true;
+                messager.printMessage(Diagnostic.Kind.ERROR,
+                        "Invalid -A" + OPT_REGISTRY_CLASS + " value '" + registryOption
+                                + "': must be a fully-qualified class name like org.example.MyMetadataRegistry");
+            }
+        }
+    }
+
+    /**
+     * Fully-qualified name of the registry class to generate, or null when
+     * the configured name failed validation (the error is reported in
+     * {@link #init(ProcessingEnvironment)}).
+     */
+    private String registryFullName() {
+        if (registryOptionInvalid) {
+            return null;
+        }
+        if (configuredRegistryClass != null) {
+            return configuredRegistryClass;
+        }
+        String pkg = registryPackage != null ? registryPackage : "";
+        return pkg.isEmpty() ? DEFAULT_REGISTRY_SIMPLE_NAME : pkg + "." + DEFAULT_REGISTRY_SIMPLE_NAME;
     }
 
     @Override
@@ -954,9 +999,15 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     }
 
     private void generateRegistryClass() {
-        String pkg = registryPackage != null ? registryPackage : "";
-        String registryCode = CodeGenerator.generateRegistry(pkg, registryEntries, methodRegistryEntries);
-        String fullRegistryName = pkg.isEmpty() ? "_AeshMetadataRegistry" : pkg + "._AeshMetadataRegistry";
+        String fullRegistryName = registryFullName();
+        if (fullRegistryName == null) {
+            return;
+        }
+        int lastDot = fullRegistryName.lastIndexOf('.');
+        String pkg = lastDot < 0 ? "" : fullRegistryName.substring(0, lastDot);
+        String simpleName = lastDot < 0 ? fullRegistryName : fullRegistryName.substring(lastDot + 1);
+        String registryCode = CodeGenerator.generateRegistry(pkg, simpleName, registryEntries,
+                methodRegistryEntries);
 
         try {
             JavaFileObject sourceFile = filer.createSourceFile(fullRegistryName);
@@ -970,8 +1021,10 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     }
 
     private void writeServiceFile() {
-        String pkg = registryPackage != null ? registryPackage : "";
-        String fullRegistryName = pkg.isEmpty() ? "_AeshMetadataRegistry" : pkg + "._AeshMetadataRegistry";
+        String fullRegistryName = registryFullName();
+        if (fullRegistryName == null) {
+            return;
+        }
 
         try {
             javax.tools.FileObject serviceFile = filer.createResource(
@@ -1023,8 +1076,10 @@ public class AeshAnnotationProcessor extends AbstractProcessor {
     }
 
     private void writeReflectConfig(String configDir) {
-        String pkg = registryPackage != null ? registryPackage : "";
-        String fullRegistryName = pkg.isEmpty() ? "_AeshMetadataRegistry" : pkg + "._AeshMetadataRegistry";
+        String fullRegistryName = registryFullName();
+        if (fullRegistryName == null) {
+            return;
+        }
 
         try {
             javax.tools.FileObject file = filer.createResource(
