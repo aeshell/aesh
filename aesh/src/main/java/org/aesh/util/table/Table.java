@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.aesh.util.text.DisplayWidths;
+
 /**
  * Renders tabular data as formatted text with configurable border styles.
  *
@@ -108,7 +110,7 @@ public class Table<T> {
             String[] parts = header.split(System.lineSeparator());
             int max = 0;
             for (String part : parts) {
-                int partWidth = TableWidths.displayWidth(part);
+                int partWidth = DisplayWidths.displayWidth(part);
                 if (partWidth > max) {
                     max = partWidth;
                 }
@@ -141,7 +143,7 @@ public class Table<T> {
                 } else {
                     columnFormats[a] = "s";
                 }
-                int cellWidth = TableWidths.displayWidth(c.toString());
+                int cellWidth = DisplayWidths.displayWidth(c.toString());
                 if (cellWidth > columnWidths[a]) {
                     columnWidths[a] = cellWidth;
                 }
@@ -215,11 +217,11 @@ public class Table<T> {
                 for (Object[] row : rows) {
                     for (int c = 0; c < row.length; c++) {
                         String cellStr = row[c].toString();
-                        if (TableWidths.displayWidth(cellStr) > columnWidths[c]) {
+                        if (DisplayWidths.displayWidth(cellStr) > columnWidths[c]) {
                             if (columnWidths[c] > 3) {
-                                row[c] = TableWidths.truncate(cellStr, columnWidths[c] - 3) + "...";
+                                row[c] = DisplayWidths.truncate(cellStr, columnWidths[c] - 3) + "...";
                             } else {
-                                row[c] = TableWidths.truncate(cellStr, columnWidths[c]);
+                                row[c] = DisplayWidths.truncate(cellStr, columnWidths[c]);
                             }
                         }
                     }
@@ -293,10 +295,10 @@ public class Table<T> {
                 for (int c = 0; c < columnCount; c++) {
                     int width = columnWidths[c];
                     String header = headerRow.get(c);
-                    if (TableWidths.displayWidth(header) > width) {
-                        header = TableWidths.truncate(header, width);
+                    if (DisplayWidths.displayWidth(header) > width) {
+                        header = DisplayWidths.truncate(header, width);
                     }
-                    int headerWidth = TableWidths.displayWidth(header);
+                    int headerWidth = DisplayWidths.displayWidth(header);
                     int leftPad = (width - headerWidth) / 2;
                     int remainder = width - headerWidth - leftPad;
                     if (c > 0) {
@@ -351,9 +353,9 @@ public class Table<T> {
                 String cell = row[c].toString();
                 String format = columnFormats[c];
                 if ("d".equals(format) || "f".equals(format)) {
-                    padded[c] = TableWidths.padLeft(cell, columnWidths[c]);
+                    padded[c] = DisplayWidths.padLeft(cell, columnWidths[c]);
                 } else {
-                    padded[c] = TableWidths.padRight(cell, columnWidths[c]);
+                    padded[c] = DisplayWidths.padRight(cell, columnWidths[c]);
                 }
             }
             rtrn.append(String.format(rowFormatString, padded));

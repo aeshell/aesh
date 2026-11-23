@@ -545,4 +545,60 @@ public class GraphTest {
         assertTrue("Should contain 'ABCDEFGH'", output.contains("ABCDEFGH"));
         assertTrue("Should contain 'IJKLMNOP'", output.contains("IJKLMNOP"));
     }
+
+    // --- Test: display-width-aware layout (#786 follow-up) ---
+
+    private static final String RED = "\u001B[31m";
+    private static final String RESET = "\u001B[0m";
+
+    private static String stripAnsi(String output) {
+        return output.replace(RED, "").replace(RESET, "");
+    }
+
+    private static GraphNode fanOut(String leafLabel) {
+        return GraphNode.of("root").child(leafLabel).child("tail");
+    }
+
+    private static void assertNoLoneSurrogates(String output) {
+        for (int codePoint : output.codePoints().toArray()) {
+            assertTrue("Wrapping must not leave an unpaired surrogate",
+                    codePoint < 0xD800 || codePoint > 0xDFFF);
+        }
+    }
+
+    @Test
+    public void testAnsiStyledLabelsPreserveLayout() {
+        String plain = Graph.render(fanOut("leaf"), GraphStyle.UNICODE, 0, 0);
+        String styled = Graph.render(fanOut(RED + "leaf" + RESET), GraphStyle.UNICODE, 0, 0);
+        assertEquals(plain, stripAnsi(styled));
+    }
+
+    @Test
+    public void testWideLabelsOccupyTwoColumns() {
+        assertEquals(Graph.render(fanOut("AxxZ"), GraphStyle.UNICODE, 0, 0),
+                Graph.render(fanOut("A☕Z"), GraphStyle.UNICODE, 0, 0).replace("☕", "xx"));
+        assertEquals(Graph.render(fanOut("AxxZ"), GraphStyle.UNICODE, 0, 0),
+                Graph.render(fanOut("A界Z"), GraphStyle.UNICODE, 0, 0).replace("界", "xx"));
+    }
+
+    @Test
+    public void testCombiningMarksOccupyNoColumns() {
+        assertEquals(Graph.render(fanOut("AéZ"), GraphStyle.UNICODE, 0, 0),
+                Graph.render(fanOut("Ae\u0301Z"), GraphStyle.UNICODE, 0, 0).replace("e\u0301", "\u00e9"));
+    }
+
+    @Test
+    public void testWrappingPreservesSurrogatePairs() {
+        String output = Graph.render(GraphNode.of("😀x"), GraphStyle.UNICODE, 0, 1);
+        assertNoLoneSurrogates(output);
+        assertTrue("Wrapped emoji must survive", output.contains("😀"));
+    }
+
+    @Test
+    public void testWrappingPreservesAnsiSequences() {
+        String plainWrapped = Graph.render(GraphNode.of("leaf"), GraphStyle.UNICODE, 0, 2);
+        String styledWrapped = Graph.render(GraphNode.of(RED + "leaf" + RESET), GraphStyle.UNICODE, 0, 2);
+        assertEquals(plainWrapped, stripAnsi(styledWrapped));
+        assertNoLoneSurrogates(styledWrapped);
+    }
 }

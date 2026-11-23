@@ -33,6 +33,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.aesh.terminal.utils.WcWidth;
+import org.aesh.util.text.DisplayWidths;
+
 /**
  * Renders directed acyclic graph (DAG) data as formatted text.
  *
@@ -188,29 +191,17 @@ public class Graph {
         }
 
         void wrapLabel(int maxLabelWidth) {
-            if (maxLabelWidth <= 0 || label.length() <= maxLabelWidth || isDummy)
+            if (maxLabelWidth <= 0 || isDummy
+                    || DisplayWidths.displayWidth(label) <= maxLabelWidth) {
                 return;
-            List<String> result = new ArrayList<>();
-            int start = 0;
-            while (start < label.length()) {
-                int end = Math.min(start + maxLabelWidth, label.length());
-                if (end < label.length()) {
-                    int space = label.lastIndexOf(' ', end);
-                    if (space > start)
-                        end = space;
-                }
-                result.add(label.substring(start, end).trim());
-                start = end;
-                if (start < label.length() && label.charAt(start) == ' ')
-                    start++;
             }
-            this.lines = result.toArray(new String[0]);
+            this.lines = DisplayWidths.wrap(label, maxLabelWidth).toArray(new String[0]);
         }
 
         int width() {
             int max = 0;
             for (String line : lines) {
-                max = Math.max(max, line.length());
+                max = Math.max(max, DisplayWidths.displayWidth(line));
             }
             return Math.max(max, 1);
         }
@@ -320,7 +311,7 @@ public class Graph {
             assignCoordinates(layers);
 
             // Phase 6: Render onto character grid
-            char[][] grid = renderGrid(layers, allEdges);
+            String[][] grid = renderGrid(layers, allEdges);
 
             // Phase 7: Grid to string
             return gridToString(grid);
@@ -788,7 +779,7 @@ public class Graph {
             return multiChildCount + (hasSingleChild ? 1 : 0);
         }
 
-        private char[][] renderGrid(List<List<LayoutNode<T>>> layers, List<int[]> allEdges) {
+        private String[][] renderGrid(List<List<LayoutNode<T>>> layers, List<int[]> allEdges) {
             int gridWidth = 0;
             for (List<LayoutNode<T>> layer : layers) {
                 for (LayoutNode<T> ln : layer) {
@@ -824,9 +815,9 @@ public class Graph {
             if (gridHeight < 1)
                 gridHeight = 1;
 
-            char[][] grid = new char[gridHeight][gridWidth];
-            for (char[] row : grid) {
-                java.util.Arrays.fill(row, ' ');
+            String[][] grid = new String[gridHeight][gridWidth];
+            for (String[] row : grid) {
+                java.util.Arrays.fill(row, " ");
             }
 
             // Compute row mapping: which grid row corresponds to each layer's first label line
@@ -843,23 +834,19 @@ public class Graph {
                     if (ln.isDummy) {
                         for (int r = 0; r < layerHeight[l]; r++) {
                             if (ln.x >= 0 && ln.x < gridWidth) {
-                                grid[baseRow + r][ln.x] = style.vertical();
+                                grid[baseRow + r][ln.x] = String.valueOf(style.vertical());
                             }
                         }
                     } else {
                         int nodeWidth = ln.width();
                         for (int lineIdx = 0; lineIdx < ln.lines.length; lineIdx++) {
                             String line = ln.lines[lineIdx];
-                            int startX = ln.x - nodeWidth / 2 + (nodeWidth - line.length()) / 2;
+                            int startX = ln.x - nodeWidth / 2
+                                    + (nodeWidth - DisplayWidths.displayWidth(line)) / 2;
                             int gridRow = baseRow + lineIdx;
                             if (gridRow >= grid.length)
                                 break;
-                            for (int i = 0; i < line.length(); i++) {
-                                int gx = startX + i;
-                                if (gx >= 0 && gx < gridWidth) {
-                                    grid[gridRow][gx] = line.charAt(i);
-                                }
-                            }
+                            writeLabelLine(grid, gridRow, startX, line, gridWidth);
                         }
                     }
                 }
@@ -880,7 +867,76 @@ public class Graph {
             return grid;
         }
 
-        private void renderMultiRowRouting(char[][] grid, int startRow, int numRows,
+        /**
+         * Writes one label line into the grid at display column {@code startX}.
+         * Wide characters occupy two cells (the second stays empty);
+         * combining marks join the previous cell; escape sequences ride
+         * along without consuming columns. Trailing escapes reattach to the
+         * last written cell so styling never leaks into borders.
+         */
+        private void writeLabelLine(String[][] grid, int gridRow, int startX, String line, int gridWidth) {
+            int gx = startX;
+            StringBuilder pendingEscapes = new StringBuilder();
+            int lastContentX = -1;
+            int i = 0;
+            while (i < line.length()) {
+                if (line.charAt(i) == '\u001B') {
+                    int end = DisplayWidths.consumeEscape(line, i);
+                    if (end < 0) {
+                        // Unterminated: keep historical cell-per-character behavior.
+                        boolean inBounds = gx >= 0 && gx < gridWidth;
+                        gx = writeCell(grid, gridRow, gx, gridWidth,
+                                pendingEscapes.toString() + line.charAt(i), 1);
+                        if (inBounds) {
+                            lastContentX = gx - 1;
+                        }
+                        pendingEscapes.setLength(0);
+                        i++;
+                        continue;
+                    }
+                    pendingEscapes.append(line, i, end);
+                    i = end;
+                    continue;
+                }
+                int codePoint = line.codePointAt(i);
+                int charCount = Character.charCount(codePoint);
+                int width = WcWidth.width(codePoint);
+                if (width < 0) {
+                    width = 1; // control characters keep their historical single cell
+                }
+                if (width == 0 && lastContentX >= 0) {
+                    grid[gridRow][lastContentX] += line.substring(i, i + charCount);
+                } else {
+                    if (width == 0) {
+                        width = 1; // leading mark: own cell rather than overwriting
+                    }
+                    gx = writeCell(grid, gridRow, gx, gridWidth,
+                            pendingEscapes.toString() + line.substring(i, i + charCount), width);
+                    pendingEscapes.setLength(0);
+                    lastContentX = gx - width;
+                }
+                i += charCount;
+            }
+            if (pendingEscapes.length() > 0 && lastContentX >= 0
+                    && lastContentX < gridWidth) {
+                grid[gridRow][lastContentX] += pendingEscapes.toString();
+            }
+        }
+
+        private int writeCell(String[][] grid, int gridRow, int gx, int gridWidth, String content, int width) {
+            if (gx >= 0 && gx < gridWidth) {
+                grid[gridRow][gx] = content;
+                if (width > 1) {
+                    int continuation = gx + 1;
+                    if (continuation < gridWidth) {
+                        grid[gridRow][continuation] = "";
+                    }
+                }
+            }
+            return gx + width;
+        }
+
+        private void renderMultiRowRouting(String[][] grid, int startRow, int numRows,
                 List<List<LayoutNode<T>>> layers, List<int[]> allEdges,
                 int parentLayerIdx, int gridWidth) {
             List<LayoutNode<T>> parentLayer = layers.get(parentLayerIdx);
@@ -995,7 +1051,7 @@ public class Graph {
                 for (int x = 0; x < gridWidth; x++) {
                     if (!up[x] && !down[x] && !left[x] && !right[x])
                         continue;
-                    grid[gridRow][x] = selectJunction(up[x], down[x], left[x], right[x]);
+                    grid[gridRow][x] = String.valueOf(selectJunction(up[x], down[x], left[x], right[x]));
                 }
             }
 
@@ -1054,12 +1110,12 @@ public class Graph {
                 for (int x = 0; x < gridWidth; x++) {
                     if (!up[x] && !down[x] && !left[x] && !right[x])
                         continue;
-                    grid[gridRow][x] = selectJunction(up[x], down[x], left[x], right[x]);
+                    grid[gridRow][x] = String.valueOf(selectJunction(up[x], down[x], left[x], right[x]));
                 }
             }
         }
 
-        private void renderRoutingRow(char[][] grid, int routingRow,
+        private void renderRoutingRow(String[][] grid, int routingRow,
                 List<List<LayoutNode<T>>> layers, List<int[]> allEdges,
                 int parentLayerIdx, int gridWidth) {
             // Collect edges between parentLayerIdx and parentLayerIdx+1
@@ -1130,7 +1186,7 @@ public class Graph {
             for (int x = 0; x < gridWidth; x++) {
                 if (!up[x] && !down[x] && !left[x] && !right[x])
                     continue;
-                grid[routingRow][x] = selectJunction(up[x], down[x], left[x], right[x]);
+                grid[routingRow][x] = String.valueOf(selectJunction(up[x], down[x], left[x], right[x]));
             }
         }
 
@@ -1168,12 +1224,12 @@ public class Graph {
             return ' ';
         }
 
-        private String gridToString(char[][] grid) {
+        private String gridToString(String[][] grid) {
             StringBuilder sb = new StringBuilder();
             int lastNonBlankRow = -1;
             for (int r = grid.length - 1; r >= 0; r--) {
-                for (char c : grid[r]) {
-                    if (c != ' ') {
+                for (String cell : grid[r]) {
+                    if (!isBlankCell(cell)) {
                         lastNonBlankRow = r;
                         break;
                     }
@@ -1186,18 +1242,35 @@ public class Graph {
                 // Right-trim
                 int lastNonSpace = -1;
                 for (int c = grid[r].length - 1; c >= 0; c--) {
-                    if (grid[r][c] != ' ') {
+                    if (!isBlankCell(grid[r][c])) {
                         lastNonSpace = c;
                         break;
                     }
                 }
-                if (lastNonSpace >= 0) {
-                    sb.append(grid[r], 0, lastNonSpace + 1);
+                for (int c = 0; c <= lastNonSpace; c++) {
+                    sb.append(grid[r][c]);
                 }
                 sb.append(System.lineSeparator());
             }
 
             return sb.toString();
+        }
+
+        /**
+         * Cells holding nothing, or only spaces, do not count as content.
+         * Anything else — including escape sequences and the empty second
+         * half of a wide character — is emitted verbatim.
+         */
+        private static boolean isBlankCell(String cell) {
+            if (cell.isEmpty()) {
+                return true;
+            }
+            for (int i = 0; i < cell.length(); i++) {
+                if (cell.charAt(i) != ' ') {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 

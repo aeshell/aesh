@@ -336,4 +336,43 @@ public class TreeTest {
 
         assertEquals(expected, output);
     }
+
+    // --- Test: labels keep their visible layout (#786 follow-up) ---
+
+    private static final String RED = "\u001B[31m";
+    private static final String RESET = "\u001B[0m";
+
+    private static String renderNestedLeaf(String leafLabel) {
+        return Tree.render(TreeNode.of("root")
+                .child(TreeNode.of(leafLabel).child("child"))
+                .child("tail"));
+    }
+
+    private static String stripAnsi(String output) {
+        return output.replace(RED, "").replace(RESET, "");
+    }
+
+    @Test
+    public void testAnsiStyledLabelsPreserveLayout() {
+        assertEquals(renderNestedLeaf("leaf"), stripAnsi(renderNestedLeaf(RED + "leaf" + RESET)));
+    }
+
+    @Test
+    public void testWideLabelsKeepConnectorIndentation() {
+        String expected = "root" + NL
+                + "├── ☕ 界 😀" + NL
+                + "│   └── child" + NL
+                + "└── tail" + NL;
+
+        assertEquals(expected, renderNestedLeaf("☕ 界 😀"));
+    }
+
+    @Test
+    public void testCombiningMarksKeepConnectorIndentation() {
+        TreeNode precomposed = TreeNode.of("root").child("AéZ");
+        TreeNode decomposed = TreeNode.of("root").child("Ae\u0301Z");
+
+        assertEquals(Tree.render(precomposed),
+                Tree.render(decomposed).replace("e\u0301", "\u00e9"));
+    }
 }
