@@ -146,6 +146,57 @@ public class MetadataProviderRegistryTest {
         MetadataProviderRegistry.register(null);
     }
 
+    // --- register() defers the class path scan (#794) ---
+
+    @Test
+    public void testExplicitRegistrationAnswersBeforeDiscovery() {
+        MetadataProviderRegistry.reset();
+        CommandMetadataProvider<?> universal = new StubProvider();
+        MetadataProviderRegistry.register(commandClassName -> universal);
+
+        // The explicit registry answers for a class the discoverable
+        // internal registry also covers: no scan is needed to resolve it
+        assertSame("explicit registry must answer before discovery runs",
+                universal, MetadataProviderRegistry.getProvider(AliasCommand.class));
+
+        // Proof the answer came from the explicit registry: after reset it
+        // is discovery's provider instead
+        MetadataProviderRegistry.reset();
+        CommandMetadataProvider<?> discovered = MetadataProviderRegistry.getProvider(AliasCommand.class);
+        assertNotNull("discovery must resume after reset", discovered);
+        assertNotSame("the earlier answer came from the explicit registry, not the scan",
+                universal, discovered);
+    }
+
+    @Test
+    public void testDiscoveryRunsOnlyOnExplicitMiss() {
+        MetadataProviderRegistry.reset();
+        // Registry that answers nothing: every lookup misses explicitly and
+        // must fall back to discovery, which still finds the internal
+        // registry on the class path
+        MetadataProviderRegistry.register(commandClassName -> null);
+        assertNotNull("discovery must answer classes no explicit registry covers",
+                MetadataProviderRegistry.getProvider(AliasCommand.class));
+    }
+
+    @Test
+    public void testExplicitRegistrationsSurviveClassloaderChange() {
+        MetadataProviderRegistry.reset();
+        CommandMetadataProvider<?> universal = new StubProvider();
+        MetadataProviderRegistry.register(commandClassName -> universal);
+
+        ClassLoader original = Thread.currentThread().getContextClassLoader();
+        try {
+            // A context classloader change re-runs discovery under the new
+            // loader but must keep explicitly registered registries (#794)
+            Thread.currentThread().setContextClassLoader(new URLClassLoader(new URL[0], original));
+            assertSame("explicit registration must survive a discovery reload",
+                    universal, MetadataProviderRegistry.getProvider(AliasCommand.class));
+        } finally {
+            Thread.currentThread().setContextClassLoader(original);
+        }
+    }
+
     // --- Invalidation on register/reset (#647) ---
 
     @Test

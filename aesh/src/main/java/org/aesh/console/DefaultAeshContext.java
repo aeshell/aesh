@@ -25,21 +25,20 @@ import java.util.Set;
 import org.aesh.command.export.ExportManager;
 import org.aesh.io.FileResource;
 import org.aesh.io.Resource;
-import org.aesh.terminal.utils.Config;
 
 /**
  * @author Aesh team
  */
 public class DefaultAeshContext implements AeshContext {
 
-    private Resource cwd;
+    private volatile Resource cwd;
     private final ExportManager exportManager;
 
     /** Cached default context for the user's working directory. */
     private static volatile DefaultAeshContext defaultInstance;
 
     public DefaultAeshContext() {
-        this(new FileResource(Config.getUserDir()), null);
+        this((ExportManager) null);
     }
 
     public DefaultAeshContext(Resource cwd) {
@@ -56,12 +55,14 @@ public class DefaultAeshContext implements AeshContext {
     }
 
     public DefaultAeshContext(ExportManager exportManager) {
-        this(new FileResource(Config.getUserDir()), exportManager);
+        this.exportManager = exportManager;
     }
 
     /**
      * Returns a cached default context for the user's working directory.
-     * Thread-safe with double-checked locking.
+     * Thread-safe with double-checked locking. The working directory itself
+     * materializes lazily on first read (see
+     * {@link #getCurrentWorkingDirectory()}).
      */
     public static DefaultAeshContext getDefault() {
         DefaultAeshContext instance = defaultInstance;
@@ -79,7 +80,24 @@ public class DefaultAeshContext implements AeshContext {
 
     @Override
     public Resource getCurrentWorkingDirectory() {
-        return cwd;
+        // The default working directory materializes on first read: building
+        // it eagerly ran Config.getUserDir() — whose class-init loads the
+        // NIO filesystem and stream machinery — plus an isDirectory()
+        // stat() on every start, even for commands that never read the
+        // working directory (#794).
+        Resource result = cwd;
+        if (result == null) {
+            synchronized (this) {
+                result = cwd;
+                if (result == null) {
+                    result = new FileResource(System.getProperty("user.dir"));
+                    if (!result.isDirectory())
+                        throw new IllegalArgumentException("Current working directory must be a directory");
+                    cwd = result;
+                }
+            }
+        }
+        return result;
     }
 
     @Override

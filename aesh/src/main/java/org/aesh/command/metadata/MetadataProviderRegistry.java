@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -45,14 +46,32 @@ import org.aesh.command.Command;
  */
 public final class MetadataProviderRegistry {
 
-    private static volatile List<MetadataRegistry> registries;
-    private static volatile ClassLoader registriesClassLoader;
+    /**
+     * Registries registered explicitly through {@link #register} or named by
+     * {@link #useOnly}. Consulted first on every lookup and populated with
+     * zero class path I/O, so {@code register(...)} never triggers a scan
+     * (#794).
+     */
+    private static volatile List<MetadataRegistry> explicitRegistries;
+
+    /**
+     * Registries discovered from the class path, loaded lazily on the first
+     * lookup that no explicit registry can answer. Cached per context
+     * classloader so a fresh classloader (dev-mode reload) gets a fresh
+     * scan while explicit registrations survive.
+     */
+    private static volatile List<MetadataRegistry> discoveredRegistries;
+    private static volatile ClassLoader discoveredRegistriesClassLoader;
+
+    /** True while a {@link #useOnly} set stands: discovery is skipped entirely. */
+    private static volatile boolean discoveryDisabled;
 
     /**
      * Bumped every time the meaning of the registry set changes
-     * ({@link #register} adding a registry, {@link #reset}, or a
-     * classloader-triggered reload). Cached entries computed under an older
-     * generation are recomputed on next lookup.
+     * ({@link #register} adding a registry, {@link #useOnly} replacing the
+     * set, {@link #reset}, a discovery load, or a classloader-triggered
+     * reload). Cached entries computed under an older generation are
+     * recomputed on next lookup.
      */
     private static volatile long cacheGeneration;
 
@@ -86,7 +105,16 @@ public final class MetadataProviderRegistry {
             Class<?> current = cls;
             while (current != null && current != Object.class) {
                 String className = current.getName();
-                for (MetadataRegistry registry : getRegistries()) {
+                // Explicit registries answer without any class path I/O;
+                // discovery runs only when they cannot answer (#794)
+                for (MetadataRegistry registry : snapshotExplicitRegistries()) {
+                    @SuppressWarnings("rawtypes")
+                    CommandMetadataProvider provider = registry.get(className);
+                    if (provider != null) {
+                        return new CacheEntry(provider, cacheGeneration);
+                    }
+                }
+                for (MetadataRegistry registry : discoveryRegistries()) {
                     @SuppressWarnings("rawtypes")
                     CommandMetadataProvider provider = registry.get(className);
                     if (provider != null) {
@@ -140,9 +168,12 @@ public final class MetadataProviderRegistry {
      * <li>Testing with mock registries</li>
      * </ul>
      * <p>
-     * Registered instances are consulted before registries discovered via
-     * {@link java.util.ServiceLoader}; among explicit registrations the
-     * most recently registered wins.
+     * The registration itself performs no class path I/O: lookups consult
+     * explicitly registered registries first and fall back to class path
+     * discovery only when they cannot answer, so an application whose
+     * explicit registry covers its commands never pays the discovery scan
+     * (#794). Registered instances keep precedence over discovery; among
+     * explicit registrations the most recently registered wins.
      *
      * @param registry the registry to register
      * @since 3.16
@@ -151,18 +182,20 @@ public final class MetadataProviderRegistry {
         if (registry == null)
             return;
         synchronized (MetadataProviderRegistry.class) {
-            // Ensure getRegistries() has loaded the ServiceLoader-based registries first,
-            // then add the manual registration alongside them
-            List<MetadataRegistry> current = getRegistries();
-            if (!current.contains(registry)) {
-                // Create a new list to avoid ConcurrentModificationException.
+            List<MetadataRegistry> current = explicitRegistries;
+            if (current == null) {
+                List<MetadataRegistry> updated = new ArrayList<>(1);
+                updated.add(registry);
+                explicitRegistries = updated;
+                cacheGeneration++;
+            } else if (!current.contains(registry)) {
                 // Prepend so explicit registrations take precedence over
-                // discovery; cached lookups from the older generation are
-                // recomputed on next read.
+                // discovery and over earlier registrations; cached lookups
+                // from the older generation are recomputed on next read.
                 List<MetadataRegistry> updated = new ArrayList<>(current.size() + 1);
                 updated.add(registry);
                 updated.addAll(current);
-                registries = updated;
+                explicitRegistries = updated;
                 cacheGeneration++;
             }
         }
@@ -201,8 +234,10 @@ public final class MetadataProviderRegistry {
                 if (registry != null && !fixed.contains(registry))
                     fixed.add(registry);
             }
-            MetadataProviderRegistry.registries = fixed;
-            registriesClassLoader = Thread.currentThread().getContextClassLoader();
+            explicitRegistries = fixed;
+            discoveryDisabled = true;
+            discoveredRegistries = null;
+            discoveredRegistriesClassLoader = null;
             cacheGeneration++;
         }
     }
@@ -253,32 +288,53 @@ public final class MetadataProviderRegistry {
         if (ownerClass == null)
             return result;
         String ownerName = ownerClass.getName();
-        for (MetadataRegistry registry : getRegistries()) {
-            try {
-                List<MethodCommandMetadataProvider> providers = registry.methodProviders(ownerName);
-                if (providers != null)
-                    result.addAll(providers);
-            } catch (Exception ignored) {
-                // A broken registry must not break unrelated lookups
-            }
+        for (MetadataRegistry registry : snapshotExplicitRegistries()) {
+            collectMethodProviders(registry, ownerName, result);
+        }
+        for (MetadataRegistry registry : discoveryRegistries()) {
+            collectMethodProviders(registry, ownerName, result);
         }
         return result;
     }
 
-    private static List<MetadataRegistry> getRegistries() {
+    private static void collectMethodProviders(MetadataRegistry registry, String ownerName,
+            List<MethodCommandMetadataProvider> result) {
+        try {
+            List<MethodCommandMetadataProvider> providers = registry.methodProviders(ownerName);
+            if (providers != null)
+                result.addAll(providers);
+        } catch (Exception ignored) {
+            // A broken registry must not break unrelated lookups
+        }
+    }
+
+    /** Explicit registries as an immutable snapshot (empty when none). */
+    private static List<MetadataRegistry> snapshotExplicitRegistries() {
+        List<MetadataRegistry> explicit = explicitRegistries;
+        return explicit != null ? explicit : Collections.emptyList();
+    }
+
+    /**
+     * Discovered registries, loading them lazily: the class path scan runs
+     * only on the first lookup that no explicit registry can answer, and is
+     * re-run when the context classloader changes (a fresh classloader may
+     * carry fresh generated registries, e.g. dev-mode reloads). Explicit
+     * registrations survive a reload (#794).
+     */
+    private static List<MetadataRegistry> discoveryRegistries() {
+        if (discoveryDisabled)
+            return Collections.emptyList();
         ClassLoader currentCL = Thread.currentThread().getContextClassLoader();
-        List<MetadataRegistry> result = registries;
-        // Reload if registries haven't been loaded yet or classloader changed
-        if (result == null || registriesClassLoader != currentCL) {
+        List<MetadataRegistry> result = discoveredRegistries;
+        if (result == null || discoveredRegistriesClassLoader != currentCL) {
             synchronized (MetadataProviderRegistry.class) {
-                result = registries;
-                if (result == null || registriesClassLoader != currentCL) {
+                result = discoveredRegistries;
+                if (result == null || discoveredRegistriesClassLoader != currentCL) {
                     result = loadRegistries();
-                    registries = result;
-                    registriesClassLoader = currentCL;
-                    // The list identity changed out from under cached
-                    // entries (explicit registrations included); force them
-                    // to recompute.
+                    discoveredRegistries = result;
+                    discoveredRegistriesClassLoader = currentCL;
+                    // The discovery result changed out from under cached
+                    // entries; force them to recompute.
                     cacheGeneration++;
                 }
             }
@@ -331,7 +387,8 @@ public final class MetadataProviderRegistry {
     }
 
     /**
-     * Reset the registry, forcing re-discovery on next access.
+     * Reset the registry, clearing explicit registrations and forcing
+     * re-discovery on next access.
      * <p>
      * Note: with the ClassValue-based cache, explicit reset is typically
      * not needed for classloader changes — the cache is automatically
@@ -342,8 +399,10 @@ public final class MetadataProviderRegistry {
      */
     public static void reset() {
         synchronized (MetadataProviderRegistry.class) {
-            registries = null;
-            registriesClassLoader = null;
+            explicitRegistries = null;
+            discoveredRegistries = null;
+            discoveredRegistriesClassLoader = null;
+            discoveryDisabled = false;
             cacheGeneration++;
         }
     }
