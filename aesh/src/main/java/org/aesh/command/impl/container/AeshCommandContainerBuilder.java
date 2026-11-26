@@ -1396,8 +1396,23 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
         }
     }
 
-    /** Cached child resolver function to avoid repeated lambda allocation. */
+    /**
+     * Cached child resolver to avoid repeated lambda allocation (#517); a
+     * named class also avoids spinning a hidden lambda per builder (#793).
+     */
     private Function<Class<? extends Command>, CommandContainer<CI>> cachedChildResolver;
+
+    /** Resolves lazy children through this builder (see {@link #cachedChildResolver}). */
+    private final class BuilderChildResolver implements Function<Class<? extends Command>, CommandContainer<CI>> {
+        @Override
+        public CommandContainer<CI> apply(Class<? extends Command> clazz) {
+            try {
+                return create(clazz);
+            } catch (CommandLineParserException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
     /**
      * Set the child resolver on a parser, using a cached function that
@@ -1406,13 +1421,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
      */
     private void setChildResolverFromBuilder(AeshCommandLineParser<CI> parser) {
         if (cachedChildResolver == null) {
-            cachedChildResolver = clazz -> {
-                try {
-                    return this.create(clazz);
-                } catch (CommandLineParserException e) {
-                    throw new RuntimeException(e);
-                }
-            };
+            cachedChildResolver = new BuilderChildResolver();
         }
         parser.setChildResolver(cachedChildResolver);
     }

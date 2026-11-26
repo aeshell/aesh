@@ -179,7 +179,9 @@ public class AeshCommandPopulator<O extends Object, CI extends CommandInvocation
     private void injectParentCommands(ProcessedCommand<Command<CI>, CI> processedCommand,
             CommandContext commandContext) {
         org.aesh.command.impl.internal.ParentCommandInjector injector = processedCommand.getParentCommandInjector();
-        if (injector != null) {
+        // NO_OP carries no @ParentCommand fields: skip the lookup lambda and
+        // the call entirely (#793)
+        if (injector != null && injector != org.aesh.command.impl.internal.ParentCommandInjector.NO_OP) {
             injector.inject(getObject(), type -> {
                 if (!Command.class.isAssignableFrom(type))
                     return null;

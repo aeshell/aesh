@@ -29,8 +29,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
@@ -127,33 +125,68 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
     }
 
-    private static final Pattern DESCRIPTION_VARIABLE_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
     private static final char DASH = '-';
     private static final char EQUALS = '=';
 
-    private static final Comparator<ProcessedOption> BY_ORDER = new Comparator<ProcessedOption>() {
+    /**
+     * Comparators as named classes: anonymous instances plus
+     * {@code thenComparing} chains spin hidden lambda classes and initialize
+     * extra classes at class-init, although option sorting is help-only
+     * (#793).
+     */
+    private static final Comparator<ProcessedOption> BY_ORDER = new ByOrder();
+    private static final Comparator<ProcessedOption> SORT_BY_ORDER_NAME = new ByOrderThenName();
+    private static final Comparator<ProcessedOption> SORT_BY_ORDER_ONLY = new ByOrderThenDeclaration();
+    private static final Comparator<ProcessedOption> POSITIONAL_DISPLAY_ORDER = new ByPositionalIndex();
+
+    private static final class ByOrder implements Comparator<ProcessedOption> {
         @Override
         public int compare(ProcessedOption l, ProcessedOption r) {
             return Integer.compare(l.getOrder(), r.getOrder());
         }
-    };
-    private static final Comparator<ProcessedOption> BY_DECLARATION_ORDER = new Comparator<ProcessedOption>() {
+    }
+
+    private static final class ByOrderThenName implements Comparator<ProcessedOption> {
         @Override
         public int compare(ProcessedOption l, ProcessedOption r) {
-            return Integer.compare(l.getDeclarationOrder(), r.getDeclarationOrder());
-        }
-    };
-    private static final Comparator<ProcessedOption> BY_NAME = new Comparator<ProcessedOption>() {
-        @Override
-        public int compare(ProcessedOption l, ProcessedOption r) {
+            int byOrder = Integer.compare(l.getOrder(), r.getOrder());
+            if (byOrder != 0)
+                return byOrder;
             String ln = l.name() != null ? l.name() : "";
             String rn = r.name() != null ? r.name() : "";
-            return ln.compareTo(rn);
+            int byName = ln.compareTo(rn);
+            if (byName != 0)
+                return byName;
+            return Integer.compare(l.getDeclarationOrder(), r.getDeclarationOrder());
         }
-    };
-    private static final Comparator<ProcessedOption> SORT_BY_ORDER_NAME = BY_ORDER.thenComparing(BY_NAME)
-            .thenComparing(BY_DECLARATION_ORDER);
-    private static final Comparator<ProcessedOption> SORT_BY_ORDER_ONLY = BY_ORDER.thenComparing(BY_DECLARATION_ORDER);
+    }
+
+    private static final class ByOrderThenDeclaration implements Comparator<ProcessedOption> {
+        @Override
+        public int compare(ProcessedOption l, ProcessedOption r) {
+            int byOrder = Integer.compare(l.getOrder(), r.getOrder());
+            if (byOrder != 0)
+                return byOrder;
+            return Integer.compare(l.getDeclarationOrder(), r.getDeclarationOrder());
+        }
+    }
+
+    /**
+     * Positional display order: index-range minimums, with a lone
+     * {@code @Argument} sorting before {@code @Arguments}. Size-gated at the
+     * call site so single-positional commands never sort at all (#793).
+     */
+    private static final class ByPositionalIndex implements Comparator<ProcessedOption> {
+        @Override
+        public int compare(ProcessedOption left, ProcessedOption right) {
+            return Integer.compare(minIndex(left), minIndex(right));
+        }
+
+        private static int minIndex(ProcessedOption option) {
+            return option.hasIndexRange() ? option.getIndexRange().getMin()
+                    : (option.getOptionType() == OptionType.ARGUMENT ? 0 : 1);
+        }
+    }
 
     private String name;
     private final String description;
@@ -621,7 +654,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (!includeHidden && o.getVisibility() == OptionVisibility.HIDDEN)
                 continue;
             String group = o.getHelpGroup().isEmpty() ? "" : o.getHelpGroup();
-            groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
+            // get-or-create without a lambda: help rendering spins no
+            // hidden classes (#793)
+            List<ProcessedOption> members = groups.get(group);
+            if (members == null) {
+                members = new ArrayList<>();
+                groups.put(group, members);
+            }
+            members.add(o);
         }
         for (List<ProcessedOption> group : groups.values())
             group.sort(BY_ORDER);
@@ -1835,11 +1875,24 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         Map<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
         for (ProcessedOption o : visibleOpts) {
             String group = o.getHelpGroup().isEmpty() ? "" : o.getHelpGroup();
-            groups.computeIfAbsent(group, k -> new ArrayList<>()).add(o);
+            // get-or-create without a lambda: help rendering spins no
+            // hidden classes (#793)
+            List<ProcessedOption> members = groups.get(group);
+            if (members == null) {
+                members = new ArrayList<>();
+                groups.put(group, members);
+            }
+            members.add(o);
         }
         for (ProcessedOption positional : positionalOptions) {
-            if (!positional.getHelpGroup().isEmpty())
-                groups.computeIfAbsent(positional.getHelpGroup(), k -> new ArrayList<>()).add(positional);
+            if (!positional.getHelpGroup().isEmpty()) {
+                List<ProcessedOption> members = groups.get(positional.getHelpGroup());
+                if (members == null) {
+                    members = new ArrayList<>();
+                    groups.put(positional.getHelpGroup(), members);
+                }
+                members.add(positional);
+            }
         }
         if (!groups.isEmpty()) {
             for (List<ProcessedOption> group : groups.values())
@@ -2501,13 +2554,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (arguments != null)
             positional.add(arguments);
 
-        positional.sort((left, right) -> {
-            int leftMin = left.hasIndexRange() ? left.getIndexRange().getMin()
-                    : (left.getOptionType() == OptionType.ARGUMENT ? 0 : 1);
-            int rightMin = right.hasIndexRange() ? right.getIndexRange().getMin()
-                    : (right.getOptionType() == OptionType.ARGUMENT ? 0 : 1);
-            return Integer.compare(leftMin, rightMin);
-        });
+        // Single-positional commands are already in order; sorting would
+        // spin a lambda for nothing (#793)
+        if (positional.size() > 1)
+            positional.sort(POSITIONAL_DISPLAY_ORDER);
         cachedPositionalOrder = positional;
         return positional;
     }
@@ -2614,16 +2664,39 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (raw == null || raw.isEmpty() || raw.indexOf('$') < 0)
                 return raw;
 
-            Matcher matcher = DESCRIPTION_VARIABLE_PATTERN.matcher(raw);
-            StringBuffer out = new StringBuffer(raw.length());
-            while (matcher.find()) {
-                String key = matcher.group(1);
+            // Plain scanner replacing a Pattern: the compiled regex loaded
+            // the whole java.util.regex machinery at ProcessedCommand
+            // class-init on every execution, even when no description
+            // contains a variable (#793). Semantics match the historical
+            // pattern \$\{([^}]+)}: "${" + at least one non-} character +
+            // "}", left-to-right, unresolved keys stay literal.
+            int length = raw.length();
+            StringBuilder out = new StringBuilder(length);
+            int copiedUpTo = 0;
+            int searchFrom = 0;
+            while (searchFrom < length) {
+                int start = raw.indexOf("${", searchFrom);
+                if (start < 0)
+                    break;
+                int end = raw.indexOf('}', start + 2);
+                if (end < 0)
+                    break;
+                if (end == start + 2) {
+                    // "${}" is not a variable: keep scanning after it
+                    searchFrom = end + 1;
+                    continue;
+                }
+                String key = raw.substring(start + 2, end);
                 String replacement = resolveVariable(key, option);
+                out.append(raw, copiedUpTo, start);
                 if (replacement == null)
-                    replacement = matcher.group(0);
-                matcher.appendReplacement(out, Matcher.quoteReplacement(replacement));
+                    out.append(raw, start, end + 1);
+                else
+                    out.append(replacement);
+                copiedUpTo = end + 1;
+                searchFrom = end + 1;
             }
-            matcher.appendTail(out);
+            out.append(raw, copiedUpTo, length);
             return out.toString();
         }
 

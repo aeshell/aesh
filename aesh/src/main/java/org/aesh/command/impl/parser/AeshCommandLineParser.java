@@ -23,6 +23,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -230,8 +231,14 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         if (clazz == null)
             return null;
         // Remove all other keys mapping to the same class (aliases)
-        // to prevent duplicate resolution via stale alias entries
-        lazyChildClasses.values().removeIf(c -> c == clazz);
+        // to prevent duplicate resolution via stale alias entries.
+        // Iterator loop instead of removeIf: the capturing lambda spun a
+        // hidden class on every lazy resolution (#793).
+        Iterator<Class<? extends Command>> entries = lazyChildClasses.values().iterator();
+        while (entries.hasNext()) {
+            if (entries.next() == clazz)
+                entries.remove();
+        }
         try {
             CommandContainer<CI> container = resolveChildContainer(clazz);
             addChildParser(container.getParser());
@@ -449,7 +456,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             return;
         org.aesh.command.impl.internal.ParentCommandInjector injector = child.getProcessedCommand()
                 .getParentCommandInjector();
-        if (injector != null) {
+        // NO_OP carries no @ParentCommand fields: skip the lookup lambda and
+        // the call entirely, the common case for generated commands (#793)
+        if (injector != null && injector != org.aesh.command.impl.internal.ParentCommandInjector.NO_OP) {
             AeshCommandLineParser<CI> childParser = (AeshCommandLineParser<CI>) child;
             injector.inject(child.getCommand(), type -> {
                 for (AeshCommandLineParser<CI> ancestor = childParser.parent; ancestor != null; ancestor = ancestor.parent) {
@@ -623,12 +632,23 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             if (hasChildren) {
                 for (CommandLineParser<CI> child : parsers) {
                     String group = child.getProcessedCommand().helpGroup();
-                    outputGroups.computeIfAbsent(group.isEmpty() ? "" : group, k -> new ArrayList<>())
-                            .add(child.getFormattedCommand(4, maxLength + 2, width));
+                    // get-or-create without a lambda: help rendering spins
+                    // no hidden classes (#793)
+                    String key = group.isEmpty() ? "" : group;
+                    List<String> lines = outputGroups.get(key);
+                    if (lines == null) {
+                        lines = new ArrayList<>();
+                        outputGroups.put(key, lines);
+                    }
+                    lines.add(child.getFormattedCommand(4, maxLength + 2, width));
                 }
             }
             for (Map.Entry<String, List<HelpEntry>> section : additionalSections.entrySet()) {
-                List<String> lines = outputGroups.computeIfAbsent(section.getKey(), k -> new ArrayList<>());
+                List<String> lines = outputGroups.get(section.getKey());
+                if (lines == null) {
+                    lines = new ArrayList<>();
+                    outputGroups.put(section.getKey(), lines);
+                }
                 for (HelpEntry he : section.getValue())
                     lines.add(formatHelpEntry(he, 4, maxLength + 2, scheme));
             }

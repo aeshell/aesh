@@ -143,7 +143,7 @@ public class AeshRuntimeRunner {
          * @return true when help and other output should use ANSI colors
          */
         public boolean resolve() {
-            return resolveAnsiColors(this, TtyDetect::isStdoutTty, System::getenv);
+            return resolveAnsiColors(this, STDOUT_TTY, SYSTEM_GETENV);
         }
 
         /**
@@ -167,7 +167,7 @@ public class AeshRuntimeRunner {
          * @return true when redirected output should keep ANSI colors
          */
         public boolean resolveWhenRedirected() {
-            return resolveForceWhenRedirected(this, System::getenv);
+            return resolveForceWhenRedirected(this, SYSTEM_GETENV);
         }
 
         /**
@@ -626,26 +626,57 @@ public class AeshRuntimeRunner {
     }
 
     /**
-     * Resolve a value once and cache it. Used for the ANSI tty probes so
-     * every render site shares a single resolution per execution without
-     * probing on paths that never render colored output (#783).
+     * Resolve a value once and cache it. Named class, not a lambda: the
+     * capturing supplier behind the old {@code memoize(...)} spun a hidden
+     * lambda class on every runner execution, dragging in the JDK's
+     * LambdaMetafactory bytecode-generation machinery before args were even
+     * inspected (#793).
      */
-    private static Supplier<Boolean> memoize(Supplier<Boolean> probe) {
-        return new Supplier<Boolean>() {
-            private Boolean value;
+    private final class AnsiColorProbe implements Supplier<Boolean> {
+        private final Supplier<Boolean> ttyProbe;
+        private Boolean value;
 
-            @Override
-            public Boolean get() {
-                if (value == null)
-                    value = probe.get();
-                return value;
+        AnsiColorProbe(Supplier<Boolean> ttyProbe) {
+            this.ttyProbe = ttyProbe;
+        }
+
+        @Override
+        public Boolean get() {
+            Boolean resolved = value;
+            if (resolved == null) {
+                resolved = resolveAnsiColors(ansiMode, ttyProbe, SYSTEM_GETENV);
+                value = resolved;
             }
-        };
+            return resolved;
+        }
     }
 
-    private Supplier<Boolean> memoizeAnsiProbe(Supplier<Boolean> ttyProbe) {
-        return memoize(() -> resolveAnsiColors(ansiMode, ttyProbe, System::getenv));
-    }
+    /**
+     * {@code System.getenv} as a named constant: the {@code System::getenv}
+     * method reference spins a hidden lambda class at runtime (#793).
+     */
+    private static final Function<String, String> SYSTEM_GETENV = new Function<String, String>() {
+        @Override
+        public String apply(String name) {
+            return System.getenv(name);
+        }
+    };
+
+    /** Stdout tty probe as a named constant (see {@link #SYSTEM_GETENV}). */
+    private static final Supplier<Boolean> STDOUT_TTY = new Supplier<Boolean>() {
+        @Override
+        public Boolean get() {
+            return TtyDetect.isStdoutTty();
+        }
+    };
+
+    /** Stderr tty probe as a named constant (see {@link #SYSTEM_GETENV}). */
+    private static final Supplier<Boolean> STDERR_TTY = new Supplier<Boolean>() {
+        @Override
+        public Boolean get() {
+            return TtyDetect.isStderrTty();
+        }
+    };
 
     @SuppressWarnings("unchecked")
     public CommandResult execute() {
@@ -657,12 +688,12 @@ public class AeshRuntimeRunner {
                 return CommandResult.USAGE_ERROR;
             }
         }
-        // ANSI tty probes stay lazy: each memoized supplier resolves at most
+        // ANSI tty probes stay lazy: each probe resolves at most
         // once per execution, and only when colored output is actually
         // rendered. Successful executions never probe (#783).
-        Supplier<Boolean> colors = memoizeAnsiProbe(TtyDetect::isStdoutTty);
+        Supplier<Boolean> colors = new AnsiColorProbe(STDOUT_TTY);
         // Errors and usage go to stderr, which may be redirected on its own
-        Supplier<Boolean> stderrColors = memoizeAnsiProbe(TtyDetect::isStderrTty);
+        Supplier<Boolean> stderrColors = new AnsiColorProbe(STDERR_TTY);
         CommandResult fastFailure = failFastOnUnknownSubcommand(stderrColors);
         if (fastFailure != null)
             return fastFailure;
@@ -715,7 +746,7 @@ public class AeshRuntimeRunner {
                 .commandRegistry(commandRegistry)
                 .shell(effectiveShell)
                 .stdoutColors(colors)
-                .ansiWhenRedirected(resolveForceWhenRedirected(ansiMode, System::getenv))
+                .ansiWhenRedirected(resolveForceWhenRedirected(ansiMode, SYSTEM_GETENV))
                 .enableProgramStatus(programStatusEnabled)
                 .programStatusAppName(programStatusAppName)
                 .programStatusConnection(programStatusConnection);
