@@ -94,6 +94,50 @@ final class CodeGenerator {
     }
 
     /**
+     * Whether any field (or any field inside a {@code @Mixin}, including
+     * superclasses) maps to an option: such a provider implements
+     * {@code IndexedFieldAccessor} and needs the shared accessor local (#792).
+     */
+    private static boolean hasOptionFields(List<VariableElement> fields) {
+        for (VariableElement field : fields) {
+            if (hasAnnotation(field))
+                return true;
+            if (field.getAnnotation(Mixin.class) != null) {
+                TypeMirror mixinType = field.asType();
+                if (mixinType instanceof DeclaredType
+                        && hasMixinOptionFields((TypeElement) ((DeclaredType) mixinType).asElement())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasMixinOptionFields(TypeElement typeElement) {
+        for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
+            if (enclosed instanceof VariableElement) {
+                VariableElement field = (VariableElement) enclosed;
+                if (hasAnnotation(field))
+                    return true;
+                if (field.getAnnotation(Mixin.class) != null) {
+                    TypeMirror mixinType = field.asType();
+                    if (mixinType instanceof DeclaredType
+                            && hasMixinOptionFields((TypeElement) ((DeclaredType) mixinType).asElement())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() != TypeKind.NONE && !superclass.toString().equals("java.lang.Object")) {
+            if (superclass instanceof DeclaredType) {
+                return hasMixinOptionFields((TypeElement) ((DeclaredType) superclass).asElement());
+            }
+        }
+        return false;
+    }
+
+    /**
      * If the given type is an enum, returns its constant names (lowercased).
      * Returns null if the type is not an enum or constants cannot be resolved.
      * Used to auto-populate allowedValues at compile time (#591).
@@ -266,20 +310,28 @@ final class CodeGenerator {
             }
         }
 
-        // buildProcessedCommand()
+        // buildProcessedCommand() / buildHelpProcessedCommand() delegate to a
+        // single shared build() so every option's metadata is emitted once
+        // (#792). Execution-only work (converters, callbacks, field
+        // accessors, initial values, lookup wiring) is guarded at runtime by
+        // !forHelp, preserving the help-path isolation (#675): a guarded
+        // branch never executes, and verification alone initializes nothing.
         body.append("    @Override\n");
         body.append("    public ProcessedCommand buildProcessedCommand(").append(simpleName).append(" instance)");
         body.append(" throws CommandLineParserException {\n");
-        generateBuildProcessedCommand(body, simpleName, commandElement,
-                fields, isGroup, elementUtils, typeUtils, accessorInfos, parentInfos, false, sharedConverters);
+        body.append("        return build(instance, false);\n");
         body.append("    }\n\n");
 
-        // buildHelpProcessedCommand()
         body.append("    @Override\n");
         body.append("    public ProcessedCommand buildHelpProcessedCommand()");
         body.append(" throws CommandLineParserException {\n");
+        body.append("        return build(null, true);\n");
+        body.append("    }\n\n");
+
+        body.append("    private ProcessedCommand build(").append(simpleName).append(" instance, boolean forHelp)");
+        body.append(" throws CommandLineParserException {\n");
         generateBuildProcessedCommand(body, simpleName, commandElement,
-                fields, isGroup, elementUtils, typeUtils, new java.util.ArrayList<>(), parentInfos, true, sharedConverters);
+                fields, isGroup, elementUtils, typeUtils, accessorInfos, parentInfos, sharedConverters);
         body.append("    }\n\n");
 
         boolean hasRealFields = hasRealFieldAccessors(accessorInfos);
@@ -558,7 +610,7 @@ final class CodeGenerator {
             List<VariableElement> fields, boolean isGroup,
             Elements elementUtils, Types typeUtils,
             List<FieldAccessorInfo> accessorInfos, List<FieldAccessorInfo> parentInfos,
-            boolean forHelp, java.util.LinkedHashSet<String> sharedConverters) {
+            java.util.LinkedHashSet<String> sharedConverters) {
 
         boolean generateHelp;
         String version;
@@ -579,9 +631,9 @@ final class CodeGenerator {
         boolean sortOptions = "true".equals(
                 getAnnotationValue(commandElement, "sortOptions", elementUtils));
         String validatorExpr = commandCallbackExpression(commandElement, "validator",
-                NULL_COMMAND_VALIDATOR, elementUtils, forHelp);
+                NULL_COMMAND_VALIDATOR, elementUtils);
         String resultHandlerExpr = commandCallbackExpression(commandElement, "resultHandler",
-                NULL_RESULT_HANDLER, elementUtils, forHelp);
+                NULL_RESULT_HANDLER, elementUtils);
 
         // Pre-count options so the ArrayList is pre-sized, avoiding resizing (#575)
         int optionCount = countOptions(fields, elementUtils, typeUtils);
@@ -595,7 +647,7 @@ final class CodeGenerator {
                 getAnnotationValue(commandElement, "name", elementUtils))).append(",\n");
         sb.append("                ").append(stringLiteral(
                 getAnnotationValue(commandElement, "description", elementUtils))).append(",\n");
-        sb.append("                ").append(forHelp ? "null" : "instance").append(",\n");
+        sb.append("                ").append(forHelpGuard("instance")).append(",\n");
         sb.append("                ").append(validatorExpr).append(", ").append(resultHandlerExpr).append(",\n");
         sb.append("                ")
                 .append(disableParsing).append(", ").append(stopAtFirstPositional).append(", ")
@@ -604,32 +656,37 @@ final class CodeGenerator {
 
         // Non-default command attributes, set directly instead of builder-chained (#791)
         emitCommandCallbackSetter(sb, "setActivator", commandElement, "activator",
-                NULL_COMMAND_ACTIVATOR, elementUtils, forHelp);
+                NULL_COMMAND_ACTIVATOR, elementUtils);
         String[] aliases = getAnnotationStringArrayValue(commandElement, "aliases", elementUtils);
         if (aliases != null && aliases.length > 0) {
             sb.append("        processedCommand.setAliases(").append(listExpression(aliases)).append(");\n\n");
         }
         emitCommandCallbackSetter(sb, "setDefaultValueProvider", commandElement, "defaultValueProvider",
-                NULL_DEFAULT_VALUE_PROVIDER, elementUtils, forHelp);
+                NULL_DEFAULT_VALUE_PROVIDER, elementUtils);
         String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);
         if (helpUrl != null && !helpUrl.isEmpty()) {
             sb.append("        processedCommand.setHelpUrl(").append(stringLiteral(helpUrl)).append(");\n\n");
         }
         emitHelpToggleSources(sb, commandElement, elementUtils);
 
-        // Resolve shared converters as method locals on the execution path
-        // only (#675). Class-level statics would warm every converter type
-        // at provider class-init — including for help listings that never
-        // parse a value.
-        if (!forHelp) {
-            for (String type : sharedConverters) {
-                sb.append("        org.aesh.command.converter.Converter converter_")
-                        .append(converterConstantSuffix(type))
-                        .append(" = org.aesh.converter.CLConverterManager.getInstance().getConverter(")
-                        .append(type).append(".class);\n");
-            }
-            if (!sharedConverters.isEmpty())
-                sb.append("\n");
+        // Resolve shared converters as method locals, gated by forHelp so the
+        // help path resolves none (#675). Class-level statics would warm every
+        // converter type at provider class-init — including for help listings
+        // that never parse a value.
+        for (String type : sharedConverters) {
+            sb.append("        org.aesh.command.converter.Converter converter_")
+                    .append(converterConstantSuffix(type))
+                    .append(" = forHelp ? null : org.aesh.converter.CLConverterManager.getInstance().getConverter(")
+                    .append(type).append(".class);\n");
+        }
+        if (!sharedConverters.isEmpty())
+            sb.append("\n");
+        // One gated accessor reference shared by every option (#792): help
+        // builds pass null so options get no field accessor at all. Emitted
+        // only when the provider implements IndexedFieldAccessor, i.e. when
+        // it has option fields; otherwise there are no call sites.
+        if (hasOptionFields(fields)) {
+            sb.append("        org.aesh.command.impl.internal.IndexedFieldAccessor accessor = forHelp ? null : this;\n\n");
         }
 
         // Set command-level completeFallback if not DEFAULT (#565)
@@ -683,11 +740,8 @@ final class CodeGenerator {
             sb.append("            ProcessedOption helpOpt = ProcessedOption.createDirect(\n");
             sb.append("                    \"h\", \"help\", \"Display this help and exit\",\n");
             sb.append("                    Boolean.class, \"generatedHelp\", OptionType.BOOLEAN,\n");
-            if (forHelp)
-                sb.append("                    null, null);\n");
-            else
-                sb.append(
-                        "                    converter_java_lang_Boolean, new org.aesh.command.impl.internal.SyntheticBooleanAccessor());\n");
+            sb.append(
+                    "                    converter_java_lang_Boolean, forHelp ? null : new org.aesh.command.impl.internal.SyntheticBooleanAccessor());\n");
             sb.append("            helpOpt.setOverrideRequired(true);\n");
             sb.append("            processedCommand.addOptionDirect(helpOpt);\n");
             sb.append("        }\n");
@@ -703,11 +757,8 @@ final class CodeGenerator {
             sb.append("            ProcessedOption versionOpt = ProcessedOption.createDirect(\n");
             sb.append("                    \"v\", \"version\", \"Displays version information of the command\",\n");
             sb.append("                    Boolean.class, \"generatedVersion\", OptionType.BOOLEAN,\n");
-            if (forHelp)
-                sb.append("                    null, null);\n");
-            else
-                sb.append(
-                        "                    converter_java_lang_Boolean, new org.aesh.command.impl.internal.SyntheticBooleanAccessor());\n");
+            sb.append(
+                    "                    converter_java_lang_Boolean, forHelp ? null : new org.aesh.command.impl.internal.SyntheticBooleanAccessor());\n");
             sb.append("            versionOpt.setOverrideRequired(true);\n");
             sb.append("            processedCommand.addOptionDirect(versionOpt);\n");
             sb.append("        }\n");
@@ -720,22 +771,24 @@ final class CodeGenerator {
         // Process user fields
         for (VariableElement field : fields) {
             generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils, accessorInfos,
-                    forHelp, commandPackage, false);
+                    commandPackage, false);
         }
 
-        if (!forHelp) {
-            if (parentInfos.isEmpty()) {
-                sb.append(
-                        "        processedCommand.setParentCommandInjector(org.aesh.command.impl.internal.ParentCommandInjector.NO_OP);\n\n");
-            } else {
-                sb.append("        processedCommand.setParentCommandInjector(this);\n\n");
-            }
-            if (hasLookupOptions(accessorInfos)) {
-                sb.append("        processedCommand.setGeneratedOptionLookup(this);\n\n");
-            } else {
-                sb.append("        processedCommand.setGeneratedOptionLookup(GeneratedOptionLookup.EMPTY);\n\n");
-            }
+        // Runtime lookup wiring is execution-only: help builds keep the
+        // mutable lookup maps (#675).
+        sb.append("        if (!forHelp) {\n");
+        if (parentInfos.isEmpty()) {
+            sb.append(
+                    "            processedCommand.setParentCommandInjector(org.aesh.command.impl.internal.ParentCommandInjector.NO_OP);\n");
+        } else {
+            sb.append("            processedCommand.setParentCommandInjector(this);\n");
         }
+        if (hasLookupOptions(accessorInfos)) {
+            sb.append("            processedCommand.setGeneratedOptionLookup(this);\n");
+        } else {
+            sb.append("            processedCommand.setGeneratedOptionLookup(GeneratedOptionLookup.EMPTY);\n");
+        }
+        sb.append("        }\n\n");
 
         // Generated options bypass addOption()'s per-add check, so yield them
         // to explicit user options in one pass with the same rule as the
@@ -750,13 +803,10 @@ final class CodeGenerator {
 
     /**
      * Expression for a command-level callback attribute: {@code new X()} when
-     * the annotation names a non-default class, else {@code null}. The help
-     * path never instantiates callbacks (#675).
+     * the annotation names a non-default class, else {@code null}.
      */
     private static String commandCallbackExpression(TypeElement element, String attributeName,
-            String nullSentinel, Elements elementUtils, boolean forHelp) {
-        if (forHelp)
-            return "null";
+            String nullSentinel, Elements elementUtils) {
         String className = getAnnotationClassValue(element,
                 CommandDefinition.class.getCanonicalName(), attributeName, elementUtils);
         if (className != null && !className.equals(nullSentinel))
@@ -764,13 +814,21 @@ final class CodeGenerator {
         return "null";
     }
 
-    /** Emit a command-level callback setter for a non-default value (#791). */
+    /** {@code forHelp ? null : expr} — the shared runtime guard (#792). */
+    private static String forHelpGuard(String expr) {
+        return "forHelp ? null : " + expr;
+    }
+
+    /**
+     * Emit a command-level callback setter for a non-default value, guarded
+     * so the help path never instantiates callbacks (#675, #792).
+     */
     private static void emitCommandCallbackSetter(StringBuilder sb, String setterName,
-            TypeElement element, String attributeName, String nullSentinel, Elements elementUtils,
-            boolean forHelp) {
-        String expr = commandCallbackExpression(element, attributeName, nullSentinel, elementUtils, forHelp);
+            TypeElement element, String attributeName, String nullSentinel, Elements elementUtils) {
+        String expr = commandCallbackExpression(element, attributeName, nullSentinel, elementUtils);
         if (!"null".equals(expr)) {
-            sb.append("        processedCommand.").append(setterName).append("(").append(expr).append(");\n\n");
+            sb.append("        if (!forHelp) processedCommand.").append(setterName)
+                    .append("(").append(expr).append(");\n\n");
         }
     }
 
@@ -809,14 +867,14 @@ final class CodeGenerator {
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
+            String commandPackage, boolean mixinFieldPrivate) {
         generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils, accessorInfos,
-                forHelp, commandPackage, false);
+                commandPackage, false);
     }
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
+            String commandPackage, boolean mixinFieldPrivate) {
         Option o = field.getAnnotation(Option.class);
         OptionList ol = field.getAnnotation(OptionList.class);
         OptionGroup og = field.getAnnotation(OptionGroup.class);
@@ -825,66 +883,68 @@ final class CodeGenerator {
 
         if (o != null) {
             generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    forHelp, null, commandPackage, mixinFieldPrivate);
+                    null, commandPackage, mixinFieldPrivate);
         } else if (ol != null) {
             generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    forHelp, null, commandPackage, mixinFieldPrivate);
+                    null, commandPackage, mixinFieldPrivate);
         } else if (og != null) {
             generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    forHelp, commandPackage, mixinFieldPrivate);
+                    commandPackage, mixinFieldPrivate);
         } else if (args != null) {
             generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    forHelp, null, commandPackage, mixinFieldPrivate);
+                    null, commandPackage, mixinFieldPrivate);
         } else if (arg != null) {
             generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    forHelp, null, commandPackage, mixinFieldPrivate);
+                    null, commandPackage, mixinFieldPrivate);
         } else if (field.getAnnotation(Mixin.class) != null) {
             // Chain mixinFieldName for nested mixins: "outer" + "inner" -> "outer.inner"
             String nestedMixinName = mixinFieldName != null
                     ? mixinFieldName + "." + field.getSimpleName().toString()
                     : field.getSimpleName().toString();
             generateMixin(sb, simpleName, field, nestedMixinName, elementUtils, typeUtils, accessorInfos,
-                    forHelp, commandPackage, isPrivateField(field));
+                    commandPackage, isPrivateField(field));
         }
     }
 
     private static void generateMixin(StringBuilder sb, String simpleName, VariableElement mixinField,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
+            String commandPackage, boolean mixinFieldPrivate) {
         TypeMirror mixinType = mixinField.asType();
         if (!(mixinType instanceof DeclaredType))
             return;
         TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
         String mixinTypeName = erasedTypeName(mixinType, typeUtils);
 
-        if (!forHelp) {
-            if (isPrivateField(mixinField)) {
-                String constName = fieldConstantRef(fieldConstantName(mixinFieldName));
-                sb.append("        try {\n");
-                sb.append("            if (").append(constName).append(".get(instance) == null) {\n");
-                sb.append("                ").append(constName).append(".set(instance, new ").append(mixinTypeName)
-                        .append("());\n");
-                sb.append("            }\n");
-                sb.append("        } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n\n");
-            } else {
-                sb.append("        if (instance.").append(mixinFieldName).append(" == null) {\n");
-                sb.append("            instance.").append(mixinFieldName).append(" = new ").append(mixinTypeName)
-                        .append("();\n");
-                sb.append("        }\n\n");
-            }
+        // Mixin instantiation is execution-only: the help build has no
+        // command instance and must not construct mixins (#675, #792).
+        if (isPrivateField(mixinField)) {
+            String constName = fieldConstantRef(fieldConstantName(mixinFieldName));
+            sb.append("        if (!forHelp) {\n");
+            sb.append("            try {\n");
+            sb.append("                if (").append(constName).append(".get(instance) == null) {\n");
+            sb.append("                    ").append(constName).append(".set(instance, new ").append(mixinTypeName)
+                    .append("());\n");
+            sb.append("                }\n");
+            sb.append("            } catch (IllegalAccessException e) { throw new RuntimeException(e); }\n");
+            sb.append("        }\n\n");
+        } else {
+            sb.append("        if (!forHelp && instance.").append(mixinFieldName).append(" == null) {\n");
+            sb.append("            instance.").append(mixinFieldName).append(" = new ").append(mixinTypeName)
+                    .append("();\n");
+            sb.append("        }\n\n");
         }
 
         generateMixinFields(sb, simpleName, mixinFieldName, mixinElement, elementUtils, typeUtils, accessorInfos,
-                forHelp, commandPackage, mixinFieldPrivate);
+                commandPackage, mixinFieldPrivate);
     }
 
     private static void generateMixinFields(StringBuilder sb, String simpleName, String mixinFieldName,
             TypeElement typeElement, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
+            String commandPackage, boolean mixinFieldPrivate) {
         for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
             if (enclosed instanceof VariableElement) {
                 generateFieldProcessing(sb, simpleName, (VariableElement) enclosed, mixinFieldName,
-                        elementUtils, typeUtils, accessorInfos, forHelp, commandPackage, mixinFieldPrivate);
+                        elementUtils, typeUtils, accessorInfos, commandPackage, mixinFieldPrivate);
             }
         }
         // Recurse into superclass
@@ -893,14 +953,14 @@ final class CodeGenerator {
             if (superclass instanceof DeclaredType) {
                 TypeElement superElement = (TypeElement) ((DeclaredType) superclass).asElement();
                 generateMixinFields(sb, simpleName, mixinFieldName, superElement, elementUtils, typeUtils, accessorInfos,
-                        forHelp, commandPackage, mixinFieldPrivate);
+                        commandPackage, mixinFieldPrivate);
             }
         }
     }
 
     private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
+            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -934,11 +994,8 @@ final class CodeGenerator {
         sb.append("                    ").append(fieldType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", ").append(optionType).append(",\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, fieldType, effectiveType, typeUtils, forHelp);
-        if (forHelp)
-            sb.append(", null);\n");
-        else
-            sb.append(", this, ").append(accIdx).append(");\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, fieldType, effectiveType, typeUtils);
+        sb.append(", accessor, ").append(accIdx).append(");\n");
         // Non-default setters
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
@@ -954,11 +1011,11 @@ final class CodeGenerator {
         if (o.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(")
                     .append(listExpression(o.defaultValue())).append(");\n");
-        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
-        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         if (o.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (o.optionalValue())
@@ -1004,18 +1061,19 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
-        emitInitialValueSetter(sb, var, info, forHelp);
+        emitInitialValueSetter(sb, var, info);
         sb.append("            processedCommand.addOptionDirect(").append(var).append(");\n");
         sb.append("        }\n\n");
     }
 
-    private static void emitInitialValueSetter(StringBuilder sb, String var, FieldAccessorInfo info, boolean forHelp) {
+    private static void emitInitialValueSetter(StringBuilder sb, String var, FieldAccessorInfo info) {
         // The accessor switch is unnecessary for fields the generated provider
         // can read directly. Private fields and method-command slot arrays keep
         // the existing capture path (method owners are not Adapter instances).
-        if (forHelp || info.needsReflection || info.synthetic || "Adapter".equals(info.commandSimpleName))
+        if (info.needsReflection || info.synthetic || "Adapter".equals(info.commandSimpleName))
             return;
-        sb.append("            ").append(var).append(".setInitialValue(instance.");
+        // Guarded: the help build has no command instance to read (#675, #792)
+        sb.append("            if (!forHelp) ").append(var).append(".setInitialValue(instance.");
         if (info.mixinFieldName != null)
             sb.append(info.mixinFieldName).append(".");
         sb.append(info.fieldName).append(");\n");
@@ -1023,7 +1081,7 @@ final class CodeGenerator {
 
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
+            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1054,14 +1112,11 @@ final class CodeGenerator {
         sb.append("                    ").append(elementType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", OptionType.LIST,\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, elementType, forHelp);
-        if (forHelp)
-            sb.append(", null);\n");
-        else
-            sb.append(", this, ").append(accIdx).append(");\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, elementType);
+        sb.append(", accessor, ").append(accIdx).append(");\n");
         sb.append("            ").append(var).append(".setValueSeparator(").append(charLiteral(ol.valueSeparator()))
                 .append(");\n");
-        emitInitialValueFactory(sb, var, field.asType(), typeUtils, forHelp);
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (isArrayType)
@@ -1075,11 +1130,11 @@ final class CodeGenerator {
         if (ol.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(")
                     .append(listExpression(ol.defaultValue())).append(");\n");
-        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
-        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         if (ol.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (ol.optionalValue())
@@ -1112,14 +1167,14 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
-        emitInitialValueSetter(sb, var, info, forHelp);
+        emitInitialValueSetter(sb, var, info);
         sb.append("            processedCommand.addOptionDirect(").append(var).append(");\n");
         sb.append("        }\n\n");
     }
 
     private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
+            String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1149,13 +1204,10 @@ final class CodeGenerator {
         sb.append("                    ").append(valueType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", OptionType.GROUP,\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, valueType, forHelp);
-        if (forHelp)
-            sb.append(", null);\n");
-        else
-            sb.append(", this, ").append(accIdx).append(");\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, valueType);
+        sb.append(", accessor, ").append(accIdx).append(");\n");
         sb.append("            ").append(var).append(".setValueSeparator(',');\n");
-        emitInitialValueFactory(sb, var, field.asType(), typeUtils, forHelp);
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (og.required())
@@ -1167,11 +1219,11 @@ final class CodeGenerator {
         if (og.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(")
                     .append(listExpression(og.defaultValue())).append(");\n");
-        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
-        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         if (og.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (og.inherited())
@@ -1195,14 +1247,14 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
-        emitInitialValueSetter(sb, var, info, forHelp);
+        emitInitialValueSetter(sb, var, info);
         sb.append("            processedCommand.addOptionDirect(").append(var).append(");\n");
         sb.append("        }\n\n");
     }
 
     private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
+            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1226,12 +1278,9 @@ final class CodeGenerator {
         sb.append("                    ").append(elementType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", OptionType.ARGUMENTS,\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, elementType, forHelp);
-        if (forHelp)
-            sb.append(", null);\n");
-        else
-            sb.append(", this, ").append(accIdx).append(");\n");
-        emitInitialValueFactory(sb, var, field.asType(), typeUtils, forHelp);
+        emitConverterExpression(sb, field, "converter", elementUtils, elementType);
+        sb.append(", accessor, ").append(accIdx).append(");\n");
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (isArrayType)
@@ -1258,24 +1307,24 @@ final class CodeGenerator {
         emitHelpGroupSetter(sb, var, a.helpGroup());
         if (a.order() != Integer.MAX_VALUE)
             sb.append("            ").append(var).append(".setOrder(").append(a.order()).append(");\n");
-        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
-        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         if (a.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
         emitCompleteFallbackSetter(sb, var, a.completeFallback());
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
-        emitInitialValueSetter(sb, var, info, forHelp);
+        emitInitialValueSetter(sb, var, info);
         sb.append("            processedCommand.setArguments(").append(var).append(");\n");
         sb.append("        }\n\n");
     }
 
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            boolean forHelp, String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
+            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1298,11 +1347,8 @@ final class CodeGenerator {
         sb.append("                    ").append(fieldType).append(".class, ")
                 .append(stringLiteral(fieldName)).append(", OptionType.ARGUMENT,\n");
         sb.append("                    ");
-        emitConverterExpression(sb, field, "converter", elementUtils, fieldType, forHelp);
-        if (forHelp)
-            sb.append(", null);\n");
-        else
-            sb.append(", this, ").append(accIdx).append(");\n");
+        emitConverterExpression(sb, field, "converter", elementUtils, fieldType);
+        sb.append(", accessor, ").append(accIdx).append(");\n");
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (arg.required())
@@ -1324,11 +1370,11 @@ final class CodeGenerator {
         emitHelpGroupSetter(sb, var, arg.helpGroup());
         if (arg.order() != Integer.MAX_VALUE)
             sb.append("            ").append(var).append(".setOrder(").append(arg.order()).append(");\n");
-        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
-        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
-        emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils);
+        emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils);
+        emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils);
+        emitParserSetter(sb, var, field, "parser", elementUtils);
         if (arg.overrideRequired())
             sb.append("            ").append(var).append(".setOverrideRequired(true);\n");
         if (arg.inherited())
@@ -1339,7 +1385,7 @@ final class CodeGenerator {
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
-        emitInitialValueSetter(sb, var, info, forHelp);
+        emitInitialValueSetter(sb, var, info);
         sb.append("            processedCommand.addArgument(").append(var).append(");\n");
         sb.append("        }\n\n");
     }
@@ -1547,15 +1593,12 @@ final class CodeGenerator {
 
     /** Emit a converter expression inline (for createDirect() call). */
     private static void emitConverterExpression(StringBuilder sb, VariableElement field,
-            String attributeName, Elements elementUtils, String fieldType, boolean forHelp) {
-        if (forHelp) {
-            sb.append("null");
-            return;
-        }
+            String attributeName, Elements elementUtils, String fieldType) {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_CONVERTER)) {
-            sb.append("new ").append(className).append("()");
+            sb.append(forHelpGuard("new " + className + "()"));
         } else {
+            // Shared local, already null on the help path (#675)
             sb.append("converter_").append(converterConstantSuffix(converterLookupType(fieldType)));
         }
     }
@@ -1565,22 +1608,19 @@ final class CodeGenerator {
      * for enum types, avoiding the runtime CLConverterManager lookup (#591).
      */
     private static void emitConverterExpression(StringBuilder sb, VariableElement field,
-            String attributeName, Elements elementUtils, String fieldType, TypeMirror effectiveType, Types typeUtils,
-            boolean forHelp) {
-        if (forHelp) {
-            sb.append("null");
-            return;
-        }
+            String attributeName, Elements elementUtils, String fieldType, TypeMirror effectiveType, Types typeUtils) {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(NULL_CONVERTER)) {
-            sb.append("new ").append(className).append("()");
+            sb.append(forHelpGuard("new " + className + "()"));
             return;
         }
         if (getEnumConstantNames(effectiveType, typeUtils) != null) {
             // Check if the type is an enum -- emit EnumConverter directly (#591).
-            sb.append("new org.aesh.command.impl.converter.EnumConverter(").append(fieldType).append(".class)");
+            sb.append(forHelpGuard(
+                    "new org.aesh.command.impl.converter.EnumConverter(" + fieldType + ".class)"));
             return;
         }
+        // Shared local, already null on the help path (#675)
         sb.append("converter_").append(converterConstantSuffix(converterLookupType(fieldType)));
     }
 
@@ -1590,30 +1630,26 @@ final class CodeGenerator {
      * lazily in {@link org.aesh.command.impl.internal.ProcessedOption#completer()} (#789).
      */
     private static void emitCompleterSetter(StringBuilder sb, String var, VariableElement field,
-            String attributeName, Elements elementUtils, boolean forHelp) {
-        emitCallbackSetter(sb, var, "setCompleter", field, attributeName, NULL_OPTION_COMPLETER, elementUtils, forHelp);
+            String attributeName, Elements elementUtils) {
+        emitCallbackSetter(sb, var, "setCompleter", field, attributeName, NULL_OPTION_COMPLETER, elementUtils);
     }
 
     /** Emit parser setter if non-default (for createDirect() path). */
     private static void emitParserSetter(StringBuilder sb, String var, VariableElement field,
-            String attributeName, Elements elementUtils, boolean forHelp) {
-        if (forHelp)
-            return;
+            String attributeName, Elements elementUtils) {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(AESH_OPTION_PARSER)) {
-            sb.append("            ").append(var).append(".setParser(new ").append(className).append("());\n");
+            sb.append("            if (!forHelp) ").append(var)
+                    .append(".setParser(new ").append(className).append("());\n");
         }
     }
 
     /** Emit a generic callback setter (validator, activator, renderer). */
     private static void emitCallbackSetter(StringBuilder sb, String var, String setterName,
-            VariableElement field, String attributeName, String nullSentinel, Elements elementUtils,
-            boolean forHelp) {
-        if (forHelp)
-            return;
+            VariableElement field, String attributeName, String nullSentinel, Elements elementUtils) {
         String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
         if (className != null && !className.equals(nullSentinel)) {
-            sb.append("            ").append(var).append(".").append(setterName)
+            sb.append("            if (!forHelp) ").append(var).append(".").append(setterName)
                     .append("(new ").append(className).append("());\n");
         }
     }
@@ -2133,16 +2169,15 @@ final class CodeGenerator {
      * Skipped on the help path because help builds never reset command fields.
      */
     private static void emitInitialValueFactory(StringBuilder sb, String var,
-            TypeMirror fieldType, Types typeUtils, boolean forHelp) {
-        if (forHelp)
-            return;
+            TypeMirror fieldType, Types typeUtils) {
         TypeMirror effectiveType = fieldType;
         if (isOptionalType(effectiveType, typeUtils))
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         String erasedName = erasedTypeName(effectiveType, typeUtils);
         String factoryExpr = collectionFactoryExpression(erasedName);
         if (factoryExpr != null) {
-            sb.append("            ").append(var)
+            // Guarded so the help path never initializes CollectionFactory (#675, #792)
+            sb.append("            if (!forHelp) ").append(var)
                     .append(".setInitialValueFactory(").append(factoryExpr).append(");\n");
         }
     }
@@ -2567,15 +2602,21 @@ final class CodeGenerator {
         body.append("    @Override\n");
         body.append("    public ProcessedCommand buildProcessedCommand(Object owner)");
         body.append(" throws CommandLineParserException {\n");
-        generateMethodBuildProcessedCommand(body, ownerTypeRef, method, params, cliName, aliases,
-                description, elementUtils, typeUtils, accessorInfos, false, sharedConverters);
+        body.append("        return build(owner, false);\n");
         body.append("    }\n\n");
 
         body.append("    @Override\n");
         body.append("    public ProcessedCommand buildHelpProcessedCommand()");
         body.append(" throws CommandLineParserException {\n");
+        body.append("        return build(null, true);\n");
+        body.append("    }\n\n");
+
+        // Shared build so parameter metadata is emitted once; exec-only work
+        // is guarded by !forHelp (#792, #675).
+        body.append("    private ProcessedCommand build(Object owner, boolean forHelp)");
+        body.append(" throws CommandLineParserException {\n");
         generateMethodBuildProcessedCommand(body, ownerTypeRef, method, params, cliName, aliases,
-                description, elementUtils, typeUtils, new java.util.ArrayList<>(), true, sharedConverters);
+                description, elementUtils, typeUtils, accessorInfos, sharedConverters);
         body.append("    }\n\n");
 
         boolean hasRealFields = hasRealFieldAccessors(accessorInfos);
@@ -2605,7 +2646,7 @@ final class CodeGenerator {
             ExecutableElement method, List<? extends VariableElement> params,
             String cliName, String[] aliases, String description,
             Elements elementUtils, Types typeUtils,
-            List<FieldAccessorInfo> accessorInfos, boolean forHelp,
+            List<FieldAccessorInfo> accessorInfos,
             java.util.LinkedHashSet<String> sharedConverters) {
         int optionCount = 0;
         for (VariableElement param : params) {
@@ -2615,7 +2656,7 @@ final class CodeGenerator {
         sb.append("        ProcessedCommand processedCommand = ProcessedCommand.createDirect(\n");
         sb.append("                ").append(stringLiteral(cliName)).append(",\n");
         sb.append("                ").append(stringLiteral(description)).append(",\n");
-        sb.append("                ").append(forHelp ? "null" : "new Adapter((" + ownerTypeRef + ") owner)")
+        sb.append("                ").append(forHelpGuard("new Adapter((" + ownerTypeRef + ") owner)"))
                 .append(",\n");
         sb.append("                null, null, false, false, false,\n");
         sb.append("                ").append(optionCount).append(");\n\n");
@@ -2623,19 +2664,29 @@ final class CodeGenerator {
             sb.append("        processedCommand.setAliases(").append(listExpression(aliases)).append(");\n\n");
         }
 
-        if (!forHelp) {
-            for (String type : sharedConverters) {
-                sb.append("        org.aesh.command.converter.Converter converter_")
-                        .append(converterConstantSuffix(type))
-                        .append(" = org.aesh.converter.CLConverterManager.getInstance().getConverter(")
-                        .append(type).append(".class);\n");
+        // Converter locals gated by forHelp: the help path resolves none (#675)
+        for (String type : sharedConverters) {
+            sb.append("        org.aesh.command.converter.Converter converter_")
+                    .append(converterConstantSuffix(type))
+                    .append(" = forHelp ? null : org.aesh.converter.CLConverterManager.getInstance().getConverter(")
+                    .append(type).append(".class);\n");
+        }
+        if (!sharedConverters.isEmpty())
+            sb.append("\n");
+        boolean hasOptionParams = false;
+        for (VariableElement param : params) {
+            if (param.getAnnotation(Option.class) != null || param.getAnnotation(Argument.class) != null
+                    || param.getAnnotation(OptionList.class) != null || param.getAnnotation(Arguments.class) != null) {
+                hasOptionParams = true;
+                break;
             }
-            if (!sharedConverters.isEmpty())
-                sb.append("\n");
+        }
+        if (hasOptionParams) {
+            sb.append("        org.aesh.command.impl.internal.IndexedFieldAccessor accessor = forHelp ? null : this;\n\n");
         }
 
         for (int i = 0; i < params.size(); i++) {
-            generateMethodParameter(sb, params.get(i), i, elementUtils, typeUtils, accessorInfos, forHelp,
+            generateMethodParameter(sb, params.get(i), i, elementUtils, typeUtils, accessorInfos,
                     elementUtils.getPackageOf(method).getQualifiedName().toString(), false);
         }
 
@@ -2649,7 +2700,7 @@ final class CodeGenerator {
      * option and are passed through at execution time.
      */
     private static void generateMethodParameter(StringBuilder sb, VariableElement param, int paramIndex,
-            Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos, boolean forHelp,
+            Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
             String commandPackage, boolean mixinFieldPrivate) {
         if (isCommandInvocationParam(param, elementUtils, typeUtils))
             return;
@@ -2660,16 +2711,16 @@ final class CodeGenerator {
         Arguments a = param.getAnnotation(Arguments.class);
         if (o != null) {
             generateOption(sb, "Adapter", param, o, null, elementUtils, typeUtils, accessorInfos,
-                    forHelp, target, commandPackage, false);
+                    target, commandPackage, false);
         } else if (arg != null) {
             generateArgument(sb, "Adapter", param, arg, null, elementUtils, typeUtils, accessorInfos,
-                    forHelp, target, commandPackage, false);
+                    target, commandPackage, false);
         } else if (ol != null) {
             generateOptionList(sb, "Adapter", param, ol, null, elementUtils, typeUtils, accessorInfos,
-                    forHelp, target, commandPackage, false);
+                    target, commandPackage, false);
         } else if (a != null) {
             generateArguments(sb, "Adapter", param, a, null, elementUtils, typeUtils, accessorInfos,
-                    forHelp, target, commandPackage, false);
+                    target, commandPackage, false);
         }
     }
 

@@ -2304,7 +2304,9 @@ public class ProcessorTest {
     public void testHelpBuildTouchesNoConverterOrReflection() throws Exception {
         // Generated provider classes must not resolve converters, completers
         // or reflection at class-init: LazyHelp walks every group child for a
-        // help-only listing, and provider lookup runs clinit (#675).
+        // help-only listing, and provider lookup runs clinit (#675). Since
+        // #792 both builds share one method, so the guarantee is a runtime
+        // guard: every execution-only statement sits behind forHelp.
         CompilationResult result = compileWithProcessor(
                 new InMemorySource("test.CountingConverter", COUNTING_CONVERTER_SOURCE),
                 new InMemorySource("test.CountingHelpCommand", COUNTING_HELP_CMD_SOURCE));
@@ -2327,21 +2329,45 @@ public class ProcessorTest {
         assertFalse("No provider-level static initializer",
                 source.contains("\n    static {\n"));
 
-        // Execution path resolves the shared Boolean converter once as a local
-        String execBody = source.substring(source.indexOf("buildProcessedCommand(CountingHelpCommand"));
-        assertTrue("Execution must resolve converters as method locals",
-                execBody.contains("Converter converter_java_lang_Boolean = "));
-        // Help path references neither converters, completers, callbacks, accessors nor reflection
+        // The public builders only delegate to the shared build() (#792)
         int helpStart = source.indexOf("buildHelpProcessedCommand()");
         int helpEnd = source.indexOf("\n    }\n", helpStart);
         String helpBody = source.substring(helpStart, helpEnd);
-        for (String forbidden : new String[] { "converter_", "getConverter", "Converter(",
-                "Completer(", "setValidator(", "setActivator(", "setCompleter(", "setRenderer(",
-                "setParser(", ", new Accessor(", ", this, ", "SyntheticBooleanAccessor", "Fields.",
-                "setGeneratedOptionLookup", "setParentCommandInjector" }) {
-            assertFalse("Help build must not reference " + forbidden + ", got: " + helpBody,
-                    helpBody.contains(forbidden));
-        }
+        assertTrue("Help builder must delegate to the shared build",
+                helpBody.contains("return build(null, true);"));
+
+        // Execution-only work is guarded at runtime so the help call never
+        // executes it (#675): converter locals, custom converters, callbacks,
+        // initial values and lookup wiring all sit behind forHelp.
+        int buildStart = source.indexOf(" private ProcessedCommand build(");
+        String buildBody = source.substring(buildStart);
+        assertTrue("Converter locals must be gated",
+                buildBody.contains("converter_java_lang_Boolean = forHelp ? null : "));
+        assertTrue("Custom converters must be gated",
+                buildBody.contains("forHelp ? null : new") && buildBody.contains("CountingConverter()"));
+        int guardCount = buildBody.split("if \\(!forHelp\\)", -1).length - 1
+                + buildBody.split("forHelp \\? null :", -1).length - 1;
+        assertTrue("Expected forHelp guards in the shared build, found " + guardCount,
+                guardCount >= 3);
+        // The accessor reference itself is gated
+        assertTrue("Field accessor must be gated",
+                buildBody.contains("IndexedFieldAccessor accessor = forHelp ? null : this;"));
+
+        // Runtime proof: the help build constructs neither command nor converter
+        Class<?> commandClass = result.classLoader.loadClass("test.CountingHelpCommand");
+        Class<?> metadataClass = result.classLoader.loadClass("test.CountingHelpCommand_AeshMetadata");
+        Class<?> converterClass = result.classLoader.loadClass("test.CountingConverter");
+        CommandMetadataProvider provider = (CommandMetadataProvider) metadataClass.newInstance();
+        commandClass.getField("constructions").setInt(null, 0);
+        converterClass.getField("constructions").setInt(null, 0);
+        ProcessedCommand helpPC = provider.buildHelpProcessedCommand();
+        assertNotNull(helpPC);
+        assertEquals("Help build must not construct the command",
+                0, commandClass.getField("constructions").getInt(null));
+        assertEquals("Help build must not construct converters",
+                0, converterClass.getField("constructions").getInt(null));
+        assertEquals("Help build must not resolve converters",
+                0, helpPC.findLongOptionNoActivatorCheck("output").converter() == null ? 0 : 1);
     }
 
     @Test
@@ -3481,8 +3507,14 @@ public class ProcessorTest {
                 source.contains("setInitialValue(instance.count);"));
         assertFalse("private field keeps its accessor path",
                 source.contains("setInitialValue(instance.secret);"));
-        String helpBody = source.substring(source.indexOf("buildHelpProcessedCommand()"));
+        String helpBody = source.substring(source.indexOf("buildHelpProcessedCommand()"),
+                source.indexOf("\n    }\n", source.indexOf("buildHelpProcessedCommand()")));
         assertFalse("help-only builds do not capture initial values", helpBody.contains(".setInitialValue("));
+        // The shared build guards initial-value capture at runtime (#792)
+        int buildStart = source.indexOf(" private ProcessedCommand build(");
+        String buildBody = source.substring(buildStart);
+        assertTrue("initial value capture must be guarded",
+                buildBody.contains("if (!forHelp) opt_0.setInitialValue(instance.enabled);"));
 
         Class<?> commandClass = result.classLoader.loadClass("test.DirectInitialCommand");
         Class<?> metadataClass = result.classLoader.loadClass("test.DirectInitialCommand_AeshMetadata");
