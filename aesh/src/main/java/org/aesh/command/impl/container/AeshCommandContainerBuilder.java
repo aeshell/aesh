@@ -81,7 +81,8 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
 
     private boolean lazyChildResolution;
     private DefaultValueProvider defaultValueProvider;
-    private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
+    /** Fleet-wide help toggles, or null for none (#798 — see AeshRuntimeRunner). */
+    private EnumSet<HelpFeature> helpDefaults;
     private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
 
     public void setLazyChildResolution(boolean lazyChildResolution) {
@@ -97,7 +98,7 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
      * {@code INHERIT}. Set by the registry; direct use may set it explicitly.
      */
     public void setHelpDefaults(EnumSet<HelpFeature> helpDefaults) {
-        this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
+        this.helpDefaults = helpDefaults;
     }
 
     /**

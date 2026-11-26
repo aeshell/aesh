@@ -83,7 +83,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
      * {@code INHERIT}. Propagated to the container builder and re-applied to
      * already-built commands (top-down, so children see resolved parents).
      */
-    private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
+    /** Fleet-wide help toggles, or null for none (#798 — see AeshRuntimeRunner). */
+    private EnumSet<HelpFeature> helpDefaults;
     /**
      * Fleet-wide arguments-section placement applied when a command leaves it
      * {@code INHERIT}. Propagated and re-applied together with the toggles.
@@ -183,7 +184,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
      * late call still takes effect before any help is rendered.
      */
     public void setHelpDefaults(EnumSet<HelpFeature> helpDefaults) {
-        this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
+        this.helpDefaults = helpDefaults;
         applyHelpToggles();
     }
 

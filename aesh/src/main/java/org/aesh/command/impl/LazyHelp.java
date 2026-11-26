@@ -52,12 +52,12 @@ public final class LazyHelp {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String render(Class<? extends Command> rootClass, String[] args) {
-        return render(rootClass, args, true, EnumSet.noneOf(HelpFeature.class), ArgumentsSection.OFF);
+        return render(rootClass, args, true, null, ArgumentsSection.OFF);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String render(Class<? extends Command> rootClass, String[] args, boolean ansi) {
-        return render(rootClass, args, ansi, EnumSet.noneOf(HelpFeature.class), ArgumentsSection.OFF);
+        return render(rootClass, args, ansi, null, ArgumentsSection.OFF);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -110,7 +110,7 @@ public final class LazyHelp {
     }
 
     public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args, boolean ansi) {
-        return renderUnknownSubcommandHelp(rootClass, args, ansi, EnumSet.noneOf(HelpFeature.class),
+        return renderUnknownSubcommandHelp(rootClass, args, ansi, null,
                 ArgumentsSection.OFF);
     }
 

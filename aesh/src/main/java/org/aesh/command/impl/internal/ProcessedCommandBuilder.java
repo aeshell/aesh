@@ -72,7 +72,8 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
     private Toggle failOnDuplicateOptions = Toggle.INHERIT;
     private ArgumentsSection argumentsSection = ArgumentsSection.INHERIT;
     private Toggle headerBeforeSynopsis = Toggle.INHERIT;
-    private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
+    /** Fleet-wide help toggles, or null for none (#798 — see AeshRuntimeRunner). */
+    private EnumSet<HelpFeature> helpDefaults;
     private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
     private int optionCapacity = -1;
 
@@ -184,7 +185,7 @@ public class ProcessedCommandBuilder<C extends Command<CI>, CI extends CommandIn
      * explicitly (empty by default).
      */
     public ProcessedCommandBuilder<C, CI> helpDefaults(EnumSet<HelpFeature> helpDefaults) {
-        this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
+        this.helpDefaults = helpDefaults;
         return this;
     }
 

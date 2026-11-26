@@ -106,7 +106,12 @@ public class AeshRuntimeRunner {
     private AnsiMode ansiMode = AnsiMode.AUTO;
     private UsageErrorMode usageErrorMode = UsageErrorMode.FULL_HELP;
     private boolean argumentFiles;
-    private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
+    /**
+     * Fleet-wide help toggles, or null for none: {@code EnumSet.noneOf}
+     * here loaded the MethodHandle/classfile machinery on every start
+     * (#798); {@code resolveHelpToggles} treats null as no features.
+     */
+    private EnumSet<HelpFeature> helpDefaults;
     private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
     private HelpColorScheme helpColorScheme;
 
@@ -233,7 +238,7 @@ public class AeshRuntimeRunner {
      * every command; per-command {@code ON}/{@code OFF} always wins.
      */
     public AeshRuntimeRunner helpDefaults(EnumSet<HelpFeature> helpDefaults) {
-        this.helpDefaults = helpDefaults != null ? helpDefaults : EnumSet.noneOf(HelpFeature.class);
+        this.helpDefaults = helpDefaults;
         this.registryBuilder.helpDefaults(helpDefaults);
         return this;
     }

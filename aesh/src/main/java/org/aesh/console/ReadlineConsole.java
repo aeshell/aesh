@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -57,7 +56,6 @@ import org.aesh.command.impl.context.CommandContext;
 import org.aesh.command.impl.invocation.AeshCommandInvocationBuilder;
 import org.aesh.command.impl.registry.MutableCommandRegistryImpl;
 import org.aesh.command.invocation.CommandInvocation;
-import org.aesh.command.operator.OperatorType;
 import org.aesh.command.parser.CommandLineParserException;
 import org.aesh.command.parser.SubcommandNotFoundException;
 import org.aesh.command.registry.CommandRegistry;
@@ -790,7 +788,7 @@ public class ReadlineConsole implements Console, Consumer<Connection> {
                 .commandInvocationBuilder(new AeshCommandInvocationBuilder(
                         shell, this, settings.commandOutputHandler()))
                 .aeshContext(context)
-                .operators(EnumSet.allOf(OperatorType.class))
+                .operators(AeshCommandRuntimeBuilder.allOperators())
                 .build();
     }
 

@@ -51,9 +51,18 @@ import org.aesh.terminal.Connection;
  */
 public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
 
-    public static final EnumSet<OperatorType> ALL_OPERATORS = EnumSet.allOf(OperatorType.class);
-
-    private static final EnumSet<OperatorType> NO_OPERATORS = EnumSet.noneOf(OperatorType.class);
+    /**
+     * The full operator set, computed on demand. Replaces the eager
+     * {@code ALL_OPERATORS} constant, whose class initializer ran
+     * {@code EnumSet.allOf} on every start — dragging in ~190 JDK
+     * invoke/classfile/constant classes through {@code MethodHandleAccessorFactory}
+     * even for CLIs that never use operators (#798).
+     *
+     * @return a fresh mutable set with every operator enabled
+     */
+    public static EnumSet<OperatorType> allOperators() {
+        return EnumSet.allOf(OperatorType.class);
+    }
 
     /**
      * Shared stateless default: {@code build()} used to allocate a fresh
@@ -364,7 +373,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         this.invocationProviders = settings.invocationProviders();
         this.registry = (CommandRegistry<CI>) settings.commandRegistry();
         this.ctx = settings.aeshContext();
-        this.operators = settings.operatorParserEnabled() ? EnumSet.allOf(OperatorType.class) : null;
+        this.operators = settings.operatorParserEnabled() ? allOperators() : null;
         this.pipelineConfig = settings.pipelineConfig();
         this.commandOutputHandler = settings.commandOutputHandler();
         return this;
@@ -406,9 +415,9 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
             ctx = DefaultAeshContext.getDefault();
         }
 
-        if (operators == null) {
-            operators = NO_OPERATORS;
-        }
+        // A null operator set passes through: AeshCommandRuntime normalizes
+        // it to an immutable empty set, so CLIs that never enable operators
+        // skip the EnumSet machinery entirely (#798)
 
         InvocationProviders resolvedProviders = invocationProviders;
         if (resolvedProviders != null

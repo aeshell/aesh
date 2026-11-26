@@ -21,7 +21,6 @@
 package org.aesh.parser;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -72,7 +71,7 @@ public class LineParser {
     private String text;
     private int cursor = -1;
     private boolean parseBrackets;
-    private EnumSet<OperatorType> operators;
+    private Set<OperatorType> operators;
     private OperatorType currentOperator;
     private int startIndex;
 
@@ -91,7 +90,7 @@ public class LineParser {
         return this;
     }
 
-    public LineParser operators(EnumSet<OperatorType> operators) {
+    public LineParser operators(Set<OperatorType> operators) {
         this.operators = operators;
         return this;
     }

@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -108,10 +108,11 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
     private final CommandInvocationBuilder<CI> commandInvocationBuilder;
 
     private final boolean parseBrackets;
-    private final EnumSet<OperatorType> operators;
+    /** Operator set; an immutable empty set when no operators are enabled (#798). */
+    private final Set<OperatorType> operators;
     private volatile PipelineResult lastPipelineResult;
     private volatile PipelineConfig pipelineConfig = PipelineConfig.DEFAULT;
-    private final AtomicBoolean closed = new AtomicBoolean();
+    private volatile boolean closed;
     private boolean programStatusEnabled;
     private String programStatusAppName;
     private Connection programStatusConnection;
@@ -158,7 +159,9 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
         processAfterInit();
         registry.addRegistrationListener(this);
         this.parseBrackets = parseBrackets;
-        this.operators = operators;
+        // Immutable empty set for "no operators": EnumSet.noneOf would drag
+        // the MethodHandle/classfile machinery into every start (#798)
+        this.operators = operators != null ? operators : Collections.emptySet();
     }
 
     @Override
@@ -168,12 +171,19 @@ public class AeshCommandRuntime<CI extends CommandInvocation>
 
     /**
      * Detaches this runtime from the registry's registration listeners.
-     * Idempotent: only the first call unregisters (#666).
+     * Idempotent: only the first call unregisters (#666). Synchronized
+     * instead of an AtomicBoolean: its internal VarHandle dragged the whole
+     * MethodHandle/classfile machinery (~200 JDK classes) into every CLI
+     * start, and close() runs once per runtime so the lock is free (#798).
      */
     @Override
     public void close() {
-        if (closed.compareAndSet(false, true))
-            registry.removeRegistrationListener(this);
+        synchronized (this) {
+            if (closed)
+                return;
+            closed = true;
+        }
+        registry.removeRegistrationListener(this);
     }
 
     @Override
