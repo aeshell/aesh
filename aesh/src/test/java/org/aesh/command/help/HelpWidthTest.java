@@ -155,8 +155,21 @@ public class HelpWidthTest {
         System.setProperty("aesh.help.width", value);
     }
 
+    /**
+     * The width pin surefire sets for the whole fork (see aesh/pom.xml,
+     * {@code systemPropertyVariables}). Tests that override the width must
+     * restore THIS value, not clear the property: clearing deletes the pin
+     * for every later test class in the fork, and their help width then
+     * follows the live terminal — wide on a developer's terminal, 80 on CI,
+     * so width-sensitive assertions fail only locally.
+     */
+    private static final String PINNED_WIDTH = System.getProperty("aesh.help.width");
+
     private static void clearWidth() {
-        System.clearProperty("aesh.help.width");
+        if (PINNED_WIDTH != null)
+            System.setProperty("aesh.help.width", PINNED_WIDTH);
+        else
+            System.clearProperty("aesh.help.width");
     }
 
     @CommandDefinition(name = "wide", description = "A command with a deliberately long description that must wrap onto several lines when the help width is narrow", generateHelp = true)

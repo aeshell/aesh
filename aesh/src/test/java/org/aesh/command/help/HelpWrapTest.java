@@ -152,8 +152,10 @@ public class HelpWrapTest {
 
     // Wrap-assumption tests below pin the width: help now follows the live
     // terminal width, so an ambient COLUMNS or wide terminal would otherwise
-    // change the expected 80-column layout.
+    // change the expected 80-column layout. The prior value is restored —
+    // clearing would delete surefire's fork-wide pin (aesh/pom.xml).
     private static String help(Command<CommandInvocation> command) throws Exception {
+        String pinned = System.getProperty("aesh.help.width");
         System.setProperty("aesh.help.width", "80");
         try {
             CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>().create(command)
@@ -161,7 +163,10 @@ public class HelpWrapTest {
             parser.updateAnsiMode(false);
             return parser.printHelp();
         } finally {
-            System.clearProperty("aesh.help.width");
+            if (pinned != null)
+                System.setProperty("aesh.help.width", pinned);
+            else
+                System.clearProperty("aesh.help.width");
         }
     }
 

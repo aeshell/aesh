@@ -268,10 +268,23 @@ public class HelpHeaderFooterTest {
     }
 
     private static String help(Command<CommandInvocation> command) throws Exception {
-        CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>().create(command)
-                .getParser();
-        parser.updateAnsiMode(false);
-        return parser.printHelp();
+        // Pin the width: wrapping assertions must not follow the live
+        // terminal (wide on a developer's terminal, 80 on CI). Restores the
+        // prior value — surefire pins aesh.help.width=80 for the fork (see
+        // aesh/pom.xml), and clearing would delete that pin for later tests.
+        String pinned = System.getProperty("aesh.help.width");
+        System.setProperty("aesh.help.width", "80");
+        try {
+            CommandLineParser<CommandInvocation> parser = new AeshCommandContainerBuilder<CommandInvocation>().create(command)
+                    .getParser();
+            parser.updateAnsiMode(false);
+            return parser.printHelp();
+        } finally {
+            if (pinned != null)
+                System.setProperty("aesh.help.width", pinned);
+            else
+                System.clearProperty("aesh.help.width");
+        }
     }
 
     @CommandDefinition(name = "header-first", description = "List threads first", generateHelp = true, headerBeforeSynopsis = Toggle.ON, header = "Shows the threads of ${COMMAND-NAME}.")

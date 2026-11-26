@@ -1887,7 +1887,10 @@ public class CommandLineFormatterTest {
     public void testSynopsis_WrapsAtWidth() throws CommandLineParserException {
         // Pin the width: help now follows the live terminal width, so an
         // ambient COLUMNS or wide terminal would otherwise change the
-        // expected 80-column layout.
+        // expected 80-column layout. Restore the prior value afterwards —
+        // clearing would delete surefire's fork-wide pin (aesh/pom.xml) and
+        // make later test classes follow the live terminal.
+        String pinned = System.getProperty("aesh.help.width");
         System.setProperty("aesh.help.width", "80");
         try {
             ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
@@ -1924,7 +1927,7 @@ public class CommandLineFormatterTest {
             }
             assertTrue("Synopsis should wrap to multiple lines", synopsisLineCount > 1);
         } finally {
-            System.clearProperty("aesh.help.width");
+            restoreWidth(pinned);
         }
     }
 
@@ -1932,7 +1935,9 @@ public class CommandLineFormatterTest {
     public void testFullColumnOptionWrapsDescription() throws CommandLineParserException {
         // A label exactly one wider than the option column must not sit a
         // single space from its description (#766): it wraps like any
-        // other overflow instead.
+        // other overflow instead. Restore the prior width afterwards —
+        // clearing would delete surefire's fork-wide pin (aesh/pom.xml).
+        String pinned = System.getProperty("aesh.help.width");
         System.setProperty("aesh.help.width", "80");
         try {
             ProcessedCommandBuilder<Command<CommandInvocation>, CommandInvocation> pb = ProcessedCommandBuilder.builder()
@@ -1958,8 +1963,16 @@ public class CommandLineFormatterTest {
             assertTrue("description wraps to the next line, indented",
                     label + 1 < lines.length && lines[label + 1].trim().equals("How long to watch"));
         } finally {
-            System.clearProperty("aesh.help.width");
+            restoreWidth(pinned);
         }
+    }
+
+    /** Restores the width pin these tests override (surefire sets aesh.help.width=80, see aesh/pom.xml). */
+    private static void restoreWidth(String pinned) {
+        if (pinned != null)
+            System.setProperty("aesh.help.width", pinned);
+        else
+            System.clearProperty("aesh.help.width");
     }
 
     // --- Issue #458: Option column width capping ---
