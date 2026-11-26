@@ -111,6 +111,26 @@ public class AeshCommandContainerBuilder<CI extends CommandInvocation> implement
                 : ArgumentsSection.OFF;
     }
 
+    /**
+     * A copy of this builder with lazy child resolution enabled, for
+     * execution-scoped forks: a fork executes exactly one route through the
+     * command tree, so eagerly building every sibling of the group is waste
+     * (11 wasted command builds per execution on the jbang hierarchy, ~157 at
+     * Camel's scale). Unselected children still resolve on demand —
+     * {@code printHelp()}, {@code getAllChildParsers()} and child lookup all
+     * trigger {@code resolveAllLazyChildren()} when actually needed (#799).
+     *
+     * @return a new builder mirroring this one's settings, with lazy children
+     */
+    public AeshCommandContainerBuilder<CI> lazyForkBuilder() {
+        AeshCommandContainerBuilder<CI> fork = new AeshCommandContainerBuilder<>();
+        fork.lazyChildResolution = true;
+        fork.defaultValueProvider = defaultValueProvider;
+        fork.helpDefaults = helpDefaults;
+        fork.argumentsSectionDefault = argumentsSectionDefault;
+        return fork;
+    }
+
     @Override
     public CommandContainer<CI> create(Command command) throws CommandLineParserException {
         CommandMetadataProvider provider = MetadataProviderRegistry.getProvider(command.getClass());

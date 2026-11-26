@@ -671,6 +671,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
      * command through the same builder that registered it (fresh parser,
      * parse state and command instance, with the builder's lazy and
      * default-value wiring). Anything else keeps the shared container.
+     * The fork builds lazily: only the commands on the executed route are
+     * constructed (#799).
      */
     @Override
     public CommandContainer<CI> createExecutionContainer(CommandContainer<CI> shared) {
@@ -678,7 +680,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
         if (source == null || source.kind != CommandSourceKind.CLASS)
             return shared;
         try {
-            CommandContainer<CI> fork = (CommandContainer<CI>) getBuilder().create(source.clazz);
+            CommandContainer<CI> fork = (CommandContainer<CI>) forkBuilder().create(source.clazz);
             if (defaultValueProvider != null)
                 injectDefaultValueProvider(fork.getParser());
             if (!ansiColors)
@@ -698,7 +700,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
      * Fork straight from the recorded class for class-registered commands,
      * without materializing the shared container first: the run-once path
      * never pays for a shared build it discards (#678). Anything else
-     * resolves the shared container and forks from it as before.
+     * resolves the shared container and forks from it as before. The fork
+     * builds lazily — only the executed route is constructed (#799).
      */
     @Override
     public CommandContainer<CI> createExecutionContainer(String name) throws CommandNotFoundException {
@@ -706,7 +709,7 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
         CommandSource source = primary == null ? null : sources.get(primary);
         if (source != null && source.kind == CommandSourceKind.CLASS && source.clazz != null) {
             try {
-                CommandContainer<CI> fork = (CommandContainer<CI>) getBuilder().create(source.clazz);
+                CommandContainer<CI> fork = (CommandContainer<CI>) forkBuilder().create(source.clazz);
                 // Apply the recorded (possibly custom, #706) name and aliases.
                 fork.getParser().getProcessedCommand().setName(primary);
                 fork.getParser().getProcessedCommand().setAliases(source.aliases);
@@ -755,6 +758,35 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                     .setArgumentsSectionDefault(argumentsSectionDefault);
         }
         return containerBuilder;
+    }
+
+    /**
+     * Cached lazy mirror of the configured builder, for execution-scoped
+     * forks (#799): registration-time {@code materialize()} keeps the
+     * configured builder's eager child resolution (the shared container
+     * amortizes it, #577), while a fork only executes one route and resolves
+     * unselected siblings on demand. Only the registry's own default builder
+     * is mirrored: a user-supplied builder — including subclasses that
+     * override create() — stays in charge of every build, preserving the
+     * custom-builder contract.
+     */
+    private AeshCommandContainerBuilder<CI> lazyForkBuilder;
+
+    @SuppressWarnings("unchecked")
+    private CommandContainerBuilder<CI> forkBuilder() {
+        CommandContainerBuilder<CI> base = getBuilder();
+        if (base.getClass() != AeshCommandContainerBuilder.class)
+            return base;
+        AeshCommandContainerBuilder<CI> fork = lazyForkBuilder;
+        if (fork == null) {
+            fork = ((AeshCommandContainerBuilder<CI>) base).lazyForkBuilder();
+            lazyForkBuilder = fork;
+        }
+        // Mirror the registry-level settings getBuilder() re-applies on
+        // every call: they can change after this fork builder was cached
+        fork.setHelpDefaults(helpDefaults);
+        fork.setArgumentsSectionDefault(argumentsSectionDefault);
+        return fork;
     }
 
     @Override
