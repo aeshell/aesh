@@ -29,8 +29,6 @@ import java.util.function.Function;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
-import org.aesh.command.impl.completer.BooleanOptionCompleter;
-import org.aesh.command.impl.completer.DefaultValueOptionCompleter;
 import org.aesh.command.impl.completer.NullOptionCompleter;
 import org.aesh.command.impl.converter.NullConverter;
 import org.aesh.command.impl.parser.AeshOptionParser;
@@ -254,16 +252,12 @@ public class ProcessedOptionBuilder {
     }
 
     private OptionCompleter initCompleter(Class<? extends OptionCompleter> completerClass) {
-
         if (completerClass != null && !completerClass.equals(NullOptionCompleter.class)) {
             return ReflectionUtil.newInstance(completerClass);
-        } else {
-            // File/Resource completers are deferred — ProcessedOption.completer() lazy-creates them
-            if (type == Boolean.class || type == boolean.class)
-                return BooleanOptionCompleter.INSTANCE;
-            else
-                return null;
         }
+        // Built-in default completers (Boolean, allowedValues, File/Resource/Path)
+        // are resolved lazily in ProcessedOption.completer() (#789).
+        return null;
     }
 
     public ProcessedOptionBuilder validator(OptionValidator validator) {
@@ -545,9 +539,6 @@ public class ProcessedOptionBuilder {
                 allowedValues.add(((Enum<?>) constant).name().toLowerCase());
         }
 
-        if (completer == null && !allowedValues.isEmpty())
-            completer = new DefaultValueOptionCompleter(allowedValues);
-
         ProcessedOption option = new ProcessedOption(shortName, name, description, argument, required,
                 valueSeparator, askIfNotSet, acceptNameWithoutDashes, selectorType, defaultValues, type, fieldName, optionType,
                 converter,
@@ -587,19 +578,8 @@ public class ProcessedOptionBuilder {
             option.setArity(org.aesh.command.option.Arity.parse(arity));
         if (index != null && !index.isEmpty())
             option.setIndex(index);
-        // Resolve DEFAULT completeFallback based on type
-        if (completeFallback == CompletionFallback.DEFAULT) {
-            if (type != null && type.isEnum()) {
-                option.setCompleteFallback(CompletionFallback.NONE);
-            } else if (type != null && (java.io.File.class.isAssignableFrom(type)
-                    || java.nio.file.Path.class.isAssignableFrom(type)
-                    || org.aesh.io.Resource.class.isAssignableFrom(type)
-                    || String.class.isAssignableFrom(type))) {
-                option.setCompleteFallback(CompletionFallback.FILES);
-            } else {
-                option.setCompleteFallback(CompletionFallback.NONE);
-            }
-        } else {
+        // DEFAULT resolves lazily in ProcessedOption.getCompleteFallback() (#789)
+        if (completeFallback != CompletionFallback.DEFAULT) {
             option.setCompleteFallback(completeFallback);
         }
         return option;

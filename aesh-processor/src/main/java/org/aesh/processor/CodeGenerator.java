@@ -185,7 +185,11 @@ final class CodeGenerator {
         sb.append(" implements CommandMetadataProvider<").append(simpleName).append("> {\n\n");
 
         generatePrivateFieldConstants(sb, simpleName, qualifiedCommandName, fields);
-        java.util.LinkedHashSet<String> sharedConverters = collectSharedConverterTypes(fields, elementUtils, typeUtils);
+        boolean generateHelp = "true".equals(getAnnotationValue(commandElement, "generateHelp", elementUtils));
+        String version = getAnnotationValue(commandElement, "version", elementUtils);
+        boolean needsGeneratedBoolean = generateHelp || (version != null && !version.isEmpty());
+        java.util.LinkedHashSet<String> sharedConverters = collectSharedConverterTypes(
+                fields, elementUtils, typeUtils, needsGeneratedBoolean);
 
         // commandType()
         sb.append("    @Override\n");
@@ -692,7 +696,7 @@ final class CodeGenerator {
         // Process user fields
         for (VariableElement field : fields) {
             generateFieldProcessing(sb, simpleName, field, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, commandPackage, false);
+                    forHelp, commandPackage, false);
         }
 
         generateParentCommandInjector(sb, simpleName, fields);
@@ -758,16 +762,14 @@ final class CodeGenerator {
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
-            boolean mixinFieldPrivate) {
-        generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils, accessorInfos, commandFallback,
+            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
+        generateFieldProcessing(sb, simpleName, field, null, elementUtils, typeUtils, accessorInfos,
                 forHelp, commandPackage, false);
     }
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
-            boolean mixinFieldPrivate) {
+            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
         Option o = field.getAnnotation(Option.class);
         OptionList ol = field.getAnnotation(OptionList.class);
         OptionGroup og = field.getAnnotation(OptionGroup.class);
@@ -776,33 +778,32 @@ final class CodeGenerator {
 
         if (o != null) {
             generateOption(sb, simpleName, field, o, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, null, commandPackage, mixinFieldPrivate);
+                    forHelp, null, commandPackage, mixinFieldPrivate);
         } else if (ol != null) {
             generateOptionList(sb, simpleName, field, ol, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, null, commandPackage, mixinFieldPrivate);
+                    forHelp, null, commandPackage, mixinFieldPrivate);
         } else if (og != null) {
             generateOptionGroup(sb, simpleName, field, og, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, commandPackage, mixinFieldPrivate);
+                    forHelp, commandPackage, mixinFieldPrivate);
         } else if (args != null) {
             generateArguments(sb, simpleName, field, args, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, null, commandPackage, mixinFieldPrivate);
+                    forHelp, null, commandPackage, mixinFieldPrivate);
         } else if (arg != null) {
             generateArgument(sb, simpleName, field, arg, mixinFieldName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, null, commandPackage, mixinFieldPrivate);
+                    forHelp, null, commandPackage, mixinFieldPrivate);
         } else if (field.getAnnotation(Mixin.class) != null) {
             // Chain mixinFieldName for nested mixins: "outer" + "inner" -> "outer.inner"
             String nestedMixinName = mixinFieldName != null
                     ? mixinFieldName + "." + field.getSimpleName().toString()
                     : field.getSimpleName().toString();
             generateMixin(sb, simpleName, field, nestedMixinName, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, commandPackage, isPrivateField(field));
+                    forHelp, commandPackage, isPrivateField(field));
         }
     }
 
     private static void generateMixin(StringBuilder sb, String simpleName, VariableElement mixinField,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
-            boolean mixinFieldPrivate) {
+            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
         TypeMirror mixinType = mixinField.asType();
         if (!(mixinType instanceof DeclaredType))
             return;
@@ -827,18 +828,16 @@ final class CodeGenerator {
         }
 
         generateMixinFields(sb, simpleName, mixinFieldName, mixinElement, elementUtils, typeUtils, accessorInfos,
-                commandFallback, forHelp, commandPackage, mixinFieldPrivate);
+                forHelp, commandPackage, mixinFieldPrivate);
     }
 
     private static void generateMixinFields(StringBuilder sb, String simpleName, String mixinFieldName,
             TypeElement typeElement, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
-            boolean mixinFieldPrivate) {
+            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
         for (javax.lang.model.element.Element enclosed : typeElement.getEnclosedElements()) {
             if (enclosed instanceof VariableElement) {
                 generateFieldProcessing(sb, simpleName, (VariableElement) enclosed, mixinFieldName,
-                        elementUtils, typeUtils, accessorInfos, commandFallback, forHelp, commandPackage,
-                        mixinFieldPrivate);
+                        elementUtils, typeUtils, accessorInfos, forHelp, commandPackage, mixinFieldPrivate);
             }
         }
         // Recurse into superclass
@@ -847,15 +846,14 @@ final class CodeGenerator {
             if (superclass instanceof DeclaredType) {
                 TypeElement superElement = (TypeElement) ((DeclaredType) superclass).asElement();
                 generateMixinFields(sb, simpleName, mixinFieldName, superElement, elementUtils, typeUtils, accessorInfos,
-                        commandFallback, forHelp, commandPackage, mixinFieldPrivate);
+                        forHelp, commandPackage, mixinFieldPrivate);
             }
         }
     }
 
     private static void generateOption(StringBuilder sb, String simpleName, VariableElement field, Option o,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
-            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
+            boolean forHelp, String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -863,7 +861,6 @@ final class CodeGenerator {
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
         }
         String fieldType = getBoxedTypeName(effectiveType, typeUtils);
-        boolean isBooleanType = isBooleanType(effectiveType, typeUtils);
         String optionName = o.name().length() < 1 ? fieldName : o.name();
         String optionType = o.hasValue() ? "OptionType.NORMAL" : "OptionType.BOOLEAN";
 
@@ -909,8 +906,7 @@ final class CodeGenerator {
         if (o.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(o.defaultValue())).append("));\n");
-        emitCompleterSetter(sb, var, field, "completer", isBooleanType, isFileOrResourceType(effectiveType, typeUtils),
-                elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
@@ -941,7 +937,7 @@ final class CodeGenerator {
         if (o.selector() != org.aesh.selector.SelectorType.NO_OP)
             sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(o.selector()))
                     .append(");\n");
-        emitCompleteFallbackSetter(sb, var, o.completeFallback(), field, typeUtils, commandFallback);
+        emitCompleteFallbackSetter(sb, var, o.completeFallback());
         emitAliasesSetter(sb, var, o.aliases());
         emitHelpGroupSetter(sb, var, o.helpGroup());
         emitExclusiveWithSetter(sb, var, o.exclusiveWith());
@@ -979,8 +975,7 @@ final class CodeGenerator {
 
     private static void generateOptionList(StringBuilder sb, String simpleName, VariableElement field, OptionList ol,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
-            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
+            boolean forHelp, String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1017,7 +1012,7 @@ final class CodeGenerator {
             sb.append(", new Accessor(").append(accIdx).append("));\n");
         sb.append("            ").append(var).append(".setValueSeparator(").append(charLiteral(ol.valueSeparator()))
                 .append(");\n");
-        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils, forHelp);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (isArrayType)
@@ -1031,7 +1026,7 @@ final class CodeGenerator {
         if (ol.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(ol.defaultValue())).append("));\n");
-        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
@@ -1057,13 +1052,7 @@ final class CodeGenerator {
         if (ol.selector() != org.aesh.selector.SelectorType.NO_OP)
             sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(ol.selector()))
                     .append(");\n");
-        {
-            TypeMirror elemMirror = isArrayType
-                    ? ((javax.lang.model.type.ArrayType) effectiveType).getComponentType()
-                    : getGenericTypeArgumentMirror(effectiveType, 0);
-            emitCompleteFallbackSetter(sb, var, ol.completeFallback(), elemMirror != null ? elemMirror : effectiveType,
-                    typeUtils, commandFallback);
-        }
+        emitCompleteFallbackSetter(sb, var, ol.completeFallback());
         emitAliasesSetter(sb, var, ol.aliases());
         emitHelpGroupSetter(sb, var, ol.helpGroup());
         emitExclusiveWithSetter(sb, var, ol.exclusiveWith());
@@ -1081,8 +1070,7 @@ final class CodeGenerator {
 
     private static void generateOptionGroup(StringBuilder sb, String simpleName, VariableElement field, OptionGroup og,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp, String commandPackage,
-            boolean mixinFieldPrivate) {
+            boolean forHelp, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1117,7 +1105,7 @@ final class CodeGenerator {
         else
             sb.append(", new Accessor(").append(accIdx).append("));\n");
         sb.append("            ").append(var).append(".setValueSeparator(',');\n");
-        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils, forHelp);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (og.required())
@@ -1129,7 +1117,7 @@ final class CodeGenerator {
         if (og.defaultValue().length > 0)
             sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(og.defaultValue())).append("));\n");
-        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
@@ -1146,11 +1134,7 @@ final class CodeGenerator {
         if (og.selector() != org.aesh.selector.SelectorType.NO_OP)
             sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(og.selector()))
                     .append(");\n");
-        {
-            TypeMirror valMirror = getGenericTypeArgumentMirror(effectiveType, 1);
-            emitCompleteFallbackSetter(sb, var, og.completeFallback(), valMirror != null ? valMirror : effectiveType, typeUtils,
-                    commandFallback);
-        }
+        emitCompleteFallbackSetter(sb, var, og.completeFallback());
         emitAliasesSetter(sb, var, og.aliases());
         emitHelpGroupSetter(sb, var, og.helpGroup());
         emitExclusiveWithSetter(sb, var, og.exclusiveWith());
@@ -1168,8 +1152,7 @@ final class CodeGenerator {
 
     private static void generateArguments(StringBuilder sb, String simpleName, VariableElement field, Arguments a,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
-            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
+            boolean forHelp, String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1197,7 +1180,7 @@ final class CodeGenerator {
             sb.append(", null);\n");
         else
             sb.append(", new Accessor(").append(accIdx).append("));\n");
-        emitInitialValueFactory(sb, var, field.asType(), typeUtils);
+        emitInitialValueFactory(sb, var, field.asType(), typeUtils, forHelp);
         if (isOptionalWrapped)
             sb.append("            ").append(var).append(".setOptionalWrapped(true);\n");
         if (isArrayType)
@@ -1224,19 +1207,13 @@ final class CodeGenerator {
         emitHelpGroupSetter(sb, var, a.helpGroup());
         if (a.order() != Integer.MAX_VALUE)
             sb.append("            ").append(var).append(".setOrder(").append(a.order()).append(");\n");
-        emitCompleterSetter(sb, var, field, "completer", false, false, elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
         emitParserSetter(sb, var, field, "parser", elementUtils, forHelp);
         if (a.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
-        {
-            TypeMirror elemMirror = isArrayType
-                    ? ((javax.lang.model.type.ArrayType) effectiveType).getComponentType()
-                    : getGenericTypeArgumentMirror(effectiveType, 0);
-            emitCompleteFallbackSetter(sb, var, a.completeFallback(), elemMirror != null ? elemMirror : effectiveType,
-                    typeUtils, commandFallback);
-        }
+        emitCompleteFallbackSetter(sb, var, a.completeFallback());
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
@@ -1247,8 +1224,7 @@ final class CodeGenerator {
 
     private static void generateArgument(StringBuilder sb, String simpleName, VariableElement field, Argument arg,
             String mixinFieldName, Elements elementUtils, Types typeUtils, List<FieldAccessorInfo> accessorInfos,
-            org.aesh.command.option.CompletionFallback commandFallback, boolean forHelp,
-            String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
+            boolean forHelp, String accessorFieldName, String commandPackage, boolean mixinFieldPrivate) {
         String fieldName = field.getSimpleName().toString();
         TypeMirror effectiveType = field.asType();
         boolean isOptionalWrapped = isOptionalType(effectiveType, typeUtils);
@@ -1296,8 +1272,7 @@ final class CodeGenerator {
         emitHelpGroupSetter(sb, var, arg.helpGroup());
         if (arg.order() != Integer.MAX_VALUE)
             sb.append("            ").append(var).append(".setOrder(").append(arg.order()).append(");\n");
-        emitCompleterSetter(sb, var, field, "completer", false, isFileOrResourceType(field.asType(), typeUtils),
-                elementUtils, forHelp);
+        emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setRenderer", field, "renderer", NULL_OPTION_RENDERER, elementUtils, forHelp);
@@ -1308,7 +1283,7 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setInherited(true);\n");
         if (arg.url())
             sb.append("            ").append(var).append(".setIsUrl(true);\n");
-        emitCompleteFallbackSetter(sb, var, arg.completeFallback(), field, typeUtils, commandFallback);
+        emitCompleteFallbackSetter(sb, var, arg.completeFallback());
         if (mixinFieldName != null)
             sb.append("            ").append(var).append(".setMixinFieldName(").append(stringLiteral(mixinFieldName))
                     .append(");\n");
@@ -1478,7 +1453,17 @@ final class CodeGenerator {
         // Legacy direct-parent form, plus the type-directed runtime form.
         sb.append("        @Override\n");
         sb.append("        public void accept(Object cmd, Object parent) {\n");
-        sb.append("            inject(cmd, type -> type.isInstance(parent) ? parent : null);\n");
+        for (FieldAccessorInfo parentInfo : parentInfos) {
+            sb.append("            if (parent instanceof ").append(parentInfo.fieldType).append(") {");
+            if (parentInfo.needsReflection) {
+                sb.append(" try { ").append(fieldConstantRef(fieldConstantName(parentInfo.fieldName)))
+                        .append(".set(cmd, parent); } catch (IllegalAccessException e) { throw new RuntimeException(e); }");
+            } else {
+                sb.append(" ((").append(commandSimpleName).append(") cmd).")
+                        .append(parentInfo.fieldName).append(" = (").append(parentInfo.fieldType).append(") parent;");
+            }
+            sb.append(" }\n");
+        }
         sb.append("        }\n\n");
         sb.append("        @Override\n");
         sb.append("        public void inject(Object cmd, java.util.function.Function<Class<?>, Object> parentLookup) {\n");
@@ -1513,7 +1498,7 @@ final class CodeGenerator {
         if (className != null && !className.equals(NULL_CONVERTER)) {
             sb.append("new ").append(className).append("()");
         } else {
-            sb.append("converter_").append(converterConstantSuffix(fieldType));
+            sb.append("converter_").append(converterConstantSuffix(converterLookupType(fieldType)));
         }
     }
 
@@ -1538,25 +1523,17 @@ final class CodeGenerator {
             sb.append("new org.aesh.command.impl.converter.EnumConverter(").append(fieldType).append(".class)");
             return;
         }
-        sb.append("converter_").append(converterConstantSuffix(fieldType));
+        sb.append("converter_").append(converterConstantSuffix(converterLookupType(fieldType)));
     }
 
-    /** Emit completer setter if non-default. */
+    /**
+     * Emit completer setter only for an explicit custom completer. Built-in
+     * default completers (Boolean, allowedValues, File/Resource/Path) resolve
+     * lazily in {@link org.aesh.command.impl.internal.ProcessedOption#completer()} (#789).
+     */
     private static void emitCompleterSetter(StringBuilder sb, String var, VariableElement field,
-            String attributeName, boolean isBooleanType, boolean isFileOrResource, Elements elementUtils,
-            boolean forHelp) {
-        if (forHelp)
-            return;
-        String className = getFieldAnnotationClassValue(field, attributeName, elementUtils);
-        if (className != null && !className.equals(NULL_OPTION_COMPLETER)) {
-            sb.append("            ").append(var).append(".setCompleter(new ").append(className).append("());\n");
-        } else if (isBooleanType) {
-            sb.append("            ").append(var)
-                    .append(".setCompleter(org.aesh.command.impl.completer.BooleanOptionCompleter.INSTANCE);\n");
-        } else if (isFileOrResource) {
-            sb.append("            ").append(var)
-                    .append(".setCompleter(new org.aesh.command.impl.completer.FileOptionCompleter());\n");
-        }
+            String attributeName, Elements elementUtils, boolean forHelp) {
+        emitCallbackSetter(sb, var, "setCompleter", field, attributeName, NULL_OPTION_COMPLETER, elementUtils, forHelp);
     }
 
     /** Emit parser setter if non-default (for createDirect() path). */
@@ -1584,58 +1561,16 @@ final class CodeGenerator {
     }
 
     /**
-     * Emit setCompleteFallback() resolving DEFAULT based on command-level default
-     * (if set) or field type at compile time.
+     * Emit setCompleteFallback() only when explicitly overridden on the
+     * option/argument annotation. {@code DEFAULT} resolves lazily in
+     * {@link org.aesh.command.impl.internal.ProcessedOption#getCompleteFallback()} (#789).
      */
     private static void emitCompleteFallbackSetter(StringBuilder sb, String var,
-            org.aesh.command.option.CompletionFallback value, VariableElement field, Types typeUtils,
-            org.aesh.command.option.CompletionFallback commandFallback) {
-        // Delegate to the TypeMirror overload using the field's effective type
-        TypeMirror fieldType = field.asType();
-        if (isOptionalType(fieldType, typeUtils))
-            fieldType = unwrapOptionalTypeMirror(fieldType);
-        emitCompleteFallbackSetter(sb, var, value, fieldType, typeUtils, commandFallback);
-    }
-
-    /**
-     * Overload that accepts the effective TypeMirror directly. Used by
-     * OptionList/Arguments where the relevant type is the element type,
-     * not the collection type.
-     */
-    private static void emitCompleteFallbackSetter(StringBuilder sb, String var,
-            org.aesh.command.option.CompletionFallback value, TypeMirror effectiveType, Types typeUtils,
-            org.aesh.command.option.CompletionFallback commandFallback) {
-        org.aesh.command.option.CompletionFallback resolved = value;
-        if (resolved == org.aesh.command.option.CompletionFallback.DEFAULT
-                && commandFallback != org.aesh.command.option.CompletionFallback.DEFAULT) {
-            // Command-level default takes priority over type heuristic (#565)
-            resolved = commandFallback;
+            org.aesh.command.option.CompletionFallback value) {
+        if (value != org.aesh.command.option.CompletionFallback.DEFAULT) {
+            sb.append("            ").append(var).append(".setCompleteFallback(org.aesh.command.option.CompletionFallback.")
+                    .append(value.name()).append(");\n");
         }
-        if (resolved == org.aesh.command.option.CompletionFallback.DEFAULT) {
-            // Resolve DEFAULT based on effective type
-            TypeMirror fieldType = effectiveType;
-            if (fieldType.getKind() == TypeKind.DECLARED) {
-                javax.lang.model.element.Element element = typeUtils.asElement(fieldType);
-                if (element != null && element.getKind() == javax.lang.model.element.ElementKind.ENUM) {
-                    resolved = org.aesh.command.option.CompletionFallback.NONE;
-                } else {
-                    // String, File, Path -> FILES; other types -> NONE
-                    String typeName = erasedTypeName(fieldType, typeUtils);
-                    if (typeName.equals("java.lang.String") || typeName.equals("java.io.File")
-                            || typeName.equals("java.nio.file.Path")
-                            || typeName.equals("org.aesh.io.Resource")) {
-                        resolved = org.aesh.command.option.CompletionFallback.FILES;
-                    } else {
-                        resolved = org.aesh.command.option.CompletionFallback.NONE;
-                    }
-                }
-            } else {
-                // Primitive types -> NONE
-                resolved = org.aesh.command.option.CompletionFallback.NONE;
-            }
-        }
-        sb.append("            ").append(var).append(".setCompleteFallback(org.aesh.command.option.CompletionFallback.")
-                .append(resolved.name()).append(");\n");
     }
 
     private static void emitAliasesSetter(StringBuilder sb, String var, String[] aliases) {
@@ -1662,11 +1597,6 @@ final class CodeGenerator {
         if (allowedValues != null && allowedValues.length > 0) {
             sb.append("            ").append(var).append(".setAllowedValues(java.util.Arrays.asList(")
                     .append(stringArrayLiteral(allowedValues)).append("));\n");
-            // Mirror ProcessedOptionBuilder.build(): auto-create DefaultValueOptionCompleter when
-            // allowedValues is non-empty and no custom completer was set
-            sb.append("            if (").append(var).append(".completer() == null) ").append(var)
-                    .append(".setCompleter(new org.aesh.command.impl.completer.DefaultValueOptionCompleter(")
-                    .append(var).append(".getAllowedValues()));\n");
         }
     }
 
@@ -1794,17 +1724,19 @@ final class CodeGenerator {
                 TypeMirror mixinType = field.asType();
                 if (mixinType instanceof DeclaredType) {
                     TypeElement mixinElement = (TypeElement) ((DeclaredType) mixinType).asElement();
-                    // The reflective accessor always reads the mixin instance
-                    // through this constant, so it is emitted whenever the
-                    // mixin exists — it only materializes if reflection
-                    // actually happens (#785).
-                    privateFields.add(new String[] {
-                            fieldConstantName(mixinFieldName),
-                            declaringClassName(field),
-                            mixinFieldName
-                    });
-                    collectMixinPrivateFields(privateFields, mixinFieldName, mixinElement, commandPackage,
+                    List<String[]> mixinPrivateFields = new ArrayList<>();
+                    collectMixinPrivateFields(mixinPrivateFields, mixinFieldName, mixinElement, commandPackage,
                             isPrivateField(field));
+                    // Only emit the mixin Field constant when the mixin field itself
+                    // is private or at least one option inside it needs reflection (#789).
+                    if (isPrivateField(field) || !mixinPrivateFields.isEmpty()) {
+                        privateFields.add(new String[] {
+                                fieldConstantName(mixinFieldName),
+                                declaringClassName(field),
+                                mixinFieldName
+                        });
+                        privateFields.addAll(mixinPrivateFields);
+                    }
                 }
             }
         }
@@ -1843,18 +1775,12 @@ final class CodeGenerator {
      * never touches the local.
      */
     private static java.util.LinkedHashSet<String> collectSharedConverterTypes(
-            List<VariableElement> fields, Elements elementUtils, Types typeUtils) {
-        return collectSharedConverterTypes(fields, elementUtils, typeUtils, true);
-    }
-
-    private static java.util.LinkedHashSet<String> collectSharedConverterTypes(
             List<VariableElement> fields, Elements elementUtils, Types typeUtils,
-            boolean alwaysIncludeBoolean) {
+            boolean includeGeneratedBoolean) {
         // Collect distinct default converter types (types that use CLConverterManager, not custom converters)
         java.util.LinkedHashSet<String> converterTypes = new java.util.LinkedHashSet<>();
-        // Always include Boolean — needed for generated help/version options.
-        // Method providers synthesize no help/version options, so they skip it.
-        if (alwaysIncludeBoolean)
+        // Include Boolean only when generated help/version options actually need it (#789).
+        if (includeGeneratedBoolean)
             converterTypes.add("java.lang.Boolean");
 
         for (VariableElement field : fields) {
@@ -1876,20 +1802,25 @@ final class CodeGenerator {
                 if (field.getAnnotation(Option.class) != null
                         && getEnumConstantNames(effectiveType, typeUtils) != null)
                     continue; // direct EnumConverter, no shared lookup (#591)
-                converterTypes.add(getBoxedTypeName(effectiveType, typeUtils));
+                converterTypes.add(converterLookupType(getBoxedTypeName(effectiveType, typeUtils)));
             } else if (field.getAnnotation(OptionList.class) != null || field.getAnnotation(Arguments.class) != null) {
                 TypeMirror effectiveType = field.asType();
                 if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
-                converterTypes.add(getElementTypeName(effectiveType, typeUtils));
+                converterTypes.add(converterLookupType(getElementTypeName(effectiveType, typeUtils)));
             } else if (field.getAnnotation(OptionGroup.class) != null) {
                 TypeMirror effectiveType = field.asType();
                 if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
-                converterTypes.add(getGenericTypeArgument(effectiveType, 1, typeUtils));
+                converterTypes.add(converterLookupType(getGenericTypeArgument(effectiveType, 1, typeUtils)));
             }
         }
         return converterTypes;
+    }
+
+    /** Share the Boolean converter lookup between primitive boolean and java.lang.Boolean (#789). */
+    private static String converterLookupType(String typeName) {
+        return "boolean".equals(typeName) ? "java.lang.Boolean" : typeName;
     }
 
     /** Generate a safe Java identifier suffix from a type name. */
@@ -1913,17 +1844,17 @@ final class CodeGenerator {
                 if (f.getAnnotation(Option.class) != null
                         && getEnumConstantNames(effectiveType, typeUtils) != null)
                     continue; // direct EnumConverter, no shared lookup (#591)
-                types.add(getBoxedTypeName(effectiveType, typeUtils));
+                types.add(converterLookupType(getBoxedTypeName(effectiveType, typeUtils)));
             } else if (f.getAnnotation(OptionList.class) != null || f.getAnnotation(Arguments.class) != null) {
                 TypeMirror effectiveType = f.asType();
                 if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
-                types.add(getElementTypeName(effectiveType, typeUtils));
+                types.add(converterLookupType(getElementTypeName(effectiveType, typeUtils)));
             } else if (f.getAnnotation(OptionGroup.class) != null) {
                 TypeMirror effectiveType = f.asType();
                 if (isOptionalType(effectiveType, typeUtils))
                     effectiveType = unwrapOptionalTypeMirror(effectiveType);
-                types.add(getGenericTypeArgument(effectiveType, 1, typeUtils));
+                types.add(converterLookupType(getGenericTypeArgument(effectiveType, 1, typeUtils)));
             }
         }
         // Recurse into superclass
@@ -2148,10 +2079,13 @@ final class CodeGenerator {
 
     /**
      * Emit a setInitialValueFactory() call that creates an empty collection/map
-     * of the declared field type, avoiding reflection at runtime.
+     * of the declared field type without reflection or invokedynamic (#789).
+     * Skipped on the help path because help builds never reset command fields.
      */
     private static void emitInitialValueFactory(StringBuilder sb, String var,
-            TypeMirror fieldType, Types typeUtils) {
+            TypeMirror fieldType, Types typeUtils, boolean forHelp) {
+        if (forHelp)
+            return;
         TypeMirror effectiveType = fieldType;
         if (isOptionalType(effectiveType, typeUtils))
             effectiveType = unwrapOptionalTypeMirror(effectiveType);
@@ -2168,23 +2102,23 @@ final class CodeGenerator {
             case "java.util.ArrayList":
             case "java.util.List":
             case "java.util.Collection":
-                return "java.util.ArrayList::new";
+                return "org.aesh.command.impl.internal.CollectionFactory.ARRAY_LIST";
             case "java.util.LinkedList":
-                return "java.util.LinkedList::new";
+                return "org.aesh.command.impl.internal.CollectionFactory.LINKED_LIST";
             case "java.util.HashSet":
             case "java.util.Set":
-                return "java.util.HashSet::new";
+                return "org.aesh.command.impl.internal.CollectionFactory.HASH_SET";
             case "java.util.LinkedHashSet":
-                return "java.util.LinkedHashSet::new";
+                return "org.aesh.command.impl.internal.CollectionFactory.LINKED_HASH_SET";
             case "java.util.TreeSet":
-                return "java.util.TreeSet::new";
+                return "org.aesh.command.impl.internal.CollectionFactory.TREE_SET";
             case "java.util.HashMap":
             case "java.util.Map":
-                return "java.util.HashMap::new";
+                return "org.aesh.command.impl.internal.CollectionFactory.HASH_MAP";
             case "java.util.LinkedHashMap":
-                return "java.util.LinkedHashMap::new";
+                return "org.aesh.command.impl.internal.CollectionFactory.LINKED_HASH_MAP";
             case "java.util.TreeMap":
-                return "java.util.TreeMap::new";
+                return "org.aesh.command.impl.internal.CollectionFactory.TREE_MAP";
             default:
                 return null;
         }
@@ -2308,18 +2242,6 @@ final class CodeGenerator {
         return type;
     }
 
-    private static boolean isBooleanType(TypeMirror type, Types typeUtils) {
-        if (type.getKind() == TypeKind.BOOLEAN)
-            return true;
-        return erasedTypeName(type, typeUtils).equals("java.lang.Boolean");
-    }
-
-    private static boolean isFileOrResourceType(TypeMirror type, Types typeUtils) {
-        String name = erasedTypeName(type, typeUtils);
-        return name.equals("java.io.File") || name.equals("java.nio.file.Path")
-                || name.equals("org.aesh.io.Resource");
-    }
-
     private static String getBoxedTypeName(TypeMirror type, Types typeUtils) {
         switch (type.getKind()) {
             case BOOLEAN:
@@ -2341,20 +2263,6 @@ final class CodeGenerator {
             default:
                 return erasedTypeName(type, typeUtils);
         }
-    }
-
-    /**
-     * Get the TypeMirror of a generic type argument. Returns null if not resolvable.
-     */
-    private static TypeMirror getGenericTypeArgumentMirror(TypeMirror type, int index) {
-        if (type instanceof DeclaredType) {
-            DeclaredType declaredType = (DeclaredType) type;
-            List<? extends TypeMirror> typeArgs = declaredType.getTypeArguments();
-            if (typeArgs.size() > index) {
-                return typeArgs.get(index);
-            }
-        }
-        return null;
     }
 
     private static String getGenericTypeArgument(TypeMirror type, int index, Types typeUtils) {
@@ -2681,19 +2589,18 @@ final class CodeGenerator {
         Argument arg = param.getAnnotation(Argument.class);
         OptionList ol = param.getAnnotation(OptionList.class);
         Arguments a = param.getAnnotation(Arguments.class);
-        org.aesh.command.option.CompletionFallback commandFallback = org.aesh.command.option.CompletionFallback.DEFAULT;
         if (o != null) {
             generateOption(sb, "Adapter", param, o, null, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, target, commandPackage, false);
+                    forHelp, target, commandPackage, false);
         } else if (arg != null) {
             generateArgument(sb, "Adapter", param, arg, null, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, target, commandPackage, false);
+                    forHelp, target, commandPackage, false);
         } else if (ol != null) {
             generateOptionList(sb, "Adapter", param, ol, null, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, target, commandPackage, false);
+                    forHelp, target, commandPackage, false);
         } else if (a != null) {
             generateArguments(sb, "Adapter", param, a, null, elementUtils, typeUtils, accessorInfos,
-                    commandFallback, forHelp, target, commandPackage, false);
+                    forHelp, target, commandPackage, false);
         }
     }
 

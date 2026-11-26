@@ -552,7 +552,22 @@ public class ProcessedOption {
     }
 
     public CompletionFallback getCompleteFallback() {
-        return completeFallback;
+        if (completeFallback != CompletionFallback.DEFAULT) {
+            return completeFallback;
+        }
+        if (parent != null && parent.getCompleteFallback() != CompletionFallback.DEFAULT) {
+            return parent.getCompleteFallback();
+        }
+        if (type != null && type.isEnum()) {
+            return CompletionFallback.NONE;
+        }
+        if (type != null && (File.class.isAssignableFrom(type)
+                || Path.class.isAssignableFrom(type)
+                || Resource.class.isAssignableFrom(type)
+                || String.class.isAssignableFrom(type))) {
+            return CompletionFallback.FILES;
+        }
+        return CompletionFallback.NONE;
     }
 
     public void setCompleteFallback(CompletionFallback completeFallback) {
@@ -998,8 +1013,14 @@ public class ProcessedOption {
     }
 
     public OptionCompleter completer() {
-        if (completer == null && (type == File.class || type == Resource.class || type == Path.class)) {
-            completer = new org.aesh.command.impl.completer.FileOptionCompleter();
+        if (completer == null) {
+            if (type == Boolean.class || type == boolean.class) {
+                completer = org.aesh.command.impl.completer.BooleanOptionCompleter.INSTANCE;
+            } else if (allowedValues != null && !allowedValues.isEmpty()) {
+                completer = new org.aesh.command.impl.completer.DefaultValueOptionCompleter(allowedValues);
+            } else if (type == File.class || type == Resource.class || type == Path.class) {
+                completer = new org.aesh.command.impl.completer.FileOptionCompleter();
+            }
         }
         return completer;
     }

@@ -6428,6 +6428,140 @@ public class ProcessorTest {
                 parent, childClass.getField("parent").get(child));
     }
 
+    @Test
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void testGeneratedCodeAvoidsInvokedynamicDeadFieldsAndEagerDefaults() throws Exception {
+        String mixinSource = "package test;\n" +
+                "import java.io.File;\n" +
+                "import java.util.LinkedHashSet;\n" +
+                "import java.util.List;\n" +
+                "import java.util.Map;\n" +
+                "import org.aesh.command.option.Option;\n" +
+                "import org.aesh.command.option.OptionGroup;\n" +
+                "import org.aesh.command.option.OptionList;\n" +
+                "public class PublicOptMixin {\n" +
+                "    @Option(description = \"Config file\")\n" +
+                "    public File config;\n" +
+                "    @Option(allowedValues = {\"a\", \"b\"}, description = \"Choice\")\n" +
+                "    public String choice;\n" +
+                "    @OptionList(description = \"Tags\")\n" +
+                "    public LinkedHashSet<String> tags;\n" +
+                "    @OptionGroup(shortName = 'D', description = \"Props\")\n" +
+                "    public Map<String, String> props;\n" +
+                "}\n";
+        String noBoolCmdSource = "package test;\n" +
+                "import java.util.List;\n" +
+                "import org.aesh.command.Command;\n" +
+                "import org.aesh.command.CommandDefinition;\n" +
+                "import org.aesh.command.CommandResult;\n" +
+                "import org.aesh.command.invocation.CommandInvocation;\n" +
+                "import org.aesh.command.option.Arguments;\n" +
+                "import org.aesh.command.option.Mixin;\n" +
+                "@CommandDefinition(name = \"clean\", description = \"clean\", generateHelp = false)\n" +
+                "public class CleanCmd implements Command<CommandInvocation> {\n" +
+                "    @Mixin\n" +
+                "    public PublicOptMixin mixin;\n" +
+                "    @Arguments(description = \"Files\")\n" +
+                "    public List<String> files;\n" +
+                "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+                "}\n";
+        String boolAndParentCmdSource = "package test;\n" +
+                "import org.aesh.command.Command;\n" +
+                "import org.aesh.command.CommandDefinition;\n" +
+                "import org.aesh.command.CommandResult;\n" +
+                "import org.aesh.command.invocation.CommandInvocation;\n" +
+                "import org.aesh.command.option.Option;\n" +
+                "import org.aesh.command.option.ParentCommand;\n" +
+                "@CommandDefinition(name = \"child2\", description = \"child2\", generateHelp = true)\n" +
+                "public class BoolAndParentCmd implements Command<CommandInvocation> {\n" +
+                "    @ParentCommand\n" +
+                "    private ParentCmd privateParent;\n" +
+                "    @Option(hasValue = false, description = \"Verbose\")\n" +
+                "    public boolean verbose;\n" +
+                "    public ParentCmd getPrivateParent() { return privateParent; }\n" +
+                "    public CommandResult execute(CommandInvocation ci) { return CommandResult.SUCCESS; }\n" +
+                "}\n";
+
+        CompilationResult result = compileWithProcessor(
+                new InMemorySource("test.PublicOptMixin", mixinSource),
+                new InMemorySource("test.CleanCmd", noBoolCmdSource),
+                new InMemorySource("test.ParentCmd", PARENT_CMD_SOURCE),
+                new InMemorySource("test.BoolAndParentCmd", boolAndParentCmdSource));
+        assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
+
+        // 1. No dead $Fields class for an all-public command + public mixin
+        String cleanSource = new String(Files.readAllBytes(
+                result.outputDir.resolve("test/CleanCmd_AeshMetadata.java")), StandardCharsets.UTF_8);
+        assertFalse("All-public mixin command must not emit dead Fields holder",
+                cleanSource.contains("class Fields"));
+        assertFalse("All-public mixin command must not emit $Fields.class",
+                Files.exists(result.outputDir.resolve("test/CleanCmd_AeshMetadata$Fields.class")));
+
+        // 2. No unused Boolean converter when generateHelp=false, version="" and no boolean fields
+        assertFalse("Must not look up unused Boolean converter",
+                cleanSource.contains("converter_java_lang_Boolean"));
+
+        // 3. CollectionFactory used on exec path, omitted on help path, and no eager default completers/fallbacks
+        assertTrue("Exec path should use CollectionFactory",
+                cleanSource.contains("CollectionFactory.LINKED_HASH_SET")
+                        && cleanSource.contains("CollectionFactory.HASH_MAP")
+                        && cleanSource.contains("CollectionFactory.ARRAY_LIST"));
+        assertFalse("Must not emit eager default completers or fallback setters",
+                cleanSource.contains("FileOptionCompleter")
+                        || cleanSource.contains("DefaultValueOptionCompleter")
+                        || cleanSource.contains("BooleanOptionCompleter")
+                        || cleanSource.contains("setCompleteFallback("));
+        String helpSection = cleanSource.substring(
+                cleanSource.indexOf("buildHelpProcessedCommand()"),
+                cleanSource.indexOf("static final class Accessor"));
+        assertFalse("Help path must not emit setInitialValueFactory",
+                helpSection.contains("setInitialValueFactory"));
+
+        // 4. Shared Boolean converter for generateHelp=true + primitive boolean (no duplicate converter_boolean)
+        String boolSource = new String(Files.readAllBytes(
+                result.outputDir.resolve("test/BoolAndParentCmd_AeshMetadata.java")), StandardCharsets.UTF_8);
+        assertTrue("Should share converter_java_lang_Boolean",
+                boolSource.contains("converter_java_lang_Boolean"));
+        assertFalse("Should not emit separate converter_boolean",
+                boolSource.contains("converter_boolean"));
+        assertFalse("Must not emit lambda in Accessor.accept", boolSource.contains("->"));
+
+        // 5. Zero LambdaMetafactory / BootstrapMethods in compiled .class files
+        for (String classRel : new String[] {
+                "test/CleanCmd_AeshMetadata.class",
+                "test/CleanCmd_AeshMetadata$Accessor.class",
+                "test/BoolAndParentCmd_AeshMetadata.class",
+                "test/BoolAndParentCmd_AeshMetadata$Accessor.class" }) {
+            byte[] bytes = Files.readAllBytes(result.outputDir.resolve(classRel));
+            String ascii = new String(bytes, StandardCharsets.ISO_8859_1);
+            assertFalse(classRel + " must not contain LambdaMetafactory",
+                    ascii.contains("LambdaMetafactory"));
+            assertFalse(classRel + " must not contain BootstrapMethods",
+                    ascii.contains("BootstrapMethods"));
+        }
+
+        // 6. Verify parity on both commands and private @ParentCommand injection via accept()
+        assertEquivalence(result.classLoader.loadClass("test.CleanCmd"),
+                result.classLoader.loadClass("test.CleanCmd_AeshMetadata"));
+        Class<?> boolCmdClass = result.classLoader.loadClass("test.BoolAndParentCmd");
+        Class<?> boolMetaClass = result.classLoader.loadClass("test.BoolAndParentCmd_AeshMetadata");
+        assertEquivalence(boolCmdClass, boolMetaClass);
+
+        Object child = boolCmdClass.newInstance();
+        Object parent = result.classLoader.loadClass("test.ParentCmd").newInstance();
+        CommandMetadataProvider provider = (CommandMetadataProvider) boolMetaClass.newInstance();
+        ProcessedCommand pc = provider.buildProcessedCommand((Command) child);
+        pc.getParentCommandInjector().accept(child, "wrong-type");
+        assertNull("Non-matching parent type must not be injected",
+                boolCmdClass.getMethod("getPrivateParent").invoke(child));
+        pc.getParentCommandInjector().accept(child, null);
+        assertNull("Null parent must not throw or inject",
+                boolCmdClass.getMethod("getPrivateParent").invoke(child));
+        pc.getParentCommandInjector().accept(child, parent);
+        assertSame("Matching private @ParentCommand must be injected",
+                parent, boolCmdClass.getMethod("getPrivateParent").invoke(child));
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private org.aesh.command.CommandRuntime methodRuntime(ProcessedCommand processedCommand) throws Exception {
         org.aesh.command.container.CommandContainer container = new org.aesh.command.impl.container.AeshCommandContainer(
