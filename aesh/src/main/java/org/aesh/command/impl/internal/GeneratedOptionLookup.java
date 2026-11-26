@@ -26,6 +26,12 @@ package org.aesh.command.impl.internal;
  */
 public interface GeneratedOptionLookup {
 
+    /**
+     * Shared empty lookup for generated commands with no named options (#790).
+     */
+    GeneratedOptionLookup EMPTY = new GeneratedOptionLookup() {
+    };
+
     default int longOptionIndex(String name) {
         return -1;
     }

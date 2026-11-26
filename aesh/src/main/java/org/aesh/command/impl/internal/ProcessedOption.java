@@ -316,6 +316,28 @@ public class ProcessedOption {
         return opt;
     }
 
+    /**
+     * Direct factory for generated (annotation-processor) code using a stateless
+     * {@link IndexedFieldAccessor} shared by the metadata provider, eliminating
+     * per-option {@link FieldAccessor} allocations (#790).
+     */
+    public static ProcessedOption createDirect(
+            String shortName, String name, String description,
+            Class<?> type, String fieldName, OptionType optionType,
+            Converter converter, IndexedFieldAccessor indexedAccessor, int accessorIndex) {
+        ProcessedOption opt = indexedAccessor != null
+                ? new GeneratedProcessedOption(indexedAccessor, accessorIndex)
+                : new ProcessedOption();
+        opt.shortName = shortName;
+        opt.name = name;
+        opt.description = description;
+        opt.type = type;
+        opt.fieldName = fieldName;
+        opt.optionType = optionType;
+        opt.converter = converter;
+        return opt;
+    }
+
     /** No-arg constructor for createDirect() and subclasses. Sets only immutable defaults. */
     protected ProcessedOption() {
         this.selectorType = SelectorType.NO_OP;
@@ -1498,7 +1520,7 @@ public class ProcessedOption {
         }
     }
 
-    private void setField(Object instance, Object value) {
+    protected void setField(Object instance, Object value) {
         if (fieldAccessor != null)
             fieldAccessor.set(instance, value);
         else

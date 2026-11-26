@@ -41,17 +41,52 @@ import org.aesh.console.AeshContext;
  *
  * @author Aesh team
  */
-public final class GeneratedProcessedOption extends ProcessedOption {
+public final class GeneratedProcessedOption extends ProcessedOption implements FieldAccessor {
+
+    private final IndexedFieldAccessor indexedAccessor;
+    private final int accessorIndex;
 
     public GeneratedProcessedOption() {
         super();
+        this.indexedAccessor = null;
+        this.accessorIndex = -1;
+    }
+
+    GeneratedProcessedOption(IndexedFieldAccessor indexedAccessor, int accessorIndex) {
+        super();
+        this.indexedAccessor = indexedAccessor;
+        this.accessorIndex = accessorIndex;
+    }
+
+    @Override
+    public FieldAccessor getFieldAccessor() {
+        return fieldAccessor != null ? fieldAccessor : (indexedAccessor != null ? this : null);
+    }
+
+    @Override
+    public void set(Object instance, Object value) {
+        setField(instance, value);
+    }
+
+    @Override
+    public Object get(Object instance) {
+        return getFieldValue(instance);
+    }
+
+    @Override
+    protected void setField(Object instance, Object value) {
+        if (indexedAccessor != null) {
+            indexedAccessor.set(accessorIndex, instance, value);
+        } else {
+            fieldAccessor.set(instance, value);
+        }
     }
 
     @Override
     public void captureInitialValue(Object instance) {
         if (initialValueCaptured || instance == null || getFieldName() == null)
             return;
-        Object value = fieldAccessor.get(instance);
+        Object value = getFieldValue(instance);
         if (value != null) {
             initialValue = value;
         }
@@ -64,7 +99,7 @@ public final class GeneratedProcessedOption extends ProcessedOption {
             restoreInitialValue(instance);
             return;
         }
-        fieldAccessor.set(instance, typeDefault());
+        setField(instance, typeDefault());
     }
 
     @SuppressWarnings("unchecked")
@@ -90,7 +125,7 @@ public final class GeneratedProcessedOption extends ProcessedOption {
         } else if (initialValue != null && initialValue.getClass().isArray()) {
             val = copyArrayValue(initialValue);
         }
-        fieldAccessor.set(instance, val);
+        setField(instance, val);
     }
 
     @Override
@@ -103,11 +138,13 @@ public final class GeneratedProcessedOption extends ProcessedOption {
 
     @Override
     public Object getFieldValue(Object instance) {
-        return fieldAccessor.get(instance);
+        return indexedAccessor != null
+                ? indexedAccessor.get(accessorIndex, instance)
+                : fieldAccessor.get(instance);
     }
 
     @Override
     public void setFieldValue(Object instance, Object value) {
-        fieldAccessor.set(instance, value);
+        setField(instance, value);
     }
 }

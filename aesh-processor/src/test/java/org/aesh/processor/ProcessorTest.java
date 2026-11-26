@@ -2316,11 +2316,14 @@ public class ProcessorTest {
         String execBody = source.substring(source.indexOf("buildProcessedCommand(CountingHelpCommand"));
         assertTrue("Execution must resolve converters as method locals",
                 execBody.contains("Converter converter_java_lang_Boolean = "));
-        // Help path references neither converters, completers, callbacks nor accessors
-        String helpBody = source.substring(source.indexOf("buildHelpProcessedCommand()"));
+        // Help path references neither converters, completers, callbacks, accessors nor reflection
+        int helpStart = source.indexOf("buildHelpProcessedCommand()");
+        int helpEnd = source.indexOf("\n    }\n", helpStart);
+        String helpBody = source.substring(helpStart, helpEnd);
         for (String forbidden : new String[] { "converter_", "getConverter", "Converter(",
                 "Completer(", "setValidator(", "setActivator(", "setCompleter(", "setRenderer(",
-                "setParser(", ", new Accessor(" }) {
+                "setParser(", ", new Accessor(", ", this, ", "SyntheticBooleanAccessor", "Fields.",
+                "setGeneratedOptionLookup", "setParentCommandInjector" }) {
             assertFalse("Help build must not reference " + forbidden + ", got: " + helpBody,
                     helpBody.contains(forbidden));
         }
@@ -3381,8 +3384,14 @@ public class ProcessorTest {
         assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
         String source = new String(Files.readAllBytes(
                 result.outputDir.resolve("test/LookupCommand_AeshMetadata.java")), StandardCharsets.UTF_8);
-        assertTrue(source.contains("processedCommand.setGeneratedOptionLookup(Lookup.INSTANCE);"));
-        String helpBody = source.substring(source.indexOf("buildHelpProcessedCommand()"));
+        assertTrue(source.contains("processedCommand.setGeneratedOptionLookup(this);"));
+        assertFalse("Lookup must be folded into the provider, not an inner class",
+                source.contains("class Lookup "));
+        assertFalse("No $Lookup.class should be emitted",
+                Files.exists(result.outputDir.resolve("test/LookupCommand_AeshMetadata$Lookup.class")));
+        int helpStart = source.indexOf("buildHelpProcessedCommand()");
+        int helpEnd = source.indexOf("\n    }\n", helpStart);
+        String helpBody = source.substring(helpStart, helpEnd);
         assertFalse("help-only builds keep runtime lookup maps", helpBody.contains("setGeneratedOptionLookup"));
 
         Class<?> commandClass = result.classLoader.loadClass("test.LookupCommand");
@@ -6318,6 +6327,8 @@ public class ProcessorTest {
                 source.contains("owner.build("));
         assertFalse("Generated code must not use Method.invoke",
                 source.contains("Method.invoke"));
+        assertFalse("Method metadata provider must not emit $Accessor.class",
+                Files.exists(result.outputDir.resolve("test/MultiOwner_build_2_AeshMethodMetadata$Accessor.class")));
     }
 
     @Test
@@ -6489,13 +6500,21 @@ public class ProcessorTest {
                 new InMemorySource("test.BoolAndParentCmd", boolAndParentCmdSource));
         assertTrue("Compilation should succeed: " + result.diagnostics, result.success);
 
-        // 1. No dead $Fields class for an all-public command + public mixin
+        // 1. Single-class provider: no $Fields, $Accessor, or $Lookup inner classes
         String cleanSource = new String(Files.readAllBytes(
                 result.outputDir.resolve("test/CleanCmd_AeshMetadata.java")), StandardCharsets.UTF_8);
         assertFalse("All-public mixin command must not emit dead Fields holder",
                 cleanSource.contains("class Fields"));
+        assertFalse("Provider must not emit $Accessor inner class",
+                cleanSource.contains("class Accessor"));
+        assertFalse("Provider must not emit $Lookup inner class",
+                cleanSource.contains("class Lookup"));
         assertFalse("All-public mixin command must not emit $Fields.class",
                 Files.exists(result.outputDir.resolve("test/CleanCmd_AeshMetadata$Fields.class")));
+        assertFalse("Must not emit $Accessor.class",
+                Files.exists(result.outputDir.resolve("test/CleanCmd_AeshMetadata$Accessor.class")));
+        assertFalse("Must not emit $Lookup.class",
+                Files.exists(result.outputDir.resolve("test/CleanCmd_AeshMetadata$Lookup.class")));
 
         // 2. No unused Boolean converter when generateHelp=false, version="" and no boolean fields
         assertFalse("Must not look up unused Boolean converter",
@@ -6511,9 +6530,9 @@ public class ProcessorTest {
                         || cleanSource.contains("DefaultValueOptionCompleter")
                         || cleanSource.contains("BooleanOptionCompleter")
                         || cleanSource.contains("setCompleteFallback("));
-        String helpSection = cleanSource.substring(
-                cleanSource.indexOf("buildHelpProcessedCommand()"),
-                cleanSource.indexOf("static final class Accessor"));
+        int cleanHelpStart = cleanSource.indexOf("buildHelpProcessedCommand()");
+        int cleanHelpEnd = cleanSource.indexOf("\n    }\n", cleanHelpStart);
+        String helpSection = cleanSource.substring(cleanHelpStart, cleanHelpEnd);
         assertFalse("Help path must not emit setInitialValueFactory",
                 helpSection.contains("setInitialValueFactory"));
 
@@ -6524,14 +6543,16 @@ public class ProcessorTest {
                 boolSource.contains("converter_java_lang_Boolean"));
         assertFalse("Should not emit separate converter_boolean",
                 boolSource.contains("converter_boolean"));
-        assertFalse("Must not emit lambda in Accessor.accept", boolSource.contains("->"));
+        assertFalse("Must not emit lambda in accept", boolSource.contains("->"));
+        assertFalse("Must not emit $Accessor.class for BoolAndParentCmd",
+                Files.exists(result.outputDir.resolve("test/BoolAndParentCmd_AeshMetadata$Accessor.class")));
+        assertFalse("Must not emit $Lookup.class for BoolAndParentCmd",
+                Files.exists(result.outputDir.resolve("test/BoolAndParentCmd_AeshMetadata$Lookup.class")));
 
         // 5. Zero LambdaMetafactory / BootstrapMethods in compiled .class files
         for (String classRel : new String[] {
                 "test/CleanCmd_AeshMetadata.class",
-                "test/CleanCmd_AeshMetadata$Accessor.class",
-                "test/BoolAndParentCmd_AeshMetadata.class",
-                "test/BoolAndParentCmd_AeshMetadata$Accessor.class" }) {
+                "test/BoolAndParentCmd_AeshMetadata.class" }) {
             byte[] bytes = Files.readAllBytes(result.outputDir.resolve(classRel));
             String ascii = new String(bytes, StandardCharsets.ISO_8859_1);
             assertFalse(classRel + " must not contain LambdaMetafactory",
@@ -6540,9 +6561,18 @@ public class ProcessorTest {
                     ascii.contains("BootstrapMethods"));
         }
 
-        // 6. Verify parity on both commands and private @ParentCommand injection via accept()
-        assertEquivalence(result.classLoader.loadClass("test.CleanCmd"),
-                result.classLoader.loadClass("test.CleanCmd_AeshMetadata"));
+        // 6. Verify parity on both commands, NO_OP injector when no @ParentCommand,
+        // private @ParentCommand injection via accept(), and independent synthetic help state across builds
+        Class<?> cleanMetaClass = result.classLoader.loadClass("test.CleanCmd_AeshMetadata");
+        assertEquivalence(result.classLoader.loadClass("test.CleanCmd"), cleanMetaClass);
+        CommandMetadataProvider cleanProvider = (CommandMetadataProvider) cleanMetaClass.newInstance();
+        assertFalse("Command without @ParentCommand should not implement ParentCommandInjector",
+                cleanProvider instanceof org.aesh.command.impl.internal.ParentCommandInjector);
+        ProcessedCommand cleanPc = cleanProvider.buildProcessedCommand(
+                (Command) result.classLoader.loadClass("test.CleanCmd").newInstance());
+        assertSame("Command without @ParentCommand should share ParentCommandInjector.NO_OP",
+                org.aesh.command.impl.internal.ParentCommandInjector.NO_OP, cleanPc.getParentCommandInjector());
+
         Class<?> boolCmdClass = result.classLoader.loadClass("test.BoolAndParentCmd");
         Class<?> boolMetaClass = result.classLoader.loadClass("test.BoolAndParentCmd_AeshMetadata");
         assertEquivalence(boolCmdClass, boolMetaClass);
@@ -6550,7 +6580,10 @@ public class ProcessorTest {
         Object child = boolCmdClass.newInstance();
         Object parent = result.classLoader.loadClass("test.ParentCmd").newInstance();
         CommandMetadataProvider provider = (CommandMetadataProvider) boolMetaClass.newInstance();
+        assertTrue("Command with @ParentCommand should implement ParentCommandInjector directly",
+                provider instanceof org.aesh.command.impl.internal.ParentCommandInjector);
         ProcessedCommand pc = provider.buildProcessedCommand((Command) child);
+        assertSame(provider, pc.getParentCommandInjector());
         pc.getParentCommandInjector().accept(child, "wrong-type");
         assertNull("Non-matching parent type must not be injected",
                 boolCmdClass.getMethod("getPrivateParent").invoke(child));
@@ -6560,6 +6593,14 @@ public class ProcessorTest {
         pc.getParentCommandInjector().accept(child, parent);
         assertSame("Matching private @ParentCommand must be injected",
                 parent, boolCmdClass.getMethod("getPrivateParent").invoke(child));
+
+        // Synthetic --help state must stay isolated across builds from the same singleton provider
+        ProcessedCommand pc2 = provider.buildProcessedCommand((Command) boolCmdClass.newInstance());
+        ProcessedOption help1 = pc.findLongOptionNoActivatorCheck("help");
+        ProcessedOption help2 = pc2.findLongOptionNoActivatorCheck("help");
+        help1.getFieldAccessor().set(child, true);
+        assertEquals(true, help1.getFieldAccessor().get(child));
+        assertEquals("Second build's --help must remain false", false, help2.getFieldAccessor().get(child));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

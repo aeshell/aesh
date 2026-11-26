@@ -30,6 +30,20 @@ import java.util.function.Function;
 public interface ParentCommandInjector extends BiConsumer<Object, Object> {
 
     /**
+     * Shared no-op injector for generated commands with no {@code @ParentCommand}
+     * fields (#790).
+     */
+    ParentCommandInjector NO_OP = new ParentCommandInjector() {
+        @Override
+        public void accept(Object command, Object parent) {
+        }
+
+        @Override
+        public void inject(Object command, Function<Class<?>, Object> parentLookup) {
+        }
+    };
+
+    /**
      * Inject each {@code @ParentCommand} field from the nearest matching parent.
      *
      * @param command child command instance
