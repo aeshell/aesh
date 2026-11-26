@@ -90,87 +90,145 @@ public class ProcessedOption {
 
     private String description;
     private List<String> values;
-    private String argument;
     private List<String> defaultValues;
     private Class<?> type;
     private Converter converter;
     private OptionType optionType;
-    private boolean required = false;
     private char valueSeparator;
     private String fieldName;
-    private String paramLabel;
-    private org.aesh.command.option.Arity arity;
-    private org.aesh.command.option.IndexRange indexRange;
     private OptionCompleter completer;
-    private Map<String, String> properties;
-    private boolean longNameUsed = true;
-    private OptionValidator validator;
-    private boolean endsWithSeparator = false;
-    private OptionActivator activator;
-    private OptionRenderer renderer;
-    private boolean overrideRequired = false;
-    private boolean ansiMode = true;
     private ProcessedCommand parent;
-    private OptionParser parser;
-    private boolean cursorOption = false;
-    private boolean cursorValue = false;
-    private boolean askIfNotSet = false;
-    private boolean acceptNameWithoutDashes = false;
-    private SelectorType selectorType;
-    private boolean negatable = false;
-    private String negationPrefix = "no-";
-    private boolean negatedByUser = false;
-    private boolean optionalValue = false;
-    private boolean optionalWrapped = false;
-    /**
-     * True when the option was explicitly given without values (bare) and has
-     * {@code optionalValue} set, e.g. {@code --find} with nothing after it.
-     * Set at parse time by {@link #applyOptionalFallback()}; lets populate
-     * inject an empty list instead of resetting, so "given without values"
-     * (empty) stays distinct from "not given" (null) (#705).
-     */
-    private boolean explicitEmpty = false;
-    /**
-     * True when the option was explicitly given on the command line (its
-     * token was parsed), as opposed to set from a default, a fallback, a
-     * {@code DefaultValueProvider}, an interactive prompt or a selector.
-     * Set at parse time; {@link #clear()} resets it for the next parse
-     * (#707). Backs {@code CommandInvocation.hasMatchedOption} and friends.
-     */
-    private boolean explicitlyGiven = false;
-    /**
-     * True when the multi-value field is an array rather than a Collection
-     * ({@code String[]}, {@code int[]} ...). The {@code type} is then the
-     * component type, and values are injected as arrays (#704).
-     */
-    private boolean arrayType = false;
-    private String fallbackValue;
-    // Raw template strings for deferred resolution (#520).
-    // Only set when the value contains ${...} variable references.
-    private List<String> rawDefaultValues;
-    private String rawFallbackValue;
-    // True when the primary variable in the template resolved (not just the :- fallback).
-    // Used to give env var defaults priority over DefaultValueProvider (#521).
-    private boolean variableDefaultResolved;
-    private boolean variableFallbackResolved;
-    private boolean inherited = false;
-    private String descriptionUrl;
-    private boolean isUrl = false;
-    private List<String> aliases = Collections.emptyList();
-    private String helpGroup = "";
-    private List<String> exclusiveWith = Collections.emptyList();
-    private List<String> allowedValues = Collections.emptyList();
-    private OptionVisibility visibility = OptionVisibility.BRIEF;
-    private int order = Integer.MAX_VALUE;
-    private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
     private int declarationOrder = Integer.MAX_VALUE;
-    private BiConsumer<Object, Object> fieldSetter;
-    private Consumer<Object> fieldResetter;
-    private Function<Object, Object> fieldGetter;
+
+    /**
+     * Bit-packed option state: 22 booleans plus the {@link OptionVisibility}
+     * and {@link CompletionFallback} enums (two bits each), replacing 22
+     * boolean fields and 2 references (~26 bytes per option). The flag
+     * accessors are trivially JIT-inlinable (#795).
+     */
+    private int flags = F_LONG_NAME_USED | F_ANSI_MODE;
+
+    private static final int F_REQUIRED = 1 << 0;
+    private static final int F_LONG_NAME_USED = 1 << 1;
+    private static final int F_ENDS_WITH_SEPARATOR = 1 << 2;
+    private static final int F_OVERRIDE_REQUIRED = 1 << 3;
+    private static final int F_ANSI_MODE = 1 << 4;
+    private static final int F_CURSOR_OPTION = 1 << 5;
+    private static final int F_CURSOR_VALUE = 1 << 6;
+    private static final int F_ASK_IF_NOT_SET = 1 << 7;
+    private static final int F_ACCEPT_NAME_WITHOUT_DASHES = 1 << 8;
+    private static final int F_NEGATABLE = 1 << 9;
+    private static final int F_NEGATED_BY_USER = 1 << 10;
+    private static final int F_OPTIONAL_VALUE = 1 << 11;
+    private static final int F_OPTIONAL_WRAPPED = 1 << 12;
+    private static final int F_EXPLICIT_EMPTY = 1 << 13;
+    private static final int F_EXPLICITLY_GIVEN = 1 << 14;
+    private static final int F_ARRAY_TYPE = 1 << 15;
+    private static final int F_VARIABLE_DEFAULT_RESOLVED = 1 << 16;
+    private static final int F_VARIABLE_FALLBACK_RESOLVED = 1 << 17;
+    private static final int F_INHERITED = 1 << 18;
+    private static final int F_IS_URL = 1 << 19;
+    private static final int F_INITIAL_VALUE_CAPTURED = 1 << 20;
+    private static final int F_DISPLAY_PARTS_COMPUTED = 1 << 21;
+    private static final int VISIBILITY_SHIFT = 22;
+    private static final int VISIBILITY_MASK = 3 << VISIBILITY_SHIFT;
+    private static final int FALLBACK_SHIFT = 24;
+    private static final int FALLBACK_MASK = 3 << FALLBACK_SHIFT;
+
+    private boolean flag(int bit) {
+        return (flags & bit) != 0;
+    }
+
+    private void flag(int bit, boolean value) {
+        if (value)
+            flags |= bit;
+        else
+            flags &= ~bit;
+    }
+
+    /**
+     * Lazily allocated holder for rarely populated option fields (#795):
+     * most options never set any of these, so they cost one null reference
+     * instead of ~26 always-present fields. Getter defaults (emptyList,
+     * "no-", {@code NO_OP}, {@code Integer.MAX_VALUE}, ...) live in the
+     * accessors, so a null holder and a holder with null fields mean the
+     * same thing.
+     */
+    private OptionExtras extras;
+
+    static final class OptionExtras {
+        String argument;
+        String paramLabel;
+        org.aesh.command.option.Arity arity;
+        org.aesh.command.option.IndexRange indexRange;
+        Map<String, String> properties;
+        OptionValidator validator;
+        OptionActivator activator;
+        OptionRenderer renderer;
+        OptionParser parser;
+        SelectorType selectorType;
+        String negationPrefix;
+        String fallbackValue;
+        List<String> rawDefaultValues;
+        String rawFallbackValue;
+        String descriptionUrl;
+        List<String> aliases;
+        List<String> exclusiveWith;
+        List<String> allowedValues;
+        String helpGroup;
+        int order = Integer.MAX_VALUE;
+        BiConsumer<Object, Object> fieldSetter;
+        Consumer<Object> fieldResetter;
+        Function<Object, Object> fieldGetter;
+        /**
+         * Precomputed static help label parts. {@code displayNamePart} holds
+         * the option text as rendered before the description (e.g.
+         * {@code "-f, --file"}, {@code "    --verbose"},
+         * {@code "--[no-]quiet"} or {@code "<input>"}),
+         * {@code displayPlaceholderPart} the value suffix including
+         * delimiters (e.g. {@code "=<path>"}) or null when the option takes
+         * no placeholder. Computed once on first use; any setter that changes
+         * label inputs invalidates them via
+         * {@link #invalidateDisplayLabelParts()}.
+         */
+        String displayNamePart;
+        String displayPlaceholderPart;
+        Supplier<Object> initialValueFactory;
+    }
+
+    private OptionExtras extras() {
+        OptionExtras e = extras;
+        if (e == null) {
+            e = new OptionExtras();
+            extras = e;
+        }
+        return e;
+    }
+
+    private List<String> aliasesOrEmpty() {
+        OptionExtras e = extras;
+        return e != null && e.aliases != null ? e.aliases : Collections.emptyList();
+    }
+
     protected FieldAccessor fieldAccessor;
     protected Object initialValue;
-    protected boolean initialValueCaptured;
-    protected Supplier<Object> initialValueFactory;
+
+    /** Whether the initial field value was captured; see {@link #captureInitialValue(Object)}. */
+    boolean isInitialValueCaptured() {
+        return flag(F_INITIAL_VALUE_CAPTURED);
+    }
+
+    void setInitialValueCaptured(boolean captured) {
+        flag(F_INITIAL_VALUE_CAPTURED, captured);
+    }
+
+    Supplier<Object> initialValueFactory() {
+        OptionExtras e = extras;
+        return e != null ? e.initialValueFactory : null;
+    }
+
+    private String mixinFieldName;
+    private AeshConverterInvocation cachedConverterInvocation;
 
     /**
      * Seed the initial field value directly, bypassing the accessor read in
@@ -181,26 +239,8 @@ public class ProcessedOption {
      */
     public void setInitialValue(Object initialValue) {
         this.initialValue = initialValue;
-        this.initialValueCaptured = true;
+        setInitialValueCaptured(true);
     }
-
-    private String mixinFieldName;
-    private AeshConverterInvocation cachedConverterInvocation;
-
-    /**
-     * Precomputed static help label parts. {@code displayNamePart} holds the
-     * option text as rendered before the description (e.g. {@code "-f, --file"},
-     * {@code "    --verbose"}, {@code "--[no-]quiet"} or {@code "<input>"}),
-     * {@code displayPlaceholderPart} the value suffix including delimiters
-     * (e.g. {@code "=<path>"}) or null when the option takes no placeholder.
-     * Generated metadata seeds both at compile time; the reflection path and
-     * runtime-mutated options compute them once on first use. Any setter that
-     * changes label inputs invalidates them via
-     * {@link #invalidateDisplayLabelParts()}.
-     */
-    private String displayNamePart;
-    private String displayPlaceholderPart;
-    private boolean displayPartsComputed;
 
     public ProcessedOption(char shortName, String name, String description,
             String argument, boolean required, char valueSeparator, boolean askIfNotSet, boolean acceptNameWithoutDashes,
@@ -248,43 +288,48 @@ public class ProcessedOption {
             this.shortName = String.valueOf(shortName);
         this.name = name;
         this.description = description;
-        this.argument = argument;
-        this.required = required;
+        // Rare fields land in the lazy extras holder, and only when the value
+        // differs from the accessor default (#795)
+        if (argument != null)
+            extras().argument = argument;
+        flag(F_REQUIRED, required);
         this.valueSeparator = valueSeparator;
         this.type = type;
         this.fieldName = fieldName;
-        this.overrideRequired = overrideRequired;
+        flag(F_OVERRIDE_REQUIRED, overrideRequired);
         this.optionType = optionType;
         this.converter = converter;
         this.completer = completer;
-        this.validator = optionValidator;
-        this.activator = activator;
-        this.askIfNotSet = askIfNotSet;
-        this.acceptNameWithoutDashes = acceptNameWithoutDashes;
-        if (selectorType != null)
-            this.selectorType = selectorType;
-        else
-            this.selectorType = SelectorType.NO_OP;
-        this.parser = parser;
+        if (optionValidator != null)
+            extras().validator = optionValidator;
+        if (activator != null)
+            extras().activator = activator;
+        flag(F_ASK_IF_NOT_SET, askIfNotSet);
+        flag(F_ACCEPT_NAME_WITHOUT_DASHES, acceptNameWithoutDashes);
+        if (selectorType != null && selectorType != SelectorType.NO_OP)
+            extras().selectorType = selectorType;
+        if (parser != null)
+            extras().parser = parser;
 
         if (renderer != null)
-            this.renderer = renderer;
+            extras().renderer = renderer;
 
         if (hasVariableReference(defaultValue)) {
-            this.rawDefaultValues = defaultValue;
+            extras().rawDefaultValues = defaultValue;
             this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValue);
-            this.variableDefaultResolved = checkVariableResolved(defaultValue);
+            flag(F_VARIABLE_DEFAULT_RESOLVED, checkVariableResolved(defaultValue));
         } else {
-            this.defaultValues = defaultValue;
+            this.defaultValues = defaultValue != null ? defaultValue : Collections.emptyList();
         }
-        this.negatable = negatable;
-        this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
-        this.inherited = inherited;
-        this.descriptionUrl = descriptionUrl;
-        this.isUrl = isUrl || "java.net.URL".equals(type.getName()) || "java.net.URI".equals(type.getName());
-        this.optionalValue = optionalValue;
+        flag(F_NEGATABLE, negatable);
+        if (negationPrefix != null)
+            extras().negationPrefix = negationPrefix;
+        flag(F_INHERITED, inherited);
+        if (descriptionUrl != null)
+            extras().descriptionUrl = descriptionUrl;
+        flag(F_IS_URL, isUrl || "java.net.URL".equals(type.getName()) || "java.net.URI".equals(type.getName()));
+        flag(F_OPTIONAL_VALUE, optionalValue);
 
-        properties = java.util.Collections.emptyMap();
         values = java.util.Collections.emptyList();
     }
 
@@ -340,9 +385,7 @@ public class ProcessedOption {
 
     /** No-arg constructor for createDirect() and subclasses. Sets only immutable defaults. */
     protected ProcessedOption() {
-        this.selectorType = SelectorType.NO_OP;
         this.valueSeparator = ' ';
-        this.properties = Collections.emptyMap();
         this.values = Collections.emptyList();
         this.defaultValues = Collections.emptyList();
     }
@@ -350,7 +393,7 @@ public class ProcessedOption {
     // --- Setters used by generated code via createDirect() ---
 
     public void setRequired(boolean required) {
-        this.required = required;
+        flag(F_REQUIRED, required);
     }
 
     /**
@@ -367,47 +410,49 @@ public class ProcessedOption {
     }
 
     public void setAskIfNotSet(boolean askIfNotSet) {
-        this.askIfNotSet = askIfNotSet;
+        flag(F_ASK_IF_NOT_SET, askIfNotSet);
     }
 
     public void setAcceptNameWithoutDashes(boolean acceptNameWithoutDashes) {
-        this.acceptNameWithoutDashes = acceptNameWithoutDashes;
+        flag(F_ACCEPT_NAME_WITHOUT_DASHES, acceptNameWithoutDashes);
         invalidateDisplayLabelParts();
     }
 
     public void setOverrideRequired(boolean overrideRequired) {
-        this.overrideRequired = overrideRequired;
+        flag(F_OVERRIDE_REQUIRED, overrideRequired);
     }
 
     public void setNegatable(boolean negatable) {
-        this.negatable = negatable;
+        flag(F_NEGATABLE, negatable);
         invalidateDisplayLabelParts();
     }
 
     public void setNegationPrefix(String negationPrefix) {
-        this.negationPrefix = negationPrefix != null ? negationPrefix : "no-";
+        extras().negationPrefix = negationPrefix != null ? negationPrefix : "no-";
         invalidateDisplayLabelParts();
     }
 
     public void setInherited(boolean inherited) {
-        this.inherited = inherited;
+        flag(F_INHERITED, inherited);
     }
 
     public void setDescriptionUrl(String descriptionUrl) {
-        this.descriptionUrl = descriptionUrl;
+        if (descriptionUrl != null)
+            extras().descriptionUrl = descriptionUrl;
     }
 
     public void setIsUrl(boolean isUrl) {
-        this.isUrl = isUrl;
+        flag(F_IS_URL, isUrl);
     }
 
     public void setOptionalValue(boolean optionalValue) {
-        this.optionalValue = optionalValue;
+        flag(F_OPTIONAL_VALUE, optionalValue);
         invalidateDisplayLabelParts();
     }
 
     public void setInitialValueFactory(Supplier<Object> factory) {
-        this.initialValueFactory = factory;
+        if (factory != null)
+            extras().initialValueFactory = factory;
     }
 
     /**
@@ -416,30 +461,32 @@ public class ProcessedOption {
      * uses Optional.empty() instead of null.
      */
     public void setOptionalWrapped(boolean optionalWrapped) {
-        this.optionalWrapped = optionalWrapped;
+        flag(F_OPTIONAL_WRAPPED, optionalWrapped);
     }
 
     public boolean isOptionalWrapped() {
-        return optionalWrapped;
+        return flag(F_OPTIONAL_WRAPPED);
     }
 
     public void setFallbackValue(String fallbackValue) {
+        OptionExtras e = extras();
         if (fallbackValue != null && fallbackValue.length() > 3
                 && fallbackValue.charAt(0) == '$' && fallbackValue.charAt(1) == '{') {
-            this.rawFallbackValue = fallbackValue;
+            e.rawFallbackValue = fallbackValue;
             PropertiesLookup.ResolvedValue resolved = PropertiesLookup.resolveWithSource(fallbackValue);
-            this.fallbackValue = resolved.value;
-            this.variableFallbackResolved = resolved.fromVariable;
+            e.fallbackValue = resolved.value;
+            flag(F_VARIABLE_FALLBACK_RESOLVED, resolved.fromVariable);
         } else {
-            this.rawFallbackValue = null;
-            this.variableFallbackResolved = false;
-            this.fallbackValue = fallbackValue;
+            e.rawFallbackValue = null;
+            flag(F_VARIABLE_FALLBACK_RESOLVED, false);
+            e.fallbackValue = fallbackValue;
         }
         invalidateDisplayLabelParts();
     }
 
     public String getFallbackValue() {
-        return fallbackValue;
+        OptionExtras e = extras;
+        return e != null ? e.fallbackValue : null;
     }
 
     /**
@@ -453,21 +500,24 @@ public class ProcessedOption {
      * @return the raw declared defaults, or null when no variable is involved
      */
     public List<String> getRawDefaultValues() {
-        return rawDefaultValues;
+        OptionExtras e = extras;
+        return e != null ? e.rawDefaultValues : null;
     }
 
     public boolean hasFallbackValue() {
-        return fallbackValue != null;
+        return getFallbackValue() != null;
     }
 
     public void setDefaultValues(List<String> defaultValues) {
         if (defaultValues != null && hasVariableReference(defaultValues)) {
-            this.rawDefaultValues = defaultValues;
+            extras().rawDefaultValues = defaultValues;
             this.defaultValues = PropertiesLookup.checkForSystemVariables(defaultValues);
-            this.variableDefaultResolved = checkVariableResolved(defaultValues);
+            flag(F_VARIABLE_DEFAULT_RESOLVED, checkVariableResolved(defaultValues));
         } else {
-            this.rawDefaultValues = null;
-            this.variableDefaultResolved = false;
+            OptionExtras e = extras;
+            if (e != null)
+                e.rawDefaultValues = null;
+            flag(F_VARIABLE_DEFAULT_RESOLVED, false);
             this.defaultValues = defaultValues != null ? defaultValues : Collections.emptyList();
         }
     }
@@ -481,39 +531,45 @@ public class ProcessedOption {
     }
 
     public void setValidator(OptionValidator validator) {
-        this.validator = validator;
+        if (validator != null)
+            extras().validator = validator;
     }
 
     public void setActivator(OptionActivator activator) {
-        this.activator = activator;
+        if (activator != null)
+            extras().activator = activator;
     }
 
     public void setRenderer(OptionRenderer renderer) {
-        this.renderer = renderer;
+        if (renderer != null)
+            extras().renderer = renderer;
     }
 
     public void setFieldSetter(BiConsumer<Object, Object> fieldSetter) {
-        this.fieldSetter = fieldSetter;
+        extras().fieldSetter = fieldSetter;
     }
 
     public void setFieldResetter(Consumer<Object> fieldResetter) {
-        this.fieldResetter = fieldResetter;
+        extras().fieldResetter = fieldResetter;
     }
 
     public BiConsumer<Object, Object> getFieldSetter() {
-        return fieldSetter;
+        OptionExtras e = extras;
+        return e != null ? e.fieldSetter : null;
     }
 
     public Consumer<Object> getFieldResetter() {
-        return fieldResetter;
+        OptionExtras e = extras;
+        return e != null ? e.fieldResetter : null;
     }
 
     public void setFieldGetter(Function<Object, Object> fieldGetter) {
-        this.fieldGetter = fieldGetter;
+        extras().fieldGetter = fieldGetter;
     }
 
     public Function<Object, Object> getFieldGetter() {
-        return fieldGetter;
+        OptionExtras e = extras;
+        return e != null ? e.fieldGetter : null;
     }
 
     public void setFieldAccessor(FieldAccessor fieldAccessor) {
@@ -525,57 +581,102 @@ public class ProcessedOption {
     }
 
     public void setAliases(List<String> aliases) {
-        this.aliases = aliases != null ? aliases : Collections.emptyList();
+        extras().aliases = aliases != null ? aliases : Collections.emptyList();
         invalidateDisplayLabelParts();
     }
 
     public List<String> getAliases() {
-        return aliases;
+        return aliasesOrEmpty();
     }
 
     public void setHelpGroup(String helpGroup) {
-        this.helpGroup = helpGroup != null ? helpGroup : "";
+        if (helpGroup != null && !helpGroup.isEmpty())
+            extras().helpGroup = helpGroup;
     }
 
     public String getHelpGroup() {
-        return helpGroup;
+        OptionExtras e = extras;
+        return e != null && e.helpGroup != null ? e.helpGroup : "";
     }
 
     public void setExclusiveWith(List<String> exclusiveWith) {
-        this.exclusiveWith = exclusiveWith != null ? exclusiveWith : Collections.emptyList();
+        if (exclusiveWith != null && !exclusiveWith.isEmpty())
+            extras().exclusiveWith = exclusiveWith;
     }
 
     public List<String> getExclusiveWith() {
-        return exclusiveWith;
+        OptionExtras e = extras;
+        return e != null && e.exclusiveWith != null ? e.exclusiveWith : Collections.emptyList();
     }
 
     public void setAllowedValues(List<String> allowedValues) {
-        this.allowedValues = allowedValues != null ? allowedValues : Collections.emptyList();
+        if (allowedValues != null && !allowedValues.isEmpty())
+            extras().allowedValues = allowedValues;
+        else {
+            OptionExtras e = extras;
+            if (e != null)
+                e.allowedValues = null;
+        }
     }
 
     public List<String> getAllowedValues() {
-        return allowedValues;
+        OptionExtras e = extras;
+        return e != null && e.allowedValues != null ? e.allowedValues : Collections.emptyList();
     }
 
     public boolean hasAllowedValues() {
-        return allowedValues != null && !allowedValues.isEmpty();
+        return !getAllowedValues().isEmpty();
     }
 
     public void setVisibility(OptionVisibility visibility) {
-        this.visibility = visibility != null ? visibility : OptionVisibility.BRIEF;
+        int packed;
+        switch (visibility != null ? visibility : OptionVisibility.BRIEF) {
+            case FULL:
+                packed = 1;
+                break;
+            case HIDDEN:
+                packed = 2;
+                break;
+            case BRIEF:
+            default:
+                packed = 0;
+                break;
+        }
+        flags = (flags & ~VISIBILITY_MASK) | (packed << VISIBILITY_SHIFT);
     }
 
     public OptionVisibility getVisibility() {
-        return visibility;
+        switch ((flags & VISIBILITY_MASK) >>> VISIBILITY_SHIFT) {
+            case 1:
+                return OptionVisibility.FULL;
+            case 2:
+                return OptionVisibility.HIDDEN;
+            default:
+                return OptionVisibility.BRIEF;
+        }
     }
 
     public void setOrder(int order) {
-        this.order = order;
+        if (order != Integer.MAX_VALUE)
+            extras().order = order;
+        else {
+            OptionExtras e = extras;
+            if (e != null)
+                e.order = Integer.MAX_VALUE;
+        }
     }
 
     public CompletionFallback getCompleteFallback() {
-        if (completeFallback != CompletionFallback.DEFAULT) {
-            return completeFallback;
+        int packed = (flags & FALLBACK_MASK) >>> FALLBACK_SHIFT;
+        if (packed != 0) {
+            switch (packed) {
+                case 1:
+                    return CompletionFallback.FILES;
+                case 2:
+                    return CompletionFallback.DIRECTORIES;
+                default:
+                    return CompletionFallback.NONE;
+            }
         }
         if (parent != null && parent.getCompleteFallback() != CompletionFallback.DEFAULT) {
             return parent.getCompleteFallback();
@@ -593,11 +694,27 @@ public class ProcessedOption {
     }
 
     public void setCompleteFallback(CompletionFallback completeFallback) {
-        this.completeFallback = completeFallback;
+        int packed;
+        switch (completeFallback != null ? completeFallback : CompletionFallback.DEFAULT) {
+            case FILES:
+                packed = 1;
+                break;
+            case DIRECTORIES:
+                packed = 2;
+                break;
+            case NONE:
+                packed = 3;
+                break;
+            default:
+                packed = 0;
+                break;
+        }
+        flags = (flags & ~FALLBACK_MASK) | (packed << FALLBACK_SHIFT);
     }
 
     public int getOrder() {
-        return order;
+        OptionExtras e = extras;
+        return e != null ? e.order : Integer.MAX_VALUE;
     }
 
     public void setDeclarationOrder(int declarationOrder) {
@@ -609,7 +726,7 @@ public class ProcessedOption {
     }
 
     public boolean hasAlias(String name) {
-        for (String alias : aliases) {
+        for (String alias : aliasesOrEmpty()) {
             if (alias.equals(name))
                 return true;
         }
@@ -665,22 +782,23 @@ public class ProcessedOption {
      * types are captured only when non-null.
      */
     public void captureInitialValue(Object instance) {
-        if (initialValueCaptured || instance == null || fieldName == null)
+        if (isInitialValueCaptured() || instance == null || fieldName == null)
             return;
         if (fieldAccessor != null) {
             Object value = fieldAccessor.get(instance);
             if (value != null) {
                 initialValue = value;
             }
-            initialValueCaptured = true;
+            setInitialValueCaptured(true);
             return;
         }
-        if (fieldGetter != null) {
-            Object value = fieldGetter.apply(instance);
+        Function<Object, Object> getter = getFieldGetter();
+        if (getter != null) {
+            Object value = getter.apply(instance);
             if (value != null) {
                 initialValue = value;
             }
-            initialValueCaptured = true;
+            setInitialValueCaptured(true);
             return;
         }
         try {
@@ -691,7 +809,7 @@ public class ProcessedOption {
             if (!Modifier.isPublic(field.getModifiers()))
                 field.setAccessible(true);
             initialValue = field.get(target);
-            initialValueCaptured = true;
+            setInitialValueCaptured(true);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             // Capture failed, will fall back to null on reset
         }
@@ -699,7 +817,7 @@ public class ProcessedOption {
 
     public void resetField(Object instance) {
         // If we captured a non-null initial value, restore it
-        if (initialValueCaptured && initialValue != null) {
+        if (isInitialValueCaptured() && initialValue != null) {
             restoreInitialValue(instance);
             return;
         }
@@ -707,12 +825,14 @@ public class ProcessedOption {
             fieldAccessor.set(instance, typeDefault());
             return;
         }
-        if (fieldResetter != null) {
-            fieldResetter.accept(instance);
+        Consumer<Object> resetter = getFieldResetter();
+        if (resetter != null) {
+            resetter.accept(instance);
             return;
         }
-        if (fieldSetter != null) {
-            fieldSetter.accept(instance, typeDefault());
+        BiConsumer<Object, Object> setter = getFieldSetter();
+        if (setter != null) {
+            setter.accept(instance, typeDefault());
             return;
         }
         // Fallback to reflection
@@ -741,16 +861,16 @@ public class ProcessedOption {
                 else if (double.class.isAssignableFrom(field.getType()))
                     field.set(target, 0.0d);
             } else
-                field.set(target, optionalWrapped ? java.util.Optional.empty() : null);
+                field.set(target, flag(F_OPTIONAL_WRAPPED) ? java.util.Optional.empty() : null);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             // Field reset failed, continue
         }
     }
 
     protected Object typeDefault() {
-        if (optionalWrapped)
+        if (flag(F_OPTIONAL_WRAPPED))
             return java.util.Optional.empty();
-        if (arrayType || type == null || !type.isPrimitive())
+        if (flag(F_ARRAY_TYPE) || type == null || !type.isPrimitive())
             return null;
         if (type == boolean.class)
             return Boolean.FALSE;
@@ -817,11 +937,12 @@ public class ProcessedOption {
     @SuppressWarnings("unchecked")
     protected void restoreInitialValue(Object instance) {
         Object val = copyInitialValue(initialValue);
-        if (fieldAccessor != null || fieldSetter != null) {
+        BiConsumer<Object, Object> setter = getFieldSetter();
+        if (fieldAccessor != null || setter != null) {
             if (fieldAccessor != null)
                 fieldAccessor.set(instance, val);
             else
-                fieldSetter.accept(instance, val);
+                setter.accept(instance, val);
             return;
         }
         try {
@@ -833,8 +954,9 @@ public class ProcessedOption {
                 field.setAccessible(true);
             field.set(target, val);
         } catch (ReflectiveOperationException e) {
-            if (fieldResetter != null) {
-                fieldResetter.accept(instance);
+            Consumer<Object> resetter = getFieldResetter();
+            if (resetter != null) {
+                resetter.accept(instance);
             }
         }
     }
@@ -882,7 +1004,7 @@ public class ProcessedOption {
     }
 
     public boolean isOptionalValue() {
-        return optionalValue;
+        return flag(F_OPTIONAL_VALUE);
     }
 
     /**
@@ -891,7 +1013,7 @@ public class ProcessedOption {
      * collection for list options instead of resetting the field (#705).
      */
     public boolean isExplicitlyGiven() {
-        return explicitlyGiven;
+        return flag(F_EXPLICITLY_GIVEN);
     }
 
     /**
@@ -900,22 +1022,22 @@ public class ProcessedOption {
      * providers, prompts or selectors (#707).
      */
     public void setExplicitlyGiven(boolean explicitlyGiven) {
-        this.explicitlyGiven = explicitlyGiven;
+        flag(F_EXPLICITLY_GIVEN, explicitlyGiven);
     }
 
     public boolean isExplicitEmpty() {
-        return explicitEmpty;
+        return flag(F_EXPLICIT_EMPTY);
     }
 
     /**
      * Whether the multi-value field is an array rather than a Collection.
      */
     public boolean isArrayType() {
-        return arrayType;
+        return flag(F_ARRAY_TYPE);
     }
 
     public void setArrayType(boolean arrayType) {
-        this.arrayType = arrayType;
+        flag(F_ARRAY_TYPE, arrayType);
     }
 
     public boolean hasMultipleValues() {
@@ -923,11 +1045,11 @@ public class ProcessedOption {
     }
 
     public boolean isRequired() {
-        return required;
+        return flag(F_REQUIRED);
     }
 
     public boolean doOverrideRequired() {
-        return overrideRequired;
+        return flag(F_OVERRIDE_REQUIRED);
     }
 
     public Class<?> type() {
@@ -947,11 +1069,13 @@ public class ProcessedOption {
     }
 
     public String getArgument() {
-        return argument;
+        OptionExtras e = extras;
+        return e != null ? e.argument : null;
     }
 
     public void setArgument(String argument) {
-        this.argument = argument;
+        if (argument != null)
+            extras().argument = argument;
         invalidateDisplayLabelParts();
     }
 
@@ -960,13 +1084,15 @@ public class ProcessedOption {
     }
 
     public void addProperty(String name, String value) {
-        if (properties.isEmpty() && !(properties instanceof LinkedHashMap))
-            properties = new LinkedHashMap<>();
-        properties.put(name, value);
+        OptionExtras e = extras();
+        if (e.properties == null)
+            e.properties = new LinkedHashMap<>();
+        e.properties.put(name, value);
     }
 
     public Map<String, String> getProperties() {
-        return properties;
+        OptionExtras e = extras;
+        return e != null && e.properties != null ? e.properties : Collections.emptyMap();
     }
 
     public OptionType getOptionType() {
@@ -982,42 +1108,48 @@ public class ProcessedOption {
      * If paramLabel is set, returns that; otherwise returns the fieldName.
      */
     public String getDisplayLabel() {
-        return paramLabel != null && !paramLabel.isEmpty() ? paramLabel : fieldName;
+        String label = getParamLabel();
+        return label != null && !label.isEmpty() ? label : fieldName;
     }
 
     public void setParamLabel(String paramLabel) {
-        this.paramLabel = paramLabel;
+        if (paramLabel != null)
+            extras().paramLabel = paramLabel;
         invalidateDisplayLabelParts();
     }
 
     public String getParamLabel() {
-        return paramLabel;
+        OptionExtras e = extras;
+        return e != null ? e.paramLabel : null;
     }
 
     public void setArity(org.aesh.command.option.Arity arity) {
-        this.arity = arity;
+        if (arity != null)
+            extras().arity = arity;
     }
 
     public void setArity(String aritySpec) {
         if (aritySpec != null && !aritySpec.isEmpty())
-            this.arity = org.aesh.command.option.Arity.parse(aritySpec);
+            extras().arity = org.aesh.command.option.Arity.parse(aritySpec);
     }
 
     public org.aesh.command.option.Arity getArity() {
-        return arity;
+        OptionExtras e = extras;
+        return e != null ? e.arity : null;
     }
 
     public void setIndex(String index) {
         if (index != null && !index.isEmpty())
-            this.indexRange = org.aesh.command.option.IndexRange.parse(index);
+            extras().indexRange = org.aesh.command.option.IndexRange.parse(index);
     }
 
     public org.aesh.command.option.IndexRange getIndexRange() {
-        return indexRange;
+        OptionExtras e = extras;
+        return e != null ? e.indexRange : null;
     }
 
     public boolean hasIndexRange() {
-        return indexRange != null;
+        return getIndexRange() != null;
     }
 
     /**
@@ -1025,9 +1157,10 @@ public class ProcessedOption {
      * Returns false if no arity is set (legacy unlimited behavior for @Arguments).
      */
     public boolean isArityFull() {
-        if (arity == null)
+        org.aesh.command.option.Arity a = getArity();
+        if (a == null)
             return false;
-        return getValues().size() >= arity.getMax();
+        return getValues().size() >= a.getMax();
     }
 
     public Converter converter() {
@@ -1038,8 +1171,8 @@ public class ProcessedOption {
         if (completer == null) {
             if (type == Boolean.class || type == boolean.class) {
                 completer = org.aesh.command.impl.completer.BooleanOptionCompleter.INSTANCE;
-            } else if (allowedValues != null && !allowedValues.isEmpty()) {
-                completer = new org.aesh.command.impl.completer.DefaultValueOptionCompleter(allowedValues);
+            } else if (hasAllowedValues()) {
+                completer = new org.aesh.command.impl.completer.DefaultValueOptionCompleter(getAllowedValues());
             } else if (type == File.class || type == Resource.class || type == Path.class) {
                 completer = new org.aesh.command.impl.completer.FileOptionCompleter();
             }
@@ -1048,25 +1181,32 @@ public class ProcessedOption {
     }
 
     public OptionValidator validator() {
-        return validator;
+        OptionExtras e = extras;
+        return e != null ? e.validator : null;
     }
 
     public OptionActivator activator() {
-        return activator;
+        OptionExtras e = extras;
+        return e != null ? e.activator : null;
     }
 
     public boolean isActivated(ParsedCommand parsedCommand) {
-        return activator == null || activator.isActivated(parsedCommand);
+        OptionActivator a = activator();
+        return a == null || a.isActivated(parsedCommand);
     }
 
     public OptionParser parser() {
-        if (parser == null)
-            parser = new AeshOptionParser();
-        return parser;
+        OptionExtras e = extras;
+        if (e != null && e.parser != null)
+            return e.parser;
+        OptionParser created = new AeshOptionParser();
+        extras().parser = created;
+        return created;
     }
 
     public void setParser(OptionParser parser) {
-        this.parser = parser;
+        if (parser != null)
+            extras().parser = parser;
     }
 
     void setParent(ProcessedCommand parent) {
@@ -1081,47 +1221,51 @@ public class ProcessedOption {
      * might return null if render is not specified
      */
     public OptionRenderer getRenderer() {
-        return renderer;
+        OptionExtras e = extras;
+        return e != null ? e.renderer : null;
     }
 
     public boolean isLongNameUsed() {
-        return longNameUsed;
+        return flag(F_LONG_NAME_USED);
     }
 
     public void setLongNameUsed(boolean longNameUsed) {
-        this.longNameUsed = longNameUsed;
+        flag(F_LONG_NAME_USED, longNameUsed);
     }
 
     public void setEndsWithSeparator(boolean endsWithSeparator) {
-        this.endsWithSeparator = endsWithSeparator;
+        flag(F_ENDS_WITH_SEPARATOR, endsWithSeparator);
     }
 
     public boolean getEndsWithSeparator() {
-        return endsWithSeparator;
+        return flag(F_ENDS_WITH_SEPARATOR);
     }
 
     public boolean askIfNotSet() {
-        return askIfNotSet;
+        return flag(F_ASK_IF_NOT_SET);
     }
 
     public boolean acceptNameWithoutDashes() {
-        return acceptNameWithoutDashes;
+        return flag(F_ACCEPT_NAME_WITHOUT_DASHES);
     }
 
     public SelectorType selectorType() {
-        return selectorType;
+        OptionExtras e = extras;
+        return e != null && e.selectorType != null ? e.selectorType : SelectorType.NO_OP;
     }
 
     public void setSelectorType(SelectorType selectorType) {
-        this.selectorType = selectorType != null ? selectorType : SelectorType.NO_OP;
+        if (selectorType != null && selectorType != SelectorType.NO_OP)
+            extras().selectorType = selectorType;
     }
 
     public boolean isNegatable() {
-        return negatable;
+        return flag(F_NEGATABLE);
     }
 
     public String getNegationPrefix() {
-        return negationPrefix;
+        OptionExtras e = extras;
+        return e != null && e.negationPrefix != null ? e.negationPrefix : "no-";
     }
 
     /**
@@ -1130,21 +1274,21 @@ public class ProcessedOption {
      * Returns null if this option is not negatable.
      */
     public String getNegatedName() {
-        return negatable && name != null ? negationPrefix + name : null;
+        return isNegatable() && name != null ? getNegationPrefix() + name : null;
     }
 
     /**
      * Returns true if this option was specified in its negated form (e.g., --no-verbose).
      */
     public boolean isNegatedByUser() {
-        return negatedByUser;
+        return flag(F_NEGATED_BY_USER);
     }
 
     /**
      * Sets whether this option was specified in its negated form.
      */
     public void setNegatedByUser(boolean negatedByUser) {
-        this.negatedByUser = negatedByUser;
+        flag(F_NEGATED_BY_USER, negatedByUser);
     }
 
     /**
@@ -1153,21 +1297,22 @@ public class ProcessedOption {
      * in sub-command mode.
      */
     public boolean isInherited() {
-        return inherited;
+        return flag(F_INHERITED);
     }
 
     /**
      * Returns the documentation URL for this option's description.
      */
     public String getDescriptionUrl() {
-        return descriptionUrl;
+        OptionExtras e = extras;
+        return e != null ? e.descriptionUrl : null;
     }
 
     /**
      * Returns true if this option's value should be treated as a URL.
      */
     public boolean isUrl() {
-        return isUrl;
+        return flag(F_IS_URL);
     }
 
     /**
@@ -1178,7 +1323,7 @@ public class ProcessedOption {
      */
     public String getFormattedValue(boolean supportsHyperlinks) {
         String val = getValue();
-        if (val != null && isUrl && supportsHyperlinks) {
+        if (val != null && isUrl() && supportsHyperlinks) {
             return ANSI.hyperlink(val, val);
         }
         return val;
@@ -1187,15 +1332,16 @@ public class ProcessedOption {
     public void clear() {
         if (values instanceof ArrayList)
             values.clear();
-        if (properties instanceof HashMap)
-            properties.clear();
-        longNameUsed = true;
-        endsWithSeparator = false;
-        cursorOption = false;
-        cursorValue = false;
-        negatedByUser = false;
-        explicitEmpty = false;
-        explicitlyGiven = false;
+        OptionExtras e = extras;
+        if (e != null && e.properties instanceof HashMap)
+            e.properties.clear();
+        flag(F_LONG_NAME_USED, true);
+        flag(F_ENDS_WITH_SEPARATOR, false);
+        flag(F_CURSOR_OPTION, false);
+        flag(F_CURSOR_VALUE, false);
+        flag(F_NEGATED_BY_USER, false);
+        flag(F_EXPLICIT_EMPTY, false);
+        flag(F_EXPLICITLY_GIVEN, false);
         resolveVariables();
     }
 
@@ -1206,14 +1352,17 @@ public class ProcessedOption {
      * when only variable re-resolution is needed without clearing parsed state (#576).
      */
     public void resolveVariables() {
-        if (rawDefaultValues != null) {
-            defaultValues = PropertiesLookup.checkForSystemVariables(rawDefaultValues);
-            variableDefaultResolved = checkVariableResolved(rawDefaultValues);
+        OptionExtras e = extras;
+        if (e == null)
+            return;
+        if (e.rawDefaultValues != null) {
+            defaultValues = PropertiesLookup.checkForSystemVariables(e.rawDefaultValues);
+            flag(F_VARIABLE_DEFAULT_RESOLVED, checkVariableResolved(e.rawDefaultValues));
         }
-        if (rawFallbackValue != null) {
-            PropertiesLookup.ResolvedValue resolved = PropertiesLookup.resolveWithSource(rawFallbackValue);
-            fallbackValue = resolved.value;
-            variableFallbackResolved = resolved.fromVariable;
+        if (e.rawFallbackValue != null) {
+            PropertiesLookup.ResolvedValue resolved = PropertiesLookup.resolveWithSource(e.rawFallbackValue);
+            e.fallbackValue = resolved.value;
+            flag(F_VARIABLE_FALLBACK_RESOLVED, resolved.fromVariable);
         }
     }
 
@@ -1227,30 +1376,33 @@ public class ProcessedOption {
     }
 
     public TerminalString getRenderedNameWithDashes() {
-        String prefix = acceptNameWithoutDashes ? "" : "--";
+        String prefix = acceptNameWithoutDashes() ? "" : "--";
         String text = prefix + name;
-        if (renderer == null || !ansiMode)
+        OptionRenderer r = getRenderer();
+        if (r == null || !flag(F_ANSI_MODE))
             return new TerminalString(text, true);
         else {
-            String hyperlinkUrl = renderer.getHyperlinkUrl();
+            String hyperlinkUrl = r.getHyperlinkUrl();
             if (hyperlinkUrl != null) {
-                return new TerminalString(text, hyperlinkUrl, renderer.getColor(), renderer.getTextType());
+                return new TerminalString(text, hyperlinkUrl, r.getColor(), r.getTextType());
             }
-            return new TerminalString(text, renderer.getColor(), renderer.getTextType());
+            return new TerminalString(text, r.getColor(), r.getTextType());
         }
     }
 
     public List<TerminalString> getRenderedAliasNamesWithDashes() {
+        List<String> aliases = aliasesOrEmpty();
         if (aliases.isEmpty())
             return Collections.emptyList();
-        String prefix = acceptNameWithoutDashes ? "" : "--";
+        String prefix = acceptNameWithoutDashes() ? "" : "--";
+        OptionRenderer r = getRenderer();
         List<TerminalString> result = new ArrayList<>(aliases.size());
         for (String alias : aliases) {
             String text = prefix + alias;
-            if (renderer == null || !ansiMode)
+            if (r == null || !flag(F_ANSI_MODE))
                 result.add(new TerminalString(text, true));
             else
-                result.add(new TerminalString(text, renderer.getColor(), renderer.getTextType()));
+                result.add(new TerminalString(text, r.getColor(), r.getTextType()));
         }
         return result;
     }
@@ -1261,18 +1413,19 @@ public class ProcessedOption {
      * Returns null if this option is not negatable.
      */
     public TerminalString getRenderedNegatedNameWithDashes() {
-        if (!negatable || name == null) {
+        if (!isNegatable() || name == null) {
             return null;
         }
         // Negatable options are boolean, so they don't have a value suffix
-        if (renderer == null || !ansiMode)
-            return new TerminalString("--" + negationPrefix + name, true);
+        OptionRenderer r = getRenderer();
+        if (r == null || !flag(F_ANSI_MODE))
+            return new TerminalString("--" + getNegationPrefix() + name, true);
         else
-            return new TerminalString("--" + negationPrefix + name, renderer.getColor(), renderer.getTextType());
+            return new TerminalString("--" + getNegationPrefix() + name, r.getColor(), r.getTextType());
     }
 
     private void invalidateDisplayLabelParts() {
-        displayPartsComputed = false;
+        flag(F_DISPLAY_PARTS_COMPUTED, false);
     }
 
     /**
@@ -1281,15 +1434,16 @@ public class ProcessedOption {
      * building the label inline per render.
      */
     private void ensureDisplayLabelParts() {
-        if (displayPartsComputed)
+        if (flag(F_DISPLAY_PARTS_COMPUTED))
             return;
-        displayNamePart = buildDisplayNamePart(shortName, name, aliases, negatable, negationPrefix,
-                acceptNameWithoutDashes, optionType, getDisplayLabel());
-        String placeholder = resolveValuePlaceholder(argument, optionType,
+        OptionExtras e = extras();
+        e.displayNamePart = buildDisplayNamePart(shortName, name, aliasesOrEmpty(), isNegatable(), getNegationPrefix(),
+                acceptNameWithoutDashes(), optionType, getDisplayLabel());
+        String placeholder = resolveValuePlaceholder(getArgument(), optionType,
                 type == Boolean.class || type == boolean.class, isOptionalValue(), hasFallbackValue(),
                 name, fieldName);
-        displayPlaceholderPart = placeholder != null ? "=<" + placeholder + ">" : null;
-        displayPartsComputed = true;
+        e.displayPlaceholderPart = placeholder != null ? "=<" + placeholder + ">" : null;
+        flag(F_DISPLAY_PARTS_COMPUTED, true);
     }
 
     private static String buildDisplayNamePart(String shortName, String name, List<String> aliases,
@@ -1349,8 +1503,9 @@ public class ProcessedOption {
 
     public int getFormattedLength() {
         ensureDisplayLabelParts();
-        return displayNamePart.length()
-                + (displayPlaceholderPart != null ? displayPlaceholderPart.length() : 0);
+        OptionExtras e = extras;
+        return e.displayNamePart.length()
+                + (e.displayPlaceholderPart != null ? e.displayPlaceholderPart.length() : 0);
     }
 
     //TODO: add offset, offset for descriptionstart and break on width
@@ -1364,44 +1519,46 @@ public class ProcessedOption {
 
     public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks,
             String resolvedDescription) {
-        HelpColorScheme scheme = ansiMode ? HelpColorScheme.resolve(null) : HelpColorScheme.plain();
+        HelpColorScheme scheme = flag(F_ANSI_MODE) ? HelpColorScheme.resolve(null) : HelpColorScheme.plain();
         return getFormattedOption(offset, descriptionStart, width, supportsHyperlinks, resolvedDescription, scheme);
     }
 
     public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks,
             String resolvedDescription, HelpColorScheme colorScheme) {
         ensureDisplayLabelParts();
-        HelpColorScheme scheme = ansiMode
+        boolean ansi = flag(F_ANSI_MODE);
+        HelpColorScheme scheme = ansi
                 ? (colorScheme != null ? colorScheme : HelpColorScheme.resolve(null))
                 : HelpColorScheme.plain();
         StringBuilder sb = new StringBuilder();
         if (offset > 0)
             appendSpaces(sb, offset);
+        OptionExtras e = extras;
         // Emit any leading short-flag gutter spaces before ANSI styling so
         // underline/background attributes never bleed onto blank alignment space.
         int leadingSpaces = 0;
-        while (leadingSpaces < displayNamePart.length() && displayNamePart.charAt(leadingSpaces) == ' ') {
+        while (leadingSpaces < e.displayNamePart.length() && e.displayNamePart.charAt(leadingSpaces) == ' ') {
             leadingSpaces++;
         }
         if (leadingSpaces > 0) {
             appendSpaces(sb, leadingSpaces);
         }
-        String visibleName = leadingSpaces > 0 ? displayNamePart.substring(leadingSpaces) : displayNamePart;
+        String visibleName = leadingSpaces > 0 ? e.displayNamePart.substring(leadingSpaces) : e.displayNamePart;
         // Style option or positional label in one SGR sequence so required
         // emphasis (bold) is never reset by a separate color code (#788).
         if (isBareDisplayLabel()) {
-            String labelEscape = ansiMode
-                    ? (required ? scheme.requiredParameterEscape() : scheme.parametersEscape())
+            String labelEscape = ansi
+                    ? (flag(F_REQUIRED) ? scheme.requiredParameterEscape() : scheme.parametersEscape())
                     : "";
             HelpColorScheme.appendStyled(sb, labelEscape, visibleName);
         } else {
-            String nameEscape = ansiMode
-                    ? (required ? scheme.requiredOptionEscape() : scheme.optionsEscape())
+            String nameEscape = ansi
+                    ? (flag(F_REQUIRED) ? scheme.requiredOptionEscape() : scheme.optionsEscape())
                     : "";
             HelpColorScheme.appendStyled(sb, nameEscape, visibleName);
         }
-        if (displayPlaceholderPart != null) {
-            HelpColorScheme.appendStyled(sb, ansiMode ? scheme.optionParamsEscape() : "", displayPlaceholderPart);
+        if (e.displayPlaceholderPart != null) {
+            HelpColorScheme.appendStyled(sb, ansi ? scheme.optionParamsEscape() : "", e.displayPlaceholderPart);
         }
         if (resolvedDescription != null && resolvedDescription.length() > 0) {
             int descOffset = descriptionStart - getFormattedLength() - offset;
@@ -1415,6 +1572,7 @@ public class ProcessedOption {
                 appendSpaces(sb, descriptionStart);
             }
 
+            String descriptionUrl = getDescriptionUrl();
             if (supportsHyperlinks && descriptionUrl != null && descriptionUrl.length() > 0) {
                 sb.append(ANSI.hyperlink(descriptionUrl, resolvedDescription));
             } else {
@@ -1440,7 +1598,7 @@ public class ProcessedOption {
 
     private boolean isBareDisplayLabel() {
         return (optionType == OptionType.ARGUMENT || optionType == OptionType.ARGUMENTS)
-                && (name == null || name.isEmpty()) && !displayNamePart.isEmpty();
+                && (name == null || name.isEmpty()) && !extras.displayNamePart.isEmpty();
     }
 
     /**
@@ -1486,11 +1644,12 @@ public class ProcessedOption {
     @SuppressWarnings("unchecked")
     public Object doConvert(String inputValue, InvocationProviders invocationProviders,
             Object command, AeshContext aeshContext, boolean doValidation) throws OptionValidatorException {
-        if (doValidation && hasAllowedValues()
-                && !allowedValues.contains(inputValue) && !allowedValues.contains(inputValue.toLowerCase())) {
+        List<String> allowed = getAllowedValues();
+        if (doValidation && !allowed.isEmpty()
+                && !allowed.contains(inputValue) && !allowed.contains(inputValue.toLowerCase())) {
             throw new OptionValidatorException("Invalid value '" + inputValue
                     + "' for option '" + getDisplayName()
-                    + "'. Allowed values: " + String.join(", ", allowedValues));
+                    + "'. Allowed values: " + String.join(", ", allowed));
         }
         // Reuse cached AeshConverterInvocation to avoid per-value allocation (#579)
         if (cachedConverterInvocation == null) {
@@ -1501,8 +1660,9 @@ public class ProcessedOption {
         Object result = converter.convert(
                 invocationProviders.getConverterProvider().enhanceConverterInvocation(
                         cachedConverterInvocation));
-        if (validator != null && doValidation) {
-            validator.validate(invocationProviders.getValidatorProvider().enhanceValidatorInvocation(
+        OptionValidator v = validator();
+        if (v != null && doValidation) {
+            v.validate(invocationProviders.getValidatorProvider().enhanceValidatorInvocation(
                     new AeshValidatorInvocation(result, command, aeshContext)));
         }
         return result;
@@ -1513,7 +1673,7 @@ public class ProcessedOption {
             boolean doValidation) throws OptionValidatorException {
         if (converter == null || instance == null)
             return;
-        if (fieldAccessor != null || fieldSetter != null) {
+        if (fieldAccessor != null || getFieldSetter() != null) {
             injectValueWithSetter(instance, invocationProviders, aeshContext, doValidation);
         } else {
             injectValueWithReflection(resolveMixinInstance(instance), invocationProviders, aeshContext, doValidation);
@@ -1524,7 +1684,7 @@ public class ProcessedOption {
         if (fieldAccessor != null)
             fieldAccessor.set(instance, value);
         else
-            fieldSetter.accept(instance, value);
+            getFieldSetter().accept(instance, value);
     }
 
     protected void injectValueWithSetter(Object instance, InvocationProviders invocationProviders, AeshContext aeshContext,
@@ -1540,7 +1700,7 @@ public class ProcessedOption {
                                 doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation)));
             }
         } else if (optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
-            if (arrayType) {
+            if (flag(F_ARRAY_TYPE)) {
                 List<String> strings = values.size() > 0 ? values : defaultValues;
                 setField(instance, wrapIfOptional(toArrayValue(strings, invocationProviders, instance, aeshContext,
                         doValidation)));
@@ -1561,8 +1721,9 @@ public class ProcessedOption {
             setField(instance, wrapIfOptional(tmpSet));
         } else if (optionType == OptionType.GROUP) {
             Map<String, Object> tmpMap = newHashMap();
-            for (String propertyKey : properties.keySet())
-                tmpMap.put(propertyKey, doConvert(properties.get(propertyKey), invocationProviders, instance,
+            Map<String, String> props = getProperties();
+            for (String propertyKey : props.keySet())
+                tmpMap.put(propertyKey, doConvert(props.get(propertyKey), invocationProviders, instance,
                         aeshContext, doValidation));
             setField(instance, wrapIfOptional(tmpMap));
         }
@@ -1572,7 +1733,7 @@ public class ProcessedOption {
      * Wraps a value in Optional.of() if this option's field is Optional-typed.
      */
     private Object wrapIfOptional(Object value) {
-        if (optionalWrapped && value != null)
+        if (flag(F_OPTIONAL_WRAPPED) && value != null)
             return java.util.Optional.of(value);
         return value;
     }
@@ -1599,7 +1760,7 @@ public class ProcessedOption {
                                     doConvert(defaultValues.get(0), invocationProviders, instance, aeshContext, doValidation)));
                 }
             } else if (optionType == OptionType.LIST || optionType == OptionType.ARGUMENTS) {
-                if (arrayType) {
+                if (flag(F_ARRAY_TYPE)) {
                     List<String> strings = values.size() > 0 ? values : defaultValues;
                     field.set(instance, wrapIfOptional(toArrayValue(strings, invocationProviders, instance,
                             aeshContext, doValidation)));
@@ -1616,17 +1777,18 @@ public class ProcessedOption {
 
                 field.set(instance, wrapIfOptional(tmpSet));
             } else if (optionType == OptionType.GROUP) {
-                if (optionalWrapped || field.getType().isInterface()
+                Map<String, String> props = getProperties();
+                if (flag(F_OPTIONAL_WRAPPED) || field.getType().isInterface()
                         || Modifier.isAbstract(field.getType().getModifiers())) {
                     Map<String, Object> tmpMap = newHashMap();
-                    for (String propertyKey : properties.keySet())
-                        tmpMap.put(propertyKey, doConvert(properties.get(propertyKey), invocationProviders, instance,
+                    for (String propertyKey : props.keySet())
+                        tmpMap.put(propertyKey, doConvert(props.get(propertyKey), invocationProviders, instance,
                                 aeshContext, doValidation));
                     field.set(instance, wrapIfOptional(tmpMap));
                 } else {
                     Map<String, Object> tmpMap = (Map<String, Object>) field.getType().newInstance();
-                    for (String propertyKey : properties.keySet())
-                        tmpMap.put(propertyKey, doConvert(properties.get(propertyKey), invocationProviders, instance,
+                    for (String propertyKey : props.keySet())
+                        tmpMap.put(propertyKey, doConvert(props.get(propertyKey), invocationProviders, instance,
                                 aeshContext, doValidation));
                     field.set(instance, tmpMap);
                 }
@@ -1652,7 +1814,7 @@ public class ProcessedOption {
     @SuppressWarnings("unchecked")
     private Collection<Object> initializeCollection(Field field) throws IllegalAccessException, InstantiationException {
         // For Optional-wrapped collections, always use ArrayList
-        if (optionalWrapped) {
+        if (flag(F_OPTIONAL_WRAPPED)) {
             if (Set.class.isAssignableFrom(type))
                 return new HashSet<>();
             return new ArrayList<>();
@@ -1669,16 +1831,17 @@ public class ProcessedOption {
     }
 
     public void updateInvocationProviders(InvocationProviders invocationProviders) {
-        if (activator != null)
-            activator = invocationProviders.getOptionActivatorProvider().enhanceOptionActivator(activator);
+        OptionActivator current = activator();
+        if (current != null)
+            extras().activator = invocationProviders.getOptionActivatorProvider().enhanceOptionActivator(current);
     }
 
     public void updateAnsiMode(boolean ansiMode) {
-        this.ansiMode = ansiMode;
+        flag(F_ANSI_MODE, ansiMode);
     }
 
     public boolean isAnsiMode() {
-        return ansiMode;
+        return flag(F_ANSI_MODE);
     }
 
     private <S, T> Map<S, T> newHashMap() {
@@ -1694,8 +1857,9 @@ public class ProcessedOption {
     public Object getFieldValue(Object instance) {
         if (fieldAccessor != null)
             return fieldAccessor.get(instance);
-        if (fieldGetter != null)
-            return fieldGetter.apply(instance);
+        Function<Object, Object> getter = getFieldGetter();
+        if (getter != null)
+            return getter.apply(instance);
         try {
             Object target = resolveMixinInstance(instance);
             Field field = getField(target.getClass(), fieldName);
@@ -1714,8 +1878,9 @@ public class ProcessedOption {
             fieldAccessor.set(instance, value);
             return;
         }
-        if (fieldSetter != null) {
-            fieldSetter.accept(instance, value);
+        BiConsumer<Object, Object> setter = getFieldSetter();
+        if (setter != null) {
+            setter.accept(instance, value);
             return;
         }
         try {
@@ -1732,19 +1897,19 @@ public class ProcessedOption {
     }
 
     public boolean isCursorOption() {
-        return cursorOption;
+        return flag(F_CURSOR_OPTION);
     }
 
     public void setCursorOption(boolean cursorOption) {
-        this.cursorOption = cursorOption;
+        flag(F_CURSOR_OPTION, cursorOption);
     }
 
     public boolean isCursorValue() {
-        return cursorValue;
+        return flag(F_CURSOR_VALUE);
     }
 
     public void setCursorValue(boolean cursorValue) {
-        this.cursorValue = cursorValue;
+        flag(F_CURSOR_VALUE, cursorValue);
     }
 
     public boolean hasDefaultValue() {
@@ -1788,7 +1953,7 @@ public class ProcessedOption {
      * {@link DefaultValueProvider} (#521).
      */
     public boolean isVariableDefaultResolved() {
-        return variableDefaultResolved;
+        return flag(F_VARIABLE_DEFAULT_RESOLVED);
     }
 
     /**
@@ -1796,7 +1961,7 @@ public class ProcessedOption {
      * reference and the primary variable resolved.
      */
     public boolean isVariableFallbackResolved() {
-        return variableFallbackResolved;
+        return flag(F_VARIABLE_FALLBACK_RESOLVED);
     }
 
     /**
@@ -1820,10 +1985,10 @@ public class ProcessedOption {
         // Bare use with optionalValue: the option was explicitly given without
         // values. Record it so populate can tell "given" (empty) from
         // "absent" (reset) (#705).
-        explicitEmpty = true;
+        flag(F_EXPLICIT_EMPTY, true);
 
         // Priority 1: Annotation fallbackValue resolved from env/sys var (#521)
-        if (variableFallbackResolved && hasFallbackValue()) {
+        if (flag(F_VARIABLE_FALLBACK_RESOLVED) && hasFallbackValue()) {
             addValue(getFallbackValue());
             return;
         }
@@ -1867,11 +2032,11 @@ public class ProcessedOption {
                 ", description='" + description + '\'' +
                 ", values=" + values +
                 ", defaultValues=" + defaultValues +
-                ", arguments='" + argument + '\'' +
+                ", arguments='" + getArgument() + '\'' +
                 ", type=" + type +
-                ", required=" + required +
+                ", required=" + isRequired() +
                 ", valueSeparator=" + valueSeparator +
-                ", properties=" + properties +
+                ", properties=" + getProperties() +
                 '}';
     }
 

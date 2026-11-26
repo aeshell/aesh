@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.aesh.command.invocation.InvocationProviders;
 import org.aesh.command.validator.OptionValidatorException;
@@ -84,18 +85,18 @@ public final class GeneratedProcessedOption extends ProcessedOption implements F
 
     @Override
     public void captureInitialValue(Object instance) {
-        if (initialValueCaptured || instance == null || getFieldName() == null)
+        if (isInitialValueCaptured() || instance == null || getFieldName() == null)
             return;
         Object value = getFieldValue(instance);
         if (value != null) {
             initialValue = value;
         }
-        initialValueCaptured = true;
+        setInitialValueCaptured(true);
     }
 
     @Override
     public void resetField(Object instance) {
-        if (initialValueCaptured && initialValue != null) {
+        if (isInitialValueCaptured() && initialValue != null) {
             restoreInitialValue(instance);
             return;
         }
@@ -107,8 +108,9 @@ public final class GeneratedProcessedOption extends ProcessedOption implements F
     protected void restoreInitialValue(Object instance) {
         Object val = initialValue;
         if (initialValue instanceof Collection || initialValue instanceof Map) {
-            if (initialValueFactory != null) {
-                val = initialValueFactory.get();
+            Supplier<Object> factory = initialValueFactory();
+            if (factory != null) {
+                val = factory.get();
             } else if (initialValue instanceof Collection) {
                 try {
                     val = initialValue.getClass().getDeclaredConstructor().newInstance();
