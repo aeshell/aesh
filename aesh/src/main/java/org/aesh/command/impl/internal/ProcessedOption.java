@@ -134,6 +134,17 @@ public class ProcessedOption {
     private static final int VISIBILITY_MASK = 3 << VISIBILITY_SHIFT;
     private static final int FALLBACK_SHIFT = 24;
     private static final int FALLBACK_MASK = 3 << FALLBACK_SHIFT;
+    /**
+     * Initial-value factory packed into bits 26-29 (#797): 0 = none (the
+     * common case, no OptionExtras allocated), 1..8 = the
+     * {@link CollectionFactory} constant with that ordinal + 1, 9 = a custom
+     * {@code Supplier} stored in {@link OptionExtras#initialValueFactory}.
+     */
+    private static final int FACTORY_SHIFT = 26;
+    private static final int FACTORY_MASK = 0xF << FACTORY_SHIFT;
+    private static final int CUSTOM_FACTORY_CODE = 9;
+    /** Cached once: {@code CollectionFactory.values()} clones per call. */
+    private static final CollectionFactory[] FACTORY_CONSTANTS = CollectionFactory.values();
 
     private boolean flag(int bit) {
         return (flags & bit) != 0;
@@ -223,6 +234,11 @@ public class ProcessedOption {
     }
 
     Supplier<Object> initialValueFactory() {
+        int code = (flags & FACTORY_MASK) >>> FACTORY_SHIFT;
+        if (code == 0)
+            return null;
+        if (code < CUSTOM_FACTORY_CODE)
+            return FACTORY_CONSTANTS[code - 1];
         OptionExtras e = extras;
         return e != null ? e.initialValueFactory : null;
     }
@@ -451,8 +467,18 @@ public class ProcessedOption {
     }
 
     public void setInitialValueFactory(Supplier<Object> factory) {
-        if (factory != null)
-            extras().initialValueFactory = factory;
+        if (factory == null)
+            return;
+        if (factory instanceof CollectionFactory) {
+            // The generated path only ever passes a CollectionFactory
+            // constant: pack its ordinal into the free flag bits so the
+            // option never allocates an OptionExtras holder (#797)
+            flags = (flags & ~FACTORY_MASK)
+                    | ((((CollectionFactory) factory).ordinal() + 1) << FACTORY_SHIFT);
+            return;
+        }
+        extras().initialValueFactory = factory;
+        flags = (flags & ~FACTORY_MASK) | (CUSTOM_FACTORY_CODE << FACTORY_SHIFT);
     }
 
     /**
