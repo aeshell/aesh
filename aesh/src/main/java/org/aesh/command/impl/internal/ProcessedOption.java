@@ -43,6 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpColorScheme;
 import org.aesh.command.activator.OptionActivator;
 import org.aesh.command.completer.OptionCompleter;
 import org.aesh.command.converter.Converter;
@@ -1320,34 +1321,45 @@ public class ProcessedOption {
 
     public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks,
             String resolvedDescription) {
+        HelpColorScheme scheme = ansiMode ? HelpColorScheme.resolve(null) : HelpColorScheme.plain();
+        return getFormattedOption(offset, descriptionStart, width, supportsHyperlinks, resolvedDescription, scheme);
+    }
+
+    public String getFormattedOption(int offset, int descriptionStart, int width, boolean supportsHyperlinks,
+            String resolvedDescription, HelpColorScheme colorScheme) {
         ensureDisplayLabelParts();
+        HelpColorScheme scheme = ansiMode
+                ? (colorScheme != null ? colorScheme : HelpColorScheme.resolve(null))
+                : HelpColorScheme.plain();
         StringBuilder sb = new StringBuilder();
-        if (ansiMode && required)
-            sb.append(ANSI.BOLD);
         if (offset > 0)
             appendSpaces(sb, offset);
-        // Start option name styling
-        if (ansiMode)
-            sb.append(ANSI.YELLOW_TEXT);
-        // For positional arguments (ARGUMENT/ARGUMENTS), show <label> instead of --name
-        if (isBareDisplayLabel()) {
-            if (ansiMode)
-                sb.append(ANSI.CYAN_TEXT);
-            sb.append(displayNamePart);
-        } else
-            sb.append(displayNamePart);
-        // End option name styling
-        if (ansiMode)
-            sb.append(ANSI.RESET);
-        if (displayPlaceholderPart != null) {
-            if (ansiMode)
-                sb.append(ANSI.CYAN_TEXT);
-            sb.append(displayPlaceholderPart);
-            if (ansiMode)
-                sb.append(ANSI.RESET);
+        // Emit any leading short-flag gutter spaces before ANSI styling so
+        // underline/background attributes never bleed onto blank alignment space.
+        int leadingSpaces = 0;
+        while (leadingSpaces < displayNamePart.length() && displayNamePart.charAt(leadingSpaces) == ' ') {
+            leadingSpaces++;
         }
-        if (ansiMode && required)
-            sb.append(ANSI.BOLD_OFF);
+        if (leadingSpaces > 0) {
+            appendSpaces(sb, leadingSpaces);
+        }
+        String visibleName = leadingSpaces > 0 ? displayNamePart.substring(leadingSpaces) : displayNamePart;
+        // Style option or positional label in one SGR sequence so required
+        // emphasis (bold) is never reset by a separate color code (#788).
+        if (isBareDisplayLabel()) {
+            String labelEscape = ansiMode
+                    ? (required ? scheme.requiredParameterEscape() : scheme.parametersEscape())
+                    : "";
+            HelpColorScheme.appendStyled(sb, labelEscape, visibleName);
+        } else {
+            String nameEscape = ansiMode
+                    ? (required ? scheme.requiredOptionEscape() : scheme.optionsEscape())
+                    : "";
+            HelpColorScheme.appendStyled(sb, nameEscape, visibleName);
+        }
+        if (displayPlaceholderPart != null) {
+            HelpColorScheme.appendStyled(sb, ansiMode ? scheme.optionParamsEscape() : "", displayPlaceholderPart);
+        }
         if (resolvedDescription != null && resolvedDescription.length() > 0) {
             int descOffset = descriptionStart - getFormattedLength() - offset;
             if (descOffset > 1) {

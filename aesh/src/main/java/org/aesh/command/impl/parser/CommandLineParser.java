@@ -22,6 +22,7 @@ package org.aesh.command.impl.parser;
 import java.util.List;
 
 import org.aesh.command.Command;
+import org.aesh.command.HelpColorScheme;
 import org.aesh.command.impl.internal.ProcessedCommand;
 import org.aesh.command.impl.internal.ProcessedOption;
 import org.aesh.command.invocation.CommandInvocation;
@@ -196,6 +197,27 @@ public interface CommandLineParser<CI extends CommandInvocation> {
      */
     default boolean isAnsiMode() {
         return true;
+    }
+
+    /**
+     * Set the color scheme used when rendering help and usage output for this
+     * command and its sub-commands. Passing {@code null} falls back to
+     * {@link HelpColorScheme#getDefault()}. End-user overrides via
+     * {@code AESH_HELP_COLORS} and {@code aesh.help.color.*} still layer on
+     * top, and {@code updateAnsiMode(false)} / {@code NO_COLOR} suppress all
+     * styling.
+     *
+     * @param colorScheme the help color scheme, or null for the process default
+     */
+    default void updateHelpColorScheme(HelpColorScheme colorScheme) {
+    }
+
+    /**
+     * Returns the help color scheme explicitly set on this parser, or
+     * {@code null} when inheriting the process default.
+     */
+    default HelpColorScheme getHelpColorScheme() {
+        return null;
     }
 
     /**

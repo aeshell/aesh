@@ -30,6 +30,7 @@ import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.CommandDefinition;
 import org.aesh.command.GroupCommand;
+import org.aesh.command.HelpColorScheme;
 import org.aesh.command.HelpFeature;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
@@ -69,6 +70,13 @@ public final class LazyHelp {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String render(Class<? extends Command> rootClass, String[] args, Supplier<Boolean> ansi,
             EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
+        return render(rootClass, args, ansi, helpDefaults, argumentsSection, null);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static String render(Class<? extends Command> rootClass, String[] args, Supplier<Boolean> ansi,
+            EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection,
+            HelpColorScheme helpColorScheme) {
         if (rootClass == null || !mayRequestHelp(args))
             return null;
         Walk walk = walk(rootClass, args, helpDefaults, argumentsSection);
@@ -89,6 +97,8 @@ public final class LazyHelp {
             // output below never touches it.
             if (!ansi.get())
                 parsed.updateAnsiMode(false);
+            if (helpColorScheme != null)
+                parsed.updateHelpColorScheme(helpColorScheme);
             return parsed.printHelp();
         }
         if (parsedCommand.version() != null && parsedCommand.isGenerateVersionOptionSet())
@@ -107,11 +117,17 @@ public final class LazyHelp {
 
     public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args, boolean ansi,
             EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
-        return renderUnknownSubcommandHelp(rootClass, args, () -> ansi, helpDefaults, argumentsSection);
+        return renderUnknownSubcommandHelp(rootClass, args, () -> ansi, helpDefaults, argumentsSection, null);
     }
 
     public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args,
             Supplier<Boolean> ansi, EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection) {
+        return renderUnknownSubcommandHelp(rootClass, args, ansi, helpDefaults, argumentsSection, null);
+    }
+
+    public static String renderUnknownSubcommandHelp(Class<? extends Command> rootClass, String[] args,
+            Supplier<Boolean> ansi, EnumSet<HelpFeature> helpDefaults, ArgumentsSection argumentsSection,
+            HelpColorScheme helpColorScheme) {
         if (rootClass == null)
             return null;
         Walk walk = walk(rootClass, args, helpDefaults, argumentsSection);
@@ -119,6 +135,8 @@ public final class LazyHelp {
             return null;
         if (!ansi.get())
             walk.deepest.updateAnsiMode(false);
+        if (helpColorScheme != null)
+            walk.deepest.updateHelpColorScheme(helpColorScheme);
         return walk.deepest.printHelp();
     }
 

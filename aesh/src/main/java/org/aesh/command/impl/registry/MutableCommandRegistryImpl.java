@@ -35,6 +35,7 @@ import org.aesh.command.CommandDefinition;
 import org.aesh.command.CommandDefinitionException;
 import org.aesh.command.CommandNotFoundException;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpColorScheme;
 import org.aesh.command.HelpFeature;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
@@ -72,6 +73,11 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
      * Off is applied at build time and to already-built containers.
      */
     private boolean ansiColors = true;
+    /**
+     * Fleet-wide help color scheme applied to parsers built by this registry
+     * (and to already-built containers via {@link #applyHelpColorScheme()}).
+     */
+    private HelpColorScheme helpColorScheme;
     /**
      * Fleet-wide help toggles applied when a command leaves them
      * {@code INHERIT}. Propagated to the container builder and re-applied to
@@ -151,6 +157,24 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
             return;
         for (CommandContainer<CI> container : registry.values())
             container.getParser().updateAnsiMode(false);
+    }
+
+    /**
+     * Set the help color scheme applied to parsers built by this registry
+     * (and to already-built containers via {@link #applyHelpColorScheme()}).
+     */
+    public void setHelpColorScheme(HelpColorScheme helpColorScheme) {
+        this.helpColorScheme = helpColorScheme;
+    }
+
+    /**
+     * Apply the configured help color scheme to already-built containers.
+     */
+    public void applyHelpColorScheme() {
+        if (helpColorScheme == null)
+            return;
+        for (CommandContainer<CI> container : registry.values())
+            container.getParser().updateHelpColorScheme(helpColorScheme);
     }
 
     /**
@@ -412,6 +436,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                 injectDefaultValueProvider(container.getParser());
             if (!ansiColors)
                 container.getParser().updateAnsiMode(false);
+            if (helpColorScheme != null)
+                container.getParser().updateHelpColorScheme(helpColorScheme);
             if (invocationProviders != null)
                 applyProviders(container);
             registerBuilt(container);
@@ -656,6 +682,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                 injectDefaultValueProvider(fork.getParser());
             if (!ansiColors)
                 fork.getParser().updateAnsiMode(false);
+            if (helpColorScheme != null)
+                fork.getParser().updateHelpColorScheme(helpColorScheme);
             return fork;
         } catch (CommandLineParserException e) {
             // Registration already built this definition successfully, so a
@@ -685,6 +713,8 @@ public class MutableCommandRegistryImpl<CI extends CommandInvocation> implements
                     injectDefaultValueProvider(fork.getParser());
                 if (!ansiColors)
                     fork.getParser().updateAnsiMode(false);
+                if (helpColorScheme != null)
+                    fork.getParser().updateHelpColorScheme(helpColorScheme);
                 return fork;
             } catch (CommandLineParserException e) {
                 throw new CommandDefinitionException(name, e);

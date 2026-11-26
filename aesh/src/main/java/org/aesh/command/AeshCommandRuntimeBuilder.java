@@ -88,6 +88,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      * already-built containers and to later builds.
      */
     private Boolean ansiColors;
+    private HelpColorScheme helpColorScheme;
     /**
      * Lazily resolved stdout colors for {@code --help} rendering, see
      * {@link #stdoutColors(Supplier)}. Null (default) keeps the previous
@@ -190,6 +191,19 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
      */
     public AeshCommandRuntimeBuilder<CI> ansiColors(boolean ansiColors) {
         this.ansiColors = ansiColors;
+        return this;
+    }
+
+    /**
+     * Set the help color scheme applied to parsers built by the registry
+     * (and to already-built containers in {@link #build()}). Null (default)
+     * leaves the registry's scheme or process default untouched.
+     *
+     * @param helpColorScheme the help color scheme, or null for the default
+     * @return this builder
+     */
+    public AeshCommandRuntimeBuilder<CI> helpColorScheme(HelpColorScheme helpColorScheme) {
+        this.helpColorScheme = helpColorScheme;
         return this;
     }
 
@@ -358,6 +372,12 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
             MutableCommandRegistryImpl<CI> mutableRegistry = (MutableCommandRegistryImpl<CI>) registry;
             mutableRegistry.setAnsiColors(ansiColors);
             mutableRegistry.applyAnsiColors();
+        }
+
+        if (helpColorScheme != null && registry instanceof MutableCommandRegistryImpl) {
+            MutableCommandRegistryImpl<CI> mutableRegistry = (MutableCommandRegistryImpl<CI>) registry;
+            mutableRegistry.setHelpColorScheme(helpColorScheme);
+            mutableRegistry.applyHelpColorScheme();
         }
 
         if (commandInvocationProvider == null) {

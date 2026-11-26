@@ -39,6 +39,7 @@ import org.aesh.command.CommandNotFoundHandler;
 import org.aesh.command.CommandResult;
 import org.aesh.command.CommandRuntime;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpColorScheme;
 import org.aesh.command.HelpFeature;
 import org.aesh.command.Toggle;
 import org.aesh.command.completer.OptionCompleter;
@@ -107,6 +108,7 @@ public class AeshRuntimeRunner {
     private boolean argumentFiles;
     private EnumSet<HelpFeature> helpDefaults = EnumSet.noneOf(HelpFeature.class);
     private ArgumentsSection argumentsSectionDefault = ArgumentsSection.OFF;
+    private HelpColorScheme helpColorScheme;
 
     private AeshRuntimeRunner() {
     }
@@ -246,6 +248,19 @@ public class AeshRuntimeRunner {
         this.argumentsSectionDefault = argumentsSectionDefault != null ? argumentsSectionDefault
                 : ArgumentsSection.OFF;
         this.registryBuilder.argumentsSectionDefault(argumentsSectionDefault);
+        return this;
+    }
+
+    /**
+     * Set the help color scheme used when rendering {@code --help} and
+     * {@code Usage:} output. Passing {@code null} leaves the process default
+     * in effect. End-user overrides via {@code AESH_HELP_COLORS} and
+     * {@code aesh.help.color.*} still apply on top, and {@code NO_COLOR} /
+     * {@link AnsiMode#OFF} suppress all styling.
+     */
+    public AeshRuntimeRunner helpColorScheme(HelpColorScheme helpColorScheme) {
+        this.helpColorScheme = helpColorScheme;
+        this.registryBuilder.helpColorScheme(helpColorScheme);
         return this;
     }
 
@@ -552,7 +567,7 @@ public class AeshRuntimeRunner {
             }
             System.err.println(e.getMessage());
             String help = LazyHelp.renderUnknownSubcommandHelp(pendingCommandClass, args, colors, helpDefaults,
-                    argumentsSectionDefault);
+                    argumentsSectionDefault, helpColorScheme);
             if (help != null)
                 System.err.println(help);
             return CommandResult.USAGE_ERROR;
@@ -653,7 +668,8 @@ public class AeshRuntimeRunner {
             return fastFailure;
         if (lazyStartup && pendingCommandClass != null
                 && completionShellType == null && dynamicCompletionShellType == null && !dynamicComplete) {
-            String help = LazyHelp.render(pendingCommandClass, args, colors, helpDefaults, argumentsSectionDefault);
+            String help = LazyHelp.render(pendingCommandClass, args, colors, helpDefaults, argumentsSectionDefault,
+                    helpColorScheme);
             if (help != null) {
                 if (commandOutputHandler != null)
                     commandOutputHandler.accept(help + Config.getLineSeparator());

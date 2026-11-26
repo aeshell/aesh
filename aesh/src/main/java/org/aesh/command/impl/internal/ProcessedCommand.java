@@ -36,6 +36,7 @@ import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
 import org.aesh.command.DocFormat;
+import org.aesh.command.HelpColorScheme;
 import org.aesh.command.HelpFeature;
 import org.aesh.command.HelpSectionProvider;
 import org.aesh.command.Toggle;
@@ -1684,6 +1685,22 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @param width the help width in columns
      */
     public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll, int width) {
+        return printHelp(commandName, supportsHyperlinks, showAll, width, null);
+    }
+
+    /**
+     * Returns a description String based on the defined command and options,
+     * applying the given help color scheme (pass {@link HelpColorScheme#plain()}
+     * to suppress ANSI escapes, or {@code null} to infer ANSI mode from options).
+     *
+     * @param commandName the command name to display
+     * @param supportsHyperlinks whether the terminal supports OSC 8 hyperlinks
+     * @param showAll when true, includes FULL visibility options in output
+     * @param width the help width in columns
+     * @param colorScheme resolved color scheme, or null to infer from options
+     */
+    public String printHelp(String commandName, boolean supportsHyperlinks, boolean showAll, int width,
+            HelpColorScheme colorScheme) {
         int maxLength = 0;
         int maxOptionColumnWidth = 24;
         DescriptionResolver descriptionResolver = new DescriptionResolver(name, commandName, null, null, null);
@@ -1696,6 +1713,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (maxLength > maxOptionColumnWidth)
             maxLength = maxOptionColumnWidth;
 
+        List<ProcessedOption> positionalOptions = getPositionalOptionsInDisplayOrder();
+        HelpColorScheme scheme = colorScheme != null
+                ? colorScheme
+                : resolveDefaultScheme(visibleOpts, positionalOptions);
+
         StringBuilder sb = new StringBuilder();
         //first line — description, wrapped when it is longer than the help is wide
         String commandDescription = descriptionResolver.resolveCommandDescription(description());
@@ -1703,8 +1725,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             sb.append(line).append(Config.getLineSeparator());
         //second line — detailed synopsis with wrapping
         String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;
-        List<ProcessedOption> positionalOptions = getPositionalOptionsInDisplayOrder();
-        sb.append(renderSynopsisBlock(cmdDisplay, visibleOpts, positionalOptions, width, null));
+        sb.append(renderSynopsisBlock(cmdDisplay, visibleOpts, positionalOptions, width, null, scheme));
 
         //options and arguments — group by helpGroup
         // Grouped positionals leave the positional flow and join their
@@ -1735,7 +1756,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (maxLength > maxOptionColumnWidth)
                 maxLength = maxOptionColumnWidth;
             appendOptionGroup(sb, plainPositionals, "Arguments:", maxLength + 4, width, supportsHyperlinks,
-                    descriptionResolver);
+                    descriptionResolver, scheme);
         }
         Map<String, List<ProcessedOption>> groups = new LinkedHashMap<>();
         for (ProcessedOption o : visibleOpts) {
@@ -1753,15 +1774,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             // named groups keep their relative order either way.
             if (defaultOptionsFirst)
                 appendOptionGroup(sb, groups.get(""), "Options:", maxLength + 4, width, supportsHyperlinks,
-                        descriptionResolver);
+                        descriptionResolver, scheme);
             for (Map.Entry<String, List<ProcessedOption>> entry : groups.entrySet()) {
                 if (!entry.getKey().isEmpty())
                     appendOptionGroup(sb, entry.getValue(), entry.getKey() + ":", maxLength + 4, width,
-                            supportsHyperlinks, descriptionResolver);
+                            supportsHyperlinks, descriptionResolver, scheme);
             }
             if (!defaultOptionsFirst)
                 appendOptionGroup(sb, groups.get(""), "Options:", maxLength + 4, width, supportsHyperlinks,
-                        descriptionResolver);
+                        descriptionResolver, scheme);
         }
         // The LAST placement renders the section after all option groups.
         if (argumentsSection == ArgumentsSection.LAST && !plainPositionals.isEmpty()) {
@@ -1772,7 +1793,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             if (maxLength > maxOptionColumnWidth)
                 maxLength = maxOptionColumnWidth;
             appendOptionGroup(sb, plainPositionals, "Arguments:", maxLength + 4, width, supportsHyperlinks,
-                    descriptionResolver);
+                    descriptionResolver, scheme);
         }
         // Render positional arguments inline after the options section,
         // unless they already have their own section.
@@ -1783,7 +1804,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             }
             for (ProcessedOption positional : plainPositionals) {
                 sb.append(positional.getFormattedOption(2, maxLength + 4, width, supportsHyperlinks,
-                        descriptionResolver.resolveOptionDescription(positional)))
+                        descriptionResolver.resolveOptionDescription(positional), scheme))
                         .append(Config.getLineSeparator());
                 appendDefaultValue(sb, positional, maxLength + 4);
             }
@@ -1828,9 +1849,25 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return the wrapped usage block, ending with a line separator
      */
     public String printSynopsis(String commandName, boolean collapsed, int width) {
+        return printSynopsis(commandName, collapsed, width, null);
+    }
+
+    public String printSynopsis(String commandName, boolean collapsed, int width, HelpColorScheme colorScheme) {
         String cmdDisplay = (commandName == null || commandName.length() == 0) ? name() : commandName;
-        return renderSynopsisBlock(cmdDisplay, visibleOptions(false),
-                getPositionalOptionsInDisplayOrder(), width, collapsed);
+        List<ProcessedOption> visibleOpts = visibleOptions(false);
+        List<ProcessedOption> positionalOptions = getPositionalOptionsInDisplayOrder();
+        HelpColorScheme scheme = colorScheme != null
+                ? colorScheme
+                : resolveDefaultScheme(visibleOpts, positionalOptions);
+        return renderSynopsisBlock(cmdDisplay, visibleOpts, positionalOptions, width, collapsed, scheme);
+    }
+
+    private static HelpColorScheme resolveDefaultScheme(List<ProcessedOption> visibleOpts,
+            List<ProcessedOption> positionalOptions) {
+        boolean ansi = !visibleOpts.isEmpty()
+                ? visibleOpts.get(0).isAnsiMode()
+                : (!positionalOptions.isEmpty() && positionalOptions.get(0).isAnsiMode());
+        return ansi ? HelpColorScheme.resolve(null) : HelpColorScheme.plain();
     }
 
     /**
@@ -1856,15 +1893,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * {@code collapseSynopsis} toggle; otherwise the override wins.
      */
     private String renderSynopsisBlock(String cmdDisplay, List<ProcessedOption> visibleOpts,
-            List<ProcessedOption> positionalOptions, int width, Boolean collapsedOverride) {
-        boolean ansi = !visibleOpts.isEmpty() && visibleOpts.get(0).isAnsiMode();
-        String prefix = ansi
-                ? "Usage: " + ANSI.BOLD + cmdDisplay + ANSI.BOLD_OFF
-                : "Usage: " + cmdDisplay;
-        String synopsisOpts = collapsedOverride == null
-                ? buildDetailedSynopsis(visibleOpts)
-                : buildOptionsSynopsis(visibleOpts, ansi,
-                        collapsedOverride.booleanValue());
+            List<ProcessedOption> positionalOptions, int width, Boolean collapsedOverride,
+            HelpColorScheme colorScheme) {
+        String prefix = "Usage: " + colorScheme.styleCommand(cmdDisplay);
+        boolean collapsed = collapsedOverride == null ? collapseSynopsis : collapsedOverride.booleanValue();
+        String synopsisOpts = buildOptionsSynopsis(visibleOpts, collapsed, colorScheme);
         StringBuilder positionalSuffix = new StringBuilder();
         for (ProcessedOption positional : positionalOptions) {
             positionalSuffix.append(formatArgumentSynopsis(positional));
@@ -1916,21 +1949,6 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             currentLineLen += 1 + visualTokenLen;
         }
         return result.toString();
-    }
-
-    /**
-     * Build a detailed synopsis string from visible options.
-     * Groups boolean short flags together [-hVx], shows value options individually
-     * [--config=<config>], renders mutually exclusive options with pipes
-     * [--verbose | --quiet], and shows required options without brackets.
-     */
-    private String buildDetailedSynopsis(List<ProcessedOption> visibleOpts) {
-        if (visibleOpts.isEmpty())
-            return "";
-
-        // Determine ansiMode from the first option
-        boolean ansi = visibleOpts.get(0).isAnsiMode();
-        return buildOptionsSynopsis(visibleOpts, ansi);
     }
 
     /**
@@ -2012,19 +2030,20 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * explicitly and all optional flags collapse to {@code [OPTIONS]}.
      */
     private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
-        return buildOptionsSynopsis(visibleOpts, ansi, collapseSynopsis);
+        return buildOptionsSynopsis(visibleOpts, collapseSynopsis, HelpColorScheme.plain());
     }
 
     /**
      * Core synopsis builder with an explicit collapse override, so the usage
      * error path can collapse while {@code --help} stays expanded.
      */
-    private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi, boolean collapsed) {
+    private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean collapsed,
+            HelpColorScheme colorScheme) {
         if (visibleOpts.isEmpty())
             return "";
         if (collapsed)
-            return buildCollapsedOptionsSynopsis(visibleOpts, ansi);
-        return buildExpandedOptionsSynopsis(visibleOpts, ansi);
+            return buildCollapsedOptionsSynopsis(visibleOpts, colorScheme);
+        return buildExpandedOptionsSynopsis(visibleOpts, colorScheme);
     }
 
     /**
@@ -2032,23 +2051,22 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * form (exclusive groups with a required member stay explicit); every
      * optional flag is replaced by a single {@code [OPTIONS]} token.
      */
-    private String buildCollapsedOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
+    private String buildCollapsedOptionsSynopsis(List<ProcessedOption> visibleOpts,
+            HelpColorScheme colorScheme) {
         List<ProcessedOption> required = new ArrayList<>(visibleOpts.size());
         for (ProcessedOption o : visibleOpts) {
             if (o.isRequired())
                 required.add(o);
         }
-        StringBuilder sb = new StringBuilder(buildExpandedOptionsSynopsis(required, ansi));
+        StringBuilder sb = new StringBuilder(buildExpandedOptionsSynopsis(required, colorScheme));
         if (required.size() < visibleOpts.size()) {
-            if (ansi)
-                sb.append(" [").append(ANSI.YELLOW_TEXT).append("OPTIONS").append(ANSI.RESET).append("]");
-            else
-                sb.append(" [OPTIONS]");
+            sb.append(" [").append(colorScheme.styleOption("OPTIONS")).append("]");
         }
         return sb.toString();
     }
 
-    private String buildExpandedOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
+    private String buildExpandedOptionsSynopsis(List<ProcessedOption> visibleOpts,
+            HelpColorScheme colorScheme) {
         if (visibleOpts.isEmpty())
             return "";
 
@@ -2068,10 +2086,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
         // Emit grouped short flags: [-hVx]
         if (shortFlags.length() > 0) {
-            if (ansi)
-                synopsis.append(" ").append(ANSI.YELLOW_TEXT).append("[-").append(shortFlags).append("]").append(ANSI.RESET);
-            else
-                synopsis.append(" [-").append(shortFlags).append("]");
+            synopsis.append(" ").append(colorScheme.styleOption("[-" + shortFlags + "]"));
         }
 
         // 2. Emit remaining options
@@ -2087,7 +2102,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             // For bare options (acceptNameWithoutDashes), omit -- prefix.
             // Valued options keep their =<value> placeholder, including
             // inside exclusive pairs (#775).
-            String rendered = renderSynopsisOption(o, ansi);
+            String rendered = renderSynopsisOption(o, colorScheme);
 
             // Handle mutually exclusive options
             if (!o.getExclusiveWith().isEmpty() && !exclusiveHandled.contains(o.name())) {
@@ -2096,7 +2111,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 for (String exName : o.getExclusiveWith()) {
                     ProcessedOption exOpt = findLongOptionNoActivatorCheck(exName);
                     if (exOpt != null) {
-                        exclusive.append(" | ").append(renderSynopsisOption(exOpt, ansi));
+                        exclusive.append(" | ").append(renderSynopsisOption(exOpt, colorScheme));
                         exclusiveHandled.add(exOpt.name());
                     }
                 }
@@ -2128,7 +2143,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * standalone and mutually exclusive rendering so pairs like
      * {@code [--netrc=<netrc> | --no-netrc]} keep the placeholder (#775).
      */
-    private static String renderSynopsisOption(ProcessedOption o, boolean ansi) {
+    private static String renderSynopsisOption(ProcessedOption o, HelpColorScheme colorScheme) {
         String optName;
         String dashPrefix = o.acceptNameWithoutDashes() ? "" : "--";
         if (o.isNegatable()) {
@@ -2136,10 +2151,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         } else {
             optName = o.shortName() != null ? "-" + o.shortName() : dashPrefix + o.name();
         }
-        String styledOptName = ansi ? ANSI.YELLOW_TEXT + optName + ANSI.RESET : optName;
+        String styledOptName = colorScheme.styleOption(optName);
         if (o.getOptionType() == OptionType.GROUP) {
-            String placeholder = ansi ? ANSI.CYAN_TEXT + "<key>=<value>" + ANSI.RESET : "<key>=<value>";
-            return styledOptName + placeholder;
+            return styledOptName + colorScheme.styleOptionParam("<key>=<value>");
         }
         if (o.hasValue() && o.getOptionType() != OptionType.BOOLEAN
                 && (o.type() != Boolean.class && o.type() != boolean.class)
@@ -2147,10 +2161,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             String placeholder = o.getArgument() != null && !o.getArgument().isEmpty()
                     ? o.getArgument()
                     : o.name();
-            String styledPlaceholder = ansi
-                    ? ANSI.CYAN_TEXT + "=<" + placeholder + ">" + ANSI.RESET
-                    : "=<" + placeholder + ">";
-            return styledOptName + styledPlaceholder;
+            return styledOptName + colorScheme.styleOptionParam("=<" + placeholder + ">");
         }
         return styledOptName;
     }
@@ -2162,13 +2173,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * named-group ordering needs no restructuring here.
      */
     private void appendOptionGroup(StringBuilder sb, List<ProcessedOption> group, String heading,
-            int descriptionStart, int width, boolean supportsHyperlinks, DescriptionResolver descriptionResolver) {
+            int descriptionStart, int width, boolean supportsHyperlinks, DescriptionResolver descriptionResolver,
+            HelpColorScheme colorScheme) {
         if (group == null || group.isEmpty())
             return;
         sb.append(Config.getLineSeparator()).append(heading).append(Config.getLineSeparator());
         for (ProcessedOption o : group) {
             sb.append(o.getFormattedOption(2, descriptionStart, width, supportsHyperlinks,
-                    descriptionResolver.resolveOptionDescription(o)))
+                    descriptionResolver.resolveOptionDescription(o), colorScheme))
                     .append(Config.getLineSeparator());
             appendDefaultValue(sb, o, descriptionStart);
         }

@@ -65,8 +65,9 @@ public class DisplayLabelPartsTest {
     public void testFormattedOutputUsesParts() {
         ProcessedOption opt = normal("plain");
         String formatted = opt.getFormattedOption(2, 30, 80, false, "Target");
-        assertTrue("label must lead, got: " + formatted, formatted.contains("    --plain"));
-        assertTrue("placeholder must follow, got: " + formatted, formatted.contains("=<plain>"));
+        String plain = formatted.replaceAll("\u001B\\[[;\\d]*m", "");
+        assertTrue("label must lead, got: " + formatted, plain.contains("    --plain"));
+        assertTrue("placeholder must follow, got: " + formatted, plain.contains("=<plain>"));
     }
 
     private static String formatted(ProcessedOption opt) {
@@ -78,7 +79,8 @@ public class DisplayLabelPartsTest {
         int expected = namePart.length() + (placeholderPart != null ? placeholderPart.length() : 0);
         assertEquals("length of " + namePart, expected, opt.getFormattedLength());
         String formatted = opt.getFormattedOption(0, expected + 10, 80, false, "");
-        assertTrue("label text, got: " + formatted, formatted.contains(namePart));
+        String plain = formatted.replaceAll("\u001B\\[[;\\d]*m", "");
+        assertTrue("label text, got: " + formatted, plain.contains(namePart));
     }
 
     private static ProcessedOption bool(String name, char shortName) {

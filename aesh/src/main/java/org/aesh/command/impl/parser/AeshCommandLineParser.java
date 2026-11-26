@@ -31,6 +31,7 @@ import java.util.function.Function;
 import org.aesh.command.Command;
 import org.aesh.command.CommandLifecycle;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpColorScheme;
 import org.aesh.command.HelpContext;
 import org.aesh.command.HelpEntry;
 import org.aesh.command.HelpSectionProvider;
@@ -60,7 +61,6 @@ import org.aesh.parser.ParsedLine;
 import org.aesh.parser.ParsedLineIterator;
 import org.aesh.parser.ParsedWord;
 import org.aesh.parser.ParserStatus;
-import org.aesh.terminal.utils.ANSIBuilder;
 import org.aesh.terminal.utils.Config;
 
 /**
@@ -98,6 +98,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     private static final boolean NO_COLOR_SET = System.getenv("NO_COLOR") != null;
 
     private boolean ansiMode = !NO_COLOR_SET;
+    private HelpColorScheme helpColorScheme;
 
     @SuppressWarnings("unchecked")
     public AeshCommandLineParser(ProcessedCommand<? extends Command<CI>, CI> processedCommand) {
@@ -124,6 +125,8 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             // was set, so they never saw it: inherit no-color mode (#753).
             if (!ansiMode)
                 child.updateAnsiMode(false);
+            if (helpColorScheme != null)
+                child.updateHelpColorScheme(helpColorScheme);
         }
     }
 
@@ -538,8 +541,9 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 child.updateAnsiMode(false);
             }
         }
+        HelpColorScheme scheme = ansiMode ? HelpColorScheme.resolve(helpColorScheme) : HelpColorScheme.plain();
         String synopsis = processedCommand.printSynopsis(helpNames(), collapsed,
-                processedCommand.helpWidth());
+                processedCommand.helpWidth(), scheme);
         if (isGroupCommand()) {
             // Mark the subcommand slot at the end of the synopsis block, the
             // same splice printHelp uses so wrapped lines stay aligned.
@@ -556,12 +560,16 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public String printHelp() {
         resolveAllLazyChildren();
-        // Propagate ansiMode to any newly resolved lazy children
-        if (!ansiMode && childParsers != null) {
+        // Propagate ansiMode and helpColorScheme to any newly resolved lazy children
+        if (childParsers != null) {
             for (CommandLineParser<CI> child : childParsers) {
-                child.updateAnsiMode(false);
+                if (!ansiMode)
+                    child.updateAnsiMode(false);
+                if (helpColorScheme != null)
+                    child.updateHelpColorScheme(helpColorScheme);
             }
         }
+        HelpColorScheme scheme = ansiMode ? HelpColorScheme.resolve(helpColorScheme) : HelpColorScheme.plain();
         // Resolve the terminal width once per render: every entry below used
         // to query it separately, one failed probe per group child.
         int width = processedCommand.helpWidth();
@@ -577,7 +585,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         StringBuilder sb = new StringBuilder();
 
         if (hasChildren || hasAdditional) {
-            String helpText = processedCommand.printHelp(helpNames(), false, showAll, width);
+            String helpText = processedCommand.printHelp(helpNames(), false, showAll, width, scheme);
             // Append [COMMAND] at the end of the synopsis block for group commands.
             // The synopsis may wrap across multiple lines; the block ends at
             // the first blank line (double line separator) after "Usage:".
@@ -622,7 +630,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
             for (Map.Entry<String, List<HelpEntry>> section : additionalSections.entrySet()) {
                 List<String> lines = outputGroups.computeIfAbsent(section.getKey(), k -> new ArrayList<>());
                 for (HelpEntry he : section.getValue())
-                    lines.add(formatHelpEntry(he, 4, maxLength + 2));
+                    lines.add(formatHelpEntry(he, 4, maxLength + 2, scheme));
             }
 
             boolean hasNamedGroups = outputGroups.size() > 1 || !outputGroups.containsKey("");
@@ -652,7 +660,7 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                     sb.append(line).append(Config.getLineSeparator());
             }
         } else {
-            String helpText = processedCommand.printHelp(helpNames(), false, showAll, width);
+            String helpText = processedCommand.printHelp(helpNames(), false, showAll, width, scheme);
             String header = helpHeader(provider);
             String headerContent = header != null ? resolveDescriptionVariables(header, null) : null;
             sb.append(injectHeader(helpText, headerContent, width));
@@ -742,19 +750,19 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
         return processedCommand.resolveHelpSectionProvider();
     }
 
-    private String formatHelpEntry(HelpEntry entry, int offset, int descriptionStart) {
-        ANSIBuilder ansiBuilder = ANSIBuilder.builder(ansiMode);
+    private String formatHelpEntry(HelpEntry entry, int offset, int descriptionStart, HelpColorScheme scheme) {
+        StringBuilder sb = new StringBuilder();
         if (offset > 0)
-            ProcessedOption.appendSpaces(ansiBuilder, offset);
-        ansiBuilder.blueText(entry.name());
+            ProcessedOption.appendSpaces(sb, offset);
+        HelpColorScheme.appendStyled(sb, ansiMode ? scheme.commandsEscape() : "", entry.name());
         int descOffset = descriptionStart - entry.name().length();
         if (descOffset > 0)
-            ProcessedOption.appendSpaces(ansiBuilder, descOffset);
+            ProcessedOption.appendSpaces(sb, descOffset);
         else
-            ansiBuilder.append(" ");
+            sb.append(" ");
         if (entry.description() != null)
-            ansiBuilder.append(resolveDescriptionVariables(entry.description(), null));
-        return ansiBuilder.toString();
+            sb.append(resolveDescriptionVariables(entry.description(), null));
+        return sb.toString();
     }
 
     private String helpNames() {
@@ -1291,20 +1299,20 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
 
     @Override
     public String getFormattedCommand(int offset, int descriptionStart, int width) {
-
-        ANSIBuilder ansiBuilder = ANSIBuilder.builder(ansiMode);
+        HelpColorScheme scheme = ansiMode ? HelpColorScheme.resolve(helpColorScheme) : HelpColorScheme.plain();
+        StringBuilder sb = new StringBuilder();
 
         if (offset > 0)
-            ProcessedOption.appendSpaces(ansiBuilder, offset);
+            ProcessedOption.appendSpaces(sb, offset);
 
-        ansiBuilder.blueText(getProcessedCommand().name());
+        HelpColorScheme.appendStyled(sb, ansiMode ? scheme.commandsEscape() : "", getProcessedCommand().name());
 
         int descOffset = descriptionStart - getProcessedCommand().name().length();
 
         if (descOffset > 0)
-            ProcessedOption.appendSpaces(ansiBuilder, descOffset);
+            ProcessedOption.appendSpaces(sb, descOffset);
         else
-            ansiBuilder.append(" ");
+            sb.append(" ");
 
         // a description longer than the help is wide is wrapped, aligned with the description column
         String pad = ProcessedOption.spaces(offset + Math.max(descriptionStart, getProcessedCommand().name().length() + 1));
@@ -1313,11 +1321,11 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
                 width - pad.length());
         for (int i = 0; i < lines.size(); i++) {
             if (i > 0)
-                ansiBuilder.append(Config.getLineSeparator()).append(pad);
-            ansiBuilder.append(lines.get(i));
+                sb.append(Config.getLineSeparator()).append(pad);
+            sb.append(lines.get(i));
         }
 
-        return ansiBuilder.toString();
+        return sb.toString();
     }
 
     /**
@@ -1500,6 +1508,21 @@ public class AeshCommandLineParser<CI extends CommandInvocation> implements Comm
     @Override
     public boolean isAnsiMode() {
         return ansiMode;
+    }
+
+    @Override
+    public void updateHelpColorScheme(HelpColorScheme colorScheme) {
+        this.helpColorScheme = colorScheme;
+        if (childParsers != null) {
+            for (CommandLineParser<CI> child : childParsers) {
+                child.updateHelpColorScheme(colorScheme);
+            }
+        }
+    }
+
+    @Override
+    public HelpColorScheme getHelpColorScheme() {
+        return helpColorScheme;
     }
 
     @Override

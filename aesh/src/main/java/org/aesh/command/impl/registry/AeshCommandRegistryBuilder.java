@@ -27,6 +27,7 @@ import java.util.List;
 import org.aesh.command.ArgumentsSection;
 import org.aesh.command.Command;
 import org.aesh.command.DefaultValueProvider;
+import org.aesh.command.HelpColorScheme;
 import org.aesh.command.HelpFeature;
 import org.aesh.command.container.CommandContainer;
 import org.aesh.command.container.CommandContainerBuilder;
@@ -75,6 +76,16 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
      */
     public AeshCommandRegistryBuilder<CI> ansiColors(boolean ansiColors) {
         commandRegistry.setAnsiColors(ansiColors);
+        return this;
+    }
+
+    /**
+     * Set the help color scheme applied to parsers built by this registry
+     * (and to already-built containers in {@link #create()}). Passing
+     * {@code null} leaves the process default in effect.
+     */
+    public AeshCommandRegistryBuilder<CI> helpColorScheme(HelpColorScheme helpColorScheme) {
+        commandRegistry.setHelpColorScheme(helpColorScheme);
         return this;
     }
 
@@ -202,6 +213,7 @@ public class AeshCommandRegistryBuilder<CI extends CommandInvocation> {
     public CommandRegistry<CI> create() {
         commandRegistry.applyDefaultValueProvider();
         commandRegistry.applyAnsiColors();
+        commandRegistry.applyHelpColorScheme();
         return commandRegistry;
     }
 

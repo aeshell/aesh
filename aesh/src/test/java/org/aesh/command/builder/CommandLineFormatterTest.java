@@ -1659,7 +1659,7 @@ public class CommandLineFormatterTest {
 
         // Option names should be wrapped in yellow ANSI
         assertTrue("Option name should have yellow ANSI",
-                help.contains(ANSI.YELLOW_TEXT + "--output"));
+                help.contains("\u001B[33m--output"));
         assertTrue("Option name should be reset after",
                 help.contains("--output" + ANSI.RESET));
     }
@@ -1675,7 +1675,7 @@ public class CommandLineFormatterTest {
 
         // Value placeholder should be wrapped in cyan ANSI
         assertTrue("Value placeholder should have cyan ANSI",
-                help.contains(ANSI.CYAN_TEXT + "=<config>"));
+                help.contains("\u001B[36m=<config>"));
         assertTrue("Value placeholder should be reset after",
                 help.contains("=<config>" + ANSI.RESET));
     }
@@ -1691,9 +1691,9 @@ public class CommandLineFormatterTest {
 
         // Boolean option should have yellow name but no cyan placeholder
         assertTrue("Boolean option should have yellow ANSI",
-                help.contains(ANSI.YELLOW_TEXT + "--verbose"));
+                help.contains("\u001B[33m--verbose"));
         assertFalse("Boolean option should NOT have cyan placeholder",
-                help.contains(ANSI.CYAN_TEXT));
+                help.contains("\u001B[36m"));
     }
 
     @Test
@@ -1705,11 +1705,11 @@ public class CommandLineFormatterTest {
 
         String help = new AeshCommandLineParser<>(pb.create()).printHelp();
 
-        // Required option should have bold + yellow
-        assertTrue("Required option should have bold",
-                help.contains(ANSI.BOLD));
-        assertTrue("Required option should have yellow",
-                help.contains(ANSI.YELLOW_TEXT));
+        // Required option must combine bold + yellow in one SGR sequence so bold is not reset (#788)
+        assertTrue("Required option should have combined bold+yellow ANSI: " + help,
+                help.contains("\u001B[1;33m--target" + ANSI.RESET));
+        assertFalse("Required option must not emit a resetting 0;33m sequence",
+                help.contains("\u001B[0;33m"));
     }
 
     @Test
@@ -1725,7 +1725,7 @@ public class CommandLineFormatterTest {
 
         // Argument label should have cyan styling
         assertTrue("Argument label should have cyan ANSI",
-                help.contains(ANSI.CYAN_TEXT));
+                help.contains("\u001B[36m<file>" + ANSI.RESET));
         String stripped = stripAnsi(help);
         assertTrue("Stripped help should contain <file>", stripped.contains("<file>"));
     }
@@ -1826,12 +1826,13 @@ public class CommandLineFormatterTest {
 
         String help = parentParser.printHelp();
 
-        // Subcommand name should have styling (blue text via ANSIBuilder)
+        // Subcommand name should be bold by default, not dark ANSI blue (#788)
         String stripped = stripAnsi(help);
         assertTrue("Stripped help should contain subcommand 'run'", stripped.contains("run"));
-        // The raw help should contain ANSI codes (from ANSIBuilder.blueText)
-        assertTrue("Help should contain ANSI escape codes",
-                help.contains("\u001B["));
+        assertTrue("Subcommand name should be bold",
+                help.contains("\u001B[1mrun" + ANSI.RESET));
+        assertFalse("Subcommand name must not use dark ANSI blue",
+                help.contains("\u001B[34m") || help.contains("\u001B[0;34m"));
     }
 
     // --- Issue #455: OptionGroup rendering ---
@@ -2026,11 +2027,11 @@ public class CommandLineFormatterTest {
         assertFalse("ANSI codes should not be bare (missing ESC before [0;36m)",
                 synopsisLine.matches(".*[^\\u001B]\\[0;36m.*"));
 
-        // Verify yellow and cyan are present with ESC prefix
+        // Verify yellow and bold are present with ESC prefix
         assertTrue("Synopsis should contain yellow ANSI with ESC",
-                synopsisLine.contains(ANSI.YELLOW_TEXT));
+                synopsisLine.contains("\u001B[33m"));
         assertTrue("Synopsis should contain bold ANSI with ESC",
-                synopsisLine.contains(ANSI.BOLD) || synopsisLine.contains("\u001B[1m"));
+                synopsisLine.contains("\u001B[1m"));
 
         // Verify every [ that's part of an ANSI code has \u001B before it
         // (ANSI codes match pattern \u001B\[\d+(;\d+)*m)
