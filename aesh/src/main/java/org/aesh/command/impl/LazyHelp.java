@@ -34,7 +34,6 @@ import org.aesh.command.HelpColorScheme;
 import org.aesh.command.HelpFeature;
 import org.aesh.command.impl.container.AeshCommandContainerBuilder;
 import org.aesh.command.impl.internal.ProcessedCommand;
-import org.aesh.command.impl.internal.ProcessedCommandBuilder;
 import org.aesh.command.impl.parser.AeshCommandLineParser;
 import org.aesh.command.impl.parser.CommandLineParser;
 import org.aesh.command.invocation.CommandInvocation;
@@ -269,18 +268,15 @@ public final class LazyHelp {
         }
         if (name == null || name.isEmpty())
             return null;
-        try {
-            ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processed = ProcessedCommandBuilder
-                    .<Command<CommandInvocation>, CommandInvocation> builder()
-                    .name(name)
-                    .description(description)
-                    .create();
-            if (!helpGroup.isEmpty())
-                processed.setHelpGroup(helpGroup);
-            return new AeshCommandLineParser<>(processed);
-        } catch (CommandLineParserException e) {
-            return null;
-        }
+        // createDirect instead of ProcessedCommandBuilder: ghosts are
+        // metadata-only, so building them through the 27-field builder
+        // allocated a builder + EnumSet + ArrayList per sibling and
+        // loaded the builder class on --help (#796)
+        ProcessedCommand<Command<CommandInvocation>, CommandInvocation> processed = ProcessedCommand.createDirect(
+                name, description, null, null, null, false, false, false, 0);
+        if (!helpGroup.isEmpty())
+            processed.setHelpGroup(helpGroup);
+        return new AeshCommandLineParser<>(processed);
     }
 
     private static List<Class<? extends Command>> childClasses(Class<? extends Command> parent) {

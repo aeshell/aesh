@@ -55,6 +55,20 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
 
     private static final EnumSet<OperatorType> NO_OPERATORS = EnumSet.noneOf(OperatorType.class);
 
+    /**
+     * Shared stateless default: {@code build()} used to allocate a fresh
+     * anonymous provider per runtime even when nothing was customized (#796).
+     */
+    @SuppressWarnings("rawtypes")
+    private static final CommandInvocationProvider DEFAULT_COMMAND_INVOCATION_PROVIDER = new CommandInvocationProvider() {
+    };
+
+    /**
+     * Shared immutable default composite for builds that configure no custom
+     * invocation providers — every slot is a stateless default (#796).
+     */
+    private static final InvocationProviders DEFAULT_INVOCATION_PROVIDERS = new AeshInvocationProviders();
+
     private CommandRegistry<CI> registry;
     private CommandInvocationProvider<CI> commandInvocationProvider;
     private CommandNotFoundHandler commandNotFoundHandler;
@@ -381,8 +395,7 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
         }
 
         if (commandInvocationProvider == null) {
-            commandInvocationProvider = new CommandInvocationProvider<CI>() {
-            };
+            commandInvocationProvider = (CommandInvocationProvider<CI>) DEFAULT_COMMAND_INVOCATION_PROVIDER;
         }
 
         if (commandInvocationBuilder == null)
@@ -417,10 +430,18 @@ public class AeshCommandRuntimeBuilder<CI extends CommandInvocation> {
                             : resolvedProviders.getCommandActivatorProvider(),
                     resolvedProviders.fuzzyCompletion());
         } else if (resolvedProviders == null) {
-            // Historic path: individuals only (nulls become defaults).
-            resolvedProviders = new AeshInvocationProviders(converterInvocationProvider,
-                    completerInvocationProvider, validatorInvocationProvider, optionActivatorProvider,
-                    commandActivatorProvider);
+            if (converterInvocationProvider == null && completerInvocationProvider == null
+                    && validatorInvocationProvider == null && optionActivatorProvider == null
+                    && commandActivatorProvider == null) {
+                // No custom providers at all: share the immutable default
+                // composite instead of allocating a fresh one per build (#796)
+                resolvedProviders = DEFAULT_INVOCATION_PROVIDERS;
+            } else {
+                // Historic path: individuals only (nulls become defaults).
+                resolvedProviders = new AeshInvocationProviders(converterInvocationProvider,
+                        completerInvocationProvider, validatorInvocationProvider, optionActivatorProvider,
+                        commandActivatorProvider);
+            }
         }
         // Otherwise the composite is used as-is (identity preserved, no allocation).
 

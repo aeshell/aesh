@@ -42,29 +42,43 @@ import org.aesh.parser.ParsedLine;
  */
 public abstract class DefaultCommandContainer<CI extends CommandInvocation> implements CommandContainer<CI> {
 
+    /**
+     * Fast slot for the current line. Single-command execution adds exactly
+     * one {@link ParsedLine} and polls it before the next add, so the common
+     * case never allocates the spill queue below (#796).
+     */
+    private volatile ParsedLine pendingLine;
+
+    /** Spill queue, allocated only when a second line arrives before a poll. */
     private ConcurrentLinkedQueue<ParsedLine> lines;
 
     public DefaultCommandContainer() {
     }
 
-    private ConcurrentLinkedQueue<ParsedLine> lines() {
-        if (lines == null)
-            lines = new ConcurrentLinkedQueue<>();
-        return lines;
-    }
-
     @Override
     public void addLine(ParsedLine aeshLine) {
-        lines().add(aeshLine);
+        if (pendingLine == null) {
+            pendingLine = aeshLine;
+            return;
+        }
+        if (lines == null)
+            lines = new ConcurrentLinkedQueue<>();
+        lines.add(aeshLine);
     }
 
     @Override
     public ParsedLine pollLine() {
+        ParsedLine line = pendingLine;
+        if (line != null) {
+            pendingLine = null;
+            return line;
+        }
         return lines != null ? lines.poll() : null;
     }
 
     @Override
     public void emptyLine() {
+        pendingLine = null;
         if (lines != null)
             lines.clear();
     }
@@ -81,9 +95,9 @@ public abstract class DefaultCommandContainer<CI extends CommandInvocation> impl
             AeshContext aeshContext,
             org.aesh.command.impl.context.CommandContext commandContext)
             throws CommandLineParserException, OptionValidatorException {
-        if (lines == null || lines.isEmpty())
+        if (pendingLine == null && (lines == null || lines.isEmpty()))
             return null;
-        ParsedLine aeshLine = lines.poll();
+        ParsedLine aeshLine = pollLine();
         applyAeshContext(getParser(), aeshContext);
         getParser().parse(aeshLine.iterator(), CommandLineParser.Mode.STRICT);
         if (getParser().getProcessedCommand().parserExceptions().size() > 0
