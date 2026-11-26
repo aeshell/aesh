@@ -2283,6 +2283,21 @@ public class ProcessorTest {
         assertEquals("sub2", entries[1][0]);
         assertEquals("Subcommand 2", entries[1][1]);
         assertEquals("", entries[1][2]);
+
+        // Group metadata tables are cached as static constants so repeated
+        // container builds (per execution fork) do not re-allocate them (#791).
+        String source = new String(Files.readAllBytes(
+                result.outputDir.resolve("test/GroupTestCommand_AeshMetadata.java")), StandardCharsets.UTF_8);
+        assertTrue("Group classes must be a static constant",
+                source.contains("private static final Class[] GROUP_CLASSES"));
+        assertTrue("Group names/aliases must be a static constant",
+                source.contains("private static final String[][] GROUP_NAMES_AND_ALIASES"));
+        assertTrue("Group help entries must be a static constant",
+                source.contains("private static final String[][] GROUP_HELP_ENTRIES"));
+        assertTrue("groupCommandClasses must return the constant",
+                source.contains("return GROUP_CLASSES;"));
+        assertFalse("Group provider must not churn a ProcessedCommandBuilder",
+                source.contains("ProcessedCommandBuilder"));
     }
 
     @Test
@@ -6453,7 +6468,7 @@ public class ProcessorTest {
                 "public class PublicOptMixin {\n" +
                 "    @Option(description = \"Config file\")\n" +
                 "    public File config;\n" +
-                "    @Option(allowedValues = {\"a\", \"b\"}, description = \"Choice\")\n" +
+                "    @Option(allowedValues = {\"a\"}, defaultValue = \"a\", description = \"Choice\")\n" +
                 "    public String choice;\n" +
                 "    @OptionList(description = \"Tags\")\n" +
                 "    public LinkedHashSet<String> tags;\n" +
@@ -6601,6 +6616,19 @@ public class ProcessorTest {
         help1.getFieldAccessor().set(child, true);
         assertEquals(true, help1.getFieldAccessor().get(child));
         assertEquals("Second build's --help must remain false", false, help2.getFieldAccessor().get(child));
+
+        // 7. Slice 3: direct ProcessedCommand.createDirect, conditional resolveGeneratedConflicts,
+        //    and singleton lists for single-valued static option metadata
+        assertFalse("Must not churn a ProcessedCommandBuilder",
+                cleanSource.contains("ProcessedCommandBuilder"));
+        assertTrue("Must construct via ProcessedCommand.createDirect",
+                cleanSource.contains("ProcessedCommand.createDirect("));
+        assertFalse("No resolveGeneratedConflicts without generated help/version options",
+                cleanSource.contains("resolveGeneratedConflicts"));
+        assertTrue("Command with generateHelp=true must still resolve generated conflicts",
+                boolSource.contains("resolveGeneratedConflicts"));
+        assertTrue("Single-element lists must use Collections.singletonList",
+                cleanSource.contains("java.util.Collections.singletonList(\"a\")"));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

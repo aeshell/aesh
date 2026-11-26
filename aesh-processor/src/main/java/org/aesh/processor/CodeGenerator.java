@@ -164,12 +164,9 @@ final class CodeGenerator {
         }
 
         // Imports
-        sb.append("import java.util.Arrays;\n\n");
         sb.append("import org.aesh.command.Command;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedCommand;\n");
-        sb.append("import org.aesh.command.impl.internal.ProcessedCommandBuilder;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedOption;\n");
-        sb.append("import org.aesh.command.impl.internal.ProcessedOptionBuilder;\n");
         sb.append("import org.aesh.command.impl.internal.GeneratedOptionLookup;\n");
         sb.append("import org.aesh.command.impl.internal.IndexedFieldAccessor;\n");
         sb.append("import org.aesh.command.impl.internal.OptionType;\n");
@@ -213,14 +210,14 @@ final class CodeGenerator {
         body.append("    }\n\n");
 
         // groupCommandClasses()
-        body.append("    @Override\n");
-        body.append("    public Class<? extends Command>[] groupCommandClasses() {\n");
         if (isGroup) {
             generateGroupCommandClasses(body, commandElement, elementUtils);
         } else {
+            body.append("    @Override\n");
+            body.append("    public Class<? extends Command>[] groupCommandClasses() {\n");
             body.append("        return new Class[0];\n");
+            body.append("    }\n\n");
         }
-        body.append("    }\n\n");
 
         // commandName() — read name via annotation mirror to avoid MirroredTypesException
         // (which can occur when @CommandDefinition has Class[] attributes like groupCommands)
@@ -233,15 +230,17 @@ final class CodeGenerator {
         // commandAliases()
         String[] aliases = getAnnotationStringArrayValue(commandElement, "aliases", elementUtils);
         if (aliases != null && aliases.length > 0) {
-            body.append("    @Override\n");
-            body.append("    public String[] commandAliases() {\n");
-            body.append("        return new String[] {");
+            // Cached: registration reads aliases per lookup, callers never mutate (#791)
+            body.append("    private static final String[] COMMAND_ALIASES = new String[] {");
             for (int i = 0; i < aliases.length; i++) {
                 if (i > 0)
                     body.append(", ");
                 body.append(stringLiteral(aliases[i]));
             }
             body.append("};\n");
+            body.append("    @Override\n");
+            body.append("    public String[] commandAliases() {\n");
+            body.append("        return COMMAND_ALIASES;\n");
             body.append("    }\n\n");
         }
 
@@ -324,17 +323,26 @@ final class CodeGenerator {
         // because accessing it directly would trigger MirroredTypesException at compile time.
         List<String> groupClasses = getGroupCommandClassNames(commandElement, elementUtils);
         if (groupClasses.isEmpty()) {
+            sb.append("    @Override\n");
+            sb.append("    public Class<? extends Command>[] groupCommandClasses() {\n");
             sb.append("        return new Class[0];\n");
-        } else {
-            sb.append("        return new Class[] {\n");
-            for (int i = 0; i < groupClasses.size(); i++) {
-                sb.append("            ").append(groupClasses.get(i)).append(".class");
-                if (i < groupClasses.size() - 1)
-                    sb.append(",");
-                sb.append("\n");
-            }
-            sb.append("        };\n");
+            sb.append("    }\n\n");
+            return;
         }
+        // Cached: container builds read the group classes per execution fork,
+        // and callers only iterate (#791).
+        sb.append("    private static final Class[] GROUP_CLASSES = new Class[] {\n");
+        for (int i = 0; i < groupClasses.size(); i++) {
+            sb.append("        ").append(groupClasses.get(i)).append(".class");
+            if (i < groupClasses.size() - 1)
+                sb.append(",");
+            sb.append("\n");
+        }
+        sb.append("    };\n\n");
+        sb.append("    @Override\n");
+        sb.append("    public Class<? extends Command>[] groupCommandClasses() {\n");
+        sb.append("        return GROUP_CLASSES;\n");
+        sb.append("    }\n\n");
     }
 
     /**
@@ -349,9 +357,9 @@ final class CodeGenerator {
         if (groupClasses.isEmpty())
             return;
 
-        sb.append("    @Override\n");
-        sb.append("    public String[][] groupCommandNamesAndAliases() {\n");
-        sb.append("        return new String[][] {\n");
+        // Cached: the fast registration path reads this table on every
+        // container build (per execution fork), and callers only iterate (#791).
+        sb.append("    private static final String[][] GROUP_NAMES_AND_ALIASES = new String[][] {\n");
         for (int i = 0; i < groupClasses.size(); i++) {
             String childClassName = groupClasses.get(i);
             TypeElement childElement = elementUtils.getTypeElement(childClassName);
@@ -381,7 +389,10 @@ final class CodeGenerator {
                 sb.append(",");
             sb.append("\n");
         }
-        sb.append("        };\n");
+        sb.append("    };\n\n");
+        sb.append("    @Override\n");
+        sb.append("    public String[][] groupCommandNamesAndAliases() {\n");
+        sb.append("        return GROUP_NAMES_AND_ALIASES;\n");
         sb.append("    }\n\n");
     }
 
@@ -398,9 +409,9 @@ final class CodeGenerator {
         if (groupClasses.isEmpty())
             return;
 
-        sb.append("    @Override\n");
-        sb.append("    public String[][] groupCommandHelpEntries() {\n");
-        sb.append("        return new String[][] {\n");
+        // Cached: lazy help listings render from these literals and callers
+        // only iterate (#791).
+        sb.append("    private static final String[][] GROUP_HELP_ENTRIES = new String[][] {\n");
         for (int i = 0; i < groupClasses.size(); i++) {
             String childClassName = groupClasses.get(i);
             TypeElement childElement = elementUtils.getTypeElement(childClassName);
@@ -430,7 +441,10 @@ final class CodeGenerator {
                 sb.append(",");
             sb.append("\n");
         }
-        sb.append("        };\n");
+        sb.append("    };\n\n");
+        sb.append("    @Override\n");
+        sb.append("    public String[][] groupCommandHelpEntries() {\n");
+        sb.append("        return GROUP_HELP_ENTRIES;\n");
         sb.append("    }\n\n");
     }
 
@@ -546,9 +560,6 @@ final class CodeGenerator {
             List<FieldAccessorInfo> accessorInfos, List<FieldAccessorInfo> parentInfos,
             boolean forHelp, java.util.LinkedHashSet<String> sharedConverters) {
 
-        sb.append(
-                "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
-
         boolean generateHelp;
         String version;
         // Read all annotation values via annotation mirrors to avoid MirroredTypesException
@@ -559,61 +570,52 @@ final class CodeGenerator {
         if (version == null)
             version = "";
 
-        sb.append("                .name(").append(stringLiteral(
-                getAnnotationValue(commandElement, "name", elementUtils))).append(")\n");
-        generateCommandActivator(sb, commandElement, isGroup, elementUtils, forHelp);
-        String[] aliases = getAnnotationStringArrayValue(commandElement, "aliases", elementUtils);
-        sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(aliases)).append("))\n");
-        sb.append("                .description(").append(stringLiteral(
-                getAnnotationValue(commandElement, "description", elementUtils))).append(")\n");
-        generateCommandValidator(sb, commandElement, isGroup, elementUtils, forHelp);
-        if (forHelp)
-            sb.append("                .command((").append(simpleName).append(") null)\n");
-        else
-            sb.append("                .command(instance)\n");
-        generateResultHandler(sb, commandElement, isGroup, elementUtils, forHelp);
-        sb.append("                .generateHelp(false)\n");
+        // Direct construction: no builder, no EnumSet, no default-value setter
+        // churn, no double resolveHelpToggles (#791).
         boolean disableParsing = !isGroup && "true".equals(
                 getAnnotationValue(commandElement, "disableParsing", elementUtils));
-        sb.append("                .disableParsing(").append(disableParsing).append(")\n");
-        sb.append("                .stopAtFirstPositional(").append(
-                "true".equals(getAnnotationValue(commandElement, "stopAtFirstPositional", elementUtils)))
-                .append(")\n");
-        sb.append("                .sortOptions(").append(
-                "true".equals(getAnnotationValue(commandElement, "sortOptions", elementUtils)))
-                .append(")\n");
-        sb.append("                .collapseSynopsis(")
-                .append(toggleValue(getAnnotationValue(commandElement, "collapseSynopsis", elementUtils)))
-                .append(")\n");
-        sb.append("                .showDefaultValues(")
-                .append(toggleValue(getAnnotationValue(commandElement, "showDefaultValues", elementUtils)))
-                .append(")\n");
-        sb.append("                .defaultOptionsFirst(")
-                .append(toggleValue(getAnnotationValue(commandElement, "defaultOptionsFirst", elementUtils)))
-                .append(")\n");
-        sb.append("                .failOnDuplicateOptions(")
-                .append(toggleValue(getAnnotationValue(commandElement, "failOnDuplicateOptions", elementUtils)))
-                .append(")\n");
-        sb.append("                .argumentsSection(")
-                .append(argumentsSectionValue(getAnnotationValue(commandElement, "argumentsSection", elementUtils)))
-                .append(")\n");
-        sb.append("                .headerBeforeSynopsis(")
-                .append(toggleValue(getAnnotationValue(commandElement, "headerBeforeSynopsis", elementUtils)))
-                .append(")\n");
-        generateDefaultValueProvider(sb, commandElement, isGroup, elementUtils, forHelp);
-        sb.append("                .version(\"\")\n");
-        String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);
-        sb.append("                .helpUrl(").append(stringLiteral(helpUrl != null ? helpUrl : "")).append(")\n");
+        boolean stopAtFirstPositional = "true".equals(
+                getAnnotationValue(commandElement, "stopAtFirstPositional", elementUtils));
+        boolean sortOptions = "true".equals(
+                getAnnotationValue(commandElement, "sortOptions", elementUtils));
+        String validatorExpr = commandCallbackExpression(commandElement, "validator",
+                NULL_COMMAND_VALIDATOR, elementUtils, forHelp);
+        String resultHandlerExpr = commandCallbackExpression(commandElement, "resultHandler",
+                NULL_RESULT_HANDLER, elementUtils, forHelp);
 
         // Pre-count options so the ArrayList is pre-sized, avoiding resizing (#575)
         int optionCount = countOptions(fields, elementUtils, typeUtils);
         if (generateHelp)
             optionCount++;
-        if (version != null && !version.isEmpty())
+        if (!version.isEmpty())
             optionCount++;
-        sb.append("                .optionCapacity(").append(optionCount).append(")\n");
 
-        sb.append("                .create();\n\n");
+        sb.append("        ProcessedCommand processedCommand = ProcessedCommand.createDirect(\n");
+        sb.append("                ").append(stringLiteral(
+                getAnnotationValue(commandElement, "name", elementUtils))).append(",\n");
+        sb.append("                ").append(stringLiteral(
+                getAnnotationValue(commandElement, "description", elementUtils))).append(",\n");
+        sb.append("                ").append(forHelp ? "null" : "instance").append(",\n");
+        sb.append("                ").append(validatorExpr).append(", ").append(resultHandlerExpr).append(",\n");
+        sb.append("                ")
+                .append(disableParsing).append(", ").append(stopAtFirstPositional).append(", ")
+                .append(sortOptions).append(",\n");
+        sb.append("                ").append(optionCount).append(");\n\n");
+
+        // Non-default command attributes, set directly instead of builder-chained (#791)
+        emitCommandCallbackSetter(sb, "setActivator", commandElement, "activator",
+                NULL_COMMAND_ACTIVATOR, elementUtils, forHelp);
+        String[] aliases = getAnnotationStringArrayValue(commandElement, "aliases", elementUtils);
+        if (aliases != null && aliases.length > 0) {
+            sb.append("        processedCommand.setAliases(").append(listExpression(aliases)).append(");\n\n");
+        }
+        emitCommandCallbackSetter(sb, "setDefaultValueProvider", commandElement, "defaultValueProvider",
+                NULL_DEFAULT_VALUE_PROVIDER, elementUtils, forHelp);
+        String helpUrl = getAnnotationValue(commandElement, "helpUrl", elementUtils);
+        if (helpUrl != null && !helpUrl.isEmpty()) {
+            sb.append("        processedCommand.setHelpUrl(").append(stringLiteral(helpUrl)).append(");\n\n");
+        }
+        emitHelpToggleSources(sb, commandElement, elementUtils);
 
         // Resolve shared converters as method locals on the execution path
         // only (#675). Class-level statics would warm every converter type
@@ -737,58 +739,72 @@ final class CodeGenerator {
 
         // Generated options bypass addOption()'s per-add check, so yield them
         // to explicit user options in one pass with the same rule as the
-        // reflection path (#770).
-        sb.append("        processedCommand.resolveGeneratedConflicts();\n\n");
+        // reflection path (#770). Without generated help/version options
+        // there is nothing to yield (#791).
+        if (generateHelp || !version.isEmpty()) {
+            sb.append("        processedCommand.resolveGeneratedConflicts();\n\n");
+        }
 
         sb.append("        return processedCommand;\n");
     }
 
-    private static void generateCommandValidator(StringBuilder sb, TypeElement element, boolean isGroup,
-            Elements elementUtils, boolean forHelp) {
+    /**
+     * Expression for a command-level callback attribute: {@code new X()} when
+     * the annotation names a non-default class, else {@code null}. The help
+     * path never instantiates callbacks (#675).
+     */
+    private static String commandCallbackExpression(TypeElement element, String attributeName,
+            String nullSentinel, Elements elementUtils, boolean forHelp) {
         if (forHelp)
-            return;
-        String validatorClass = getAnnotationClassValue(element,
-                CommandDefinition.class.getCanonicalName(),
-                "validator", elementUtils);
-        if (validatorClass != null && !validatorClass.equals(NULL_COMMAND_VALIDATOR)) {
-            sb.append("                .validator(new ").append(validatorClass).append("())\n");
+            return "null";
+        String className = getAnnotationClassValue(element,
+                CommandDefinition.class.getCanonicalName(), attributeName, elementUtils);
+        if (className != null && !className.equals(nullSentinel))
+            return "new " + className + "()";
+        return "null";
+    }
+
+    /** Emit a command-level callback setter for a non-default value (#791). */
+    private static void emitCommandCallbackSetter(StringBuilder sb, String setterName,
+            TypeElement element, String attributeName, String nullSentinel, Elements elementUtils,
+            boolean forHelp) {
+        String expr = commandCallbackExpression(element, attributeName, nullSentinel, elementUtils, forHelp);
+        if (!"null".equals(expr)) {
+            sb.append("        processedCommand.").append(setterName).append("(").append(expr).append(");\n\n");
         }
     }
 
-    private static void generateResultHandler(StringBuilder sb, TypeElement element, boolean isGroup,
-            Elements elementUtils, boolean forHelp) {
-        if (forHelp)
-            return;
-        String handlerClass = getAnnotationClassValue(element,
-                CommandDefinition.class.getCanonicalName(),
-                "resultHandler", elementUtils);
-        if (handlerClass != null && !handlerClass.equals(NULL_RESULT_HANDLER)) {
-            sb.append("                .resultHandler(new ").append(handlerClass).append("())\n");
+    /**
+     * Emit help-toggle sources for explicitly-annotated values only, then one
+     * resolution pass so direct provider use sees resolved values. Fleet
+     * defaults and parent context are applied by the runtime entry points,
+     * which re-resolve idempotently (#791).
+     */
+    private static void emitHelpToggleSources(StringBuilder sb, TypeElement commandElement, Elements elementUtils) {
+        String[][] toggleSources = {
+                { "collapseSynopsis", "setCollapseSynopsisSource", "toggle" },
+                { "showDefaultValues", "setShowDefaultValuesSource", "toggle" },
+                { "defaultOptionsFirst", "setDefaultOptionsFirstSource", "toggle" },
+                { "failOnDuplicateOptions", "setFailOnDuplicateOptionsSource", "toggle" },
+                { "argumentsSection", "setArgumentsSectionSource", "section" },
+                { "headerBeforeSynopsis", "setHeaderBeforeSynopsisSource", "toggle" },
+        };
+        boolean anySet = false;
+        for (String[] source : toggleSources) {
+            String annotated = getAnnotationValue(commandElement, source[0], elementUtils);
+            String value = "section".equals(source[2])
+                    ? argumentsSectionValue(annotated)
+                    : toggleValue(annotated);
+            String defaultValue = "section".equals(source[2])
+                    ? "org.aesh.command.ArgumentsSection.INHERIT"
+                    : "org.aesh.command.Toggle.INHERIT";
+            if (!value.equals(defaultValue)) {
+                sb.append("        processedCommand.").append(source[1]).append("(").append(value).append(");\n");
+                anySet = true;
+            }
         }
-    }
-
-    private static void generateDefaultValueProvider(StringBuilder sb, TypeElement element, boolean isGroup,
-            Elements elementUtils, boolean forHelp) {
-        if (forHelp)
-            return;
-        String providerClass = getAnnotationClassValue(element,
-                CommandDefinition.class.getCanonicalName(),
-                "defaultValueProvider", elementUtils);
-        if (providerClass != null && !providerClass.equals(NULL_DEFAULT_VALUE_PROVIDER)) {
-            sb.append("                .defaultValueProvider(new ").append(providerClass).append("())\n");
-        }
-    }
-
-    private static void generateCommandActivator(StringBuilder sb, TypeElement element, boolean isGroup,
-            Elements elementUtils, boolean forHelp) {
-        if (forHelp)
-            return;
-        String activatorClass = getAnnotationClassValue(element,
-                CommandDefinition.class.getCanonicalName(),
-                "activator", elementUtils);
-        if (activatorClass != null && !activatorClass.equals(NULL_COMMAND_ACTIVATOR)) {
-            sb.append("                .activator(new ").append(activatorClass).append("())\n");
-        }
+        if (anySet)
+            sb.append("        processedCommand.resolveHelpToggles(null, null, null);\n\n");
     }
 
     private static void generateFieldProcessing(StringBuilder sb, String simpleName, VariableElement field,
@@ -936,8 +952,8 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setArgument(")
                     .append(stringLiteral(o.argument())).append(");\n");
         if (o.defaultValue().length > 0)
-            sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
-                    .append(stringArrayLiteral(o.defaultValue())).append("));\n");
+            sb.append("            ").append(var).append(".setDefaultValues(")
+                    .append(listExpression(o.defaultValue())).append(");\n");
         emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
@@ -1057,8 +1073,8 @@ final class CodeGenerator {
         if (ol.acceptNameWithoutDashes())
             sb.append("            ").append(var).append(".setAcceptNameWithoutDashes(true);\n");
         if (ol.defaultValue().length > 0)
-            sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
-                    .append(stringArrayLiteral(ol.defaultValue())).append("));\n");
+            sb.append("            ").append(var).append(".setDefaultValues(")
+                    .append(listExpression(ol.defaultValue())).append(");\n");
         emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
@@ -1149,8 +1165,8 @@ final class CodeGenerator {
         if (og.acceptNameWithoutDashes())
             sb.append("            ").append(var).append(".setAcceptNameWithoutDashes(true);\n");
         if (og.defaultValue().length > 0)
-            sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
-                    .append(stringArrayLiteral(og.defaultValue())).append("));\n");
+            sb.append("            ").append(var).append(".setDefaultValues(")
+                    .append(listExpression(og.defaultValue())).append(");\n");
         emitCompleterSetter(sb, var, field, "completer", elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setValidator", field, "validator", NULL_VALIDATOR, elementUtils, forHelp);
         emitCallbackSetter(sb, var, "setActivator", field, "activator", NULL_ACTIVATOR, elementUtils, forHelp);
@@ -1231,8 +1247,8 @@ final class CodeGenerator {
         if (a.askIfNotSet())
             sb.append("            ").append(var).append(".setAskIfNotSet(true);\n");
         if (a.defaultValue().length > 0)
-            sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
-                    .append(stringArrayLiteral(a.defaultValue())).append("));\n");
+            sb.append("            ").append(var).append(".setDefaultValues(")
+                    .append(listExpression(a.defaultValue())).append(");\n");
         if (!a.paramLabel().isEmpty())
             sb.append("            ").append(var).append(".setParamLabel(").append(stringLiteral(a.paramLabel()))
                     .append(");\n");
@@ -1297,8 +1313,8 @@ final class CodeGenerator {
             sb.append("            ").append(var).append(".setSelectorType(").append(selectorLiteral(arg.selector()))
                     .append(");\n");
         if (arg.defaultValue().length > 0)
-            sb.append("            ").append(var).append(".setDefaultValues(java.util.Arrays.asList(")
-                    .append(stringArrayLiteral(arg.defaultValue())).append("));\n");
+            sb.append("            ").append(var).append(".setDefaultValues(")
+                    .append(listExpression(arg.defaultValue())).append(");\n");
         if (!arg.paramLabel().isEmpty())
             sb.append("            ").append(var).append(".setParamLabel(").append(stringLiteral(arg.paramLabel()))
                     .append(");\n");
@@ -1617,8 +1633,8 @@ final class CodeGenerator {
 
     private static void emitAliasesSetter(StringBuilder sb, String var, String[] aliases) {
         if (aliases != null && aliases.length > 0) {
-            sb.append("            ").append(var).append(".setAliases(java.util.Arrays.asList(")
-                    .append(stringArrayLiteral(aliases)).append("));\n");
+            sb.append("            ").append(var).append(".setAliases(")
+                    .append(listExpression(aliases)).append(");\n");
         }
     }
 
@@ -1630,15 +1646,15 @@ final class CodeGenerator {
 
     private static void emitExclusiveWithSetter(StringBuilder sb, String var, String[] exclusiveWith) {
         if (exclusiveWith != null && exclusiveWith.length > 0) {
-            sb.append("            ").append(var).append(".setExclusiveWith(java.util.Arrays.asList(")
-                    .append(stringArrayLiteral(exclusiveWith)).append("));\n");
+            sb.append("            ").append(var).append(".setExclusiveWith(")
+                    .append(listExpression(exclusiveWith)).append(");\n");
         }
     }
 
     private static void emitAllowedValuesSetter(StringBuilder sb, String var, String[] allowedValues) {
         if (allowedValues != null && allowedValues.length > 0) {
-            sb.append("            ").append(var).append(".setAllowedValues(java.util.Arrays.asList(")
-                    .append(stringArrayLiteral(allowedValues)).append("));\n");
+            sb.append("            ").append(var).append(".setAllowedValues(")
+                    .append(listExpression(allowedValues)).append(");\n");
         }
     }
 
@@ -2358,6 +2374,16 @@ final class CodeGenerator {
         return sb.toString();
     }
 
+    /**
+     * List literal for static option metadata: singleton lists avoid the
+     * backing array of single-element {@code Arrays.asList} (#791).
+     */
+    private static String listExpression(String[] values) {
+        if (values != null && values.length == 1)
+            return "java.util.Collections.singletonList(" + stringLiteral(values[0]) + ")";
+        return "java.util.Arrays.asList(" + stringArrayLiteral(values) + ")";
+    }
+
     private static String stringArrayLiteralAsNew(String[] values) {
         if (values == null || values.length == 0) {
             return "new String[0]";
@@ -2490,12 +2516,10 @@ final class CodeGenerator {
             sb.append("package ").append(packageName).append(";\n\n");
         }
 
-        sb.append("import java.util.Arrays;\n\n");
         sb.append("import org.aesh.command.Command;\n");
         sb.append("import org.aesh.command.CommandException;\n");
         sb.append("import org.aesh.command.CommandResult;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedCommand;\n");
-        sb.append("import org.aesh.command.impl.internal.ProcessedCommandBuilder;\n");
         sb.append("import org.aesh.command.impl.internal.ProcessedOption;\n");
         sb.append("import org.aesh.command.impl.internal.IndexedFieldAccessor;\n");
         sb.append("import org.aesh.command.impl.internal.OptionType;\n");
@@ -2527,9 +2551,12 @@ final class CodeGenerator {
         body.append("    }\n\n");
 
         if (aliases.length > 0) {
+            // Cached: registration reads aliases per lookup, callers never mutate (#791)
+            body.append("    private static final String[] COMMAND_ALIASES = new String[] {")
+                    .append(stringArrayLiteral(aliases)).append("};\n");
             body.append("    @Override\n");
             body.append("    public String[] commandAliases() {\n");
-            body.append("        return new String[] {").append(stringArrayLiteral(aliases)).append("};\n");
+            body.append("        return COMMAND_ALIASES;\n");
             body.append("    }\n\n");
         }
 
@@ -2580,22 +2607,21 @@ final class CodeGenerator {
             Elements elementUtils, Types typeUtils,
             List<FieldAccessorInfo> accessorInfos, boolean forHelp,
             java.util.LinkedHashSet<String> sharedConverters) {
-        sb.append(
-                "        ProcessedCommand processedCommand = ((ProcessedCommandBuilder) ProcessedCommandBuilder.builder())\n");
-        sb.append("                .name(").append(stringLiteral(cliName)).append(")\n");
-        sb.append("                .aliases(Arrays.asList(").append(stringArrayLiteral(aliases)).append("))\n");
-        sb.append("                .description(").append(stringLiteral(description)).append(")\n");
-        if (forHelp)
-            sb.append("                .command((Adapter) null)\n");
-        else
-            sb.append("                .command(new Adapter((").append(ownerTypeRef).append(") owner))\n");
         int optionCount = 0;
         for (VariableElement param : params) {
             if (param.getAnnotation(Option.class) != null)
                 optionCount++;
         }
-        sb.append("                .optionCapacity(").append(optionCount).append(")\n");
-        sb.append("                .create();\n\n");
+        sb.append("        ProcessedCommand processedCommand = ProcessedCommand.createDirect(\n");
+        sb.append("                ").append(stringLiteral(cliName)).append(",\n");
+        sb.append("                ").append(stringLiteral(description)).append(",\n");
+        sb.append("                ").append(forHelp ? "null" : "new Adapter((" + ownerTypeRef + ") owner)")
+                .append(",\n");
+        sb.append("                null, null, false, false, false,\n");
+        sb.append("                ").append(optionCount).append(");\n\n");
+        if (aliases.length > 0) {
+            sb.append("        processedCommand.setAliases(").append(listExpression(aliases)).append(");\n\n");
+        }
 
         if (!forHelp) {
             for (String type : sharedConverters) {

@@ -218,6 +218,62 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private Map<String, ProcessedOption> bareNameMap;
     private GeneratedOptionLookup generatedOptionLookup;
 
+    /**
+     * Direct factory for generated (annotation-processor) code, mirroring
+     * {@link ProcessedOption#createDirect}. Bypasses
+     * {@link ProcessedCommandBuilder} and its intermediate allocations
+     * (builder object, options list, EnumSet, aliases wrapper): options are
+     * added afterwards via {@code addOptionDirect}, and command attributes
+     * that match the defaults are simply never set (#791).
+     * <p>
+     * Help toggles are left unresolved: every runtime entry point
+     * ({@code buildFromProvider}, {@code containerFromMethodProvider},
+     * {@code LazyHelp}) resolves them with the fleet defaults, and the
+     * generated code resolves explicitly-annotated sources itself.
+     * <p>
+     * Raw-typed like the rest of the generated-code surface so call sites
+     * never fight type inference.
+     *
+     * @param optionCapacity the exact number of options the generated code
+     *        will add, pre-sizing the options list, or a non-positive value
+     *        for the default sizing
+     */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static ProcessedCommand createDirect(
+            String name, String description, Command command,
+            CommandValidator validator, ResultHandler resultHandler,
+            boolean disableParsing, boolean stopAtFirstPositional, boolean sortOptions,
+            int optionCapacity) {
+        return new ProcessedCommand(name, description, command, validator, resultHandler,
+                disableParsing, stopAtFirstPositional, sortOptions, optionCapacity);
+    }
+
+    /** Constructor behind {@link #createDirect}: immutable defaults only, no validation. */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private ProcessedCommand(String name, String description, Command command,
+            CommandValidator validator, ResultHandler resultHandler,
+            boolean disableParsing, boolean stopAtFirstPositional, boolean sortOptions,
+            int optionCapacity) {
+        this.name = name;
+        this.description = description;
+        this.aliases = Collections.emptyList();
+        this.validator = validator;
+        this.resultHandler = resultHandler;
+        this.disableParsing = disableParsing;
+        this.stopAtFirstPositional = stopAtFirstPositional;
+        this.sortOptions = sortOptions;
+        this.helpUrl = "";
+        this.arguments = null;
+        this.argument = null;
+        this.argumentOptions = new ArrayList<>(1);
+        this.options = optionCapacity > 0 ? new ArrayList<>(optionCapacity) : new ArrayList<>();
+        this.optionDeclarationCounter = 0;
+        this.command = (C) command;
+        this.activator = null;
+        this.populator = new AeshCommandPopulator<>(this.command);
+        this.parserExceptions = Collections.emptyList();
+    }
+
     public ProcessedCommand(String name, List<String> aliases, C command,
             String description, CommandValidator<C, CI> validator,
             ResultHandler resultHandler,
@@ -375,6 +431,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public CommandActivator getActivator() {
         return activator;
+    }
+
+    /**
+     * Set the command activator. Used by generated (annotation-processor)
+     * code for non-default {@code @CommandDefinition(activator = ...)}
+     * values (#791).
+     */
+    public void setActivator(CommandActivator activator) {
+        this.activator = activator;
     }
 
     public boolean isActivated(ParsedCommand parsedCommand) {
@@ -758,6 +823,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     public String helpUrl() {
         return helpUrl;
+    }
+
+    /**
+     * Set the documentation URL. Used by generated (annotation-processor)
+     * code for non-default {@code @CommandDefinition(helpUrl = ...)} values
+     * (#791).
+     */
+    public void setHelpUrl(String helpUrl) {
+        this.helpUrl = helpUrl != null ? helpUrl : "";
     }
 
     public String helpGroup() {
