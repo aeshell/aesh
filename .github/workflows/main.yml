@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: aeshell/aesh-readline
-          ref: a354076d
+          ref: a354076d43e38320d17a41354764db847ee85661
           path: aesh-readline
       - name: Set up JDK 17
         uses: actions/setup-java@v6
@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: aeshell/aesh-readline
-          ref: a354076d
+          ref: a354076d43e38320d17a41354764db847ee85661
           path: aesh-readline
       - name: Set up JDK 17
         uses: actions/setup-java@v6
@@ -75,7 +75,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: aeshell/aesh-readline
-          ref: a354076d
+          ref: a354076d43e38320d17a41354764db847ee85661
           path: aesh-readline
       - name: Set up JDK 17
         uses: actions/setup-java@v6
@@ -112,7 +112,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: aeshell/aesh-readline
-          ref: a354076d
+          ref: a354076d43e38320d17a41354764db847ee85661
           path: aesh-readline
       - name: Set up GraalVM
         uses: graalvm/setup-graalvm@v1
