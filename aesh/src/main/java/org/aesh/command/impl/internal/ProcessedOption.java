@@ -2104,7 +2104,7 @@ public class ProcessedOption {
                 indent++;
             String lead = line.substring(0, indent);
             StringBuilder current = new StringBuilder(lead);
-            for (String word : line.substring(indent).split(" +")) {
+            for (String word : splitOnSpaceRuns(line.substring(indent))) {
                 if (current.length() > indent && current.length() + 1 + word.length() > width) {
                     lines.add(current.toString());
                     current.setLength(0);
@@ -2117,6 +2117,67 @@ public class ProcessedOption {
             lines.add(current.toString());
         }
         return lines;
+    }
+
+    /**
+     * Split on runs of spaces, mirroring {@code split(" +")} with the default
+     * limit: only U+0020 separates, runs collapse, a leading empty word is
+     * kept, all trailing empty words are dropped (so an all-spaces input
+     * yields no words), and the empty string yields one empty word. A plain
+     * scanner because the first {@code Pattern} use in a JVM drags in the
+     * regex engine plus its internal lambdas, the LambdaMetafactory
+     * bootstrap and the Class-File API — ~125 classes on the
+     * {@code --help} path (#801).
+     */
+    static List<String> splitOnSpaceRuns(String text) {
+        List<String> words = new ArrayList<>();
+        int n = text.length();
+        int start = 0;
+        int i = 0;
+        while (i < n) {
+            if (text.charAt(i) == ' ') {
+                words.add(text.substring(start, i));
+                while (i < n && text.charAt(i) == ' ')
+                    i++;
+                start = i;
+            } else {
+                i++;
+            }
+        }
+        words.add(text.substring(start));
+        // Mirror split's limit-0 rule: drop every trailing empty word.
+        while (!words.isEmpty() && words.get(words.size() - 1).isEmpty())
+            words.remove(words.size() - 1);
+        if (words.isEmpty() && n == 0)
+            words.add(""); // split of the empty string yields one empty word
+        return words;
+    }
+
+    /**
+     * Number of characters outside complete ANSI SGR sequences
+     * ({@code ESC [ ;digits* m}), exactly what
+     * {@code replaceAll("\u001B\\[[;\\d]*m", "").length()} returns — including
+     * the edge cases: an unterminated {@code ESC[} has no match, so all its
+     * characters count. A plain scanner so help rendering compiles no
+     * {@code Pattern} (#801).
+     */
+    static int visualLength(String text) {
+        int length = 0;
+        int n = text.length();
+        for (int i = 0; i < n; i++) {
+            char c = text.charAt(i);
+            if (c == '\u001B' && i + 1 < n && text.charAt(i + 1) == '[') {
+                int j = i + 2;
+                while (j < n && (text.charAt(j) == ';' || (text.charAt(j) >= '0' && text.charAt(j) <= '9')))
+                    j++;
+                if (j < n && text.charAt(j) == 'm') {
+                    i = j; // skip the whole SGR sequence, including the 'm'
+                    continue;
+                }
+            }
+            length++;
+        }
+        return length;
     }
 
     /**

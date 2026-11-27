@@ -2269,10 +2269,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      */
     private static String wrapSynopsis(String prefix, String options, int width) {
         // Calculate visual length excluding ANSI escape sequences
-        int visualPrefixLen = prefix.replaceAll("\u001B\\[[;\\d]*m", "").length();
+        int visualPrefixLen = ProcessedOption.visualLength(prefix);
         String full = prefix + options;
-        String visualFull = full.replaceAll("\u001B\\[[;\\d]*m", "");
-        if (visualFull.length() <= width)
+        if (ProcessedOption.visualLength(full) <= width)
             return full;
 
         int indent = visualPrefixLen + 1;
@@ -2286,9 +2285,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         String trimmed = options;
         while (trimmed.startsWith(" "))
             trimmed = trimmed.substring(1);
-        String[] tokens = trimmed.split(" +");
-        for (String token : tokens) {
-            int visualTokenLen = token.replaceAll("\u001B\\[[;\\d]*m", "").length();
+        for (String token : ProcessedOption.splitOnSpaceRuns(trimmed)) {
+            int visualTokenLen = ProcessedOption.visualLength(token);
             if (currentLineLen + 1 + visualTokenLen > width && currentLineLen > indent) {
                 result.append(Config.getLineSeparator()).append(pad);
                 currentLineLen = indent;
