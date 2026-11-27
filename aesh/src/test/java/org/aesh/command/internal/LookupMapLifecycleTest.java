@@ -97,9 +97,19 @@ public class LookupMapLifecycleTest {
         }
     }
 
+    /**
+     * Reads one of the four lookup maps through the lazy extras holder
+     * (#800): null holder means no map was built yet, which is exactly the
+     * not-built state these lifecycle tests assert.
+     */
     static Object mapField(ProcessedCommand<?, ?> command, String name) throws Exception {
-        Field field = ProcessedCommand.class.getDeclaredField(name);
+        Field extrasField = ProcessedCommand.class.getDeclaredField("extras");
+        extrasField.setAccessible(true);
+        Object extras = extrasField.get(command);
+        if (extras == null)
+            return null;
+        Field field = extras.getClass().getDeclaredField(name);
         field.setAccessible(true);
-        return field.get(command);
+        return field.get(extras);
     }
 }

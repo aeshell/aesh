@@ -190,45 +190,197 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
 
     private String name;
     private final String description;
-    private final CommandValidator<C, CI> validator;
-    private final ResultHandler resultHandler;
     /**
      * Populates the command's fields after parsing; null until first use
      * (help builds and ghost parsers never populate) — see
      * {@link #getCommandPopulator()} (#796).
      */
     private CommandPopulator<Object, CI> populator;
-    private final boolean disableParsing;
-    private final boolean stopAtFirstPositional;
-    private final boolean sortOptions;
+
     /**
-     * The annotated toggles, kept so inheritance and fleet defaults can be
-     * resolved when the parent is known (at attach time). The plain boolean
-     * fields below always hold the resolved value.
+     * Bit-packed command state (#800): 12 single-bit flags plus eight 2-bit
+     * enum slots, replacing the 12 booleans, 6 toggle sources, 2 arguments
+     * sections and the completion fallback this class carried as separate
+     * fields. Layout (bit numbers inclusive):
+     *
+     * <pre>
+     *   0  disableParsing           1  stopAtFirstPositional
+     *   2  sortOptions              3  generateHelp
+     *   4  hasInheritedOptions      5  dirty
+     *   6  unselectedResetPending   7  collapseSynopsis (resolved)
+     *   8  failOnDuplicateOptions (resolved)
+     *   9  headerBeforeSynopsis (resolved)
+     *   10 showDefaultValues (resolved)
+     *   11 defaultOptionsFirst (resolved)
+     *   12-13 collapseSynopsisSource      14-15 defaultOptionsFirstSource
+     *   16-17 showDefaultValuesSource     18-19 failOnDuplicateOptionsSource
+     *   20-21 headerBeforeSynopsisSource  22-23 argumentsSectionSource
+     *   24-25 argumentsSection (resolved) 26-27 completeFallback
+     * </pre>
+     *
+     * Enum slots use explicit {@code ==} encodings (never {@code values()}
+     * indexing or enum switches, which would spin a $SwitchMap class and
+     * clone the constants; reordering the enums cannot silently corrupt
+     * state): Toggle INHERIT=0, ON=1, OFF=2; ArgumentsSection INHERIT=0,
+     * OFF=1, FIRST=2, LAST=3; CompletionFallback DEFAULT=0, FILES=1,
+     * DIRECTORIES=2, NONE=3. The only non-zero default is
+     * {@code argumentsSection = OFF}.
      */
-    private Toggle collapseSynopsisSource = Toggle.INHERIT;
-    private Toggle defaultOptionsFirstSource = Toggle.INHERIT;
-    private Toggle showDefaultValuesSource = Toggle.INHERIT;
-    private Toggle failOnDuplicateOptionsSource = Toggle.INHERIT;
-    private ArgumentsSection argumentsSectionSource = ArgumentsSection.INHERIT;
-    private Toggle headerBeforeSynopsisSource = Toggle.INHERIT;
-    private boolean collapseSynopsis;
-    private boolean failOnDuplicateOptions;
-    private ArgumentsSection argumentsSection = ArgumentsSection.OFF;
-    private boolean headerBeforeSynopsis;
-    private CompletionFallback completeFallback = CompletionFallback.DEFAULT;
-    private DefaultValueProvider defaultValueProvider;
-    private CommandActivator activator;
-    private boolean generateHelp;
-    private String version;
-    private String helpUrl;
-    private String helpGroup = "";
-    private boolean showDefaultValues;
-    private boolean defaultOptionsFirst;
-    private String helpHeader;
-    private String helpFooter;
-    private Class<? extends HelpSectionProvider> helpSectionProviderClass;
-    private HelpSectionProvider helpSectionProvider;
+    private int flags = SECTION_OFF << ARGUMENTS_SECTION_SHIFT;
+
+    private static final int F_DISABLE_PARSING = 1 << 0;
+    private static final int F_STOP_AT_FIRST_POSITIONAL = 1 << 1;
+    private static final int F_SORT_OPTIONS = 1 << 2;
+    private static final int F_GENERATE_HELP = 1 << 3;
+    private static final int F_HAS_INHERITED_OPTIONS = 1 << 4;
+    private static final int F_DIRTY = 1 << 5;
+    private static final int F_UNSELECTED_RESET_PENDING = 1 << 6;
+    private static final int F_COLLAPSE_SYNOPSIS = 1 << 7;
+    private static final int F_FAIL_ON_DUPLICATE_OPTIONS = 1 << 8;
+    private static final int F_HEADER_BEFORE_SYNOPSIS = 1 << 9;
+    private static final int F_SHOW_DEFAULT_VALUES = 1 << 10;
+    private static final int F_DEFAULT_OPTIONS_FIRST = 1 << 11;
+    private static final int COLLAPSE_SYNOPSIS_SOURCE_SHIFT = 12;
+    private static final int DEFAULT_OPTIONS_FIRST_SOURCE_SHIFT = 14;
+    private static final int SHOW_DEFAULT_VALUES_SOURCE_SHIFT = 16;
+    private static final int FAIL_ON_DUPLICATE_SOURCE_SHIFT = 18;
+    private static final int HEADER_BEFORE_SYNOPSIS_SOURCE_SHIFT = 20;
+    private static final int ARGUMENTS_SECTION_SOURCE_SHIFT = 22;
+    private static final int ARGUMENTS_SECTION_SHIFT = 24;
+    private static final int COMPLETE_FALLBACK_SHIFT = 26;
+
+    /** Explicit encodings for the 2-bit enum slots. */
+    private static final int TOGGLE_INHERIT = 0;
+    private static final int TOGGLE_ON = 1;
+    private static final int TOGGLE_OFF = 2;
+    private static final int SECTION_INHERIT = 0;
+    private static final int SECTION_OFF = 1;
+    private static final int SECTION_FIRST = 2;
+    private static final int SECTION_LAST = 3;
+    private static final int FALLBACK_DEFAULT = 0;
+    private static final int FALLBACK_FILES = 1;
+    private static final int FALLBACK_DIRECTORIES = 2;
+    private static final int FALLBACK_NONE = 3;
+
+    private boolean flag(int bit) {
+        return (flags & bit) != 0;
+    }
+
+    private void flag(int bit, boolean value) {
+        if (value)
+            flags |= bit;
+        else
+            flags &= ~bit;
+    }
+
+    private int slot(int shift) {
+        return (flags >>> shift) & 3;
+    }
+
+    private void slot(int shift, int code) {
+        flags = (flags & ~(3 << shift)) | (code << shift);
+    }
+
+    private static int packToggle(Toggle toggle) {
+        if (toggle == Toggle.ON)
+            return TOGGLE_ON;
+        if (toggle == Toggle.OFF)
+            return TOGGLE_OFF;
+        return TOGGLE_INHERIT; // INHERIT and null
+    }
+
+    private static Toggle unpackToggle(int code) {
+        switch (code) {
+            case TOGGLE_ON:
+                return Toggle.ON;
+            case TOGGLE_OFF:
+                return Toggle.OFF;
+            default:
+                return Toggle.INHERIT;
+        }
+    }
+
+    private static int packSection(ArgumentsSection section) {
+        if (section == ArgumentsSection.FIRST)
+            return SECTION_FIRST;
+        if (section == ArgumentsSection.LAST)
+            return SECTION_LAST;
+        if (section == ArgumentsSection.OFF)
+            return SECTION_OFF;
+        return SECTION_INHERIT; // INHERIT and null
+    }
+
+    private static ArgumentsSection unpackSection(int code) {
+        if (code == SECTION_FIRST)
+            return ArgumentsSection.FIRST;
+        if (code == SECTION_LAST)
+            return ArgumentsSection.LAST;
+        if (code == SECTION_INHERIT)
+            return ArgumentsSection.INHERIT;
+        return ArgumentsSection.OFF;
+    }
+
+    private static int packFallback(CompletionFallback fallback) {
+        if (fallback == CompletionFallback.FILES)
+            return FALLBACK_FILES;
+        if (fallback == CompletionFallback.DIRECTORIES)
+            return FALLBACK_DIRECTORIES;
+        if (fallback == CompletionFallback.NONE)
+            return FALLBACK_NONE;
+        return FALLBACK_DEFAULT; // DEFAULT and null
+    }
+
+    private static CompletionFallback unpackFallback(int code) {
+        if (code == FALLBACK_FILES)
+            return CompletionFallback.FILES;
+        if (code == FALLBACK_DIRECTORIES)
+            return CompletionFallback.DIRECTORIES;
+        if (code == FALLBACK_NONE)
+            return CompletionFallback.NONE;
+        return CompletionFallback.DEFAULT;
+    }
+
+    /**
+     * Lazily allocated holder for command attributes and lookup state most
+     * commands never use: validator, result handler, activator,
+     * default-value provider, version/help strings and the reflection-path
+     * lookup maps. Null until one of them is set, so the generated path —
+     * where every one of them stays at its default — carries a single null
+     * reference instead of sixteen always-present fields (#800). Getter
+     * defaults (null, {@code ""} for helpGroup) live in the accessors, so a
+     * null holder and a holder with null fields mean the same thing.
+     */
+    private CommandExtras<C, CI> extras;
+
+    static final class CommandExtras<C extends Command<CI>, CI extends CommandInvocation> {
+        CommandValidator<C, CI> validator;
+        ResultHandler resultHandler;
+        CommandActivator activator;
+        DefaultValueProvider defaultValueProvider;
+        String version;
+        String helpUrl;
+        String helpGroup;
+        String helpHeader;
+        String helpFooter;
+        Class<? extends HelpSectionProvider> helpSectionProviderClass;
+        HelpSectionProvider helpSectionProvider;
+        // Lazy-built lookup maps for O(1) option search (built on first
+        // lookup, invalidated on add); reflection path only — the generated
+        // path uses generatedOptionLookup
+        Map<String, ProcessedOption> longNameMap;
+        Map<String, ProcessedOption> shortNameMap;
+        Map<String, ProcessedOption> negatedNameMap;
+        Map<String, ProcessedOption> bareNameMap;
+    }
+
+    private CommandExtras<C, CI> extras() {
+        CommandExtras<C, CI> e = extras;
+        if (e == null) {
+            e = new CommandExtras<>();
+            extras = e;
+        }
+        return e;
+    }
 
     private List<ProcessedOption> options;
     /** Direct references to generated options, avoiding a full scan per add (#770). */
@@ -249,16 +401,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     private ParentCommandInjector parentCommandInjector;
     private int optionDeclarationCounter;
     private List<ProcessedOption> cachedPositionalOrder;
-    private boolean hasInheritedOptions;
-    private boolean dirty;
-    private boolean unselectedResetPending;
     private ParsedCommand cachedParsedCommand;
-
-    // Lazy-built lookup maps for O(1) option search (built on first lookup, invalidated on add)
-    private Map<String, ProcessedOption> longNameMap;
-    private Map<String, ProcessedOption> shortNameMap;
-    private Map<String, ProcessedOption> negatedNameMap;
-    private Map<String, ProcessedOption> bareNameMap;
     private GeneratedOptionLookup generatedOptionLookup;
 
     /**
@@ -300,20 +443,21 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.name = name;
         this.description = description;
         this.aliases = Collections.emptyList();
-        this.validator = validator;
-        this.resultHandler = resultHandler;
-        this.disableParsing = disableParsing;
-        this.stopAtFirstPositional = stopAtFirstPositional;
-        this.sortOptions = sortOptions;
-        this.helpUrl = "";
+        flag(F_DISABLE_PARSING, disableParsing);
+        flag(F_STOP_AT_FIRST_POSITIONAL, stopAtFirstPositional);
+        flag(F_SORT_OPTIONS, sortOptions);
+        if (validator != null || resultHandler != null) {
+            CommandExtras<C, CI> e = extras();
+            e.validator = validator;
+            e.resultHandler = resultHandler;
+        }
         this.arguments = null;
         this.argument = null;
         this.options = optionCapacity > 0 ? new ArrayList<>(optionCapacity) : new ArrayList<>();
         this.optionDeclarationCounter = 0;
         this.command = (C) command;
-        this.activator = null;
-        // Populator and argument list materialize lazily: help builds and
-        // ghost parsers never parse or populate (#796)
+        // Populator, argument list and command extras materialize lazily:
+        // help builds and ghost parsers never parse or populate (#796, #800)
         this.parserExceptions = Collections.emptyList();
     }
 
@@ -403,22 +547,25 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         this.name = name;
         this.description = description;
         this.aliases = aliases == null ? Collections.emptyList() : aliases;
-        this.validator = validator;
-        this.generateHelp = generateHelp;
-        this.disableParsing = disableParsing;
-        this.stopAtFirstPositional = stopAtFirstPositional;
-        this.sortOptions = sortOptions;
-        this.collapseSynopsisSource = collapseSynopsis != null ? collapseSynopsis : Toggle.INHERIT;
-        this.defaultOptionsFirstSource = defaultOptionsFirst != null ? defaultOptionsFirst : Toggle.INHERIT;
-        this.showDefaultValuesSource = showDefaultValues != null ? showDefaultValues : Toggle.INHERIT;
-        this.failOnDuplicateOptionsSource = failOnDuplicateOptions != null ? failOnDuplicateOptions
-                : Toggle.INHERIT;
-        this.argumentsSectionSource = argumentsSection != null ? argumentsSection : ArgumentsSection.INHERIT;
-        this.headerBeforeSynopsisSource = headerBeforeSynopsis != null ? headerBeforeSynopsis
-                : Toggle.INHERIT;
-        this.defaultValueProvider = defaultValueProvider;
-        this.helpUrl = helpUrl;
-        this.resultHandler = resultHandler;
+        flag(F_GENERATE_HELP, generateHelp);
+        flag(F_DISABLE_PARSING, disableParsing);
+        flag(F_STOP_AT_FIRST_POSITIONAL, stopAtFirstPositional);
+        flag(F_SORT_OPTIONS, sortOptions);
+        // The annotated toggle sources, kept so inheritance and fleet
+        // defaults can be resolved when the parent is known (at attach
+        // time). The resolved booleans always hold the resolved value.
+        slot(COLLAPSE_SYNOPSIS_SOURCE_SHIFT, packToggle(collapseSynopsis));
+        slot(DEFAULT_OPTIONS_FIRST_SOURCE_SHIFT, packToggle(defaultOptionsFirst));
+        slot(SHOW_DEFAULT_VALUES_SOURCE_SHIFT, packToggle(showDefaultValues));
+        slot(FAIL_ON_DUPLICATE_SOURCE_SHIFT, packToggle(failOnDuplicateOptions));
+        slot(ARGUMENTS_SECTION_SOURCE_SHIFT, packSection(argumentsSection));
+        slot(HEADER_BEFORE_SYNOPSIS_SOURCE_SHIFT, packToggle(headerBeforeSynopsis));
+        if (defaultValueProvider != null)
+            extras().defaultValueProvider = defaultValueProvider;
+        if (helpUrl != null)
+            extras().helpUrl = helpUrl;
+        if (resultHandler != null)
+            extras().resultHandler = resultHandler;
         this.arguments = arguments;
         this.argument = argument;
         if (argument != null) {
@@ -429,7 +576,10 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 options.size() + (generateHelp ? 1 : 0) + (version != null && version.length() > 0 ? 1 : 0));
         this.optionDeclarationCounter = 0;
         this.command = command;
-        this.activator = activator;
+        if (validator != null)
+            extras().validator = validator;
+        if (activator != null)
+            extras().activator = activator;
         // Null populator materializes lazily in getCommandPopulator() (#796)
         this.populator = populator;
         setOptions(options);
@@ -438,7 +588,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             doGenerateHelp();
 
         if (version != null && version.length() > 0) {
-            this.version = version;
+            extras().version = version;
             doGenerateVersion();
         }
 
@@ -472,19 +622,24 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public CommandActivator getActivator() {
-        return activator;
+        return extras != null ? extras.activator : null;
     }
 
     /**
      * Set the command activator. Used by generated (annotation-processor)
      * code for non-default {@code @CommandDefinition(activator = ...)}
-     * values (#791).
+     * values (#791). Null is skipped: every caller passes either a real
+     * activator or nothing, and a null write would allocate the extras
+     * holder just to store null.
      */
     public void setActivator(CommandActivator activator) {
-        this.activator = activator;
+        if (activator == null)
+            return;
+        extras().activator = activator;
     }
 
     public boolean isActivated(ParsedCommand parsedCommand) {
+        CommandActivator activator = extras != null ? extras.activator : null;
         return activator == null || activator.isActivated(parsedCommand);
     }
 
@@ -519,9 +674,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         opt.setParent(this);
         trackGeneratedOption(opt);
         if (opt.isInherited())
-            this.hasInheritedOptions = true;
-        if (longNameMap != null || generatedOptionLookup != null)
-            invalidateLookupMaps();
+            flag(F_HAS_INHERITED_OPTIONS, true);
+        invalidateLookupMaps();
         if (command != null)
             opt.captureInitialValue(command);
     }
@@ -541,7 +695,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         boolean changed = yieldGeneratedOption(opt, generatedHelpOption);
         if (yieldGeneratedOption(opt, generatedVersionOption))
             changed = true;
-        if (changed && (longNameMap != null || generatedOptionLookup != null))
+        if (changed)
             invalidateLookupMaps();
     }
 
@@ -633,16 +787,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         opt.setParent(this);
         trackGeneratedOption(opt);
         if (opt.isInherited())
-            this.hasInheritedOptions = true;
-        if (longNameMap != null || generatedOptionLookup != null)
-            invalidateLookupMaps();
+            flag(F_HAS_INHERITED_OPTIONS, true);
+        invalidateLookupMaps();
         if (command != null)
             opt.captureInitialValue(command);
     }
 
     public List<ProcessedOption> getDisplayOptions() {
         List<ProcessedOption> display = new ArrayList<>(getOptions());
-        display.sort(sortOptions ? SORT_BY_ORDER_NAME : SORT_BY_ORDER_ONLY);
+        display.sort(flag(F_SORT_OPTIONS) ? SORT_BY_ORDER_NAME : SORT_BY_ORDER_ONLY);
         return display;
     }
 
@@ -692,11 +845,11 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public CommandValidator<C, CI> validator() {
-        return validator;
+        return extras != null ? extras.validator : null;
     }
 
     public ResultHandler resultHandler() {
-        return resultHandler;
+        return extras != null ? extras.resultHandler : null;
     }
 
     public boolean hasArguments() {
@@ -757,7 +910,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public boolean generateHelp() {
-        return generateHelp;
+        return flag(F_GENERATE_HELP);
     }
 
     /**
@@ -765,39 +918,39 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * to restore the flag after the processor handles help option creation directly.
      */
     public void setGenerateHelp(boolean generateHelp) {
-        this.generateHelp = generateHelp;
+        flag(F_GENERATE_HELP, generateHelp);
     }
 
     public boolean disableParsing() {
-        return disableParsing;
+        return flag(F_DISABLE_PARSING);
     }
 
     public boolean stopAtFirstPositional() {
-        return stopAtFirstPositional;
+        return flag(F_STOP_AT_FIRST_POSITIONAL);
     }
 
     public boolean sortOptions() {
-        return sortOptions;
+        return flag(F_SORT_OPTIONS);
     }
 
     public boolean failOnDuplicateOptions() {
-        return failOnDuplicateOptions;
+        return flag(F_FAIL_ON_DUPLICATE_OPTIONS);
     }
 
     public boolean collapseSynopsis() {
-        return collapseSynopsis;
+        return flag(F_COLLAPSE_SYNOPSIS);
     }
 
     public CompletionFallback getCompleteFallback() {
-        return completeFallback;
+        return unpackFallback(slot(COMPLETE_FALLBACK_SHIFT));
     }
 
     public void setCompleteFallback(CompletionFallback completeFallback) {
-        this.completeFallback = completeFallback;
+        slot(COMPLETE_FALLBACK_SHIFT, packFallback(completeFallback));
     }
 
     public boolean hasInheritedOptions() {
-        return hasInheritedOptions;
+        return flag(F_HAS_INHERITED_OPTIONS);
     }
 
     /**
@@ -836,18 +989,42 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 }
             }
         }
-        longNameMap = lm;
-        shortNameMap = sm;
-        negatedNameMap = nm;
-        bareNameMap = bm;
+        CommandExtras<C, CI> e = extras();
+        e.longNameMap = lm;
+        e.shortNameMap = sm;
+        e.negatedNameMap = nm;
+        e.bareNameMap = bm;
     }
 
     private void invalidateLookupMaps() {
-        longNameMap = null;
-        shortNameMap = null;
-        negatedNameMap = null;
-        bareNameMap = null;
+        CommandExtras<C, CI> e = extras;
+        if (e != null) {
+            e.longNameMap = null;
+            e.shortNameMap = null;
+            e.negatedNameMap = null;
+            e.bareNameMap = null;
+        }
         generatedOptionLookup = null;
+    }
+
+    /** The long-name lookup map, or null before the first build. */
+    private Map<String, ProcessedOption> longNameLookup() {
+        return extras != null ? extras.longNameMap : null;
+    }
+
+    /** The short-name lookup map, or null before the first build. */
+    private Map<String, ProcessedOption> shortNameLookup() {
+        return extras != null ? extras.shortNameMap : null;
+    }
+
+    /** The negated-name lookup map, or null before the first build. */
+    private Map<String, ProcessedOption> negatedNameLookup() {
+        return extras != null ? extras.negatedNameMap : null;
+    }
+
+    /** The bare-name (no dashes) lookup map, or null before the first build. */
+    private Map<String, ProcessedOption> bareNameLookup() {
+        return extras != null ? extras.bareNameMap : null;
     }
 
     /** Install immutable generated name lookup, or null to use runtime maps. */
@@ -860,51 +1037,63 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public DefaultValueProvider getDefaultValueProvider() {
-        return defaultValueProvider;
+        return extras != null ? extras.defaultValueProvider : null;
     }
 
     /**
      * Set the default value provider. Used by the registry to inject a
      * registry-level fallback when the command has no per-command provider.
+     * Null is skipped: callers only inject a real fallback, and a null write
+     * would allocate the extras holder just to store null.
      */
     public void setDefaultValueProvider(DefaultValueProvider provider) {
-        this.defaultValueProvider = provider;
+        if (provider == null)
+            return;
+        extras().defaultValueProvider = provider;
     }
 
     public String version() {
-        return version;
+        return extras != null ? extras.version : null;
     }
 
     /**
      * Set the version string. Used by generated (annotation-processor) code
-     * to restore the version after the processor handles version option creation directly.
+     * to restore the version after the processor handles version option creation
+     * directly. Null is skipped: generated code only emits this call for a
+     * non-empty version.
      */
     public void setVersion(String version) {
-        this.version = version;
+        if (version == null)
+            return;
+        extras().version = version;
     }
 
     public String helpUrl() {
-        return helpUrl;
+        return extras != null ? extras.helpUrl : null;
     }
 
     /**
      * Set the documentation URL. Used by generated (annotation-processor)
      * code for non-default {@code @CommandDefinition(helpUrl = ...)} values
-     * (#791).
+     * (#791). Null is skipped: generated code only emits this call for a
+     * non-empty URL, and null and absent read the same through
+     * {@link #helpUrl()}.
      */
     public void setHelpUrl(String helpUrl) {
-        this.helpUrl = helpUrl != null ? helpUrl : "";
+        if (helpUrl == null)
+            return;
+        extras().helpUrl = helpUrl;
     }
 
     public String helpGroup() {
-        return helpGroup;
+        return extras != null && extras.helpGroup != null ? extras.helpGroup : "";
     }
 
     /**
      * Whether the help shows the default value of each option and positional argument.
      */
     public boolean showDefaultValues() {
-        return showDefaultValues;
+        return flag(F_SHOW_DEFAULT_VALUES);
     }
 
     /**
@@ -912,7 +1101,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * before the named {@code helpGroup} sections instead of after them.
      */
     public boolean defaultOptionsFirst() {
-        return defaultOptionsFirst;
+        return flag(F_DEFAULT_OPTIONS_FIRST);
     }
 
     /**
@@ -921,36 +1110,35 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * {@link #resolveHelpToggles(ProcessedCommand, java.util.EnumSet)}.
      */
     public Toggle collapseSynopsisSource() {
-        return collapseSynopsisSource;
+        return unpackToggle(slot(COLLAPSE_SYNOPSIS_SOURCE_SHIFT));
     }
 
     public void setCollapseSynopsisSource(Toggle collapseSynopsisSource) {
-        this.collapseSynopsisSource = collapseSynopsisSource == null ? Toggle.INHERIT : collapseSynopsisSource;
+        slot(COLLAPSE_SYNOPSIS_SOURCE_SHIFT, packToggle(collapseSynopsisSource));
     }
 
     public Toggle defaultOptionsFirstSource() {
-        return defaultOptionsFirstSource;
+        return unpackToggle(slot(DEFAULT_OPTIONS_FIRST_SOURCE_SHIFT));
     }
 
     public void setDefaultOptionsFirstSource(Toggle defaultOptionsFirstSource) {
-        this.defaultOptionsFirstSource = defaultOptionsFirstSource == null ? Toggle.INHERIT : defaultOptionsFirstSource;
+        slot(DEFAULT_OPTIONS_FIRST_SOURCE_SHIFT, packToggle(defaultOptionsFirstSource));
     }
 
     public Toggle showDefaultValuesSource() {
-        return showDefaultValuesSource;
+        return unpackToggle(slot(SHOW_DEFAULT_VALUES_SOURCE_SHIFT));
     }
 
     public void setShowDefaultValuesSource(Toggle showDefaultValuesSource) {
-        this.showDefaultValuesSource = showDefaultValuesSource == null ? Toggle.INHERIT : showDefaultValuesSource;
+        slot(SHOW_DEFAULT_VALUES_SOURCE_SHIFT, packToggle(showDefaultValuesSource));
     }
 
     public Toggle failOnDuplicateOptionsSource() {
-        return failOnDuplicateOptionsSource;
+        return unpackToggle(slot(FAIL_ON_DUPLICATE_SOURCE_SHIFT));
     }
 
     public void setFailOnDuplicateOptionsSource(Toggle failOnDuplicateOptionsSource) {
-        this.failOnDuplicateOptionsSource = failOnDuplicateOptionsSource == null ? Toggle.INHERIT
-                : failOnDuplicateOptionsSource;
+        slot(FAIL_ON_DUPLICATE_SOURCE_SHIFT, packToggle(failOnDuplicateOptionsSource));
     }
 
     /**
@@ -961,16 +1149,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * Where positional arguments render in help output.
      */
     public ArgumentsSection argumentsSection() {
-        return argumentsSection;
+        return unpackSection(slot(ARGUMENTS_SECTION_SHIFT));
     }
 
     public ArgumentsSection argumentsSectionSource() {
-        return argumentsSectionSource;
+        return unpackSection(slot(ARGUMENTS_SECTION_SOURCE_SHIFT));
     }
 
     public void setArgumentsSectionSource(ArgumentsSection argumentsSectionSource) {
-        this.argumentsSectionSource = argumentsSectionSource == null ? ArgumentsSection.INHERIT
-                : argumentsSectionSource;
+        slot(ARGUMENTS_SECTION_SOURCE_SHIFT, packSection(argumentsSectionSource));
     }
 
     /**
@@ -979,16 +1166,15 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * between the usage line and the options sections.
      */
     public boolean headerBeforeSynopsis() {
-        return headerBeforeSynopsis;
+        return flag(F_HEADER_BEFORE_SYNOPSIS);
     }
 
     public Toggle headerBeforeSynopsisSource() {
-        return headerBeforeSynopsisSource;
+        return unpackToggle(slot(HEADER_BEFORE_SYNOPSIS_SOURCE_SHIFT));
     }
 
     public void setHeaderBeforeSynopsisSource(Toggle headerBeforeSynopsisSource) {
-        this.headerBeforeSynopsisSource = headerBeforeSynopsisSource == null ? Toggle.INHERIT
-                : headerBeforeSynopsisSource;
+        slot(HEADER_BEFORE_SYNOPSIS_SOURCE_SHIFT, packToggle(headerBeforeSynopsisSource));
     }
 
     /**
@@ -1007,21 +1193,21 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      */
     public void resolveHelpToggles(ProcessedCommand<?, ?> parent, EnumSet<HelpFeature> fleetDefaults,
             ArgumentsSection argumentsSectionFleet) {
-        collapseSynopsis = resolveToggle(collapseSynopsisSource,
-                parent != null ? parent.collapseSynopsis() : null, fleetDefaults, HelpFeature.COLLAPSE_SYNOPSIS);
-        defaultOptionsFirst = resolveToggle(defaultOptionsFirstSource,
+        flag(F_COLLAPSE_SYNOPSIS, resolveToggle(collapseSynopsisSource(),
+                parent != null ? parent.collapseSynopsis() : null, fleetDefaults, HelpFeature.COLLAPSE_SYNOPSIS));
+        flag(F_DEFAULT_OPTIONS_FIRST, resolveToggle(defaultOptionsFirstSource(),
                 parent != null ? parent.defaultOptionsFirst() : null, fleetDefaults,
-                HelpFeature.DEFAULT_OPTIONS_FIRST);
-        showDefaultValues = resolveToggle(showDefaultValuesSource,
-                parent != null ? parent.showDefaultValues() : null, fleetDefaults, HelpFeature.SHOW_DEFAULT_VALUES);
-        failOnDuplicateOptions = resolveToggle(failOnDuplicateOptionsSource,
+                HelpFeature.DEFAULT_OPTIONS_FIRST));
+        flag(F_SHOW_DEFAULT_VALUES, resolveToggle(showDefaultValuesSource(),
+                parent != null ? parent.showDefaultValues() : null, fleetDefaults, HelpFeature.SHOW_DEFAULT_VALUES));
+        flag(F_FAIL_ON_DUPLICATE_OPTIONS, resolveToggle(failOnDuplicateOptionsSource(),
                 parent != null ? parent.failOnDuplicateOptions() : null, fleetDefaults,
-                HelpFeature.FAIL_ON_DUPLICATE_OPTIONS);
-        argumentsSection = resolveArgumentsSection(argumentsSectionSource,
-                parent != null ? parent.argumentsSection() : null, argumentsSectionFleet);
-        headerBeforeSynopsis = resolveToggle(headerBeforeSynopsisSource,
+                HelpFeature.FAIL_ON_DUPLICATE_OPTIONS));
+        slot(ARGUMENTS_SECTION_SHIFT, packSection(resolveArgumentsSection(argumentsSectionSource(),
+                parent != null ? parent.argumentsSection() : null, argumentsSectionFleet)));
+        flag(F_HEADER_BEFORE_SYNOPSIS, resolveToggle(headerBeforeSynopsisSource(),
                 parent != null ? parent.headerBeforeSynopsis() : null, fleetDefaults,
-                HelpFeature.HEADER_BEFORE_SYNOPSIS);
+                HelpFeature.HEADER_BEFORE_SYNOPSIS));
     }
 
     private static boolean resolveToggle(Toggle source, Boolean parent, EnumSet<HelpFeature> fleetDefaults,
@@ -1051,11 +1237,13 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * characters, or null. A {@link HelpSectionProvider} that gives its own header is shown instead.
      */
     public String getHelpHeader() {
-        return helpHeader;
+        return extras != null ? extras.helpHeader : null;
     }
 
     public void setHelpHeader(String helpHeader) {
-        this.helpHeader = helpHeader;
+        if (helpHeader == null)
+            return;
+        extras().helpHeader = helpHeader;
     }
 
     /**
@@ -1063,31 +1251,39 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * characters, or null. A {@link HelpSectionProvider} that gives its own footer is shown instead.
      */
     public String getHelpFooter() {
-        return helpFooter;
+        return extras != null ? extras.helpFooter : null;
     }
 
     public void setHelpFooter(String helpFooter) {
-        this.helpFooter = helpFooter;
+        if (helpFooter == null)
+            return;
+        extras().helpFooter = helpFooter;
     }
 
     public void setHelpGroup(String helpGroup) {
-        this.helpGroup = helpGroup != null ? helpGroup : "";
+        if (helpGroup == null)
+            return;
+        extras().helpGroup = helpGroup;
     }
 
     public Class<? extends HelpSectionProvider> getHelpSectionProviderClass() {
-        return helpSectionProviderClass;
+        return extras != null ? extras.helpSectionProviderClass : null;
     }
 
     public void setHelpSectionProviderClass(Class<? extends HelpSectionProvider> helpSectionProviderClass) {
-        this.helpSectionProviderClass = helpSectionProviderClass;
+        if (helpSectionProviderClass == null)
+            return;
+        extras().helpSectionProviderClass = helpSectionProviderClass;
     }
 
     public HelpSectionProvider getHelpSectionProvider() {
-        return helpSectionProvider;
+        return extras != null ? extras.helpSectionProvider : null;
     }
 
     public void setHelpSectionProvider(HelpSectionProvider helpSectionProvider) {
-        this.helpSectionProvider = helpSectionProvider;
+        if (helpSectionProvider == null)
+            return;
+        extras().helpSectionProvider = helpSectionProvider;
     }
 
     /**
@@ -1100,12 +1296,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * @return the provider to render with, or null when there is none
      */
     public HelpSectionProvider resolveHelpSectionProvider() {
-        if (helpSectionProvider != null)
-            return helpSectionProvider;
-        if (helpSectionProviderClass != null && helpSectionProviderClass != NullHelpSectionProvider.class) {
+        CommandExtras<C, CI> e = extras;
+        if (e != null && e.helpSectionProvider != null)
+            return e.helpSectionProvider;
+        if (e != null && e.helpSectionProviderClass != null
+                && e.helpSectionProviderClass != NullHelpSectionProvider.class) {
             try {
-                return helpSectionProviderClass.getDeclaredConstructor().newInstance();
-            } catch (Exception e) {
+                return e.helpSectionProviderClass.getDeclaredConstructor().newInstance();
+            } catch (Exception ex) {
                 // fall through to the command itself
             }
         }
@@ -1170,9 +1368,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             ProcessedOption opt = generatedOption(generatedOptionLookup.shortOptionIndex(name));
             return opt != null && opt.isActivated(parsedCommand()) ? opt : null;
         }
-        if (shortNameMap == null)
+        if (shortNameLookup() == null)
             buildLookupMaps();
-        ProcessedOption opt = shortNameMap.get(name);
+        ProcessedOption opt = shortNameLookup().get(name);
         if (opt != null && opt.isActivated(parsedCommand()))
             return opt;
         return null;
@@ -1181,9 +1379,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedOption findOptionNoActivatorCheck(String name) {
         if (generatedOptionLookup != null)
             return generatedOption(generatedOptionLookup.shortOptionIndex(name));
-        if (shortNameMap == null)
+        if (shortNameLookup() == null)
             buildLookupMaps();
-        return shortNameMap.get(name);
+        return shortNameLookup().get(name);
     }
 
     /**
@@ -1252,9 +1450,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             ProcessedOption opt = generatedOption(generatedOptionLookup.longOptionIndex(name));
             return opt != null && opt.isActivated(parsedCommand()) ? opt : null;
         }
-        if (longNameMap == null)
+        if (longNameLookup() == null)
             buildLookupMaps();
-        ProcessedOption opt = longNameMap.get(name);
+        ProcessedOption opt = longNameLookup().get(name);
         if (opt != null && opt.isActivated(parsedCommand()))
             return opt;
         return null;
@@ -1263,9 +1461,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedOption findLongOptionNoActivatorCheck(String name) {
         if (generatedOptionLookup != null)
             return generatedOption(generatedOptionLookup.longOptionIndex(name));
-        if (longNameMap == null)
+        if (longNameLookup() == null)
             buildLookupMaps();
-        return longNameMap.get(name);
+        return longNameLookup().get(name);
     }
 
     /**
@@ -1284,9 +1482,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             }
             return null;
         }
-        if (negatedNameMap == null)
+        if (negatedNameLookup() == null)
             buildLookupMaps();
-        ProcessedOption opt = negatedNameMap.get(name);
+        ProcessedOption opt = negatedNameLookup().get(name);
         if (opt != null && opt.isActivated(parsedCommand())) {
             opt.setNegatedByUser(true);
             return opt;
@@ -1309,9 +1507,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             }
             return null;
         }
-        if (negatedNameMap == null)
+        if (negatedNameLookup() == null)
             buildLookupMaps();
-        ProcessedOption opt = negatedNameMap.get(name);
+        ProcessedOption opt = negatedNameLookup().get(name);
         if (opt != null) {
             opt.setNegatedByUser(true);
             return opt;
@@ -1322,9 +1520,9 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     public ProcessedOption findBareLongOption(String name) {
         if (generatedOptionLookup != null)
             return generatedOption(generatedOptionLookup.bareOptionIndex(name));
-        if (bareNameMap == null)
+        if (bareNameLookup() == null)
             buildLookupMaps();
-        return bareNameMap.get(name);
+        return bareNameLookup().get(name);
     }
 
     public List<TerminalString> findPossibleBareLongNamesWithDash(String name) {
@@ -1446,14 +1644,14 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
     }
 
     public void clear() {
-        if (!dirty) {
+        if (!flag(F_DIRTY)) {
             // Even when not dirty, re-resolve deferred ${...} variable references
             // in default/fallback values so that system property changes between
             // construction and first parse are picked up (#520)
             resolveVariableReferences();
             return;
         }
-        dirty = false;
+        flag(F_DIRTY, false);
         clearOptions();
         if (arguments != null)
             arguments.clear();
@@ -1493,21 +1691,21 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * properly reset state (#576).
      */
     public void markDirty() {
-        dirty = true;
-        unselectedResetPending = true;
+        flag(F_DIRTY, true);
+        flag(F_UNSELECTED_RESET_PENDING, true);
     }
 
     /**
      * Returns whether this command must restore its fields if a later parse
-     * leaves it unselected. Unlike {@link #dirty}, this state survives clear().
+     * leaves it unselected. Unlike the dirty flag, this state survives clear().
      */
     public boolean isUnselectedResetPending() {
-        return unselectedResetPending;
+        return flag(F_UNSELECTED_RESET_PENDING);
     }
 
     /** Mark a successful unselected field reset for this command. */
     public void clearUnselectedResetPending() {
-        unselectedResetPending = false;
+        flag(F_UNSELECTED_RESET_PENDING, false);
     }
 
     /**
@@ -1515,7 +1713,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * Visible for testing (#576).
      */
     public boolean isDirty() {
-        return dirty;
+        return flag(F_DIRTY);
     }
 
     protected void clearOptions() {
@@ -1884,7 +2082,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         // Positional arguments get their own section when asked for,
         // sharing the option description column so they no longer trail
         // the last option group.
-        if (argumentsSection == ArgumentsSection.FIRST && !plainPositionals.isEmpty()) {
+        if (argumentsSection() == ArgumentsSection.FIRST && !plainPositionals.isEmpty()) {
             for (ProcessedOption positional : plainPositionals) {
                 if (positional.getFormattedLength() > maxLength)
                     maxLength = positional.getFormattedLength();
@@ -1921,7 +2119,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                 group.sort(BY_ORDER);
             // The default (ungrouped) section goes first only when asked for;
             // named groups keep their relative order either way.
-            if (defaultOptionsFirst)
+            if (defaultOptionsFirst())
                 appendOptionGroup(sb, groups.get(""), "Options:", maxLength + 4, width, supportsHyperlinks,
                         descriptionResolver, scheme);
             for (Map.Entry<String, List<ProcessedOption>> entry : groups.entrySet()) {
@@ -1929,12 +2127,12 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
                     appendOptionGroup(sb, entry.getValue(), entry.getKey() + ":", maxLength + 4, width,
                             supportsHyperlinks, descriptionResolver, scheme);
             }
-            if (!defaultOptionsFirst)
+            if (!defaultOptionsFirst())
                 appendOptionGroup(sb, groups.get(""), "Options:", maxLength + 4, width, supportsHyperlinks,
                         descriptionResolver, scheme);
         }
         // The LAST placement renders the section after all option groups.
-        if (argumentsSection == ArgumentsSection.LAST && !plainPositionals.isEmpty()) {
+        if (argumentsSection() == ArgumentsSection.LAST && !plainPositionals.isEmpty()) {
             for (ProcessedOption positional : plainPositionals) {
                 if (positional.getFormattedLength() > maxLength)
                     maxLength = positional.getFormattedLength();
@@ -1946,7 +2144,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         }
         // Render positional arguments inline after the options section,
         // unless they already have their own section.
-        if (argumentsSection == ArgumentsSection.OFF && !plainPositionals.isEmpty()) {
+        if (argumentsSection() == ArgumentsSection.OFF && !plainPositionals.isEmpty()) {
             // If no options were rendered, start the Options section for positionals
             if (visibleOpts.isEmpty()) {
                 sb.append(Config.getLineSeparator()).append("Options:").append(Config.getLineSeparator());
@@ -1959,6 +2157,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             }
         }
         // Append documentation link if helpUrl is set
+        String helpUrl = helpUrl();
         if (helpUrl != null && helpUrl.length() > 0) {
             sb.append(Config.getLineSeparator());
             if (supportsHyperlinks) {
@@ -2045,7 +2244,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
             List<ProcessedOption> positionalOptions, int width, Boolean collapsedOverride,
             HelpColorScheme colorScheme) {
         String prefix = "Usage: " + colorScheme.styleCommand(cmdDisplay);
-        boolean collapsed = collapsedOverride == null ? collapseSynopsis : collapsedOverride.booleanValue();
+        boolean collapsed = collapsedOverride == null ? collapseSynopsis() : collapsedOverride.booleanValue();
         String synopsisOpts = buildOptionsSynopsis(visibleOpts, collapsed, colorScheme);
         StringBuilder positionalSuffix = new StringBuilder();
         for (ProcessedOption positional : positionalOptions) {
@@ -2179,7 +2378,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * explicitly and all optional flags collapse to {@code [OPTIONS]}.
      */
     private String buildOptionsSynopsis(List<ProcessedOption> visibleOpts, boolean ansi) {
-        return buildOptionsSynopsis(visibleOpts, collapseSynopsis, HelpColorScheme.plain());
+        return buildOptionsSynopsis(visibleOpts, collapseSynopsis(), HelpColorScheme.plain());
     }
 
     /**
@@ -2340,7 +2539,7 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
      * argument that has a default value, aligned with the description.
      */
     private void appendDefaultValue(StringBuilder sb, ProcessedOption option, int descriptionStart) {
-        if (!showDefaultValues || option.getDefaultValues() == null || option.getDefaultValues().isEmpty())
+        if (!showDefaultValues() || option.getDefaultValues() == null || option.getDefaultValues().isEmpty())
             return;
         ProcessedOption.appendSpaces(sb, descriptionStart);
         sb.append("Default: ").append(String.join(", ", option.getDefaultValues()))
@@ -2453,8 +2652,8 @@ public class ProcessedCommand<C extends Command<CI>, CI extends CommandInvocatio
         if (arguments != null) {
             arguments.updateInvocationProviders(invocationProviders);
         }
-        if (activator != null)
-            activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(activator);
+        if (extras != null && extras.activator != null)
+            extras.activator = invocationProviders.getCommandActivatorProvider().enhanceCommandActivator(extras.activator);
     }
 
     protected void updateOptionsInvocationProviders(InvocationProviders invocationProviders) {

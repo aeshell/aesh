@@ -20,7 +20,6 @@
 package org.aesh.command.internal;
 
 import static org.aesh.command.internal.LookupMapLifecycleTest.assertMaps;
-import static org.aesh.command.internal.LookupMapLifecycleTest.mapField;
 import static org.aesh.command.internal.LookupMapLifecycleTest.newCommand;
 import static org.aesh.command.internal.LookupMapLifecycleTest.option;
 import static org.junit.Assert.assertNull;
@@ -74,9 +73,20 @@ public class GeneratedOptionLookupTest {
 
         ProcessedOption quiet = option("quiet", 'q');
         command.addOptionDirect(quiet);
-        assertNull(mapField(command, "generatedOptionLookup"));
+        assertNull(generatedLookupField(command));
         assertSame(quiet, command.findLongOptionNoActivatorCheck("quiet"));
         assertMaps(command, true);
         assertSame(verbose, command.findLongOptionNoActivatorCheck("verbose"));
+    }
+
+    /**
+     * {@code generatedOptionLookup} stayed a direct ProcessedCommand field
+     * (#800): it is always present on the generated path, so it is read
+     * straight off the class rather than through the extras holder.
+     */
+    private static Object generatedLookupField(ProcessedCommand<?, ?> command) throws Exception {
+        java.lang.reflect.Field field = ProcessedCommand.class.getDeclaredField("generatedOptionLookup");
+        field.setAccessible(true);
+        return field.get(command);
     }
 }
